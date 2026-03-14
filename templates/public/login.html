@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white border border-gray-200 p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Welcome <span class="text-green-600">Back</span></h1>
+            <div class="w-16 h-0.5 bg-green-600 mx-auto mt-2 mb-3"></div>
+            <p class="text-gray-600">Sign in to your account</p>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex border border-gray-300 bg-gray-50 p-1">
+                <button class="flex-1 py-3 text-center font-medium bg-green-600 text-white" id="student-tab" data-role="student">
+                    Student Login
+                </button>
+                <button class="flex-1 py-3 text-center font-medium text-gray-600 hover:text-green-600" id="admin-tab" data-role="admin">
+                    Admin Login
+                </button>
+            </div>
+        </div>
+
+        <form id="login-form" class="space-y-6">
+            <input type="hidden" id="role" name="role" value="student">
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="email" required autocomplete="email">
+                <div class="hidden text-red-600 text-sm mt-1" id="email-error"></div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <input type="password" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="password" required autocomplete="current-password">
+                <div class="hidden text-red-600 text-sm mt-1" id="password-error"></div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="remember">
+                    <span class="text-sm text-gray-600">Remember me</span>
+                </label>
+                <a href="/forgot-password/" class="text-sm text-green-600 hover:text-green-700 font-medium">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 hover:bg-green-700 transition-colors" id="login-btn">
+                Sign In
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">
+                Don't have an account? 
+                <a href="/register/" class="text-green-600 hover:text-green-700 font-medium">Sign up as Student</a>
+            </p>
+        </div>
+
+        <div class="mt-4 text-xs text-gray-500 text-center">
+            By signing in, you agree to our 
+            <a href="/terms/" class="text-green-600 hover:text-green-700">Terms</a> 
+            and 
+            <a href="/privacy/" class="text-green-600 hover:text-green-700">Privacy Policy</a>
+        </div>
+    </div>
+
+    <div class="mt-6 text-center">
+        <p class="text-gray-500 text-sm">Having trouble? <a href="/contact/" class="text-green-600 hover:text-green-700 font-medium">Contact Support</a></p>
+    </div>
+</div>
+
+<div id="twofa-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white border border-gray-200 max-w-md w-full mx-4 p-8">
+        <h3 class="text-xl font-bold mb-2 text-gray-900">Two-Factor Authentication</h3>
+        <p class="text-gray-600 mb-6">Please enter the verification code from your authenticator app.</p>
+        
+        <div class="mb-6">
+            <input type="text" class="w-full text-center text-2xl tracking-widest border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="twofa-code" maxlength="6" placeholder="000000">
+        </div>
+
+        <div class="flex space-x-3">
+            <button class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors" id="twofa-cancel">Cancel</button>
+            <button class="flex-1 px-4 py-3 bg-green-600 text-white hover:bg-green-700 font-medium transition-colors" id="twofa-verify">Verify</button>
+        </div>
+    </div>
+</div>
+
+<script>
+if (typeof window.auth === 'undefined') {
+    window.auth = {
+        setTokens: function(access, refresh) {
+            localStorage.setItem('access_token', access);
+            localStorage.setItem('refresh_token', refresh);
+        },
+        clearTokens: function() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+        },
+        getAccessToken: function() {
+            return localStorage.getItem('access_token');
+        },
+        getRefreshToken: function() {
+            return localStorage.getItem('refresh_token');
+        },
+        isAuthenticated: function() {
+            return !!this.getAccessToken();
+        }
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const studentTab = document.getElementById('student-tab');
+    const adminTab = document.getElementById('admin-tab');
+    const roleInput = document.getElementById('role');
+    const form = document.getElementById('login-form');
+
+    studentTab.addEventListener('click', function() {
+        studentTab.classList.add('bg-green-600', 'text-white');
+        studentTab.classList.remove('text-gray-600', 'hover:text-green-600');
+        adminTab.classList.remove('bg-green-600', 'text-white');
+        adminTab.classList.add('text-gray-600', 'hover:text-green-600');
+        roleInput.value = 'student';
+    });
+
+    adminTab.addEventListener('click', function() {
+        adminTab.classList.add('bg-green-600', 'text-white');
+        adminTab.classList.remove('text-gray-600', 'hover:text-green-600');
+        studentTab.classList.remove('bg-green-600', 'text-white');
+        studentTab.classList.add('text-gray-600', 'hover:text-green-600');
+        roleInput.value = 'admin';
+    });
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        clearErrors();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const role = document.getElementById('role').value;
+        
+        if (!email || !password) {
+            if (!email) showError('email', 'Email is required');
+            if (!password) showError('password', 'Password is required');
+            return;
+        }
+        
+        const submitBtn = document.getElementById('login-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Signing in...';
+        submitBtn.disabled = true;
+        
+        try {
+            const response = await api.post('/auth/login/', {
+                email: email,
+                password: password
+            });
+            
+            if (response && response.access) {
+                auth.setTokens(response.access, response.refresh);
+                
+                let userRole = 'student';
+                if (response.user && response.user.role) {
+                    userRole = response.user.role;
+                }
+                
+                if (userRole === 'admin') {
+                    window.location.href = '/admin/dashboard/';
+                } else {
+                    window.location.href = '/student/dashboard/';
+                }
+            } else {
+                showError('email', 'Invalid server response');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+            
+        } catch (error) {
+            let errorMessage = 'Login failed. Please try again.';
+            
+            if (error && error.data) {
+                if (error.data.error) {
+                    errorMessage = error.data.error;
+                } else if (error.data.message) {
+                    errorMessage = error.data.message;
+                } else if (error.data.non_field_errors) {
+                    errorMessage = error.data.non_field_errors[0];
+                }
+            }
+            
+            if (errorMessage.includes('2fa') || errorMessage.includes('two-factor')) {
+                showTwoFAModal(email, password);
+            } else {
+                showError('email', errorMessage);
+            }
+            
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+});
+
+function showError(field, message) {
+    const errorDiv = document.getElementById(`${field}-error`);
+    errorDiv.textContent = message;
+    errorDiv.classList.remove('hidden');
+    document.getElementById(field).classList.add('border-red-500', 'focus:border-red-500');
+}
+
+function clearErrors() {
+    ['email', 'password'].forEach(field => {
+        const errorDiv = document.getElementById(`${field}-error`);
+        errorDiv.classList.add('hidden');
+        document.getElementById(field).classList.remove('border-red-500', 'focus:border-red-500');
+    });
+}
+
+function showTwoFAModal(email, password) {
+    const modal = document.getElementById('twofa-modal');
+    modal.classList.remove('hidden');
+    
+    document.getElementById('twofa-cancel').onclick = () => {
+        modal.classList.add('hidden');
+        document.getElementById('twofa-code').value = '';
+    };
+    
+    document.getElementById('twofa-verify').onclick = async () => {
+        const code = document.getElementById('twofa-code').value;
+        
+        if (code.length !== 6) {
+            alert('Please enter a valid 6-digit code');
+            return;
+        }
+        
+        try {
+            const response = await api.post('/auth/verify-2fa/', {
+                email: email,
+                password: password,
+                code: code
+            });
+            
+            if (response && response.access) {
+                auth.setTokens(response.access, response.refresh);
+                
+                let userRole = 'student';
+                if (response.user && response.user.role) {
+                    userRole = response.user.role;
+                }
+                
+                if (userRole === 'admin') {
+                    window.location.href = '/admin/dashboard/';
+                } else {
+                    window.location.href = '/student/dashboard/';
+                }
+            }
+            
+        } catch (error) {
+            alert('Invalid verification code');
+        }
+    };
+}
+</script>
+{% endblock %}

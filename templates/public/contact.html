@@ -1,0 +1,119 @@
+
+{% extends "base.html" %}
+
+{% block title %}Contact Us - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    
+    <section class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Contact <span class="text-green-600">Us</span></h1>
+        <div class="w-20 h-1 bg-green-600 mx-auto mb-6"></div>
+        <p class="text-xl text-gray-600">We're here to help 24/7</p>
+    </section>
+
+    <div class="grid md:grid-cols-3 gap-4 mb-12">
+        <div class="bg-white border border-gray-200 p-6 text-center hover:border-green-600 transition duration-300">
+            <i class="fas fa-envelope text-2xl text-green-600 mb-3"></i>
+            <h3 class="font-semibold text-gray-800 mb-2">Email</h3>
+            <p class="text-gray-600 text-sm">fredrickwambua@gmail.com</p>
+            <p class="text-gray-500 text-xs mt-2">Response within 2 hours</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 text-center hover:border-green-600 transition duration-300">
+            <i class="fas fa-phone text-2xl text-green-600 mb-3"></i>
+            <h3 class="font-semibold text-gray-800 mb-2">Phone</h3>
+            <p class="text-gray-600 text-sm">0740618550</p>
+            <p class="text-gray-500 text-xs mt-2">Mon-Fri, 9am-6pm</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 text-center hover:border-green-600 transition duration-300">
+            <i class="fas fa-comment text-2xl text-green-600 mb-3"></i>
+            <h3 class="font-semibold text-gray-800 mb-2">Live Chat</h3>
+            <p class="text-gray-600 text-sm">Available 24/7</p>
+            <button class="text-green-600 text-xs mt-2 hover:text-green-700 font-medium" id="start-chat">Start Chat</button>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Send Us a Message</h2>
+        
+        <form id="contact-form" class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="name" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="email" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="subject" required>
+                    <option value="">Select a subject</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="support">Technical Support</option>
+                    <option value="billing">Billing Question</option>
+                    <option value="order">Order Issue</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="message" rows="5" required></textarea>
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="copy-self">
+                <label for="copy-self" class="ml-2 text-sm text-gray-600">Send a copy to myself</label>
+            </div>
+
+            <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 hover:bg-green-700 transition-colors" id="submit-btn">
+                Send Message
+            </button>
+        </form>
+
+        <div id="success-message" class="hidden mt-4 p-4 bg-green-50 text-green-700 border border-green-200 text-center">
+            Thank you for contacting us. We'll respond within 2 hours.
+        </div>
+    </div>
+
+    <div class="bg-gray-100 w-full h-48 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300">
+        <span class="text-lg">Image Placeholder - Contact</span>
+    </div>
+</div>
+
+<script>
+document.getElementById('contact-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
+    
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        document.getElementById('contact-form').classList.add('hidden');
+        document.getElementById('success-message').classList.remove('hidden');
+        
+    } catch (error) {
+        alert('Failed to send message. Please try again or email us directly.');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+document.getElementById('start-chat').addEventListener('click', function() {
+    if (window.auth && window.auth.isAuthenticated()) {
+        window.location.href = '/messages/';
+    } else {
+        alert('Please log in or register to start a chat session.');
+        window.location.href = '/login/';
+    }
+});
+</script>
+{% endblock %}

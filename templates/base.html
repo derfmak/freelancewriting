@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}ACADEMIC WRITE{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .site-header {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3);
+            width: 100%;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 3.5rem;
+            width: 100%;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.8rem;
+            height: 2.8rem;
+            background: white;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #059669;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.2;
+            border: 2px solid white;
+        }
+
+        .logo:hover {
+            background: #fbbf24;
+            color: #059669;
+            transform: scale(1.05);
+        }
+
+        .desktop-nav {
+            display: none;
+            align-items: center;
+            height: 100%;
+        }
+
+        .desktop-nav a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.8rem;
+            padding: 0.3rem 0.7rem;
+            margin: 0 0.1rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .desktop-nav a:hover {
+            color: #fbbf24;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .desktop-nav a.active {
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.15);
+        }
+
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .auth-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .auth-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        .register-link {
+            background: #fbbf24;
+            color: #059669;
+            padding: 0.3rem 1rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid #fbbf24;
+        }
+
+        .register-link:hover {
+            background: transparent;
+            color: white;
+            border-color: white;
+        }
+
+        .mobile-menu-button {
+            display: block;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.3rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .mobile-menu-button:hover {
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 3.5rem;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            padding: 1.5rem;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 40;
+            overflow-y: auto;
+            border-top: 2px solid #059669;
+        }
+
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .mobile-nav a {
+            color: #1e293b;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav a:hover {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .mobile-nav a.active {
+            background: #ecfdf5;
+            color: #059669;
+            border-left: 3px solid #059669;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            padding: 2rem 0 1rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-section h4 {
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.3rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: #fbbf24;
+            transform: translateX(3px);
+        }
+
+        .contact-info {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.75rem;
+        }
+
+        .contact-info p {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .contact-info i {
+            color: #fbbf24;
+            width: 0.9rem;
+            font-size: 0.8rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 0.6rem;
+            margin-top: 0.6rem;
+        }
+
+        .social-link {
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            width: 1.8rem;
+            height: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.8rem;
+        }
+
+        .social-link:hover {
+            color: #fbbf24;
+            transform: translateY(-3px);
+            border-color: #fbbf24;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.7rem;
+        }
+
+        .main-content {
+            min-height: calc(100vh - 3.5rem - 18rem);
+            padding: 1.5rem 0;
+            background: white;
+        }
+
+        h1 { font-size: 2rem; font-weight: 700; }
+        h2 { font-size: 1.5rem; font-weight: 700; }
+        h3 { font-size: 1.1rem; font-weight: 600; }
+        h4 { font-size: 0.95rem; font-weight: 600; }
+        p { font-size: 0.85rem; }
+
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: #059669;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1.2rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-green {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-green:hover {
+            background: #047857;
+        }
+
+        .btn-yellow {
+            background: #fbbf24;
+            color: #059669;
+        }
+
+        .btn-yellow:hover {
+            background: #f59e0b;
+        }
+
+        @media (min-width: 768px) {
+            .footer-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .desktop-nav {
+                display: flex;
+            }
+            
+            .mobile-menu-button {
+                display: none;
+            }
+        }
+
+        .active-page {
+            color: #fbbf24 !important;
+            background: rgba(251, 191, 36, 0.15) !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div id="app">
+        <header class="site-header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/" class="logo">AW</a>
+                    
+                    <div class="desktop-nav">
+                        <a href="/" class="{% if request.path == '/' %}active{% endif %}">HOME</a>
+                        <a href="/about/" class="{% if request.path == '/about/' %}active{% endif %}">ABOUT</a>
+                        <a href="/how-it-works/" class="{% if request.path == '/how-it-works/' %}active{% endif %}">HOW IT WORKS</a>
+                        <a href="/services/" class="{% if request.path == '/services/' %}active{% endif %}">SERVICES</a>
+                        <a href="/pricing/" class="{% if request.path == '/pricing/' %}active{% endif %}">PRICING</a>
+                        <a href="/faq/" class="{% if request.path == '/faq/' %}active{% endif %}">FAQ</a>
+                        <a href="/contact/" class="{% if request.path == '/contact/' %}active{% endif %}">CONTACT</a>
+                        <a href="/terms/" class="{% if request.path == '/terms/' %}active{% endif %}">TERMS</a>
+                        <a href="/privacy/" class="{% if request.path == '/privacy/' %}active{% endif %}">PRIVACY</a>
+                        <a href="/refund-policy/" class="{% if request.path == '/refund-policy/' %}active{% endif %}">REFUND</a>
+                    </div>
+
+                    <div class="auth-section">
+                        <a href="/login/" class="auth-link">LOGIN</a>
+                        <a href="/register/" class="register-link">REGISTER</a>
+
+                        <button class="mobile-menu-button" id="mobileMenuButton">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-nav">
+                <a href="/">HOME</a>
+                <a href="/about/">ABOUT</a>
+                <a href="/how-it-works/">HOW IT WORKS</a>
+                <a href="/services/">SERVICES</a>
+                <a href="/pricing/">PRICING</a>
+                <a href="/faq/">FAQ</a>
+                <a href="/contact/">CONTACT</a>
+                <a href="/terms/">TERMS</a>
+                <a href="/privacy/">PRIVACY</a>
+                <a href="/refund-policy/">REFUND POLICY</a>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-gray-200">
+                <a href="/login/" class="block text-center py-2 text-gray-700 hover:text-green-600">LOGIN</a>
+                <a href="/register/" class="block text-center bg-green-600 text-white py-2 mt-2 hover:bg-green-700">REGISTER</a>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <div class="container">
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for message in messages %}
+                            <div class="p-3 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 text-green-700 border-l-4 border-green-500{% else %}bg-blue-50 text-blue-700 border-l-4 border-blue-500{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                {% if request.path == '/' %}
+                <section class="mb-12">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h1 class="text-3xl md:text-4xl font-bold mb-3">Welcome to <span class="text-green-600">Academic Write</span></h1>
+                            <p class="text-base text-gray-600 mb-4">Your trusted partner in academic excellence. We provide high-quality writing services for students worldwide.</p>
+                            <div class="flex gap-3">
+                                <a href="/register/" class="btn btn-green">Get Started</a>
+                                <a href="/how-it-works/" class="btn border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600">Learn More</a>
+                            </div>
+                        </div>
+                        <div>
+                            <img src="/static/images/hero/hero-academic.jpg" alt="Academic Writing Hero" class="w-full h-auto max-h-80 object-cover rounded-lg shadow-lg">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mb-12">
+                    <h2 class="text-2xl font-bold text-center mb-3">Our <span class="text-green-600">Services</span></h2>
+                    <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto text-sm">Comprehensive academic writing solutions tailored to your needs</p>
+                    <div class="grid md:grid-cols-3 gap-5">
+                        <div class="card">
+                            <img src="/static/images/services/essay-writing.jpg" alt="Essay Writing Service" class="w-full h-36 object-cover mb-3">
+                            <h3 class="text-lg font-bold mb-1">Essay Writing</h3>
+                            <p class="text-gray-600 text-xs">Expert essay writing for all academic levels and subjects</p>
+                        </div>
+                        <div class="card">
+                            <img src="/static/images/services/research-papers.jpg" alt="Research Papers Service" class="w-full h-36 object-cover mb-3">
+                            <h3 class="text-lg font-bold mb-1">Research Papers</h3>
+                            <p class="text-gray-600 text-xs">Comprehensive research and analysis for complex topics</p>
+                        </div>
+                        <div class="card">
+                            <img src="/static/images/services/dissertations.jpg" alt="Dissertation Service" class="w-full h-36 object-cover mb-3">
+                            <h3 class="text-lg font-bold mb-1">Dissertations</h3>
+                            <p class="text-gray-600 text-xs">PhD and Master's dissertation assistance from experts</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bg-green-600 text-white p-8 text-center mb-12">
+                    <h2 class="text-2xl font-bold mb-2">Ready to Get Started?</h2>
+                    <p class="text-base mb-4 opacity-90">Join thousands of satisfied students today</p>
+                    <a href="/register/" class="btn bg-yellow-400 text-green-700 px-6 py-2 font-bold hover:bg-yellow-500">Create Account</a>
+                </section>
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-section">
+                        <h4>ABOUT</h4>
+                        <ul class="footer-links">
+                            <li><a href="/about/">About Us</a></li>
+                            <li><a href="/how-it-works/">How It Works</a></li>
+                            <li><a href="/contact/">Contact</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h4>SERVICES</h4>
+                        <ul class="footer-links">
+                            <li><a href="/pricing/">Pricing</a></li>
+                            <li><a href="/faq/">FAQ</a></li>
+                            <li><a href="/guarantees/">Guarantees</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h4>LEGAL</h4>
+                        <ul class="footer-links">
+                            <li><a href="/terms/">Terms of Service</a></li>
+                            <li><a href="/privacy/">Privacy Policy</a></li>
+                            <li><a href="/refund-policy/">Refund Policy</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h4>CONTACT</h4>
+                        <div class="contact-info">
+                            <p><i class="fas fa-envelope"></i> fredrickwambua@gmail.com</p>
+                            <p><i class="fas fa-phone"></i> 0740618550</p>
+                            <p><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</p>
+                            <div class="social-links">
+                                <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                                <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="copyright">
+                    &copy; 2026 ACADEMIC WRITE. All rights reserved.
+                </div>
+            </div>
+        </footer>
+
+        <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay">
+            <div class="bg-white max-w-md w-full mx-4 p-6" id="modalContent"></div>
+        </div>
+
+        <div class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" id="loadingOverlay">
+            <div class="bg-white p-6 rounded-lg">
+                <div class="w-10 h-10 border-4 border-green-600 border-t-transparent animate-spin"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/static/js/utils/api.js"></script>
+    <script src="/static/js/utils/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mobileMenu.classList.toggle('open');
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.toggle('fa-bars');
+                        icon.classList.toggle('fa-times');
+                    }
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!mobileMenu.contains(e.target) && !mobileMenuButton.contains(e.target)) {
+                        mobileMenu.classList.remove('open');
+                        const icon = mobileMenuButton.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                        }
+                    }
+                });
+            }
+        });
+
+        window.Modal = {
+            show: function(content) {
+                const modal = document.getElementById('modalOverlay');
+                const modalContent = document.getElementById('modalContent');
+                if (modalContent) {
+                    modalContent.innerHTML = content;
+                }
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            },
+            hide: function() {
+                const modal = document.getElementById('modalOverlay');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.Loading = {
+            show: function() {
+                const loading = document.getElementById('loadingOverlay');
+                loading.classList.remove('hidden');
+                loading.classList.add('flex');
+            },
+            hide: function() {
+                const loading = document.getElementById('loadingOverlay');
+                loading.classList.add('hidden');
+                loading.classList.remove('flex');
+            }
+        };
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

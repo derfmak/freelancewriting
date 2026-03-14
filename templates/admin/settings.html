@@ -1,0 +1,1200 @@
+{% extends "admin_base.html" %}
+
+{% block title %}System Settings - Admin - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">System <span class="text-blue-600">Settings</span></h1>
+        <p class="text-gray-600 mt-1">Configure platform settings and preferences</p>
+    </div>
+
+    <div class="bg-white border border-gray-200 overflow-hidden rounded-lg shadow-sm">
+        <div class="border-b border-gray-200">
+            <nav class="flex space-x-8 px-6 overflow-x-auto" aria-label="Settings Tabs">
+                <button class="tab-link py-4 px-1 border-b-2 border-blue-600 text-blue-600 font-medium whitespace-nowrap transition-colors" data-tab="general">General</button>
+                <button class="tab-link py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap transition-colors" data-tab="pricing">Pricing</button>
+                <button class="tab-link py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap transition-colors" data-tab="email">Email</button>
+                <button class="tab-link py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap transition-colors" data-tab="security">Security</button>
+                <button class="tab-link py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap transition-colors" data-tab="integrations">Integrations</button>
+            </nav>
+        </div>
+
+        <div class="p-8">
+            <div id="general-tab" class="tab-pane">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">General Settings</h3>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500" id="general-last-saved"></span>
+                        <div class="w-2 h-2 rounded-full" id="general-save-status"></div>
+                    </div>
+                </div>
+                
+                <form id="general-form" class="space-y-8">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
+                            <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="site-name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Site URL</label>
+                            <input type="url" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="site-url">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Support Email</label>
+                            <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="support-email">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Support Phone</label>
+                            <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="support-phone">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Support Address</label>
+                            <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="support-address" rows="2"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Site Description</label>
+                            <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="site-description" rows="3"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Facebook URL</label>
+                            <input type="url" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="facebook-url">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Twitter URL</label>
+                            <input type="url" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="twitter-url">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn URL</label>
+                            <input type="url" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="linkedin-url">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Instagram URL</label>
+                            <input type="url" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="instagram-url">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Working Hours</label>
+                            <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="working-hours">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Maintenance Mode</label>
+                        <div class="flex items-center space-x-6">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="maintenance" value="off" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300">
+                                <span class="text-sm text-gray-700">Off</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="maintenance" value="on" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300">
+                                <span class="text-sm text-gray-700">On</span>
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">When enabled, only admins can access the site</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Maintenance Message</label>
+                        <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="maintenance-message" rows="2"></textarea>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="font-bold text-gray-800 mb-4">Logo & Favicon</h4>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Site Logo</label>
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-20 h-20 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center">
+                                        <img id="logo-preview" src="" alt="Logo preview" class="max-w-full max-h-full hidden">
+                                        <i class="fas fa-image text-gray-400 text-2xl" id="logo-placeholder"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="file" class="w-full border border-gray-300 px-4 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" accept="image/*" id="logo-upload">
+                                        <p class="text-xs text-gray-500 mt-1">Recommended size: 200x50px</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gray-100 border border-gray-200 rounded flex items-center justify-center">
+                                        <img id="favicon-preview" src="" alt="Favicon preview" class="max-w-full max-h-full hidden">
+                                        <i class="fas fa-globe text-gray-400" id="favicon-placeholder"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="file" class="w-full border border-gray-300 px-4 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" accept=".ico,.png" id="favicon-upload">
+                                        <p class="text-xs text-gray-500 mt-1">Size: 32x32px, ICO/PNG format</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="general-reset">Reset Changes</button>
+                        <button type="button" class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg" id="general-preview">Preview Changes</button>
+                        <button type="submit" class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="pricing-tab" class="tab-pane hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Pricing Configuration</h3>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500" id="pricing-last-saved"></span>
+                        <div class="w-2 h-2 rounded-full" id="pricing-save-status"></div>
+                    </div>
+                </div>
+
+                <form id="pricing-form" class="space-y-8">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">High School (per page)</label>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">$</span>
+                                <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="rate-high-school" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Undergraduate (per page)</label>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">$</span>
+                                <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="rate-undergraduate" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Master's (per page)</label>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">$</span>
+                                <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="rate-masters" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">PhD (per page)</label>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">$</span>
+                                <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="rate-phd" step="0.01" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="font-bold text-gray-800 mb-4">Urgency Multipliers</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-4">
+                                <span class="w-32 text-sm text-gray-600">14+ days:</span>
+                                <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="urgency-14" step="0.1" min="1">
+                                <span class="text-sm text-gray-500">x base price</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-32 text-sm text-gray-600">7-13 days:</span>
+                                <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="urgency-7" step="0.1" min="1">
+                                <span class="text-sm text-gray-500">x base price</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-32 text-sm text-gray-600">5-6 days:</span>
+                                <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="urgency-5" step="0.1" min="1">
+                                <span class="text-sm text-gray-500">x base price</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-32 text-sm text-gray-600">3-4 days:</span>
+                                <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="urgency-3" step="0.1" min="1">
+                                <span class="text-sm text-gray-500">x base price</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-32 text-sm text-gray-600">48 hours:</span>
+                                <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="urgency-48" step="0.1" min="1">
+                                <span class="text-sm text-gray-500">x base price</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-32 text-sm text-gray-600">24 hours:</span>
+                                <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="urgency-24" step="0.1" min="1">
+                                <span class="text-sm text-gray-500">x base price</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-32 text-sm text-gray-600">12 hours:</span>
+                                <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="urgency-12" step="0.1" min="1">
+                                <span class="text-sm text-gray-500">x base price</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="font-bold text-gray-800 mb-4">Additional Services</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-4">
+                                <span class="w-40 text-sm text-gray-600">Plagiarism Report:</span>
+                                <div class="flex items-center">
+                                    <span class="text-gray-500 mr-2">$</span>
+                                    <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="service-plagiarism" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-40 text-sm text-gray-600">Abstract/Summary:</span>
+                                <div class="flex items-center">
+                                    <span class="text-gray-500 mr-2">$</span>
+                                    <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="service-abstract" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-40 text-sm text-gray-600">Outline:</span>
+                                <div class="flex items-center">
+                                    <span class="text-gray-500 mr-2">$</span>
+                                    <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="service-outline" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="w-40 text-sm text-gray-600">Bibliography:</span>
+                                <div class="flex items-center">
+                                    <span class="text-gray-500 mr-2">$</span>
+                                    <input type="number" class="w-24 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="service-bibliography" step="0.01" min="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="pricing-reset">Reset Changes</button>
+                        <button type="button" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="pricing-preview">Preview Calculator</button>
+                        <button type="submit" class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="email-tab" class="tab-pane hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Email Configuration</h3>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500" id="email-last-saved"></span>
+                        <div class="w-2 h-2 rounded-full" id="email-save-status"></div>
+                    </div>
+                </div>
+
+                <form id="email-form" class="space-y-8">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Host</label>
+                            <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="smtp-host">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Port</label>
+                            <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="smtp-port">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Username</label>
+                            <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="smtp-username">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Password</label>
+                            <input type="password" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="smtp-password">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">From Email</label>
+                            <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="from-email">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">From Name</label>
+                            <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="from-name">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Encryption</label>
+                        <select class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="smtp-encryption">
+                            <option value="tls">TLS</option>
+                            <option value="ssl">SSL</option>
+                            <option value="none">None</option>
+                        </select>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="font-bold text-gray-800 mb-4">Email Templates</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                                <div>
+                                    <p class="font-medium text-gray-800">Welcome Email</p>
+                                    <p class="text-sm text-gray-500">Sent to new users after registration</p>
+                                </div>
+                                <button type="button" class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-4 py-2 text-sm rounded-lg edit-template-btn" data-template="welcome">Edit Template</button>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                                <div>
+                                    <p class="font-medium text-gray-800">Order Confirmation</p>
+                                    <p class="text-sm text-gray-500">Sent when order is placed</p>
+                                </div>
+                                <button type="button" class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-4 py-2 text-sm rounded-lg edit-template-btn" data-template="order">Edit Template</button>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                                <div>
+                                    <p class="font-medium text-gray-800">Order Delivered</p>
+                                    <p class="text-sm text-gray-500">Sent when paper is delivered</p>
+                                </div>
+                                <button type="button" class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-4 py-2 text-sm rounded-lg edit-template-btn" data-template="delivered">Edit Template</button>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                                <div>
+                                    <p class="font-medium text-gray-800">Password Reset</p>
+                                    <p class="text-sm text-gray-500">Sent for password reset requests</p>
+                                </div>
+                                <button type="button" class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-4 py-2 text-sm rounded-lg edit-template-btn" data-template="reset">Edit Template</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="email-reset">Reset Changes</button>
+                        <button type="button" class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-6 py-2 rounded-lg" id="test-email">Send Test Email</button>
+                        <button type="submit" class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="security-tab" class="tab-pane hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Security Settings</h3>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500" id="security-last-saved"></span>
+                        <div class="w-2 h-2 rounded-full" id="security-save-status"></div>
+                    </div>
+                </div>
+
+                <form id="security-form" class="space-y-8">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Max Login Attempts</label>
+                            <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="max-login-attempts" min="1">
+                            <p class="text-xs text-gray-500 mt-1">Number of failed attempts before lockout</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Lockout Duration (minutes)</label>
+                            <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="lockout-duration" min="1">
+                            <p class="text-xs text-gray-500 mt-1">Minutes account is locked</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Session Timeout</label>
+                        <select class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="session-timeout">
+                            <option value="30">30 minutes</option>
+                            <option value="60">1 hour</option>
+                            <option value="120">2 hours</option>
+                            <option value="240">4 hours</option>
+                            <option value="480">8 hours</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">User session expiration time</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password Policy</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded" id="require-uppercase">
+                                <span class="text-sm text-gray-700">Require at least one uppercase letter</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded" id="require-lowercase">
+                                <span class="text-sm text-gray-700">Require at least one lowercase letter</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded" id="require-number">
+                                <span class="text-sm text-gray-700">Require at least one number</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded" id="require-special">
+                                <span class="text-sm text-gray-700">Require at least one special character</span>
+                            </label>
+                            <div class="flex items-center space-x-4 mt-2">
+                                <span class="text-sm text-gray-600">Minimum length:</span>
+                                <input type="number" class="w-20 border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="min-password-length" min="6">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Two-Factor Authentication</label>
+                        <div class="flex flex-col space-y-2">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="2fa-required" value="optional" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300">
+                                <span class="text-sm text-gray-700">Optional (user choice)</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="2fa-required" value="required" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300">
+                                <span class="text-sm text-gray-700">Required for all users</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="2fa-required" value="admin-only" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300">
+                                <span class="text-sm text-gray-700">Admin only</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Content Moderation</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded" id="moderate-orders">
+                                <span class="text-sm text-gray-700">Require admin approval for all orders</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded" id="moderate-messages">
+                                <span class="text-sm text-gray-700">Moderate user messages before delivery</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="font-bold text-gray-800 mb-4">IP Whitelist (Admin Access)</h4>
+                        <div class="space-y-2">
+                            <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="ip-whitelist" rows="3" placeholder="Enter IP addresses, one per line"></textarea>
+                            <p class="text-xs text-gray-500">Leave empty to allow all IPs</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="security-reset">Reset Changes</button>
+                        <button type="submit" class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="integrations-tab" class="tab-pane hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Integrations</h3>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500" id="integrations-last-saved"></span>
+                        <div class="w-2 h-2 rounded-full" id="integrations-save-status"></div>
+                    </div>
+                </div>
+
+                <form id="integrations-form" class="space-y-8">
+                    <div class="border border-gray-200 p-6 rounded-lg">
+                        <h4 class="font-bold text-gray-800 mb-4">Stripe</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Publishable Key</label>
+                                <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="stripe-publishable-key">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Secret Key</label>
+                                <input type="password" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="stripe-secret-key">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Webhook Secret</label>
+                                <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="stripe-webhook-secret">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Mode</label>
+                                <select class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="stripe-mode">
+                                    <option value="test">Test Mode</option>
+                                    <option value="live">Live Mode</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="button" class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-4 py-2 rounded-lg" id="test-stripe">Test Connection</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 p-6 rounded-lg">
+                        <h4 class="font-bold text-gray-800 mb-4">PayPal</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Client ID</label>
+                                <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="paypal-client-id">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Client Secret</label>
+                                <input type="password" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="paypal-secret">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Mode</label>
+                                <select class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="paypal-mode">
+                                    <option value="sandbox">Sandbox (Test)</option>
+                                    <option value="live">Live</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="button" class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-4 py-2 rounded-lg" id="test-paypal">Test Connection</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="font-bold text-gray-800 mb-4">Analytics</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Google Analytics ID</label>
+                                <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="ga-id">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Facebook Pixel ID</label>
+                                <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="fb-pixel-id">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="font-bold text-gray-800 mb-4">reCAPTCHA</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Site Key</label>
+                                <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="recaptcha-site-key">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Secret Key</label>
+                                <input type="password" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="recaptcha-secret-key">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="integrations-reset">Reset Changes</button>
+                        <button type="submit" class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="preview-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-lg w-full mx-4 rounded-lg shadow-xl">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Preview Changes</h3>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-preview-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                    <p class="text-sm text-blue-800">The following changes will be applied immediately on public pages:</p>
+                </div>
+                
+                <div id="preview-changes" class="space-y-2 max-h-96 overflow-y-auto">
+                    <div class="border border-gray-200 p-3 rounded-lg hover:bg-gray-50">
+                        <p class="text-sm font-medium text-gray-700">Site Name: <span class="text-blue-600" id="preview-site-name"></span></p>
+                    </div>
+                    <div class="border border-gray-200 p-3 rounded-lg hover:bg-gray-50">
+                        <p class="text-sm font-medium text-gray-700">Support Email: <span class="text-blue-600" id="preview-support-email"></span></p>
+                    </div>
+                    <div class="border border-gray-200 p-3 rounded-lg hover:bg-gray-50">
+                        <p class="text-sm font-medium text-gray-700">Support Phone: <span class="text-blue-600" id="preview-support-phone"></span></p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="close-preview">Cancel</button>
+                    <button class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg" id="apply-preview">Apply Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="template-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto rounded-lg shadow-xl">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Edit Email Template</h3>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-template-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Template Name</label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg bg-gray-50" id="template-name" disabled>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="template-subject">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Available Variables</label>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-gray-100 px-3 py-1.5 text-sm text-gray-700 border border-gray-200 rounded cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors" onclick="insertVariable('{{ user.name }}')">{{ user.name }}</span>
+                        <span class="bg-gray-100 px-3 py-1.5 text-sm text-gray-700 border border-gray-200 rounded cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors" onclick="insertVariable('{{ user.email }}')">{{ user.email }}</span>
+                        <span class="bg-gray-100 px-3 py-1.5 text-sm text-gray-700 border border-gray-200 rounded cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors" onclick="insertVariable('{{ site.name }}')">{{ site.name }}</span>
+                        <span class="bg-gray-100 px-3 py-1.5 text-sm text-gray-700 border border-gray-200 rounded cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors" onclick="insertVariable('{{ site.url }}')">{{ site.url }}</span>
+                        <span class="bg-gray-100 px-3 py-1.5 text-sm text-gray-700 border border-gray-200 rounded cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors" onclick="insertVariable('{{ support.email }}')">{{ support.email }}</span>
+                        <span class="bg-gray-100 px-3 py-1.5 text-sm text-gray-700 border border-gray-200 rounded cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors" onclick="insertVariable('{{ support.phone }}')">{{ support.phone }}</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Body (HTML)</label>
+                    <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg font-mono text-sm" id="template-body" rows="10"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="cancel-template">Cancel</button>
+                    <button class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg" id="save-template">Save Template</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6 rounded-lg shadow-xl">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Confirm Changes</h3>
+        
+        <div class="space-y-4">
+            <p class="text-gray-600">Are you sure you want to save these changes? They will be applied immediately to all public pages.</p>
+            
+            <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                <p class="text-sm text-yellow-800 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    This action cannot be undone.
+                </p>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-4">
+                <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2 rounded-lg" id="cancel-confirm">Cancel</button>
+                <button class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-lg" id="confirm-save">Confirm & Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="hidden fixed bottom-4 right-4 bg-white border border-gray-200 shadow-lg rounded-lg p-4 max-w-sm z-50"></div>
+
+<script>
+let currentTab = 'general';
+let originalSettings = {};
+let pendingChanges = {};
+let currentTemplate = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+    setupTabs();
+    loadAllSettings();
+    setupEventListeners();
+    setupRealTimeUpdates();
+});
+
+function setupTabs() {
+    document.querySelectorAll('.tab-link').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabName = this.dataset.tab;
+            
+            document.querySelectorAll('.tab-link').forEach(t => {
+                t.classList.remove('border-blue-600', 'text-blue-600');
+                t.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            this.classList.remove('border-transparent', 'text-gray-500');
+            this.classList.add('border-blue-600', 'text-blue-600');
+            
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.add('hidden');
+            });
+            
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            currentTab = tabName;
+            checkForPendingChanges(tabName);
+        });
+    });
+}
+
+function setupEventListeners() {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            showConfirmModal(this.id);
+        });
+    });
+
+    document.getElementById('general-preview').addEventListener('click', showPreviewModal);
+    document.getElementById('pricing-preview').addEventListener('click', showPriceCalculatorPreview);
+    
+    document.querySelectorAll('.edit-template-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const template = this.dataset.template;
+            loadEmailTemplate(template);
+        });
+    });
+
+    document.getElementById('test-email').addEventListener('click', sendTestEmail);
+    document.getElementById('test-stripe').addEventListener('click', testStripeConnection);
+    document.getElementById('test-paypal').addEventListener('click', testPayPalConnection);
+
+    document.getElementById('general-reset').addEventListener('click', () => resetForm('general'));
+    document.getElementById('pricing-reset').addEventListener('click', () => resetForm('pricing'));
+    document.getElementById('email-reset').addEventListener('click', () => resetForm('email'));
+    document.getElementById('security-reset').addEventListener('click', () => resetForm('security'));
+    document.getElementById('integrations-reset').addEventListener('click', () => resetForm('integrations'));
+
+    document.getElementById('close-preview-modal').addEventListener('click', () => {
+        document.getElementById('preview-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('close-preview').addEventListener('click', () => {
+        document.getElementById('preview-modal').classList.add('hidden');
+    });
+
+    document.getElementById('apply-preview').addEventListener('click', function() {
+        document.getElementById('preview-modal').classList.add('hidden');
+        saveChanges(currentTab);
+    });
+
+    document.getElementById('close-template-modal').addEventListener('click', () => {
+        document.getElementById('template-modal').classList.add('hidden');
+    });
+
+    document.getElementById('cancel-template').addEventListener('click', () => {
+        document.getElementById('template-modal').classList.add('hidden');
+    });
+
+    document.getElementById('save-template').addEventListener('click', saveEmailTemplate);
+
+    document.getElementById('cancel-confirm').addEventListener('click', () => {
+        document.getElementById('confirm-modal').classList.add('hidden');
+    });
+
+    document.getElementById('confirm-save').addEventListener('click', function() {
+        document.getElementById('confirm-modal').classList.add('hidden');
+        saveChanges(currentTab);
+    });
+
+    document.getElementById('logo-upload').addEventListener('change', handleLogoUpload);
+    document.getElementById('favicon-upload').addEventListener('change', handleFaviconUpload);
+
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('change', function() {
+            trackChanges(currentTab);
+        });
+        input.addEventListener('input', function() {
+            trackChanges(currentTab);
+        });
+    });
+}
+
+function setupRealTimeUpdates() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/admin/settings/`);
+
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'settings_updated' && data.section !== currentTab) {
+            showToast(`${data.section} settings were updated by another admin`, 'info');
+        }
+    };
+}
+
+async function loadAllSettings() {
+    try {
+        const settings = await api.get('/admin/settings/');
+        originalSettings = settings;
+        populateSettings(settings);
+        updateLastSavedTimes();
+    } catch (error) {
+        showToast('Failed to load settings', 'error');
+    }
+}
+
+function populateSettings(settings) {
+    if (settings.general) {
+        document.getElementById('site-name').value = settings.general.site_name || '';
+        document.getElementById('site-url').value = settings.general.site_url || '';
+        document.getElementById('support-email').value = settings.general.support_email || '';
+        document.getElementById('support-phone').value = settings.general.support_phone || '';
+        document.getElementById('support-address').value = settings.general.support_address || '';
+        document.getElementById('site-description').value = settings.general.site_description || '';
+        document.getElementById('facebook-url').value = settings.general.facebook_url || '';
+        document.getElementById('twitter-url').value = settings.general.twitter_url || '';
+        document.getElementById('linkedin-url').value = settings.general.linkedin_url || '';
+        document.getElementById('instagram-url').value = settings.general.instagram_url || '';
+        document.getElementById('working-hours').value = settings.general.working_hours || '';
+        
+        const maintenance = settings.general.maintenance_mode ? 'on' : 'off';
+        const maintenanceRadio = document.querySelector(`input[name="maintenance"][value="${maintenance}"]`);
+        if (maintenanceRadio) maintenanceRadio.checked = true;
+        
+        document.getElementById('maintenance-message').value = settings.general.maintenance_message || '';
+        
+        if (settings.general.logo_url) {
+            document.getElementById('logo-preview').src = settings.general.logo_url;
+            document.getElementById('logo-preview').classList.remove('hidden');
+            document.getElementById('logo-placeholder').classList.add('hidden');
+        }
+        
+        if (settings.general.favicon_url) {
+            document.getElementById('favicon-preview').src = settings.general.favicon_url;
+            document.getElementById('favicon-preview').classList.remove('hidden');
+            document.getElementById('favicon-placeholder').classList.add('hidden');
+        }
+    }
+    
+    if (settings.pricing) {
+        document.getElementById('rate-high-school').value = settings.pricing.high_school || '';
+        document.getElementById('rate-undergraduate').value = settings.pricing.undergraduate || '';
+        document.getElementById('rate-masters').value = settings.pricing.masters || '';
+        document.getElementById('rate-phd').value = settings.pricing.phd || '';
+        
+        document.getElementById('urgency-14').value = settings.pricing.urgency_14 || '1.0';
+        document.getElementById('urgency-7').value = settings.pricing.urgency_7 || '1.1';
+        document.getElementById('urgency-5').value = settings.pricing.urgency_5 || '1.2';
+        document.getElementById('urgency-3').value = settings.pricing.urgency_3 || '1.3';
+        document.getElementById('urgency-48').value = settings.pricing.urgency_48 || '1.5';
+        document.getElementById('urgency-24').value = settings.pricing.urgency_24 || '2.0';
+        document.getElementById('urgency-12').value = settings.pricing.urgency_12 || '2.5';
+        
+        document.getElementById('service-plagiarism').value = settings.pricing.plagiarism_report || '';
+        document.getElementById('service-abstract').value = settings.pricing.abstract || '';
+        document.getElementById('service-outline').value = settings.pricing.outline || '';
+        document.getElementById('service-bibliography').value = settings.pricing.bibliography || '';
+    }
+    
+    if (settings.email) {
+        document.getElementById('smtp-host').value = settings.email.smtp_host || '';
+        document.getElementById('smtp-port').value = settings.email.smtp_port || '';
+        document.getElementById('smtp-username').value = settings.email.smtp_username || '';
+        document.getElementById('smtp-password').value = settings.email.smtp_password || '';
+        document.getElementById('from-email').value = settings.email.from_email || '';
+        document.getElementById('from-name').value = settings.email.from_name || '';
+        document.getElementById('smtp-encryption').value = settings.email.smtp_encryption || 'tls';
+    }
+    
+    if (settings.security) {
+        document.getElementById('max-login-attempts').value = settings.security.max_login_attempts || '5';
+        document.getElementById('lockout-duration').value = settings.security.lockout_duration || '30';
+        document.getElementById('session-timeout').value = settings.security.session_timeout || '60';
+        
+        document.getElementById('require-uppercase').checked = settings.security.require_uppercase || false;
+        document.getElementById('require-lowercase').checked = settings.security.require_lowercase || false;
+        document.getElementById('require-number').checked = settings.security.require_number || false;
+        document.getElementById('require-special').checked = settings.security.require_special || false;
+        document.getElementById('min-password-length').value = settings.security.min_password_length || '8';
+        
+        const twoFactorRadio = document.querySelector(`input[name="2fa-required"][value="${settings.security.two_factor || 'optional'}"]`);
+        if (twoFactorRadio) twoFactorRadio.checked = true;
+        
+        document.getElementById('moderate-orders').checked = settings.security.moderate_orders || false;
+        document.getElementById('moderate-messages').checked = settings.security.moderate_messages || false;
+        document.getElementById('ip-whitelist').value = (settings.security.ip_whitelist || []).join('\n');
+    }
+    
+    if (settings.integrations) {
+        document.getElementById('stripe-publishable-key').value = settings.integrations.stripe_publishable_key || '';
+        document.getElementById('stripe-secret-key').value = settings.integrations.stripe_secret_key || '';
+        document.getElementById('stripe-webhook-secret').value = settings.integrations.stripe_webhook_secret || '';
+        document.getElementById('stripe-mode').value = settings.integrations.stripe_mode || 'test';
+        
+        document.getElementById('paypal-client-id').value = settings.integrations.paypal_client_id || '';
+        document.getElementById('paypal-secret').value = settings.integrations.paypal_secret || '';
+        document.getElementById('paypal-mode').value = settings.integrations.paypal_mode || 'sandbox';
+        
+        document.getElementById('ga-id').value = settings.integrations.google_analytics_id || '';
+        document.getElementById('fb-pixel-id').value = settings.integrations.facebook_pixel_id || '';
+        
+        document.getElementById('recaptcha-site-key').value = settings.integrations.recaptcha_site_key || '';
+        document.getElementById('recaptcha-secret-key').value = settings.integrations.recaptcha_secret_key || '';
+    }
+}
+
+function trackChanges(section) {
+    const form = document.getElementById(`${section}-form`);
+    const formData = new FormData(form);
+    const currentValues = Object.fromEntries(formData.entries());
+    
+    const hasChanges = Object.keys(currentValues).some(key => {
+        const originalValue = originalSettings[section]?.[key]?.toString() || '';
+        return currentValues[key] !== originalValue;
+    });
+    
+    const statusIndicator = document.getElementById(`${section}-save-status`);
+    const lastSavedSpan = document.getElementById(`${section}-last-saved`);
+    
+    if (hasChanges) {
+        statusIndicator.classList.remove('bg-green-500');
+        statusIndicator.classList.add('bg-yellow-500');
+        lastSavedSpan.textContent = 'Unsaved changes';
+    } else {
+        statusIndicator.classList.remove('bg-yellow-500');
+        statusIndicator.classList.add('bg-green-500');
+        updateLastSavedTime(section);
+    }
+    
+    pendingChanges[section] = hasChanges ? currentValues : null;
+}
+
+function checkForPendingChanges(section) {
+    if (pendingChanges[section]) {
+        showToast('You have unsaved changes in this section', 'warning');
+    }
+}
+
+function showConfirmModal(formId) {
+    currentTab = formId.replace('-form', '');
+    document.getElementById('confirm-modal').classList.remove('hidden');
+}
+
+async function saveChanges(section) {
+    const form = document.getElementById(`${section}-form`);
+    const formData = new FormData(form);
+    const settings = Object.fromEntries(formData.entries());
+    
+    if (section === 'general') {
+        settings.maintenance_mode = document.querySelector('input[name="maintenance"]:checked')?.value === 'on';
+    }
+    
+    if (section === 'security') {
+        settings.require_uppercase = document.getElementById('require-uppercase').checked;
+        settings.require_lowercase = document.getElementById('require-lowercase').checked;
+        settings.require_number = document.getElementById('require-number').checked;
+        settings.require_special = document.getElementById('require-special').checked;
+        settings.moderate_orders = document.getElementById('moderate-orders').checked;
+        settings.moderate_messages = document.getElementById('moderate-messages').checked;
+        settings.ip_whitelist = document.getElementById('ip-whitelist').value.split('\n').filter(ip => ip.trim());
+    }
+    
+    try {
+        await api.post('/admin/settings/', {
+            section: section,
+            settings: settings
+        });
+        
+        originalSettings[section] = settings;
+        pendingChanges[section] = null;
+        
+        const statusIndicator = document.getElementById(`${section}-save-status`);
+        statusIndicator.classList.remove('bg-yellow-500');
+        statusIndicator.classList.add('bg-green-500');
+        
+        updateLastSavedTime(section);
+        showToast('Settings saved successfully', 'success');
+        
+        if (section === 'general') {
+            updatePublicPages(settings);
+        }
+        
+    } catch (error) {
+        showToast('Failed to save settings', 'error');
+    }
+}
+
+function updatePublicPages(settings) {
+    const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/public/updates/`);
+    ws.onopen = function() {
+        ws.send(JSON.stringify({
+            type: 'settings_update',
+            settings: settings
+        }));
+        ws.close();
+    };
+}
+
+function showPreviewModal() {
+    document.getElementById('preview-site-name').textContent = document.getElementById('site-name').value || 'Not set';
+    document.getElementById('preview-support-email').textContent = document.getElementById('support-email').value || 'Not set';
+    document.getElementById('preview-support-phone').textContent = document.getElementById('support-phone').value || 'Not set';
+    
+    document.getElementById('preview-modal').classList.remove('hidden');
+}
+
+function showPriceCalculatorPreview() {
+    const calculator = document.createElement('div');
+    calculator.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    calculator.innerHTML = `
+        <div class="bg-white max-w-md w-full mx-4 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Price Calculator Preview</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm mb-2">Academic Level</label>
+                    <select class="w-full border p-2 rounded" id="preview-level">
+                        <option value="highschool">High School ($${document.getElementById('rate-high-school').value || '10'}/page)</option>
+                        <option value="undergrad">Undergraduate ($${document.getElementById('rate-undergraduate').value || '12'}/page)</option>
+                        <option value="masters">Master's ($${document.getElementById('rate-masters').value || '18'}/page)</option>
+                        <option value="phd">PhD ($${document.getElementById('rate-phd').value || '25'}/page)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm mb-2">Pages</label>
+                    <input type="number" class="w-full border p-2 rounded" id="preview-pages" value="1" min="1">
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <p class="text-sm text-gray-600">Estimated Price:</p>
+                    <p class="text-2xl font-bold text-blue-600" id="preview-total">$0.00</p>
+                </div>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="this.closest('.fixed').remove()">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(calculator);
+    
+    document.getElementById('preview-level').addEventListener('change', updatePreviewPrice);
+    document.getElementById('preview-pages').addEventListener('input', updatePreviewPrice);
+}
+
+function updatePreviewPrice() {
+    const level = document.getElementById('preview-level').value;
+    const pages = parseInt(document.getElementById('preview-pages').value) || 1;
+    let rate = 0;
+    
+    if (level === 'highschool') rate = parseFloat(document.getElementById('rate-high-school').value) || 10;
+    if (level === 'undergrad') rate = parseFloat(document.getElementById('rate-undergraduate').value) || 12;
+    if (level === 'masters') rate = parseFloat(document.getElementById('rate-masters').value) || 18;
+    if (level === 'phd') rate = parseFloat(document.getElementById('rate-phd').value) || 25;
+    
+    document.getElementById('preview-total').textContent = `$${(rate * pages).toFixed(2)}`;
+}
+
+async function loadEmailTemplate(template) {
+    currentTemplate = template;
+    document.getElementById('template-modal').classList.remove('hidden');
+    
+    try {
+        const templateData = await api.get(`/admin/settings/email-template/${template}/`);
+        document.getElementById('template-name').value = templateData.name || template;
+        document.getElementById('template-subject').value = templateData.subject || '';
+        document.getElementById('template-body').value = templateData.body || '';
+    } catch (error) {
+        document.getElementById('template-subject').value = '';
+        document.getElementById('template-body').value = '';
+    }
+}
+
+async function saveEmailTemplate() {
+    const template = {
+        name: currentTemplate,
+        subject: document.getElementById('template-subject').value,
+        body: document.getElementById('template-body').value
+    };
+    
+    try {
+        await api.post('/admin/settings/email-template/', template);
+        document.getElementById('template-modal').classList.add('hidden');
+        showToast('Email template saved successfully', 'success');
+    } catch (error) {
+        showToast('Failed to save email template', 'error');
+    }
+}
+
+function insertVariable(variable) {
+    const body = document.getElementById('template-body');
+    const start = body.selectionStart;
+    const end = body.selectionEnd;
+    const text = body.value;
+    body.value = text.substring(0, start) + variable + text.substring(end);
+    body.focus();
+    body.selectionStart = start + variable.length;
+    body.selectionEnd = start + variable.length;
+}
+
+async function sendTestEmail() {
+    try {
+        await api.post('/admin/settings/test-email/', {
+            to: document.getElementById('support-email').value
+        });
+        showToast('Test email sent successfully', 'success');
+    } catch (error) {
+        showToast('Failed to send test email', 'error');
+    }
+}
+
+async function testStripeConnection() {
+    try {
+        await api.post('/admin/settings/test-stripe/', {
+            publishable_key: document.getElementById('stripe-publishable-key').value,
+            secret_key: document.getElementById('stripe-secret-key').value
+        });
+        showToast('Stripe connection successful', 'success');
+    } catch (error) {
+        showToast('Stripe connection failed', 'error');
+    }
+}
+
+async function testPayPalConnection() {
+    try {
+        await api.post('/admin/settings/test-paypal/', {
+            client_id: document.getElementById('paypal-client-id').value,
+            secret: document.getElementById('paypal-secret').value
+        });
+        showToast('PayPal connection successful', 'success');
+    } catch (error) {
+        showToast('PayPal connection failed', 'error');
+    }
+}
+
+function resetForm(section) {
+    if (pendingChanges[section]) {
+        if (confirm('Discard all unsaved changes?')) {
+            populateSettings(originalSettings);
+            pendingChanges[section] = null;
+            trackChanges(section);
+        }
+    } else {
+        populateSettings(originalSettings);
+    }
+}
+
+function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('logo-preview').src = e.target.result;
+            document.getElementById('logo-preview').classList.remove('hidden');
+            document.getElementById('logo-placeholder').classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+        trackChanges('general');
+    }
+}
+
+function handleFaviconUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('favicon-preview').src = e.target.result;
+            document.getElementById('favicon-preview').classList.remove('hidden');
+            document.getElementById('favicon-placeholder').classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+        trackChanges('general');
+    }
+}
+
+function updateLastSavedTimes() {
+    const now = new Date().toLocaleTimeString();
+    document.querySelectorAll('[id$="-last-saved"]').forEach(el => {
+        el.textContent = `Last saved: ${now}`;
+    });
+    document.querySelectorAll('[id$="-save-status"]').forEach(el => {
+        el.classList.add('bg-green-500');
+    });
+}
+
+function updateLastSavedTime(section) {
+    document.getElementById(`${section}-last-saved`).textContent = `Last saved: ${new Date().toLocaleTimeString()}`;
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    const colors = {
+        success: 'bg-green-50 border-green-500 text-green-800',
+        error: 'bg-red-50 border-red-500 text-red-800',
+        warning: 'bg-yellow-50 border-yellow-500 text-yellow-800',
+        info: 'bg-blue-50 border-blue-500 text-blue-800'
+    };
+    
+    toast.className = `fixed bottom-4 right-4 border shadow-lg rounded-lg p-4 max-w-sm z-50 ${colors[type]}`;
+    toast.innerHTML = message;
+    toast.classList.remove('hidden');
+    
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
+}
+</script>
+{% endblock %}

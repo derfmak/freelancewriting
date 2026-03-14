@@ -1,0 +1,81 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Admin Profile - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Admin <span class="text-blue-600">Profile</span></h1>
+            <p class="text-gray-600 mt-1">View and manage your profile information</p>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 p-6">
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Personal Information</h2>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Full Name</p>
+                        <p class="font-medium text-gray-800" id="full-name">{{ user.full_name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Email Address</p>
+                        <p class="font-medium text-gray-800" id="email">{{ user.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Phone</p>
+                        <p class="font-medium text-gray-800" id="phone">{{ user.phone|default:"Not provided" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Role</p>
+                        <p class="font-medium text-gray-800" id="role">{{ user.role }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Member Since</p>
+                        <p class="font-medium text-gray-800">{{ user.date_joined|date:"F j, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Account Statistics</h2>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 border border-blue-100 p-4">
+                        <p class="text-sm text-gray-500">Last Login</p>
+                        <p class="font-medium text-gray-800">{{ user.last_login|date:"F j, Y, g:i a"|default:"Never" }}</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-100 p-4">
+                        <p class="text-sm text-gray-500">Email Verified</p>
+                        <p class="font-medium {% if user.email_verified %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ user.email_verified|yesno:"Yes,No" }}
+                        </p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-100 p-4">
+                        <p class="text-sm text-gray-500">Account Status</p>
+                        <p class="font-medium {% if user.is_suspended %}text-red-600{% else %}text-green-600{% endif %}">
+                            {{ user.is_suspended|yesno:"Suspended,Active" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadProfileStats();
+});
+
+async function loadProfileStats() {
+    try {
+        const stats = await api.get('/admin/dashboard/');
+        document.getElementById('full-name').textContent = stats.admin_name || document.getElementById('full-name').textContent;
+    } catch (error) {
+        console.error('Failed to load profile stats');
+    }
+}
+</script>
+{% endblock %}

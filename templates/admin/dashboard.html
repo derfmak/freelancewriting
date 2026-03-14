@@ -1,0 +1,272 @@
+
+{% extends "admin_base.html" %}
+
+{% block title %}Admin Dashboard - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Admin <span class="text-blue-600">Dashboard</span></h1>
+            <p class="text-gray-600 mt-1">Welcome back, {{ user.full_name }}</p>
+        </div>
+        <div class="text-sm text-gray-500 bg-gray-100 px-4 py-2" id="last-updated"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Total Users</p>
+            <p class="text-3xl font-bold text-gray-900" id="total-users">0</p>
+            <p class="text-sm text-green-600 mt-2" id="new-users">+0 today</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Active Orders</p>
+            <p class="text-3xl font-bold text-gray-900" id="active-orders">0</p>
+            <p class="text-sm text-gray-600 mt-2" id="pending-orders">0 pending</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Revenue</p>
+            <p class="text-3xl font-bold text-gray-900" id="total-revenue">$0</p>
+            <p class="text-sm text-green-600 mt-2" id="revenue-today">+$0 today</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Completion Rate</p>
+            <p class="text-3xl font-bold text-gray-900" id="completion-rate">0%</p>
+            <p class="text-sm text-yellow-600 mt-2" id="avg-rating">★ 0.0</p>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Pending Actions</h2>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-4 bg-yellow-50 border border-yellow-100">
+                    <div>
+                        <p class="font-medium text-gray-800">Orders Pending Approval</p>
+                        <p class="text-sm text-gray-600 mt-1" id="pending-approval">0 orders</p>
+                    </div>
+                    <a href="/admin/orders/?status=pending" class="bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition-colors">Review</a>
+                </div>
+                <div class="flex justify-between items-center p-4 bg-blue-50 border border-blue-100">
+                    <div>
+                        <p class="font-medium text-gray-800">Refund Requests</p>
+                        <p class="text-sm text-gray-600 mt-1" id="refund-requests">0 requests</p>
+                    </div>
+                    <a href="/admin/refunds/" class="bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition-colors">Process</a>
+                </div>
+                <div class="flex justify-between items-center p-4 bg-purple-50 border border-purple-100">
+                    <div>
+                        <p class="font-medium text-gray-800">Unread Messages</p>
+                        <p class="text-sm text-gray-600 mt-1" id="unread-messages">0 messages</p>
+                    </div>
+                    <a href="/admin/messages/" class="bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition-colors">View</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="/admin/orders/pending/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
+                    <i class="fas fa-clock mr-2"></i>Pending
+                </a>
+                <a href="/admin/orders/active/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
+                    <i class="fas fa-spinner mr-2"></i>Active
+                </a>
+                <a href="/admin/users/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
+                    <i class="fas fa-users mr-2"></i>Users
+                </a>
+                <a href="/admin/finances/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
+                    <i class="fas fa-dollar-sign mr-2"></i>Finances
+                </a>
+                <a href="/admin/announcements/create/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
+                    <i class="fas fa-bullhorn mr-2"></i>Announce
+                </a>
+                <a href="/admin/content/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
+                    <i class="fas fa-edit mr-2"></i>Content
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Orders</h2>
+            <div id="recent-orders" class="space-y-3">
+                <div class="text-center text-gray-500 py-8">Loading...</div>
+            </div>
+            <a href="/admin/orders/" class="text-blue-600 text-sm hover:text-blue-700 mt-4 inline-block">View All Orders →</a>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Users</h2>
+            <div id="recent-users" class="space-y-3">
+                <div class="text-center text-gray-500 py-8">Loading...</div>
+            </div>
+            <a href="/admin/users/" class="text-blue-600 text-sm hover:text-blue-700 mt-4 inline-block">View All Users →</a>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+        <div id="recent-activity" class="space-y-3">
+            <div class="text-center text-gray-500 py-8">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardStats();
+    loadRecentOrders();
+    loadRecentUsers();
+    loadRecentActivity();
+    
+    setInterval(loadDashboardStats, 60000);
+});
+
+async function loadDashboardStats() {
+    try {
+        const stats = await api.get('/admin/dashboard/');
+        displayStats(stats);
+        document.getElementById('last-updated').textContent = 
+            `Last updated: ${new Date().toLocaleTimeString()}`;
+    } catch (error) {
+        console.error('Failed to load stats');
+    }
+}
+
+function displayStats(stats) {
+    document.getElementById('total-users').textContent = stats.total_users;
+    document.getElementById('new-users').textContent = `+${stats.new_users_today} today`;
+    document.getElementById('active-orders').textContent = stats.ongoing_orders;
+    document.getElementById('pending-orders').textContent = `${stats.pending_orders} pending`;
+    document.getElementById('total-revenue').textContent = `$${parseFloat(stats.total_revenue).toFixed(2)}`;
+    document.getElementById('revenue-today').textContent = `+$${parseFloat(stats.revenue_today).toFixed(2)} today`;
+    document.getElementById('completion-rate').textContent = `${parseFloat(stats.completion_rate).toFixed(1)}%`;
+    document.getElementById('avg-rating').textContent = `★ ${parseFloat(stats.average_rating).toFixed(1)}`;
+    
+    document.getElementById('pending-approval').textContent = `${stats.pending_orders} orders`;
+    document.getElementById('refund-requests').textContent = '0 requests';
+    document.getElementById('unread-messages').textContent = '0 messages';
+}
+
+async function loadRecentOrders() {
+    try {
+        const orders = await api.get('/admin/orders/?page=1&page_size=5');
+        displayRecentOrders(orders.results || []);
+    } catch (error) {
+        document.getElementById('recent-orders').innerHTML = 
+            '<div class="text-center text-red-500 py-4">Failed to load orders</div>';
+    }
+}
+
+function displayRecentOrders(orders) {
+    const container = document.getElementById('recent-orders');
+    
+    if (orders.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-4">No recent orders</div>';
+        return;
+    }
+    
+    container.innerHTML = orders.map(order => `
+        <div class="border border-gray-200 p-4">
+            <div class="flex justify-between items-start mb-2">
+                <a href="/admin/orders/${order.id}/" class="font-medium text-blue-600 hover:text-blue-700">
+                    #${order.order_number || order.id}
+                </a>
+                <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700">${order.status.replace('_', ' ')}</span>
+            </div>
+            <p class="text-sm text-gray-600">${order.student_name || order.user?.email || 'N/A'}</p>
+            <p class="text-sm text-gray-500 mt-2">$${parseFloat(order.total_price || 0).toFixed(2)}</p>
+        </div>
+    `).join('');
+}
+
+async function loadRecentUsers() {
+    try {
+        const users = await api.get('/admin/users/?page=1&page_size=5');
+        displayRecentUsers(users.results || []);
+    } catch (error) {
+        document.getElementById('recent-users').innerHTML = 
+            '<div class="text-center text-red-500 py-4">Failed to load users</div>';
+    }
+}
+
+function displayRecentUsers(users) {
+    const container = document.getElementById('recent-users');
+    
+    if (users.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-4">No recent users</div>';
+        return;
+    }
+    
+    container.innerHTML = users.map(user => `
+        <div class="border border-gray-200 p-4">
+            <div class="flex justify-between items-start mb-2">
+                <a href="/admin/users/${user.id}/" class="font-medium text-blue-600 hover:text-blue-700">
+                    ${user.full_name || user.email}
+                </a>
+                <span class="text-xs px-2 py-1 ${user.is_suspended ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+                    ${user.is_suspended ? 'Suspended' : 'Active'}
+                </span>
+            </div>
+            <p class="text-sm text-gray-600">${user.email}</p>
+            <p class="text-xs text-gray-500 mt-2">Joined ${new Date(user.date_joined).toLocaleDateString()}</p>
+        </div>
+    `).join('');
+}
+
+async function loadRecentActivity() {
+    try {
+        const logs = await api.get('/admin/logs/?page=1&page_size=10');
+        displayRecentActivity(logs.results || []);
+    } catch (error) {
+        document.getElementById('recent-activity').innerHTML = 
+            '<div class="text-center text-red-500 py-4">Failed to load activity</div>';
+    }
+}
+
+function displayRecentActivity(logs) {
+    const container = document.getElementById('recent-activity');
+    
+    if (logs.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-4">No recent activity</div>';
+        return;
+    }
+    
+    container.innerHTML = logs.map(log => `
+        <div class="border-b border-gray-100 last:border-b-0 py-3">
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-${getActionIcon(log.action_type)} text-blue-600 mt-1 w-4"></i>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-800">
+                        <span class="font-medium">${log.admin_name || 'Admin'}</span>
+                        ${log.action_type.replace(/_/g, ' ')}
+                        ${log.target_user_email ? `user ${log.target_user_email}` : ''}
+                        ${log.target_order_number ? `order #${log.target_order_number}` : ''}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">${new Date(log.created_at).toLocaleString()}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getActionIcon(action) {
+    const icons = {
+        'user_suspend': 'ban',
+        'user_reactivate': 'user-check',
+        'user_delete': 'user-minus',
+        'order_approve': 'check-circle',
+        'order_reject': 'times-circle',
+        'order_deliver': 'file-download',
+        'refund_approve': 'undo-alt',
+        'refund_deny': 'ban',
+        'content_edit': 'edit',
+        'settings_change': 'cog'
+    };
+    return icons[action] || 'history';
+}
+</script>
+{% endblock %}

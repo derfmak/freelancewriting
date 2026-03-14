@@ -1,0 +1,104 @@
+
+{% extends "base.html" %}
+
+{% block title %}How It Works - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    
+    <section class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">How It <span class="text-green-600">Works</span></h1>
+        <div class="w-20 h-1 bg-green-600 mx-auto mb-6"></div>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">Get your academic paper in four simple steps</p>
+    </section>
+
+    <div class="space-y-12 mb-16">
+        <div class="flex flex-col md:flex-row items-start gap-8 border-b border-gray-200 pb-8">
+            <div class="md:w-24 flex-shrink-0">
+                <div class="w-16 h-16 bg-green-600 text-white flex items-center justify-center text-2xl font-bold mx-auto md:mx-0">
+                    1
+                </div>
+            </div>
+            <div class="md:flex-1 text-center md:text-left">
+                <h3 class="text-2xl font-bold mb-3 text-gray-800">Submit Your Requirements</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    Fill out our simple order form with your paper details including academic level, 
+                    paper type, topic, deadline, and any specific instructions.
+                </p>
+                <div class="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium">Academic Level</span>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium">Paper Type</span>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium">Deadline</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-start gap-8 border-b border-gray-200 pb-8">
+            <div class="md:w-24 flex-shrink-0">
+                <div class="w-16 h-16 bg-green-600 text-white flex items-center justify-center text-2xl font-bold mx-auto md:mx-0">
+                    2
+                </div>
+            </div>
+            <div class="md:flex-1 text-center md:text-left">
+                <h3 class="text-2xl font-bold mb-3 text-gray-800">Make Secure Payment</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    Review the calculated price and make a secure payment through our platform. 
+                    Your funds are held securely until you're satisfied with the completed paper.
+                </p>
+                <div class="flex flex-wrap gap-3 mt-3 justify-center md:justify-start">
+                    <i class="fab fa-cc-visa text-2xl text-gray-400 hover:text-green-600 transition-colors"></i>
+                    <i class="fab fa-cc-mastercard text-2xl text-gray-400 hover:text-green-600 transition-colors"></i>
+                    <i class="fab fa-cc-amex text-2xl text-gray-400 hover:text-green-600 transition-colors"></i>
+                    <i class="fab fa-cc-paypal text-2xl text-gray-400 hover:text-green-600 transition-colors"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-start gap-8 border-b border-gray-200 pb-8">
+            <div class="md:w-24 flex-shrink-0">
+                <div class="w-16 h-16 bg-green-600 text-white flex items-center justify-center text-2xl font-bold mx-auto md:mx-0">
+                    3
+                </div>
+            </div>
+            <div class="md:flex-1 text-center md:text-left">
+                <h3 class="text-2xl font-bold mb-3 text-gray-800">Track Progress & Communicate</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    Monitor your order's progress through your dashboard. Communicate directly with 
+                    your writer throughout the writing process.
+                </p>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-start gap-8">
+            <div class="md:w-24 flex-shrink-0">
+                <div class="w-16 h-16 bg-green-600 text-white flex items-center justify-center text-2xl font-bold mx-auto md:mx-0">
+                    4
+                </div>
+            </div>
+            <div class="md:flex-1 text-center md:text-left">
+                <h3 class="text-2xl font-bold mb-3 text-gray-800">Download & Approve</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    Receive notification when your paper is ready. Review the completed work, 
+                    request revisions if needed, and download your final paper.
+                </p>
+                <div class="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium">Free Revisions</span>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium">Money-back</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-100 w-full h-64 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 mb-12">
+        <span class="text-lg">Image Placeholder - How It Works</span>
+    </div>
+
+    <section class="bg-green-600 text-white p-8 text-center">
+        <h2 class="text-2xl font-bold mb-3">Ready to Get Started?</h2>
+        <p class="text-lg mb-6 opacity-90">Join thousands of satisfied students who have already used our service.</p>
+        <a href="/register/" class="inline-block bg-white text-green-600 font-semibold px-8 py-3 hover:bg-gray-100 transition-colors">
+            Create Your Account
+        </a>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,684 @@
+{% extends "student_base.html" %}
+
+{% block title %}Order Details - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Order #<span id="order-number"></span></h1>
+            <p class="text-gray-600 mt-1" id="order-status"></p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/student/orders/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Orders
+            </a>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 space-y-6">
+            
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-4">Order Details</h2>
+                
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <p class="text-sm text-gray-500">Academic Level</p>
+                        <p class="font-medium" id="academic-level"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Paper Type</p>
+                        <p class="font-medium" id="paper-type"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Subject</p>
+                        <p class="font-medium" id="subject"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Pages / Words</p>
+                        <p class="font-medium" id="pages-words"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Deadline</p>
+                        <p class="font-medium" id="deadline"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Format</p>
+                        <p class="font-medium" id="format"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Sources</p>
+                        <p class="font-medium" id="sources"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Created</p>
+                        <p class="font-medium" id="created-at"></p>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <p class="text-sm text-gray-500 mb-2">Topic</p>
+                    <p class="text-gray-800" id="topic"></p>
+                </div>
+
+                <div class="border-t pt-4 mt-4">
+                    <p class="text-sm text-gray-500 mb-2">Instructions</p>
+                    <p class="text-gray-800 whitespace-pre-line" id="instructions"></p>
+                </div>
+
+                <div class="border-t pt-4 mt-4" id="attachments-section">
+                    <p class="text-sm text-gray-500 mb-2">Attachments</p>
+                    <div id="attachments-list" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6" id="delivery-section">
+                <h2 class="text-lg font-semibold mb-4">Delivery</h2>
+                
+                <div id="not-delivered" class="text-center py-8 text-gray-500 hidden">
+                    <i class="fas fa-clock text-4xl mb-3"></i>
+                    <p>Paper not yet delivered</p>
+                    <p class="text-sm mt-2">You'll be notified when the paper is ready</p>
+                </div>
+
+                <div id="delivered-content" class="hidden">
+                    <div class="bg-green-50 p-4 rounded-md mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
+                            <div>
+                                <p class="font-medium">Paper Delivered</p>
+                                <p class="text-sm text-gray-600" id="delivered-at"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-lg p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-file-pdf text-red-500 text-2xl"></i>
+                                <div>
+                                    <p class="font-medium" id="delivered-file-name">paper_final.pdf</p>
+                                    <p class="text-sm text-gray-500" id="delivered-file-size"></p>
+                                </div>
+                            </div>
+                            <a href="#" id="download-file" class="btn btn-primary text-sm" download>
+                                <i class="fas fa-download mr-2"></i>Download
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="plagiarism-report-section" class="hidden">
+                        <h3 class="font-medium mb-2">Plagiarism Report</h3>
+                        <div class="border rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-file-alt text-blue-500 text-2xl"></i>
+                                    <div>
+                                        <p class="font-medium">plagiarism_report.pdf</p>
+                                    </div>
+                                </div>
+                                <a href="#" id="download-plagiarism" class="btn btn-secondary text-sm">
+                                    <i class="fas fa-download mr-2"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 mt-4" id="delivery-actions">
+                        <button class="btn btn-primary flex-1" id="approve-btn">
+                            <i class="fas fa-check mr-2"></i>Approve Paper
+                        </button>
+                        <button class="btn btn-outline flex-1" id="revision-btn">
+                            <i class="fas fa-redo mr-2"></i>Request Revision
+                        </button>
+                    </div>
+
+                    <div class="mt-4 text-sm text-gray-500 text-center">
+                        Auto-approval in <span id="auto-approve-timer"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-4">Progress Tracking</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Order Status</span>
+                        <span class="font-medium" id="progress-status"></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>Order Placed</span>
+                        <span>In Progress</span>
+                        <span>Delivered</span>
+                        <span>Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
+                
+                <div class="space-y-3 mb-4">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Base Price:</span>
+                        <span id="base-price"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Urgency Multiplier:</span>
+                        <span id="multiplier"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Extras:</span>
+                        <span id="extras-price"></span>
+                    </div>
+                    <div class="border-t pt-2 mt-2">
+                        <div class="flex justify-between font-bold">
+                            <span>Total:</span>
+                            <span id="total-price"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <p class="text-sm text-gray-600 mb-2">Payment Status</p>
+                    <p class="font-medium text-green-600" id="payment-status">Paid from wallet</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-4">Actions</h2>
+                
+                <div class="space-y-3" id="action-buttons">
+                    <button class="btn btn-secondary w-full" id="message-btn">
+                        <i class="fas fa-comment mr-2"></i>Send Message
+                    </button>
+                    
+                    <button class="btn btn-outline w-full" id="cancel-btn">
+                        <i class="fas fa-times mr-2"></i>Cancel Order
+                    </button>
+
+                    <button class="btn btn-outline w-full hidden" id="refund-btn">
+                        <i class="fas fa-undo mr-2"></i>Request Refund
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-4">Need Help?</h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    If you have any questions about your order, you can contact support or send a message directly.
+                </p>
+                <a href="/contact/" class="text-blue-600 text-sm hover:underline block mb-2">
+                    <i class="fas fa-envelope mr-2"></i>Contact Support
+                </a>
+                <a href="/faq/" class="text-blue-600 text-sm hover:underline block">
+                    <i class="fas fa-question-circle mr-2"></i>View FAQ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cancel-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold mb-4">Cancel Order</h3>
+        <p class="text-gray-600 mb-4">Are you sure you want to cancel this order?</p>
+        
+        <div class="form-group mb-4">
+            <label class="form-label">Reason for cancellation</label>
+            <select class="form-input" id="cancel-reason">
+                <option value="changed_mind">Changed my mind</option>
+                <option value="found_writer">Found another writer</option>
+                <option value="deadline_issue">Deadline too tight</option>
+                <option value="price_issue">Price too high</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-group mb-4 hidden" id="other-reason-group">
+            <label class="form-label">Please specify</label>
+            <input type="text" class="form-input" id="other-reason">
+        </div>
+
+        <div class="flex space-x-3">
+            <button class="btn btn-secondary flex-1" id="cancel-modal-close">Close</button>
+            <button class="btn btn-danger flex-1" id="confirm-cancel">Confirm Cancellation</button>
+        </div>
+    </div>
+</div>
+
+<div id="revision-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold mb-4">Request Revision</h3>
+        <p class="text-gray-600 mb-4">Please specify what changes you need:</p>
+        
+        <div class="form-group mb-4">
+            <textarea class="form-input" id="revision-notes" rows="4" placeholder="Describe the revisions needed..."></textarea>
+        </div>
+
+        <div class="flex space-x-3">
+            <button class="btn btn-secondary flex-1" id="revision-modal-close">Cancel</button>
+            <button class="btn btn-primary flex-1" id="confirm-revision">Submit Request</button>
+        </div>
+    </div>
+</div>
+
+<div id="refund-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold mb-4">Request Refund</h3>
+        <p class="text-gray-600 mb-4">Please provide the reason for refund request:</p>
+        
+        <div class="form-group mb-4">
+            <label class="form-label">Reason</label>
+            <select class="form-input" id="refund-reason">
+                <option value="quality">Poor quality</option>
+                <option value="deadline">Missed deadline</option>
+                <option value="instructions">Didn't follow instructions</option>
+                <option value="plagiarism">Plagiarism concerns</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-group mb-4">
+            <label class="form-label">Grade received (if applicable)</label>
+            <input type="text" class="form-input" id="refund-grade" placeholder="e.g., F, 45%">
+        </div>
+
+        <div class="form-group mb-4">
+            <label class="form-label">Additional details</label>
+            <textarea class="form-input" id="refund-details" rows="3"></textarea>
+        </div>
+
+        <div class="flex space-x-3">
+            <button class="btn btn-secondary flex-1" id="refund-modal-close">Cancel</button>
+            <button class="btn btn-primary flex-1" id="confirm-refund">Submit Request</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let orderId = window.location.pathname.split('/').filter(Boolean).pop();
+let orderData = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadOrderDetails();
+    setupEventListeners();
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === '1') {
+        showSuccessMessage();
+    }
+});
+
+function setupEventListeners() {
+    document.getElementById('message-btn').addEventListener('click', function() {
+        window.location.href = `/student/messages/order/${orderId}/`;
+    });
+    
+    document.getElementById('cancel-btn').addEventListener('click', function() {
+        document.getElementById('cancel-modal').classList.remove('hidden');
+    });
+    
+    document.getElementById('cancel-modal-close').addEventListener('click', function() {
+        document.getElementById('cancel-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-cancel').addEventListener('click', cancelOrder);
+    
+    document.getElementById('cancel-reason').addEventListener('change', function() {
+        const otherGroup = document.getElementById('other-reason-group');
+        otherGroup.classList.toggle('hidden', this.value !== 'other');
+    });
+    
+    document.getElementById('approve-btn').addEventListener('click', approveOrder);
+    document.getElementById('revision-btn').addEventListener('click', showRevisionModal);
+    
+    document.getElementById('revision-modal-close').addEventListener('click', function() {
+        document.getElementById('revision-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-revision').addEventListener('click', requestRevision);
+    
+    document.getElementById('refund-btn')?.addEventListener('click', function() {
+        document.getElementById('refund-modal').classList.remove('hidden');
+    });
+    
+    document.getElementById('refund-modal-close').addEventListener('click', function() {
+        document.getElementById('refund-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-refund').addEventListener('click', requestRefund);
+}
+
+async function loadOrderDetails() {
+    try {
+        orderData = await api.get(`/orders/${orderId}/`);
+        displayOrderDetails();
+        
+        if (orderData.status === 'awaiting_review') {
+            startAutoApproveTimer();
+        }
+        
+    } catch (error) {
+        alert('Failed to load order details');
+        window.location.href = '/student/orders/';
+    }
+}
+
+function displayOrderDetails() {
+    document.getElementById('order-number').textContent = orderData.order_number || 'N/A';
+    document.getElementById('order-status').innerHTML = `
+        <span class="status-badge status-${orderData.status}">${orderData.status.replace('_', ' ')}</span>
+    `;
+    
+    document.getElementById('academic-level').textContent = orderData.academic_level.replace('_', ' ');
+    document.getElementById('paper-type').textContent = orderData.paper_type.replace('_', ' ');
+    document.getElementById('subject').textContent = orderData.subject;
+    document.getElementById('pages-words').textContent = `${orderData.pages} pages (${orderData.words || orderData.pages * 275} words)`;
+    document.getElementById('deadline').textContent = new Date(orderData.deadline).toLocaleString();
+    document.getElementById('format').textContent = orderData.format.toUpperCase();
+    document.getElementById('sources').textContent = orderData.sources;
+    document.getElementById('created-at').textContent = new Date(orderData.created_at).toLocaleString();
+    document.getElementById('topic').textContent = orderData.topic;
+    document.getElementById('instructions').textContent = orderData.instructions || 'No additional instructions provided.';
+    
+    document.getElementById('base-price').textContent = `$${parseFloat(orderData.base_price).toFixed(2)}`;
+    document.getElementById('multiplier').textContent = `${orderData.urgency_multiplier}x`;
+    document.getElementById('extras-price').textContent = `$${parseFloat(orderData.extras_price).toFixed(2)}`;
+    document.getElementById('total-price').textContent = `$${parseFloat(orderData.total_price).toFixed(2)}`;
+    
+    document.getElementById('progress-status').textContent = orderData.status.replace('_', ' ');
+    
+    let progressPercentage = 0;
+    switch(orderData.status) {
+        case 'pending': progressPercentage = 10; break;
+        case 'ongoing': progressPercentage = 50; break;
+        case 'awaiting_review': progressPercentage = 90; break;
+        case 'completed': progressPercentage = 100; break;
+    }
+    document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+    
+    if (orderData.attachments && orderData.attachments.length > 0) {
+        displayAttachments(orderData.attachments);
+    } else {
+        document.getElementById('attachments-section').classList.add('hidden');
+    }
+    
+    updateDeliverySection();
+    updateActionButtons();
+}
+
+function displayAttachments(attachments) {
+    const list = document.getElementById('attachments-list');
+    list.innerHTML = attachments.map(att => `
+        <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-file text-gray-400"></i>
+                <span class="text-sm">${att.original_name}</span>
+                <span class="text-xs text-gray-500">(${(att.file_size / 1024).toFixed(1)} KB)</span>
+            </div>
+            <a href="${att.file}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-download"></i>
+            </a>
+        </div>
+    `).join('');
+}
+
+function updateDeliverySection() {
+    if (orderData.status === 'pending' || orderData.status === 'ongoing') {
+        document.getElementById('not-delivered').classList.remove('hidden');
+        document.getElementById('delivered-content').classList.add('hidden');
+        return;
+    }
+    
+    document.getElementById('not-delivered').classList.add('hidden');
+    document.getElementById('delivered-content').classList.remove('hidden');
+    
+    if (orderData.delivered_at) {
+        document.getElementById('delivered-at').textContent = 
+            `Delivered on ${new Date(orderData.delivered_at).toLocaleString()}`;
+    }
+    
+    if (orderData.delivered_file) {
+        document.getElementById('delivered-file-name').textContent = orderData.delivered_file.original_name;
+        document.getElementById('delivered-file-size').textContent = 
+            `(${(orderData.delivered_file.file_size / 1024).toFixed(1)} KB)`;
+        document.getElementById('download-file').href = orderData.delivered_file.file;
+    }
+    
+    if (orderData.plagiarism_report && orderData.plagiarism_report_file) {
+        document.getElementById('plagiarism-report-section').classList.remove('hidden');
+        document.getElementById('download-plagiarism').href = orderData.plagiarism_report_file.file;
+    }
+    
+    if (orderData.status === 'completed') {
+        document.getElementById('delivery-actions').classList.add('hidden');
+        document.getElementById('refund-btn').classList.remove('hidden');
+    } else if (orderData.status === 'awaiting_review') {
+        document.getElementById('delivery-actions').classList.remove('hidden');
+    }
+}
+
+function updateActionButtons() {
+    if (['cancelled', 'completed'].includes(orderData.status)) {
+        document.getElementById('cancel-btn').classList.add('hidden');
+        document.getElementById('message-btn').classList.add('hidden');
+    }
+}
+
+function startAutoApproveTimer() {
+    if (!orderData.auto_approve_at) return;
+    
+    const timer = document.getElementById('auto-approve-timer');
+    
+    function updateTimer() {
+        const now = new Date();
+        const autoApprove = new Date(orderData.auto_approve_at);
+        const diff = autoApprove - now;
+        
+        if (diff <= 0) {
+            timer.textContent = 'Auto-approval pending';
+            return;
+        }
+        
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        timer.textContent = `in ${hours}h ${minutes}m`;
+    }
+    
+    updateTimer();
+    setInterval(updateTimer, 60000);
+}
+
+async function cancelOrder() {
+    const reason = document.getElementById('cancel-reason').value;
+    const otherReason = document.getElementById('other-reason').value;
+    
+    const cancelData = {
+        action: 'cancel',
+        reason: reason === 'other' ? otherReason : reason
+    };
+    
+    try {
+        await api.post(`/orders/${orderId}/action/`, cancelData);
+        document.getElementById('cancel-modal').classList.add('hidden');
+        window.location.reload();
+    } catch (error) {
+        alert('Failed to cancel order');
+    }
+}
+
+function showRevisionModal() {
+    document.getElementById('revision-modal').classList.remove('hidden');
+}
+
+async function requestRevision() {
+    const notes = document.getElementById('revision-notes').value;
+    
+    if (!notes.trim()) {
+        alert('Please specify the revisions needed');
+        return;
+    }
+    
+    try {
+        await api.post(`/orders/${orderId}/action/`, {
+            action: 'request_revision',
+            reason: notes
+        });
+        
+        document.getElementById('revision-modal').classList.add('hidden');
+        window.location.reload();
+        
+    } catch (error) {
+        alert('Failed to request revision');
+    }
+}
+
+async function approveOrder() {
+    try {
+        await api.post(`/orders/${orderId}/action/`, {
+            action: 'approve'
+        });
+        
+        if (orderData.rating) {
+            window.location.reload();
+        } else {
+            showRatingModal();
+        }
+        
+    } catch (error) {
+        alert('Failed to approve order');
+    }
+}
+
+function showRatingModal() {
+    const modal = document.getElementById('modal-container');
+    const content = document.getElementById('modal-content');
+    
+    content.innerHTML = `
+        <div class="p-6">
+            <h3 class="text-xl font-bold mb-4">Rate Your Experience</h3>
+            <p class="text-gray-600 mb-6">How would you rate the quality of this paper?</p>
+            
+            <div class="flex justify-center space-x-2 mb-6">
+                ${[1,2,3,4,5].map(star => `
+                    <button class="rating-star text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none" data-rating="${star}">
+                        <i class="fas fa-star"></i>
+                    </button>
+                `).join('')}
+            </div>
+            
+            <div class="form-group mb-4">
+                <label class="form-label">Feedback (Optional)</label>
+                <textarea class="form-input" id="rating-feedback" rows="3" 
+                    placeholder="Share your experience..."></textarea>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button class="btn btn-secondary flex-1" id="skip-rating">Skip</button>
+                <button class="btn btn-primary flex-1" id="submit-rating">Submit Rating</button>
+            </div>
+        </div>
+    `;
+    
+    let selectedRating = 0;
+    
+    content.querySelectorAll('.rating-star').forEach(star => {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.rating);
+            
+            content.querySelectorAll('.rating-star').forEach((s, index) => {
+                if (index < selectedRating) {
+                    s.classList.add('text-yellow-400');
+                    s.classList.remove('text-gray-300');
+                } else {
+                    s.classList.remove('text-yellow-400');
+                    s.classList.add('text-gray-300');
+                }
+            });
+        });
+    });
+    
+    content.querySelector('#skip-rating').addEventListener('click', function() {
+        modal.classList.add('hidden');
+        window.location.href = '/student/orders/';
+    });
+    
+    content.querySelector('#submit-rating').addEventListener('click', async function() {
+        if (selectedRating === 0) {
+            alert('Please select a rating');
+            return;
+        }
+        
+        const feedback = document.getElementById('rating-feedback').value;
+        
+        try {
+            await api.post(`/orders/${orderId}/rate/`, {
+                rating: selectedRating,
+                feedback: feedback
+            });
+            
+            modal.classList.add('hidden');
+            window.location.href = '/student/orders/';
+            
+        } catch (error) {
+            alert('Failed to submit rating');
+        }
+    });
+    
+    modal.classList.remove('hidden');
+}
+
+async function requestRefund() {
+    const reason = document.getElementById('refund-reason').value;
+    const grade = document.getElementById('refund-grade').value;
+    const details = document.getElementById('refund-details').value;
+    
+    try {
+        await api.post(`/orders/${orderId}/action/`, {
+            action: 'request_refund',
+            reason: reason,
+            grade: grade,
+            details: details
+        });
+        
+        document.getElementById('refund-modal').classList.add('hidden');
+        alert('Refund request submitted successfully');
+        window.location.reload();
+        
+    } catch (error) {
+        alert('Failed to submit refund request');
+    }
+}
+
+function showSuccessMessage() {
+    const modal = document.getElementById('modal-container');
+    const content = document.getElementById('modal-content');
+    
+    content.innerHTML = `
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Order Placed Successfully!</h3>
+            <p class="text-gray-600 mb-6">Your order #${orderData?.order_number || ''} has been submitted.</p>
+            <button class="btn btn-primary w-full" id="close-success">Continue</button>
+        </div>
+    `;
+    
+    content.querySelector('#close-success').addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    modal.classList.remove('hidden');
+}
+</script>
+{% endblock %}
