@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Admin Portal - Academic Write{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        @media (min-width: 1280px) {
+            .container {
+                padding: 0 2rem;
+            }
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+            width: 100%;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 4rem;
+            width: 100%;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            background: white;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #1e40af;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.2;
+            border: 2px solid white;
+            flex-shrink: 0;
+        }
+
+        .logo:hover {
+            background: #fbbf24;
+            color: #1e40af;
+            transform: scale(1.05);
+        }
+
+        .admin-nav {
+            display: none;
+            align-items: center;
+            height: 100%;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .admin-nav a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            margin: 0 0.1rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border-radius: 4px;
+        }
+
+        .admin-nav a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .admin-nav a.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid #fbbf24;
+        }
+
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-menu-button {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border-radius: 4px;
+            max-width: 180px;
+        }
+
+        .user-menu-button span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-menu-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .user-menu-dropdown {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.5rem;
+            width: 12rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-0.5rem);
+            transition: all 0.3s ease;
+            z-index: 100;
+            border-radius: 4px;
+        }
+
+        .user-menu-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-menu-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #1e293b;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu-item:hover {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .user-menu-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 0.5rem 0;
+        }
+
+        .notification-bell {
+            position: relative;
+            padding: 0.5rem 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            min-width: 1.2rem;
+            height: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #1e40af;
+            border-radius: 50%;
+        }
+
+        .mobile-menu-button {
+            display: block;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 0.75rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            border-radius: 4px;
+        }
+
+        .mobile-menu-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 4rem;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            padding: 1.5rem;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 40;
+            overflow-y: auto;
+            border-top: 2px solid #1e40af;
+        }
+
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .mobile-nav a {
+            color: #1e293b;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .mobile-nav a:hover {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .mobile-nav a.active {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 3px solid #1e40af;
+        }
+
+        .mobile-logout {
+            margin-top: 2rem;
+            padding: 0.75rem 1rem;
+            background: #ef4444;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-logout:hover {
+            background: #dc2626;
+        }
+
+        .main-content {
+            min-height: calc(100vh - 4rem);
+            padding: 2rem 0;
+            background: white;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            padding: 1.5rem 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #fbbf24;
+        }
+
+        .copyright {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+        }
+
+        @media (min-width: 1024px) {
+            .admin-nav {
+                display: flex;
+            }
+            
+            .mobile-menu-button {
+                display: none;
+            }
+        }
+
+        @media (max-width: 1280px) {
+            .admin-nav a {
+                padding: 0.5rem 0.5rem;
+                font-size: 0.8rem;
+            }
+            
+            .user-menu-button {
+                max-width: 140px;
+            }
+        }
+
+        .active-page {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-bottom: 2px solid #fbbf24 !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div id="app">
+        {% if user.is_authenticated and user.role == 'admin' %}
+        <header class="admin-header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/admin/dashboard/" class="logo">AW</a>
+                    
+                    <div class="admin-nav">
+                        <a href="/admin/dashboard/" class="{% if request.path == '/admin/dashboard/' %}active{% endif %}">DASHBOARD</a>
+                        <a href="/admin/orders/" class="{% if request.path == '/admin/orders/' %}active{% endif %}">ORDERS</a>
+                        <a href="/admin/users/" class="{% if request.path == '/admin/users/' %}active{% endif %}">USERS</a>
+                        <a href="/admin/finances/" class="{% if request.path == '/admin/finances/' %}active{% endif %}">FINANCES</a>
+                        <a href="/admin/refunds/" class="{% if request.path == '/admin/refunds/' %}active{% endif %}">REFUNDS</a>
+                        <a href="/admin/announcements/" class="{% if request.path == '/admin/announcements/' %}active{% endif %}">ANNOUNCEMENTS</a>
+                        <a href="/admin/content/" class="{% if request.path == '/admin/content/' %}active{% endif %}">CONTENT</a>
+                        <a href="/admin/logs/" class="{% if request.path == '/admin/logs/' %}active{% endif %}">LOGS</a>
+                        <a href="/admin/messages/" class="relative {% if request.path == '/admin/messages/' %}active{% endif %}" id="messagesLink">
+                            MESSAGES
+                            <span class="notification-badge hidden" id="unreadMessagesBadge">0</span>
+                        </a>
+                        <a href="/admin/settings/" class="{% if request.path == '/admin/settings/' %}active{% endif %}">SETTINGS</a>
+                    </div>
+
+                    <div class="auth-section">
+                        <button class="notification-bell" id="notificationBell">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge hidden" id="notificationBadge">0</span>
+                        </button>
+                        
+                        <div class="user-menu">
+                            <button class="user-menu-button" id="userMenuButton">
+                                <i class="fas fa-user-circle"></i>
+                                <span>{{ user.full_name|default:user.email|truncatechars:15 }}</span>
+                                <i class="fas fa-chevron-down fa-xs"></i>
+                            </button>
+                            
+                            <div class="user-menu-dropdown" id="userMenuDropdown">
+                                <a href="/admin/profile/" class="user-menu-item">Profile</a>
+                                <a href="/admin/settings/" class="user-menu-item">Settings</a>
+                                <div class="user-menu-divider"></div>
+                                <a href="#" class="user-menu-item" id="logoutBtn">Logout</a>
+                            </div>
+                        </div>
+
+                        <button class="mobile-menu-button" id="mobileMenuButton">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-nav">
+                <a href="/admin/dashboard/">DASHBOARD</a>
+                <a href="/admin/orders/">ORDERS</a>
+                <a href="/admin/users/">USERS</a>
+                <a href="/admin/finances/">FINANCES</a>
+                <a href="/admin/refunds/">REFUNDS</a>
+                <a href="/admin/announcements/">ANNOUNCEMENTS</a>
+                <a href="/admin/content/">CONTENT</a>
+                <a href="/admin/logs/">LOGS</a>
+                <a href="/admin/messages/">MESSAGES</a>
+                <a href="/admin/settings/">SETTINGS</a>
+                <div class="mobile-logout" id="mobileLogoutBtn">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="min-h-screen flex items-center justify-center bg-gray-50">
+            <div class="max-w-md w-full bg-white border border-gray-200 p-8 text-center">
+                <div class="w-20 h-20 bg-red-100 text-red-600 flex items-center justify-center text-4xl mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+                <p class="text-gray-600 mb-6">You must be logged in as an administrator to access this page.</p>
+                <a href="/login/" class="inline-block bg-blue-600 text-white px-6 py-3 font-medium hover:bg-blue-700 transition-colors">Go to Login</a>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if user.is_authenticated and user.role == 'admin' %}
+        <main class="main-content">
+            <div class="container">
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for message in messages %}
+                            <div class="p-3 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 text-green-700 border-l-4 border-green-500{% else %}bg-blue-50 text-blue-700 border-l-4 border-blue-500{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container mx-auto px-4">
+                <div class="text-center text-white">
+                    <div class="mb-4">
+                        <i class="fas fa-map-marker-alt text-yellow-400 mr-2"></i>
+                        <span>Nairobi, Kenya</span>
+                    </div>
+                    <div class="mb-4">
+                        <i class="fas fa-envelope text-yellow-400 mr-2"></i>
+                        <span>fredrickwambua@gmail.com</span>
+                    </div>
+                    <div class="mb-6">
+                        <i class="fas fa-phone text-yellow-400 mr-2"></i>
+                        <span>0740618550</span>
+                    </div>
+                    <div class="border-t border-white border-opacity-20 pt-6">
+                        <p class="text-sm text-white text-opacity-80">
+                            &copy; 2026 Academic Write. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay">
+            <div class="bg-white max-w-md w-full mx-4 p-6" id="modalContent"></div>
+        </div>
+
+        <div class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" id="loadingOverlay">
+            <div class="bg-white p-6 rounded-lg">
+                <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent animate-spin"></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/static/js/utils/api.js"></script>
+    <script src="/static/js/utils/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if user.is_authenticated and user.role == 'admin' %}
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mobileMenu.classList.toggle('open');
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.toggle('fa-bars');
+                        icon.classList.toggle('fa-times');
+                    }
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!mobileMenu.contains(e.target) && !mobileMenuButton.contains(e.target)) {
+                        mobileMenu.classList.remove('open');
+                        const icon = mobileMenuButton.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                        }
+                    }
+                });
+            }
+
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userMenuDropdown = document.getElementById('userMenuDropdown');
+            
+            if (userMenuButton && userMenuDropdown) {
+                userMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userMenuDropdown.classList.toggle('show');
+                });
+                
+                document.addEventListener('click', function() {
+                    userMenuDropdown.classList.remove('show');
+                });
+                
+                userMenuDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            const notificationBell = document.getElementById('notificationBell');
+            if (notificationBell) {
+                notificationBell.addEventListener('click', function() {
+                    window.location.href = '/notifications/';
+                });
+            }
+
+            async function handleLogout() {
+                try {
+                    if (window.Loading) window.Loading.show();
+                    const refreshToken = auth.getRefreshToken();
+                    await api.post('/auth/logout/', { refresh: refreshToken });
+                    auth.clearTokens();
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    auth.clearTokens();
+                    window.location.href = '/';
+                } finally {
+                    if (window.Loading) window.Loading.hide();
+                }
+            }
+
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await handleLogout();
+                });
+            }
+
+            const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+            if (mobileLogoutBtn) {
+                mobileLogoutBtn.addEventListener('click', async function() {
+                    await handleLogout();
+                });
+            }
+
+            loadUnreadCounts();
+            setInterval(loadUnreadCounts, 30000);
+            {% endif %}
+        });
+
+        async function loadUnreadCounts() {
+            try {
+                const response = await api.get('/messages/unread/');
+                const badge = document.getElementById('unreadMessagesBadge');
+                if (response.unread_count > 0) {
+                    badge.textContent = response.unread_count > 9 ? '9+' : response.unread_count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Failed to load unread counts');
+            }
+        }
+
+        window.Modal = {
+            show: function(content) {
+                const modal = document.getElementById('modalOverlay');
+                const modalContent = document.getElementById('modalContent');
+                if (modalContent) {
+                    modalContent.innerHTML = content;
+                }
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            },
+            hide: function() {
+                const modal = document.getElementById('modalOverlay');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.Loading = {
+            show: function() {
+                const loading = document.getElementById('loadingOverlay');
+                loading.classList.remove('hidden');
+                loading.classList.add('flex');
+            },
+            hide: function() {
+                const loading = document.getElementById('loadingOverlay');
+                loading.classList.add('hidden');
+                loading.classList.remove('flex');
+            }
+        };
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

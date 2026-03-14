@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    
+    <section class="text-center mb-16">
+        <h1 class="text-5xl font-bold text-gray-900 mb-4">About <span class="text-green-600">Us</span></h1>
+        <div class="w-20 h-1 bg-green-600 mx-auto mb-6"></div>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">Your trusted partner in academic excellence since 2020</p>
+    </section>
+
+    <section class="grid md:grid-cols-2 gap-12 items-center mb-16">
+        <div>
+            <h2 class="text-3xl font-bold mb-4 text-gray-800">Our <span class="text-green-600">Story</span></h2>
+            <p class="text-gray-600 mb-4 leading-relaxed">
+                Founded by a team of academic professionals, we recognized the need for reliable, 
+                high-quality academic writing assistance. Our platform was built to connect students 
+                with expert writers who understand the demands of modern education.
+            </p>
+            <p class="text-gray-600 leading-relaxed">
+                Today, we've helped thousands of students across the globe achieve their academic goals, 
+                maintaining a 98% satisfaction rate and building lasting relationships with our clients.
+            </p>
+        </div>
+        <div class="bg-gray-100 w-full h-80 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300">
+            <span class="text-lg">Image Placeholder - About Story</span>
+        </div>
+    </section>
+
+    <section class="grid md:grid-cols-2 gap-8 mb-16">
+        <div class="bg-white border border-gray-200 p-8 hover:border-green-600 transition duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-gray-800">Our <span class="text-green-600">Mission</span></h3>
+            <p class="text-gray-600 leading-relaxed">
+                To provide accessible, high-quality academic support that helps students excel in their 
+                studies while maintaining the highest standards of academic integrity.
+            </p>
+        </div>
+        <div class="bg-white border border-gray-200 p-8 hover:border-green-600 transition duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-gray-800">Our <span class="text-green-600">Vision</span></h3>
+            <p class="text-gray-600 leading-relaxed">
+                To become the world's most trusted platform for academic writing assistance, 
+                known for quality, reliability, and student success.
+            </p>
+        </div>
+    </section>
+
+    <section class="grid md:grid-cols-3 gap-8 mb-16">
+        <div class="bg-green-50 p-8 text-center border border-green-100">
+            <div class="text-4xl font-bold text-green-600 mb-2">5000+</div>
+            <p class="text-gray-600">Orders Completed</p>
+        </div>
+        <div class="bg-green-50 p-8 text-center border border-green-100">
+            <div class="text-4xl font-bold text-green-600 mb-2">98%</div>
+            <p class="text-gray-600">Satisfaction Rate</p>
+        </div>
+        <div class="bg-green-50 p-8 text-center border border-green-100">
+            <div class="text-4xl font-bold text-green-600 mb-2">24/7</div>
+            <p class="text-gray-600">Support Available</p>
+        </div>
+    </section>
+
+    <section class="grid md:grid-cols-2 gap-12 items-center mb-16">
+        <div class="bg-gray-100 w-full h-80 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 order-2 md:order-1">
+            <span class="text-lg">Image Placeholder - Team</span>
+        </div>
+        <div class="order-1 md:order-2">
+            <h2 class="text-3xl font-bold mb-4 text-gray-800">Our <span class="text-green-600">Team</span></h2>
+            <p class="text-gray-600 mb-4 leading-relaxed">
+                We have a dedicated team of professional writers with advanced degrees from top universities worldwide.
+            </p>
+            <p class="text-gray-600 leading-relaxed">
+                Each writer undergoes a rigorous selection process and specializes in specific subject areas to ensure the highest quality work.
+            </p>
+        </div>
+    </section>
+
+    <section class="bg-green-600 text-white p-12 text-center">
+        <h2 class="text-3xl font-bold mb-4">Ready to Experience Excellence?</h2>
+        <p class="text-lg mb-6 opacity-90">Join thousands of satisfied students who have already discovered our service.</p>
+        <a href="/register/" class="inline-block bg-white text-green-600 px-8 py-3 font-bold hover:bg-gray-100 transition duration-300">Get Started Today</a>
+    </section>
+</div>
+{% endblock %}

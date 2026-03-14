@@ -1,0 +1,869 @@
+{% extends "admin_base.html" %}
+
+{% block title %}System Logs - Admin - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">System <span class="text-blue-600">Logs</span></h1>
+            <p class="text-gray-600 mt-1">Real-time monitoring of system events</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2 bg-green-50 px-3 py-1 border border-green-200">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-sm text-green-700 font-medium" id="live-status">Live</span>
+            </div>
+            <select class="border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="log-type">
+                <option value="all">All Events</option>
+                <option value="user">User Events</option>
+                <option value="order">Order Events</option>
+                <option value="payment">Payment Events</option>
+                <option value="security">Security Events</option>
+                <option value="admin">Admin Actions</option>
+            </select>
+            <select class="border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="time-range">
+                <option value="today">Today</option>
+                <option value="week" selected>This Week</option>
+                <option value="month">This Month</option>
+                <option value="all">All Time</option>
+            </select>
+            <button class="bg-blue-600 text-white px-6 py-3 font-medium hover:bg-blue-700 transition-colors flex items-center" id="export-logs">
+                <i class="fas fa-download mr-2"></i>Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Real-time Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm text-gray-500 mb-2">Total Events</p>
+                    <p class="text-3xl font-bold text-gray-900" id="total-events">0</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <i class="fas fa-history text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2" id="events-today">0 today</p>
+        </div>
+        
+        <div class="bg-white border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm text-gray-500 mb-2">User Actions</p>
+                    <p class="text-3xl font-bold text-blue-600" id="user-actions">0</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2" id="user-actions-today">0 today</p>
+        </div>
+        
+        <div class="bg-white border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm text-gray-500 mb-2">Security Events</p>
+                    <p class="text-3xl font-bold text-orange-600" id="security-events">0</p>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-lg">
+                    <i class="fas fa-shield-alt text-orange-600 text-xl"></i>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2" id="security-today">0 today</p>
+        </div>
+        
+        <div class="bg-white border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm text-gray-500 mb-2">Failed Logins</p>
+                    <p class="text-3xl font-bold text-red-600" id="failed-logins">0</p>
+                </div>
+                <div class="bg-red-100 p-3 rounded-lg">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2" id="failed-today">0 today</p>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white border border-gray-200 overflow-hidden mb-8">
+        <div class="p-4 border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-wrap gap-4">
+                <div class="flex-1 min-w-[300px]">
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" placeholder="Search logs by user, action, or details..." id="search-logs">
+                </div>
+                <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-3 flex items-center" id="refresh-logs">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+                <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-3" id="clear-filters">
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Event Type</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-list" class="divide-y divide-gray-200">
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <div class="flex justify-center items-center">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+                                Loading logs...
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="border-t border-gray-200 p-4" id="pagination">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600" id="pagination-info"></div>
+                <div class="flex space-x-2" id="pagination-buttons"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Event Distribution</h2>
+            <div class="h-64">
+                <canvas id="events-chart"></canvas>
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Event Trends (Last 7 Days)</h2>
+            <div class="h-64">
+                <canvas id="trends-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Alerts -->
+    <div class="bg-white border border-gray-200 p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Recent Alerts</h2>
+            <span class="bg-red-100 text-red-700 px-2 py-1 text-xs font-medium" id="alert-count">0</span>
+        </div>
+        <div id="recent-alerts" class="space-y-2">
+            <div class="text-center text-gray-500 py-4">No recent alerts</div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Details Modal -->
+<div id="log-details-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Log Details</h3>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-details-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="log-details-content" class="space-y-4">
+                <div class="text-center py-4 text-gray-500">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+let currentPage = 1;
+let currentType = 'all';
+let currentTimeRange = 'week';
+let currentSearch = '';
+let totalPages = 1;
+let pageSize = 20;
+let eventsChart = null;
+let trendsChart = null;
+let ws = null;
+let reconnectAttempts = 0;
+let maxReconnectAttempts = 5;
+let logsData = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeWebSocket();
+    loadLogs();
+    loadStats();
+    loadCharts();
+    
+    // Set up event listeners
+    document.getElementById('log-type').addEventListener('change', function() {
+        currentType = this.value;
+        currentPage = 1;
+        loadLogs();
+        loadStats();
+        loadCharts();
+    });
+    
+    document.getElementById('time-range').addEventListener('change', function() {
+        currentTimeRange = this.value;
+        currentPage = 1;
+        loadLogs();
+        loadStats();
+        loadCharts();
+    });
+    
+    let searchTimeout;
+    document.getElementById('search-logs').addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentSearch = this.value;
+            currentPage = 1;
+            loadLogs();
+        }, 500);
+    });
+    
+    document.getElementById('refresh-logs').addEventListener('click', function() {
+        currentPage = 1;
+        loadLogs();
+        loadStats();
+        loadCharts();
+    });
+    
+    document.getElementById('clear-filters').addEventListener('click', function() {
+        document.getElementById('log-type').value = 'all';
+        document.getElementById('time-range').value = 'week';
+        document.getElementById('search-logs').value = '';
+        
+        currentType = 'all';
+        currentTimeRange = 'week';
+        currentSearch = '';
+        currentPage = 1;
+        
+        loadLogs();
+        loadStats();
+        loadCharts();
+    });
+    
+    document.getElementById('export-logs').addEventListener('click', exportLogs);
+    
+    document.getElementById('close-details-modal').addEventListener('click', function() {
+        document.getElementById('log-details-modal').classList.add('hidden');
+    });
+    
+    // Auto-refresh every 30 seconds as backup
+    setInterval(() => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            loadLogs();
+            loadStats();
+            loadCharts();
+        }
+    }, 30000);
+});
+
+function initializeWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/admin/logs/`;
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = function() {
+        console.log('WebSocket connected');
+        document.getElementById('live-status').textContent = 'Live';
+        document.getElementById('live-status').classList.remove('text-yellow-700', 'bg-yellow-50');
+        document.getElementById('live-status').classList.add('text-green-700', 'bg-green-50');
+        reconnectAttempts = 0;
+    };
+    
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        
+        if (data.type === 'new_log') {
+            // New log received in real-time
+            handleNewLog(data.log);
+        } else if (data.type === 'initial_logs') {
+            // Initial batch of logs
+            logsData = data.logs;
+            displayLogs(logsData);
+        } else if (data.type === 'stats_update') {
+            // Stats update
+            updateStats(data.stats);
+        }
+    };
+    
+    ws.onclose = function() {
+        console.log('WebSocket disconnected');
+        document.getElementById('live-status').textContent = 'Reconnecting...';
+        document.getElementById('live-status').classList.remove('text-green-700', 'bg-green-50');
+        document.getElementById('live-status').classList.add('text-yellow-700', 'bg-yellow-50');
+        
+        // Attempt to reconnect
+        if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            setTimeout(initializeWebSocket, 3000);
+        } else {
+            document.getElementById('live-status').textContent = 'Offline';
+            document.getElementById('live-status').classList.remove('text-yellow-700', 'bg-yellow-50');
+            document.getElementById('live-status').classList.add('text-red-700', 'bg-red-50');
+        }
+    };
+    
+    ws.onerror = function(error) {
+        console.error('WebSocket error:', error);
+    };
+}
+
+function handleNewLog(log) {
+    // Add new log to the beginning of the list
+    logsData.unshift(log);
+    
+    // Keep only last 1000 logs in memory
+    if (logsData.length > 1000) {
+        logsData.pop();
+    }
+    
+    // Update display if on first page
+    if (currentPage === 1 && !currentSearch && currentType === 'all') {
+        displayLogs(logsData.slice(0, pageSize));
+    }
+    
+    // Show notification for important events
+    if (log.event_type === 'security' || log.event_type === 'error') {
+        showAlert(log);
+    }
+    
+    // Update stats
+    updateStatsIncrementally(log);
+}
+
+function showAlert(log) {
+    const alertsContainer = document.getElementById('recent-alerts');
+    const alertCount = document.getElementById('alert-count');
+    
+    const alertElement = document.createElement('div');
+    alertElement.className = 'flex items-start space-x-3 p-3 bg-red-50 border border-red-100';
+    alertElement.innerHTML = `
+        <i class="fas fa-exclamation-circle text-red-600 mt-1"></i>
+        <div class="flex-1">
+            <p class="text-sm font-medium text-gray-800">${log.action}</p>
+            <p class="text-xs text-gray-600 mt-1">${new Date(log.timestamp).toLocaleString()}</p>
+        </div>
+        <button class="text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    alertsContainer.prepend(alertElement);
+    
+    // Keep only last 10 alerts
+    while (alertsContainer.children.length > 10) {
+        alertsContainer.removeChild(alertsContainer.lastChild);
+    }
+    
+    // Update alert count
+    alertCount.textContent = alertsContainer.children.length;
+}
+
+async function loadLogs() {
+    try {
+        const params = new URLSearchParams({
+            page: currentPage,
+            page_size: pageSize,
+            type: currentType !== 'all' ? currentType : '',
+            time_range: currentTimeRange,
+            search: currentSearch || ''
+        });
+        
+        const response = await api.get(`/admin/logs/?${params.toString()}`);
+        
+        // Handle different response structures
+        let logs = [];
+        let total = 0;
+        
+        if (response.results) {
+            logs = response.results;
+            total = response.count || 0;
+        } else if (Array.isArray(response)) {
+            logs = response;
+            total = response.length;
+        } else if (response.logs) {
+            logs = response.logs;
+            total = response.total || logs.length;
+        } else {
+            logs = response;
+            total = logs.length;
+        }
+        
+        logsData = logs;
+        displayLogs(logs);
+        
+        totalPages = Math.ceil(total / pageSize) || 1;
+        updatePagination(total, currentPage, pageSize);
+        
+    } catch (error) {
+        console.error('Failed to load logs:', error);
+        document.getElementById('logs-list').innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-8 text-center text-red-500">
+                    Failed to load logs. 
+                    <button onclick="loadLogs()" class="text-blue-600 hover:text-blue-800 ml-2">
+                        <i class="fas fa-sync-alt mr-1"></i>Retry
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displayLogs(logs) {
+    const tbody = document.getElementById('logs-list');
+    
+    if (!logs || logs.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                    No logs found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = logs.map(log => {
+        // Handle different field name variations
+        const logId = log.id || log.log_id;
+        const timestamp = log.timestamp || log.created_at || log.time;
+        const eventType = log.event_type || log.type || log.category;
+        const userName = log.user_name || log.user || (log.user_details ? log.user_details.full_name : null);
+        const userId = log.user_id || (log.user_details ? log.user_details.id : null);
+        const action = log.action || log.event;
+        const details = log.details || log.description || log.message || '-';
+        const ipAddress = log.ip_address || log.ip || '-';
+        const status = log.status || log.result || 'success';
+        
+        return `
+        <tr class="cursor-pointer hover:bg-gray-50 transition-colors log-row" data-id="${logId}">
+            <td class="px-6 py-4 text-sm text-gray-600">
+                <div class="flex items-center">
+                    <span class="text-xs text-gray-400 mr-2">${getTimeAgo(timestamp)}</span>
+                    <span>${new Date(timestamp).toLocaleString()}</span>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 text-xs ${getEventTypeClass(eventType)}">
+                    ${eventType}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm">
+                ${userName ? 
+                    (userId ? `<a href="/admin/users/${userId}/" class="text-blue-600 hover:text-blue-800 transition-colors" onclick="event.stopPropagation()">${userName}</a>` : userName) : 
+                    '<span class="text-gray-400">System</span>'}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${action}</td>
+            <td class="px-6 py-4 max-w-xs">
+                <span class="text-sm text-gray-600 truncate block" title="${typeof details === 'object' ? JSON.stringify(details) : details}">
+                    ${typeof details === 'object' ? JSON.stringify(details).substring(0, 50) + '...' : details}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${ipAddress}</td>
+            <td class="px-6 py-4">
+                ${getStatusBadge(status)}
+            </td>
+        </tr>
+    `}).join('');
+    
+    attachLogListeners();
+}
+
+function getTimeAgo(timestamp) {
+    const now = new Date();
+    const logTime = new Date(timestamp);
+    const diffMinutes = Math.floor((now - logTime) / (1000 * 60));
+    
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`;
+    return `${Math.floor(diffMinutes / 1440)}d ago`;
+}
+
+function getEventTypeClass(type) {
+    if (!type) return 'bg-gray-100 text-gray-700';
+    
+    type = type.toLowerCase();
+    const classes = {
+        'user': 'bg-blue-100 text-blue-700',
+        'order': 'bg-green-100 text-green-700',
+        'payment': 'bg-purple-100 text-purple-700',
+        'security': 'bg-orange-100 text-orange-700',
+        'admin': 'bg-gray-100 text-gray-700',
+        'error': 'bg-red-100 text-red-700',
+        'login': 'bg-indigo-100 text-indigo-700',
+        'content': 'bg-pink-100 text-pink-700'
+    };
+    
+    for (const [key, value] of Object.entries(classes)) {
+        if (type.includes(key)) return value;
+    }
+    
+    return 'bg-gray-100 text-gray-700';
+}
+
+function getStatusBadge(status) {
+    if (!status) return '-';
+    
+    status = status.toLowerCase();
+    if (status === 'success' || status === 'completed') {
+        return '<span class="text-green-600"><i class="fas fa-check-circle" title="Success"></i></span>';
+    } else if (status === 'failure' || status === 'failed' || status === 'error') {
+        return '<span class="text-red-600"><i class="fas fa-times-circle" title="Failed"></i></span>';
+    } else if (status === 'warning' || status === 'pending') {
+        return '<span class="text-orange-600"><i class="fas fa-exclamation-circle" title="Warning"></i></span>';
+    } else if (status === 'info') {
+        return '<span class="text-blue-600"><i class="fas fa-info-circle" title="Info"></i></span>';
+    }
+    
+    return status;
+}
+
+function attachLogListeners() {
+    document.querySelectorAll('.log-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') return; // Don't open modal if clicking on user link
+            const logId = this.dataset.id;
+            showLogDetails(logId);
+        });
+    });
+}
+
+function updatePagination(total, page, pageSize) {
+    const start = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+    
+    document.getElementById('pagination-info').textContent = 
+        total > 0 ? `Showing ${start} to ${end} of ${total} events` : 'No events found';
+    
+    const buttonsContainer = document.getElementById('pagination-buttons');
+    
+    if (totalPages <= 1) {
+        buttonsContainer.innerHTML = '';
+        return;
+    }
+    
+    let buttons = '';
+    
+    if (page > 1) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 transition-colors" data-page="${page - 1}">Previous</button>`;
+    }
+    
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm ${i === page ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-50 transition-colors'}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (page < totalPages) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 transition-colors" data-page="${page + 1}">Next</button>`;
+    }
+    
+    buttonsContainer.innerHTML = buttons;
+    
+    buttonsContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentPage = parseInt(this.dataset.page);
+            loadLogs();
+        });
+    });
+}
+
+async function loadStats() {
+    try {
+        const params = new URLSearchParams({
+            time_range: currentTimeRange
+        });
+        
+        const stats = await api.get(`/admin/logs/stats/?${params.toString()}`);
+        updateStats(stats);
+        
+    } catch (error) {
+        console.error('Failed to load stats:', error);
+    }
+}
+
+function updateStats(stats) {
+    document.getElementById('total-events').textContent = stats.total || 0;
+    document.getElementById('user-actions').textContent = stats.user_actions || 0;
+    document.getElementById('security-events').textContent = stats.security_events || 0;
+    document.getElementById('failed-logins').textContent = stats.failed_logins || 0;
+    
+    // Today's stats
+    document.getElementById('events-today').textContent = `${stats.today || 0} today`;
+    document.getElementById('user-actions-today').textContent = `${stats.user_actions_today || 0} today`;
+    document.getElementById('security-today').textContent = `${stats.security_today || 0} today`;
+    document.getElementById('failed-today').textContent = `${stats.failed_today || 0} today`;
+}
+
+function updateStatsIncrementally(log) {
+    // Update counts based on new log
+    const eventType = (log.event_type || log.type || '').toLowerCase();
+    
+    if (eventType.includes('user')) {
+        incrementStat('user-actions');
+    } else if (eventType.includes('security')) {
+        incrementStat('security-events');
+    } else if (eventType.includes('login') && log.status === 'failure') {
+        incrementStat('failed-logins');
+    }
+    
+    incrementStat('total-events');
+}
+
+function incrementStat(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const current = parseInt(element.textContent) || 0;
+        element.textContent = current + 1;
+    }
+}
+
+async function loadCharts() {
+    try {
+        const params = new URLSearchParams({
+            time_range: currentTimeRange
+        });
+        
+        const chartData = await api.get(`/admin/logs/charts/?${params.toString()}`);
+        
+        updateEventsChart(chartData.events || {});
+        updateTrendsChart(chartData.trends || {});
+        
+    } catch (error) {
+        console.error('Failed to load charts:', error);
+        
+        // Show empty charts
+        updateEventsChart({});
+        updateTrendsChart({});
+    }
+}
+
+function updateEventsChart(data) {
+    const ctx = document.getElementById('events-chart').getContext('2d');
+    
+    if (eventsChart) eventsChart.destroy();
+    
+    const defaultData = {
+        labels: ['User', 'Order', 'Payment', 'Security', 'Admin', 'Other'],
+        values: [0, 0, 0, 0, 0, 0],
+        colors: ['#3b82f6', '#22c55e', '#a855f7', '#f97316', '#6b7280', '#94a3b8']
+    };
+    
+    const chartData = {
+        labels: data.labels || defaultData.labels,
+        datasets: [{
+            data: data.values || defaultData.values,
+            backgroundColor: data.colors || defaultData.colors,
+            borderWidth: 0
+        }]
+    };
+    
+    eventsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        font: { size: 11 }
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+}
+
+function updateTrendsChart(data) {
+    const ctx = document.getElementById('trends-chart').getContext('2d');
+    
+    if (trendsChart) trendsChart.destroy();
+    
+    const defaultData = {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        values: [0, 0, 0, 0, 0, 0, 0]
+    };
+    
+    trendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels || defaultData.labels,
+            datasets: [{
+                label: 'Events',
+                data: data.values || defaultData.values,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+async function showLogDetails(logId) {
+    const modal = document.getElementById('log-details-modal');
+    modal.classList.remove('hidden');
+    
+    const content = document.getElementById('log-details-content');
+    content.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div><p class="mt-2 text-gray-500">Loading details...</p></div>';
+    
+    try {
+        const log = await api.get(`/admin/logs/${logId}/`);
+        displayLogDetails(log);
+    } catch (error) {
+        console.error('Failed to load log details:', error);
+        content.innerHTML = `
+            <div class="text-center text-red-500 py-4">
+                Failed to load log details
+                <button onclick="showLogDetails('${logId}')" class="text-blue-600 hover:text-blue-800 block mx-auto mt-2">
+                    <i class="fas fa-sync-alt mr-1"></i>Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+function displayLogDetails(log) {
+    const container = document.getElementById('log-details-content');
+    
+    // Format details if it's an object
+    let detailsHtml = '';
+    if (log.details) {
+        if (typeof log.details === 'object') {
+            detailsHtml = '<pre class="mt-2 p-4 bg-gray-50 text-sm overflow-x-auto text-gray-700">' + 
+                JSON.stringify(log.details, null, 2) + '</pre>';
+        } else {
+            detailsHtml = `<p class="text-sm text-gray-700">${log.details}</p>`;
+        }
+    } else {
+        detailsHtml = '<p class="text-sm text-gray-500">-</p>';
+    }
+    
+    container.innerHTML = `
+        <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Event ID</p>
+                        <p class="font-mono text-sm text-gray-800">${log.id}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs ${getEventTypeClass(log.event_type)}">
+                        ${log.event_type}
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Timestamp</p>
+                    <p class="font-medium text-gray-800">${new Date(log.timestamp).toLocaleString()}</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">User</p>
+                    <p class="font-medium text-gray-800">${log.user || 'System'}</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Action</p>
+                    <p class="font-medium text-gray-800">${log.action}</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">IP Address</p>
+                    <p class="font-medium text-gray-800">${log.ip_address || '-'}</p>
+                </div>
+            </div>
+
+            <div>
+                <p class="text-xs text-gray-500 mb-2">Details</p>
+                ${detailsHtml}
+            </div>
+
+            ${log.user_agent ? `
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">User Agent</p>
+                    <p class="text-sm text-gray-600 break-words">${log.user_agent}</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+async function exportLogs() {
+    try {
+        const params = new URLSearchParams({
+            type: currentType !== 'all' ? currentType : '',
+            time_range: currentTimeRange,
+            search: currentSearch || '',
+            format: 'json'
+        });
+        
+        const response = await api.get(`/admin/logs/export/?${params.toString()}`);
+        
+        const dataStr = JSON.stringify(response, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `logs_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('Failed to export logs:', error);
+        alert('Failed to export logs. Please try again.');
+    }
+}
+
+window.addEventListener('beforeunload', function() {
+    if (ws) {
+        ws.close();
+    }
+});
+</script>
+{% endblock %}

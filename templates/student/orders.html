@@ -1,0 +1,205 @@
+{% extends "student_base.html" %}
+
+{% block title %}My Orders - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900">My Orders</h1>
+        <a href="/student/orders/new/" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>New Order
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-4">
+        <div class="flex space-x-2 overflow-x-auto pb-2" id="status-filters">
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-blue-600 text-white" data-status="all">All</button>
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="pending">Pending</button>
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="ongoing">Ongoing</button>
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="awaiting_review">Awaiting Review</button>
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="completed">Completed</button>
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="cancelled">Cancelled</button>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Topic</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Pages</th>
+                        <th>Deadline</th>
+                        <th>Total</th>
+                        <th>Progress</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-list">
+                    <tr>
+                        <td colspan="9" class="text-center py-8 text-gray-500">Loading orders...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="p-4 border-t" id="pagination">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600" id="pagination-info"></div>
+                <div class="flex space-x-2" id="pagination-buttons"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentStatus = 'all';
+let totalPages = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#status-filters button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('#status-filters button').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white');
+                b.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            
+            this.classList.remove('bg-gray-100', 'text-gray-700');
+            this.classList.add('bg-blue-600', 'text-white');
+            
+            currentStatus = this.dataset.status;
+            currentPage = 1;
+            loadOrders();
+        });
+    });
+    
+    loadOrders();
+});
+
+async function loadOrders() {
+    try {
+        const params = { page: currentPage };
+        if (currentStatus !== 'all') {
+            params.status = currentStatus;
+        }
+        
+        const response = await api.get('/orders/', params);
+        
+        if (!response.results || response.results.length === 0) {
+            document.getElementById('orders-list').innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center py-8 text-gray-500">
+                        No orders found
+                        <a href="/student/orders/new/" class="block mt-2 text-blue-600">Create your first order</a>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('pagination').classList.add('hidden');
+            return;
+        }
+        
+        displayOrders(response.results);
+        
+        totalPages = Math.ceil(response.total / response.page_size) || 1;
+        updatePagination(response.total, response.page, response.page_size);
+        
+    } catch (error) {
+        document.getElementById('orders-list').innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-8 text-red-500">
+                    Failed to load orders. Please try again.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displayOrders(orders) {
+    const tbody = document.getElementById('orders-list');
+    
+    tbody.innerHTML = orders.map(order => `
+        <tr>
+            <td class="font-medium">${order.order_number || 'N/A'}</td>
+            <td>${order.topic.substring(0, 40)}${order.topic.length > 40 ? '...' : ''}</td>
+            <td>${order.paper_type.replace('_', ' ')}</td>
+            <td><span class="status-badge status-${order.status}">${order.status.replace('_', ' ')}</span></td>
+            <td>${order.pages}</td>
+            <td>${new Date(order.deadline).toLocaleDateString()}</td>
+            <td>$${parseFloat(order.total_price).toFixed(2)}</td>
+            <td>
+                <div class="flex items-center space-x-2">
+                    <div class="progress-bar w-16">
+                        <div class="progress-fill" style="width: ${order.progress_percentage || 0}%"></div>
+                    </div>
+                    <span class="text-xs text-gray-600">${order.progress_percentage || 0}%</span>
+                </div>
+            </td>
+            <td>
+                <a href="/student/orders/${order.id}/" class="text-blue-600 hover:underline text-sm">View</a>
+                ${order.status === 'awaiting_review' ? 
+                    `<button class="text-green-600 hover:underline text-sm ml-2 approve-btn" data-id="${order.id}">Approve</button>` : ''}
+            </td>
+        </tr>
+    `).join('');
+    
+    document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => approveOrder(btn.dataset.id));
+    });
+}
+
+function updatePagination(total, page, pageSize) {
+    const start = ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+    
+    document.getElementById('pagination-info').textContent = `Showing ${start}-${end} of ${total} orders`;
+    
+    const buttonsContainer = document.getElementById('pagination-buttons');
+    
+    if (totalPages <= 1) {
+        buttonsContainer.innerHTML = '';
+        return;
+    }
+    
+    let buttons = '';
+    
+    if (page > 1) {
+        buttons += `<button class="pagination-item" data-page="${page - 1}">Previous</button>`;
+    }
+    
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        buttons += `<button class="pagination-item ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (page < totalPages) {
+        buttons += `<button class="pagination-item" data-page="${page + 1}">Next</button>`;
+    }
+    
+    buttonsContainer.innerHTML = buttons;
+    
+    buttonsContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentPage = parseInt(this.dataset.page);
+            loadOrders();
+        });
+    });
+}
+
+async function approveOrder(orderId) {
+    try {
+        await api.post(`/orders/${orderId}/action/`, {
+            action: 'approve'
+        });
+        
+        loadOrders();
+        
+    } catch (error) {
+        alert('Failed to approve order');
+    }
+}
+</script>
+{% endblock %}

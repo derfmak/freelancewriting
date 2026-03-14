@@ -1,0 +1,512 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Content Management - Admin - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Content <span class="text-blue-600">Management</span></h1>
+            <p class="text-gray-600 mt-1">Create and edit website pages</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/" target="_blank" class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-6 py-3 font-medium rounded-lg flex items-center">
+                <i class="fas fa-eye mr-2"></i>View Site
+            </a>
+            <button class="bg-blue-600 text-white px-6 py-3 font-medium hover:bg-blue-700 transition-colors rounded-lg flex items-center" id="new-page-btn">
+                <i class="fas fa-plus mr-2"></i>New Page
+            </button>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-8">
+        <div class="md:col-span-1">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-gray-200 bg-gray-50">
+                    <h2 class="font-bold text-gray-800">Pages</h2>
+                    <p class="text-xs text-gray-500 mt-1">Manage your website pages</p>
+                </div>
+                <div class="p-4" id="pages-list">
+                    <div class="text-center text-gray-500 py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+                        <p class="text-sm">Loading pages...</p>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-200 bg-gray-50">
+                    <button class="w-full text-left text-sm text-blue-600 hover:text-blue-700 flex items-center" id="reorder-pages-btn">
+                        <i class="fas fa-sort mr-2"></i>Reorder Pages
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:col-span-3">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden" id="editor-container">
+                <div id="content-editor" class="p-6">
+                    <div class="text-center text-gray-500 py-16">
+                        <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-file-alt text-3xl text-blue-600"></i>
+                        </div>
+                        <p class="text-lg font-medium text-gray-700">Select a page to edit</p>
+                        <p class="text-sm text-gray-400 mt-2">Choose a page from the list to start editing</p>
+                        <button class="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium" onclick="document.getElementById('new-page-btn').click()">
+                            <i class="fas fa-plus-circle mr-1"></i>Create New Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="page-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6 rounded-lg shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-900" id="modal-title">Create New Page</h3>
+            <button class="text-gray-400 hover:text-gray-600 transition-colors" id="page-modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Page URL <span class="text-red-500">*</span></label>
+                <div class="flex items-center">
+                    <span class="bg-gray-100 border border-r-0 border-gray-300 px-3 py-3 text-gray-500 rounded-l-lg">/</span>
+                    <input type="text" class="flex-1 border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-r-lg" id="page-name" placeholder="about-us">
+                </div>
+                <p class="text-xs text-gray-500 mt-1">URL-friendly name, use hyphens instead of spaces</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Page Title <span class="text-red-500">*</span></label>
+                <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="page-title" placeholder="About Us">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="page-meta-description" rows="2" placeholder="Brief description for search engines"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Template</label>
+                <select class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors rounded-lg" id="page-template">
+                    <option value="default">Default Template</option>
+                    <option value="full-width">Full Width</option>
+                    <option value="landing">Landing Page</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="page-status" value="published" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300" checked>
+                        <span class="text-sm text-gray-700">Published</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="page-status" value="draft" class="w-4 h-4 text-blue-600 focus:ring-blue-600 border-gray-300">
+                        <span class="text-sm text-gray-700">Draft</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex space-x-3 pt-4">
+                <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3 rounded-lg" id="page-modal-cancel">Cancel</button>
+                <button class="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors px-4 py-3 rounded-lg" id="save-page">Create Page</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="delete-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6 rounded-lg shadow-xl">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Delete Page</h3>
+        <p class="text-gray-600 mb-6">Are you sure you want to delete this page? This action cannot be undone.</p>
+        <div class="flex space-x-3">
+            <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3 rounded-lg" id="delete-modal-cancel">Cancel</button>
+            <button class="flex-1 bg-red-600 text-white hover:bg-red-700 transition-colors px-4 py-3 rounded-lg" id="confirm-delete">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.tiny.cloud/1/6yvf5twl39k82v78j5fp4mf3f56a5qjxxaa5p5h0bqy0jk6p/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+<script>
+let currentPage = null;
+let pages = [];
+let pageToDelete = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadPages();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    document.getElementById('new-page-btn').addEventListener('click', showNewPageModal);
+    document.getElementById('page-modal-close').addEventListener('click', hidePageModal);
+    document.getElementById('page-modal-cancel').addEventListener('click', hidePageModal);
+    document.getElementById('save-page').addEventListener('click', savePage);
+    document.getElementById('reorder-pages-btn').addEventListener('click', toggleReorderMode);
+    
+    document.getElementById('delete-modal-cancel').addEventListener('click', hideDeleteModal);
+    document.getElementById('confirm-delete').addEventListener('click', confirmDelete);
+}
+
+async function loadPages() {
+    try {
+        const response = await api.get('/admin/content/pages/');
+        pages = response.results || response || [];
+        displayPages();
+    } catch (error) {
+        document.getElementById('pages-list').innerHTML = `
+            <div class="text-center text-red-500 py-8">
+                <i class="fas fa-exclamation-circle text-3xl mb-2"></i>
+                <p class="text-sm">Failed to load pages</p>
+                <button onclick="loadPages()" class="text-blue-600 hover:text-blue-700 text-xs mt-2">
+                    <i class="fas fa-sync-alt mr-1"></i>Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+function displayPages() {
+    const container = document.getElementById('pages-list');
+    
+    if (!pages || pages.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-file-alt text-3xl text-gray-300 mb-3"></i>
+                <p class="text-sm font-medium text-gray-700">No pages yet</p>
+                <p class="text-xs text-gray-400 mt-1">Create your first page to get started</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = pages.map(page => `
+        <div class="flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer border-l-3 ${currentPage?.id === page.id ? 'border-l-3 border-blue-600 bg-blue-50' : 'border-transparent'} transition-all rounded-lg mb-1 page-item" data-page-id="${page.id}">
+            <div class="flex items-center space-x-3 flex-1">
+                <i class="fas fa-grip-vertical text-gray-400 cursor-move reorder-handle hidden"></i>
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <p class="font-medium text-gray-800">${page.title || 'Untitled'}</p>
+                        ${page.status === 'draft' ? '<span class="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Draft</span>' : ''}
+                    </div>
+                    <p class="text-xs text-gray-500 mt-0.5">/${page.name || 'untitled'}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="text-gray-400 hover:text-blue-600 transition-colors p-1 edit-page" data-id="${page.id}" title="Edit">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="text-gray-400 hover:text-green-600 transition-colors p-1 duplicate-page" data-id="${page.id}" title="Duplicate">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="text-gray-400 hover:text-red-600 transition-colors p-1 delete-page" data-id="${page.id}" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    attachPageListeners();
+}
+
+function attachPageListeners() {
+    document.querySelectorAll('.page-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (e.target.closest('button')) return;
+            const pageId = this.dataset.pageId;
+            loadPageContent(pageId);
+        });
+    });
+    
+    document.querySelectorAll('.edit-page').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const pageId = this.dataset.id;
+            editPage(pageId);
+        });
+    });
+    
+    document.querySelectorAll('.duplicate-page').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const pageId = this.dataset.id;
+            duplicatePage(pageId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-page').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            pageToDelete = this.dataset.id;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        });
+    });
+}
+
+async function loadPageContent(pageId) {
+    try {
+        const page = await api.get(`/admin/content/pages/${pageId}/`);
+        currentPage = page;
+        displayPageEditor(page);
+        
+        document.querySelectorAll('.page-item').forEach(item => {
+            item.classList.remove('border-l-3', 'border-blue-600', 'bg-blue-50');
+            if (item.dataset.pageId === pageId) {
+                item.classList.add('border-l-3', 'border-blue-600', 'bg-blue-50');
+            }
+        });
+        
+    } catch (error) {
+        showToast('Failed to load page content', 'error');
+    }
+}
+
+function displayPageEditor(page) {
+    const editor = document.getElementById('content-editor');
+    
+    let sectionsHTML = '';
+    if (page.sections && page.sections.length > 0) {
+        sectionsHTML = page.sections.map((section, index) => `
+            <div class="border border-gray-200 rounded-lg p-4 mb-4 bg-white">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-medium text-gray-700">${section.type || 'Text'} Section</h4>
+                    <button class="text-red-500 hover:text-red-700 delete-section" data-index="${index}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <pre class="text-xs bg-gray-50 p-2 rounded">${JSON.stringify(section, null, 2)}</pre>
+            </div>
+        `).join('');
+    } else {
+        sectionsHTML = '<p class="text-gray-500 text-center py-8">No sections yet. Add sections using the button below.</p>';
+    }
+    
+    editor.innerHTML = `
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">${page.title || 'Untitled'}</h2>
+                <p class="text-sm text-gray-500 mt-1">/${page.name} • ${page.status || 'draft'}</p>
+            </div>
+            <div class="flex space-x-2">
+                <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg flex items-center text-sm" id="preview-page">
+                    <i class="fas fa-eye mr-2"></i>Preview
+                </button>
+                <button class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center text-sm" id="save-page-content">
+                    <i class="fas fa-save mr-2"></i>Save
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">Page Sections</h3>
+            <div id="sections-container">
+                ${sectionsHTML}
+            </div>
+            <button class="mt-4 border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg text-sm" id="add-section-btn">
+                <i class="fas fa-plus mr-2"></i>Add Section
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('add-section-btn').addEventListener('click', () => {
+        showToast('Section editor coming soon', 'info');
+    });
+    
+    document.getElementById('preview-page').addEventListener('click', () => {
+        window.open(`/${page.name}?preview=true`, '_blank');
+    });
+    
+    document.getElementById('save-page-content').addEventListener('click', () => {
+        showToast('Save functionality coming soon', 'info');
+    });
+    
+    document.querySelectorAll('.delete-section').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.border').remove();
+            showToast('Section removed', 'success');
+        });
+    });
+}
+
+function showNewPageModal() {
+    document.getElementById('modal-title').textContent = 'Create New Page';
+    document.getElementById('page-name').value = '';
+    document.getElementById('page-title').value = '';
+    document.getElementById('page-meta-description').value = '';
+    document.getElementById('page-template').value = 'default';
+    document.querySelector('input[name="page-status"][value="published"]').checked = true;
+    document.getElementById('page-modal').classList.remove('hidden');
+}
+
+function editPage(pageId) {
+    const page = pages.find(p => p.id == pageId);
+    if (!page) return;
+    
+    document.getElementById('modal-title').textContent = 'Edit Page';
+    document.getElementById('page-name').value = page.name || '';
+    document.getElementById('page-title').value = page.title || '';
+    document.getElementById('page-meta-description').value = page.meta_description || '';
+    document.getElementById('page-template').value = page.template || 'default';
+    
+    const statusRadio = document.querySelector(`input[name="page-status"][value="${page.status || 'published'}"]`);
+    if (statusRadio) statusRadio.checked = true;
+    
+    document.getElementById('page-modal').classList.remove('hidden');
+    document.getElementById('save-page').onclick = async function() {
+        await updatePage(pageId);
+    };
+}
+
+async function savePage() {
+    const name = document.getElementById('page-name').value.trim();
+    const title = document.getElementById('page-title').value.trim();
+    const metaDescription = document.getElementById('page-meta-description').value.trim();
+    const template = document.getElementById('page-template').value;
+    const status = document.querySelector('input[name="page-status"]:checked').value;
+    
+    if (!name || !title) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    if (!/^[a-z0-9-]+$/.test(name)) {
+        showToast('Page URL can only contain lowercase letters, numbers, and hyphens', 'error');
+        return;
+    }
+    
+    try {
+        const response = await api.post('/admin/content/pages/', {
+            name: name,
+            title: title,
+            meta_description: metaDescription,
+            template: template,
+            status: status,
+            sections: []
+        });
+        
+        hidePageModal();
+        pages.push(response);
+        loadPages();
+        showToast('Page created successfully', 'success');
+        
+    } catch (error) {
+        showToast('Failed to create page', 'error');
+    }
+}
+
+async function updatePage(pageId) {
+    const name = document.getElementById('page-name').value.trim();
+    const title = document.getElementById('page-title').value.trim();
+    const metaDescription = document.getElementById('page-meta-description').value.trim();
+    const template = document.getElementById('page-template').value;
+    const status = document.querySelector('input[name="page-status"]:checked').value;
+    
+    try {
+        await api.put(`/admin/content/pages/${pageId}/`, {
+            name: name,
+            title: title,
+            meta_description: metaDescription,
+            template: template,
+            status: status
+        });
+        
+        hidePageModal();
+        loadPages();
+        showToast('Page updated successfully', 'success');
+        
+    } catch (error) {
+        showToast('Failed to update page', 'error');
+    }
+}
+
+async function duplicatePage(pageId) {
+    try {
+        const response = await api.post(`/admin/content/pages/${pageId}/duplicate/`);
+        pages.push(response);
+        loadPages();
+        showToast('Page duplicated successfully', 'success');
+    } catch (error) {
+        showToast('Failed to duplicate page', 'error');
+    }
+}
+
+async function confirmDelete() {
+    if (!pageToDelete) return;
+    
+    try {
+        await api.delete(`/admin/content/pages/${pageToDelete}/`);
+        pages = pages.filter(p => p.id != pageToDelete);
+        loadPages();
+        
+        if (currentPage && currentPage.id == pageToDelete) {
+            document.getElementById('content-editor').innerHTML = `
+                <div class="text-center text-gray-500 py-16">
+                    <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-file-alt text-3xl text-blue-600"></i>
+                    </div>
+                    <p class="text-lg font-medium text-gray-700">Select a page to edit</p>
+                    <p class="text-sm text-gray-400 mt-2">Choose a page from the list to start editing</p>
+                </div>
+            `;
+            currentPage = null;
+        }
+        
+        hideDeleteModal();
+        showToast('Page deleted successfully', 'success');
+        
+    } catch (error) {
+        showToast('Failed to delete page', 'error');
+        hideDeleteModal();
+    }
+}
+
+function toggleReorderMode() {
+    document.querySelectorAll('.reorder-handle').forEach(el => {
+        el.classList.toggle('hidden');
+    });
+    showToast('Drag handles to reorder pages', 'info');
+}
+
+function hidePageModal() {
+    document.getElementById('page-modal').classList.add('hidden');
+}
+
+function hideDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+    pageToDelete = null;
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+
+<style>
+.border-l-3 {
+    border-left-width: 3px;
+}
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    
+    <section class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Frequently Asked <span class="text-green-600">Questions</span></h1>
+        <div class="w-20 h-1 bg-green-600 mx-auto mb-6"></div>
+        <p class="text-xl text-gray-600">Find answers to common questions about our service</p>
+    </section>
+
+    <div class="space-y-3" id="faq-list">
+        <div class="bg-white border border-gray-200">
+            <button class="w-full text-left p-5 focus:outline-none faq-question" data-target="faq1">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-800">How does your service work?</h3>
+                    <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                </div>
+            </button>
+            <div id="faq1" class="faq-answer px-5 pb-5 hidden">
+                <p class="text-gray-600 border-t border-gray-100 pt-3">
+                    Submit your order requirements, make a payment, and our writer will begin working on your paper. You can track progress and communicate directly.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200">
+            <button class="w-full text-left p-5 focus:outline-none faq-question" data-target="faq2">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-800">Is my paper guaranteed to be original?</h3>
+                    <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                </div>
+            </button>
+            <div id="faq2" class="faq-answer px-5 pb-5 hidden">
+                <p class="text-gray-600 border-t border-gray-100 pt-3">
+                    Yes, every paper is written from scratch and checked for plagiarism. We provide a report upon request.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200">
+            <button class="w-full text-left p-5 focus:outline-none faq-question" data-target="faq3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-800">What if I need revisions?</h3>
+                    <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                </div>
+            </button>
+            <div id="faq3" class="faq-answer px-5 pb-5 hidden">
+                <p class="text-gray-600 border-t border-gray-100 pt-3">
+                    We offer free unlimited revisions until you're completely satisfied with the paper.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200">
+            <button class="w-full text-left p-5 focus:outline-none faq-question" data-target="faq4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-800">How do you ensure quality?</h3>
+                    <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                </div>
+            </button>
+            <div id="faq4" class="faq-answer px-5 pb-5 hidden">
+                <p class="text-gray-600 border-t border-gray-100 pt-3">
+                    All papers are written by qualified experts with advanced degrees and undergo thorough quality checks.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200">
+            <button class="w-full text-left p-5 focus:outline-none faq-question" data-target="faq5">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-800">What if I'm not satisfied?</h3>
+                    <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                </div>
+            </button>
+            <div id="faq5" class="faq-answer px-5 pb-5 hidden">
+                <p class="text-gray-600 border-t border-gray-100 pt-3">
+                    We offer a money-back guarantee if the paper doesn't meet your requirements.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200">
+            <button class="w-full text-left p-5 focus:outline-none faq-question" data-target="faq6">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-800">How do I contact support?</h3>
+                    <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                </div>
+            </button>
+            <div id="faq6" class="faq-answer px-5 pb-5 hidden">
+                <p class="text-gray-600 border-t border-gray-100 pt-3">
+                    You can reach us at fredrickwambua@gmail.com or call 0740618550. We're available 24/7.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-100 w-full h-48 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 mt-8">
+        <span class="text-lg">Image Placeholder - FAQ</span>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.faq-question').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const answer = document.getElementById(targetId);
+            const icon = this.querySelector('i');
+            
+            answer.classList.toggle('hidden');
+            if (answer.classList.contains('hidden')) {
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                icon.style.transform = 'rotate(180deg)';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

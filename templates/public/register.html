@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="bg-white border border-gray-200 p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Create Your <span class="text-green-600">Account</span></h1>
+            <div class="w-16 h-0.5 bg-green-600 mx-auto mt-2 mb-3"></div>
+            <p class="text-gray-600">Join thousands of satisfied students</p>
+        </div>
+
+        <form id="register-form" class="space-y-6">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="full-name" required>
+                    <div class="hidden text-red-600 text-sm mt-1" id="name-error"></div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="email" required>
+                    <div class="hidden text-red-600 text-sm mt-1" id="email-error"></div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="password" required>
+                    <div class="hidden text-red-600 text-sm mt-1" id="password-error"></div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <input type="password" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="password-confirm" required>
+                    <div class="hidden text-red-600 text-sm mt-1" id="password-confirm-error"></div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number (Optional)</label>
+                <input type="tel" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="phone" placeholder="+1234567890">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Institution (Optional)</label>
+                <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="institution" placeholder="Your school or university">
+            </div>
+
+            <div class="bg-gray-50 border border-gray-200 p-4">
+                <h4 class="font-medium text-gray-700 mb-3 text-sm">Password Requirements:</h4>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="flex items-center space-x-2" id="req-length">
+                        <span class="text-gray-400">○</span>
+                        <span class="text-gray-600 text-xs">At least 8 characters</span>
+                    </div>
+                    <div class="flex items-center space-x-2" id="req-uppercase">
+                        <span class="text-gray-400">○</span>
+                        <span class="text-gray-600 text-xs">One uppercase letter</span>
+                    </div>
+                    <div class="flex items-center space-x-2" id="req-lowercase">
+                        <span class="text-gray-400">○</span>
+                        <span class="text-gray-600 text-xs">One lowercase letter</span>
+                    </div>
+                    <div class="flex items-center space-x-2" id="req-number">
+                        <span class="text-gray-400">○</span>
+                        <span class="text-gray-600 text-xs">One number</span>
+                    </div>
+                    <div class="flex items-center space-x-2" id="req-special">
+                        <span class="text-gray-400">○</span>
+                        <span class="text-gray-600 text-xs">One special character</span>
+                    </div>
+                    <div class="flex items-center space-x-2" id="req-match">
+                        <span class="text-gray-400">○</span>
+                        <span class="text-gray-600 text-xs">Passwords match</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="flex items-start space-x-3 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600 mt-0.5" id="terms" required>
+                    <span class="text-sm text-gray-600">
+                        I agree to the 
+                        <a href="/terms/" class="text-green-600 hover:text-green-700">Terms of Service</a> 
+                        and 
+                        <a href="/privacy/" class="text-green-600 hover:text-green-700">Privacy Policy</a>
+                    </span>
+                </label>
+            </div>
+
+            <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 hover:bg-green-700 transition-colors" id="register-btn">
+                Create Account
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">
+                Already have an account? 
+                <a href="/login/" class="text-green-600 hover:text-green-700 font-medium">Sign In</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<div id="verify-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white border border-gray-200 max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold mb-2 text-gray-900">Verify Your Email</h3>
+        <p class="text-gray-600 text-sm mb-4">
+            We've sent a 6-digit verification code to <span id="verify-email" class="font-medium text-green-600"></span>
+        </p>
+        
+        <div class="mb-4">
+            <input type="text" class="w-full text-center text-2xl tracking-widest border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="verify-code" maxlength="6" placeholder="000000">
+        </div>
+
+        <div class="flex justify-between items-center">
+            <button class="text-green-600 text-sm hover:text-green-700 font-medium" id="resend-code">Resend Code</button>
+            <div class="space-x-2">
+                <button class="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors" id="verify-cancel">Cancel</button>
+                <button class="px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors" id="verify-submit">Verify</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('register-form');
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('password-confirm');
+    
+    const reqLength = document.getElementById('req-length');
+    const reqUppercase = document.getElementById('req-uppercase');
+    const reqLowercase = document.getElementById('req-lowercase');
+    const reqNumber = document.getElementById('req-number');
+    const reqSpecial = document.getElementById('req-special');
+    const reqMatch = document.getElementById('req-match');
+    
+    function validatePassword() {
+        const password = passwordInput.value;
+        const confirm = confirmInput.value;
+        
+        const checks = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+            match: password === confirm && password.length > 0
+        };
+        
+        updateRequirement(reqLength, checks.length);
+        updateRequirement(reqUppercase, checks.uppercase);
+        updateRequirement(reqLowercase, checks.lowercase);
+        updateRequirement(reqNumber, checks.number);
+        updateRequirement(reqSpecial, checks.special);
+        updateRequirement(reqMatch, checks.match);
+    }
+    
+    function updateRequirement(element, isValid) {
+        const circle = element.querySelector('span:first-child');
+        const text = element.querySelector('span:last-child');
+        
+        if (isValid) {
+            circle.innerHTML = '●';
+            circle.classList.remove('text-gray-400');
+            circle.classList.add('text-green-600');
+            text.classList.remove('text-gray-600');
+            text.classList.add('text-green-700');
+        } else {
+            circle.innerHTML = '○';
+            circle.classList.remove('text-green-600');
+            circle.classList.add('text-gray-400');
+            text.classList.remove('text-green-700');
+            text.classList.add('text-gray-600');
+        }
+    }
+    
+    passwordInput.addEventListener('input', validatePassword);
+    confirmInput.addEventListener('input', validatePassword);
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        clearErrors();
+        
+        const fullName = document.getElementById('full-name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const passwordConfirm = document.getElementById('password-confirm').value;
+        const phone = document.getElementById('phone').value;
+        const institution = document.getElementById('institution').value;
+        const terms = document.getElementById('terms').checked;
+        
+        let hasError = false;
+        
+        if (!fullName) {
+            showError('name', 'Full name is required');
+            hasError = true;
+        }
+        
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailPattern.test(email)) {
+            showError('email', 'Valid email is required');
+            hasError = true;
+        }
+        
+        const passwordChecks = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
+        };
+        
+        if (!password) {
+            showError('password', 'Password is required');
+            hasError = true;
+        } else if (!Object.values(passwordChecks).every(Boolean)) {
+            showError('password', 'Password does not meet all requirements');
+            hasError = true;
+        }
+        
+        if (password !== passwordConfirm) {
+            showError('password-confirm', 'Passwords do not match');
+            hasError = true;
+        }
+        
+        if (!terms) {
+            alert('You must agree to the terms and conditions');
+            hasError = true;
+        }
+        
+        if (hasError) return;
+        
+        const submitBtn = document.getElementById('register-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Creating account...';
+        submitBtn.disabled = true;
+        
+        try {
+            const response = await api.post('/auth/register/', {
+                full_name: fullName,
+                email: email,
+                password: password,
+                password_confirm: passwordConfirm,
+                phone: phone,
+                institution: institution
+            });
+            
+            if (response && response.message) {
+                document.getElementById('verify-email').textContent = email;
+                showVerifyModal(email);
+            } else {
+                alert('Registration successful! Please check your email for verification.');
+                window.location.href = '/login/';
+            }
+            
+        } catch (error) {
+            console.error('Registration error:', error);
+            
+            if (error.data) {
+                if (error.data.email) showError('email', Array.isArray(error.data.email) ? error.data.email[0] : error.data.email);
+                if (error.data.password) showError('password', Array.isArray(error.data.password) ? error.data.password[0] : error.data.password);
+                if (error.data.full_name) showError('name', Array.isArray(error.data.full_name) ? error.data.full_name[0] : error.data.full_name);
+                if (error.data.non_field_errors) showError('email', error.data.non_field_errors[0]);
+            } else {
+                alert('Registration failed. Please try again.');
+            }
+            
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+});
+
+function showError(field, message) {
+    const errorDiv = document.getElementById(`${field}-error`);
+    errorDiv.textContent = message;
+    errorDiv.classList.remove('hidden');
+    document.getElementById(field === 'password-confirm' ? 'password-confirm' : field).classList.add('border-red-500');
+}
+
+function clearErrors() {
+    ['name', 'email', 'password', 'password-confirm'].forEach(field => {
+        const errorDiv = document.getElementById(`${field}-error`);
+        if (errorDiv) {
+            errorDiv.classList.add('hidden');
+        }
+        const input = document.getElementById(field === 'password-confirm' ? 'password-confirm' : field);
+        if (input) input.classList.remove('border-red-500');
+    });
+}
+
+function showVerifyModal(email) {
+    const modal = document.getElementById('verify-modal');
+    modal.classList.remove('hidden');
+    
+    document.getElementById('verify-cancel').onclick = () => {
+        modal.classList.add('hidden');
+        window.location.href = '/login/';
+    };
+    
+    document.getElementById('verify-submit').onclick = async () => {
+        const code = document.getElementById('verify-code').value;
+        
+        if (code.length !== 6) {
+            alert('Please enter a valid 6-digit code');
+            return;
+        }
+        
+        try {
+            const response = await api.post('/auth/verify-email/', {
+                email: email,
+                code: code
+            });
+            
+            if (response && response.message) {
+                alert('Email verified successfully! Please login.');
+                window.location.href = '/login/';
+            }
+            
+        } catch (error) {
+            console.error('Verification error:', error);
+            alert('Invalid verification code');
+        }
+    };
+    
+    document.getElementById('resend-code').onclick = async () => {
+        try {
+            await api.post('/auth/resend-code/', {
+                email: email
+            });
+            alert('Verification code resent');
+        } catch (error) {
+            console.error('Resend error:', error);
+            alert('Failed to resend code');
+        }
+    };
+}
+</script>
+{% endblock %}

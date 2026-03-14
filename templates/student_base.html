@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Student Portal - Academic Write{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .student-header {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3);
+            width: 100%;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 4.5rem;
+            width: 100%;
+            gap: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            background: white;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #059669;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.2;
+            border: 2px solid white;
+            flex-shrink: 0;
+        }
+
+        .logo:hover {
+            background: #fbbf24;
+            color: #059669;
+            transform: scale(1.05);
+        }
+
+        .student-nav {
+            display: none;
+            align-items: center;
+            height: 100%;
+            flex: 1;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .student-nav a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            margin: 0 0.1rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border-radius: 4px;
+        }
+
+        .student-nav a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .student-nav a.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid #fbbf24;
+        }
+
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+
+        .notification-bell {
+            position: relative;
+            padding: 0.6rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            min-width: 1.3rem;
+            height: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #059669;
+            border-radius: 50%;
+        }
+
+        .user-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .profile-image {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #059669;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 2px solid white;
+            overflow: hidden;
+        }
+
+        .profile-image img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 0.25rem;
+            width: 100%;
+        }
+
+        .profile-name {
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .profile-role {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.65rem;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-menu-dropdown {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.75rem;
+            width: 12rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-0.5rem);
+            transition: all 0.3s ease;
+            z-index: 100;
+            border-radius: 4px;
+        }
+
+        .user-menu-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-menu-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #1e293b;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu-item:hover {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .user-menu-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 0.5rem 0;
+        }
+
+        .mobile-menu-button {
+            display: block;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 0.75rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            border-radius: 4px;
+        }
+
+        .mobile-menu-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 4.5rem;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            padding: 1.5rem;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 40;
+            overflow-y: auto;
+            border-top: 2px solid #059669;
+        }
+
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .mobile-nav a {
+            color: #1e293b;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .mobile-nav a:hover {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .mobile-nav a.active {
+            background: #ecfdf5;
+            color: #059669;
+            border-left: 3px solid #059669;
+        }
+
+        .mobile-logout {
+            margin-top: 2rem;
+            padding: 0.75rem 1rem;
+            background: #ef4444;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-logout:hover {
+            background: #dc2626;
+        }
+
+        .main-content {
+            min-height: calc(100vh - 4.5rem - 18rem);
+            padding: 2rem 0;
+            background: white;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            padding: 2rem 0 1rem;
+        }
+
+        .footer-content {
+            text-align: center;
+            color: white;
+        }
+
+        .footer-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-info-item i {
+            color: #fbbf24;
+        }
+
+        .footer-copyright {
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 1.5rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        @media (min-width: 1024px) {
+            .student-nav {
+                display: flex;
+            }
+            
+            .mobile-menu-button {
+                display: none;
+            }
+        }
+
+        @media (max-width: 1280px) {
+            .student-nav a {
+                padding: 0.5rem 0.7rem;
+                font-size: 0.8rem;
+            }
+            
+            .profile-name {
+                max-width: 80px;
+            }
+        }
+
+        .active-page {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-bottom: 2px solid #fbbf24 !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .profile-image-upload {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-image-upload:hover::after {
+            content: 'Edit';
+            position: absolute;
+            bottom: -1.8rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #059669;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div id="app">
+        {% if user.is_authenticated and user.role == 'student' %}
+        <header class="student-header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/student/dashboard/" class="logo">AW</a>
+                    
+                    <div class="student-nav">
+                        <a href="/student/dashboard/" class="{% if request.path == '/student/dashboard/' %}active{% endif %}">DASHBOARD</a>
+                        <a href="/student/orders/" class="{% if request.path == '/student/orders/' %}active{% endif %}">MY ORDERS</a>
+                        <a href="/student/orders/new/" class="{% if request.path == '/student/orders/new/' %}active{% endif %}">NEW ORDER</a>
+                        <a href="/student/wallet/" class="{% if request.path == '/student/wallet/' %}active{% endif %}">WALLET</a>
+                        <a href="/student/messages/" class="relative {% if request.path == '/student/messages/' %}active{% endif %}">
+                            MESSAGES
+                            <span class="notification-badge hidden" id="unreadMessagesBadge">0</span>
+                        </a>
+                        <a href="/student/announcements/" class="relative {% if request.path == '/student/announcements/' %}active{% endif %}">
+                            ANNOUNCEMENTS
+                            <span class="notification-badge hidden" id="unreadAnnouncementsBadge">0</span>
+                        </a>
+                    </div>
+
+                    <div class="auth-section">
+                        <button class="notification-bell" id="notificationBell">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge hidden" id="notificationBadge">0</span>
+                        </button>
+                        
+                        <div class="user-menu">
+                            <div class="user-profile" id="userProfileButton">
+                                <div class="profile-image" id="profileImageDisplay">
+                                    {% if user.profile_image %}
+                                        <img src="{{ user.profile_image.url }}" alt="Profile">
+                                    {% else %}
+                                        <span>{{ user.full_name|first|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="profile-info">
+                                    <span class="profile-name">{{ user.full_name|default:user.email|truncatechars:15 }}</span>
+                                    <span class="profile-role">Student</span>
+                                </div>
+                            </div>
+                            
+                            <div class="user-menu-dropdown" id="userMenuDropdown">
+                                <a href="/student/profile/" class="user-menu-item">View Profile</a>
+                                <a href="#" class="user-menu-item" id="editProfileBtn">Edit Profile Picture</a>
+                                <a href="/student/settings/" class="user-menu-item">Settings</a>
+                                <div class="user-menu-divider"></div>
+                                <a href="#" class="user-menu-item" id="logoutBtn">Logout</a>
+                            </div>
+                        </div>
+
+                        <button class="mobile-menu-button" id="mobileMenuButton">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-nav">
+                <a href="/student/dashboard/">DASHBOARD</a>
+                <a href="/student/orders/">MY ORDERS</a>
+                <a href="/student/orders/new/">NEW ORDER</a>
+                <a href="/student/wallet/">WALLET</a>
+                <a href="/student/messages/">MESSAGES</a>
+                <a href="/student/announcements/">ANNOUNCEMENTS</a>
+                <a href="/student/profile/">PROFILE</a>
+                <a href="/student/settings/">SETTINGS</a>
+                <div class="mobile-logout" id="mobileLogoutBtn">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </div>
+            </div>
+        </div>
+
+        <div id="profileImageModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white max-w-md w-full mx-4 p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Update Profile Picture</h3>
+                <p class="text-sm text-gray-600 mb-4">Accepted formats: JPG, PNG, GIF. Max size: 2MB</p>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center justify-center">
+                        <div class="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-green-600" id="imagePreview">
+                            <span class="text-gray-400">Preview</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Choose Image</label>
+                        <input type="file" id="profileImageInput" accept="image/jpeg,image/png,image/gif,image/jpg" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none">
+                        <p class="text-xs text-gray-500 mt-1">JPEG, PNG, GIF up to 2MB</p>
+                    </div>
+
+                    <div class="flex space-x-3 pt-4">
+                        <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3" id="cancelImageUpload">Cancel</button>
+                        <button class="flex-1 bg-green-600 text-white hover:bg-green-700 transition-colors px-4 py-3" id="saveImageUpload">Upload Picture</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <div class="container">
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for message in messages %}
+                            <div class="p-3 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 text-green-700 border-l-4 border-green-500{% else %}bg-blue-50 text-blue-700 border-l-4 border-blue-500{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-info">
+                        <div class="footer-info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Nairobi, Kenya</span>
+                        </div>
+                        <div class="footer-info-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>fredrickwambua@gmail.com</span>
+                        </div>
+                        <div class="footer-info-item">
+                            <i class="fas fa-phone"></i>
+                            <span>0740618550</span>
+                        </div>
+                    </div>
+                    <div class="footer-copyright">
+                        &copy; 2024 Academic Write. All rights reserved.
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay">
+            <div class="bg-white max-w-md w-full mx-4 p-6" id="modalContent"></div>
+        </div>
+
+        <div class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" id="loadingOverlay">
+            <div class="bg-white p-6 rounded-lg">
+                <div class="w-10 h-10 border-4 border-green-600 border-t-transparent animate-spin"></div>
+            </div>
+        </div>
+        {% else %}
+        <div class="min-h-screen flex items-center justify-center bg-gray-50">
+            <div class="max-w-md w-full bg-white border border-gray-200 p-8 text-center">
+                <div class="w-20 h-20 bg-red-100 text-red-600 flex items-center justify-center text-4xl mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+                <p class="text-gray-600 mb-6">You must be logged in as a student to access this page.</p>
+                <a href="/login/" class="inline-block bg-green-600 text-white px-6 py-3 font-medium hover:bg-green-700 transition-colors">Go to Login</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/static/js/utils/api.js"></script>
+    <script src="/static/js/utils/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if user.is_authenticated and user.role == 'student' %}
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mobileMenu.classList.toggle('open');
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.toggle('fa-bars');
+                        icon.classList.toggle('fa-times');
+                    }
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!mobileMenu.contains(e.target) && !mobileMenuButton.contains(e.target)) {
+                        mobileMenu.classList.remove('open');
+                        const icon = mobileMenuButton.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                        }
+                    }
+                });
+            }
+
+            const userProfileButton = document.getElementById('userProfileButton');
+            const userMenuDropdown = document.getElementById('userMenuDropdown');
+            
+            if (userProfileButton && userMenuDropdown) {
+                userProfileButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userMenuDropdown.classList.toggle('show');
+                });
+                
+                document.addEventListener('click', function() {
+                    userMenuDropdown.classList.remove('show');
+                });
+                
+                userMenuDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            const notificationBell = document.getElementById('notificationBell');
+            if (notificationBell) {
+                notificationBell.addEventListener('click', function() {
+                    window.location.href = '/notifications/';
+                });
+            }
+
+            async function handleLogout() {
+                try {
+                    if (window.Loading) window.Loading.show();
+                    const refreshToken = auth.getRefreshToken();
+                    await api.post('/auth/logout/', { refresh: refreshToken });
+                    auth.clearTokens();
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    auth.clearTokens();
+                    window.location.href = '/';
+                } finally {
+                    if (window.Loading) window.Loading.hide();
+                }
+            }
+
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await handleLogout();
+                });
+            }
+
+            const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+            if (mobileLogoutBtn) {
+                mobileLogoutBtn.addEventListener('click', async function() {
+                    await handleLogout();
+                });
+            }
+
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const profileModal = document.getElementById('profileImageModal');
+            const cancelUpload = document.getElementById('cancelImageUpload');
+            const saveUpload = document.getElementById('saveImageUpload');
+            const imageInput = document.getElementById('profileImageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const profileDisplay = document.getElementById('profileImageDisplay');
+
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    userMenuDropdown.classList.remove('show');
+                    profileModal.classList.remove('hidden');
+                });
+            }
+
+            if (cancelUpload) {
+                cancelUpload.addEventListener('click', function() {
+                    profileModal.classList.add('hidden');
+                    imageInput.value = '';
+                    imagePreview.innerHTML = '<span class="text-gray-400">Preview</span>';
+                });
+            }
+
+            if (imageInput) {
+                imageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.size > 2 * 1024 * 1024) {
+                            alert('File too large. Max size is 2MB');
+                            this.value = '';
+                            return;
+                        }
+                        
+                        if (!file.type.match('image.*')) {
+                            alert('Please select an image file');
+                            this.value = '';
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover" alt="Preview">`;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            if (saveUpload) {
+                saveUpload.addEventListener('click', async function() {
+                    const file = imageInput.files[0];
+                    if (!file) {
+                        alert('Please select an image');
+                        return;
+                    }
+
+                    try {
+                        if (window.Loading) window.Loading.show();
+                        
+                        const formData = new FormData();
+                        formData.append('profile_image', file);
+                        
+                        const response = await api.upload('/student/profile/image/', formData);
+                        
+                        if (response.image_url) {
+                            profileDisplay.innerHTML = `<img src="${response.image_url}" alt="Profile">`;
+                        }
+                        
+                        profileModal.classList.add('hidden');
+                        imageInput.value = '';
+                        imagePreview.innerHTML = '<span class="text-gray-400">Preview</span>';
+                        
+                    } catch (error) {
+                        alert('Failed to upload image');
+                    } finally {
+                        if (window.Loading) window.Loading.hide();
+                    }
+                });
+            }
+            {% endif %}
+        });
+
+        window.Modal = {
+            show: function(content) {
+                const modal = document.getElementById('modalOverlay');
+                const modalContent = document.getElementById('modalContent');
+                if (modalContent) {
+                    modalContent.innerHTML = content;
+                }
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            },
+            hide: function() {
+                const modal = document.getElementById('modalOverlay');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.Loading = {
+            show: function() {
+                const loading = document.getElementById('loadingOverlay');
+                loading.classList.remove('hidden');
+                loading.classList.add('flex');
+            },
+            hide: function() {
+                const loading = document.getElementById('loadingOverlay');
+                loading.classList.add('hidden');
+                loading.classList.remove('flex');
+            }
+        };
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

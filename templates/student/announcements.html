@@ -1,0 +1,237 @@
+{% extends "student_base.html" %}
+
+{% block title %}Announcements - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900">Announcements</h1>
+        <div class="text-sm text-gray-500" id="last-updated"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-4">
+        <div class="flex space-x-2" id="filter-tabs">
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-blue-600 text-white" data-filter="all">All</button>
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-filter="unread">Unread</button>
+            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-filter="important">Important</button>
+        </div>
+    </div>
+
+    <div class="space-y-4" id="announcements-container">
+        <div class="text-center py-8 text-gray-500">Loading announcements...</div>
+    </div>
+</div>
+
+<div id="announcement-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="modal-title"></h3>
+                <button class="text-gray-500 hover:text-gray-700" id="close-announcement-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="announcement-content" class="space-y-4">
+                <div class="text-center py-4">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let announcements = [];
+let currentFilter = 'all';
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadAnnouncements();
+    
+    document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+    
+    document.querySelectorAll('#filter-tabs button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('#filter-tabs button').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white');
+                b.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            
+            this.classList.remove('bg-gray-100', 'text-gray-700');
+            this.classList.add('bg-blue-600', 'text-white');
+            
+            currentFilter = this.dataset.filter;
+            filterAnnouncements();
+        });
+    });
+    
+    document.getElementById('close-announcement-modal').addEventListener('click', function() {
+        document.getElementById('announcement-modal').classList.add('hidden');
+    });
+    
+    setInterval(loadAnnouncements, 300000);
+});
+
+async function loadAnnouncements() {
+    try {
+        announcements = await api.get('/student/announcements/');
+        filterAnnouncements();
+        updateUnreadBadge();
+    } catch (error) {
+        document.getElementById('announcements-container').innerHTML = `
+            <div class="text-center text-red-500 py-8">Failed to load announcements</div>
+        `;
+    }
+}
+
+function filterAnnouncements() {
+    let filtered = announcements;
+    
+    if (currentFilter === 'unread') {
+        filtered = announcements.filter(a => !a.read);
+    } else if (currentFilter === 'important') {
+        filtered = announcements.filter(a => a.priority === 'high' || a.priority === 'urgent');
+    }
+    
+    displayAnnouncements(filtered);
+}
+
+function displayAnnouncements(items) {
+    const container = document.getElementById('announcements-container');
+    
+    if (items.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-12">
+                <i class="fas fa-bullhorn text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500">No announcements</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = items.map(item => `
+        <div class="bg-white rounded-lg shadow-sm p-6 announcement-item ${!item.read ? 'border-l-4 border-blue-600' : ''}" data-id="${item.id}">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-3">
+                        <h3 class="text-lg font-semibold">${item.title}</h3>
+                        ${getPriorityBadge(item.priority)}
+                        ${!item.read ? '<span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">New</span>' : ''}
+                    </div>
+                    
+                    <p class="text-gray-600 mt-2">${item.excerpt || item.content.substring(0, 150)}${item.content.length > 150 ? '...' : ''}</p>
+                    
+                    <div class="flex items-center space-x-4 mt-3 text-sm text-gray-500">
+                        <span><i class="far fa-calendar mr-1"></i> ${formatDate(item.published_at)}</span>
+                        ${item.expires_at ? `<span><i class="far fa-hourglass mr-1"></i> Expires ${formatDate(item.expires_at)}</span>` : ''}
+                    </div>
+                </div>
+
+                <button class="ml-4 text-blue-600 hover:text-blue-800 read-more-btn" data-id="${item.id}">
+                    Read More
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    attachAnnouncementListeners();
+}
+
+function getPriorityBadge(priority) {
+    const badges = {
+        'low': 'bg-gray-100 text-gray-600',
+        'medium': 'bg-blue-100 text-blue-600',
+        'high': 'bg-orange-100 text-orange-600',
+        'urgent': 'bg-red-100 text-red-600'
+    };
+    
+    return `<span class="text-xs px-2 py-1 rounded-full ${badges[priority] || badges.medium}">${priority}</span>`;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function attachAnnouncementListeners() {
+    document.querySelectorAll('.read-more-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.closest('.announcement-item').dataset.id;
+            showAnnouncement(id);
+        });
+    });
+}
+
+async function showAnnouncement(id) {
+    try {
+        const announcement = await api.get(`/student/announcements/${id}/`);
+        
+        document.getElementById('modal-title').textContent = announcement.title;
+        
+        const content = document.getElementById('announcement-content');
+        content.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3">
+                    ${getPriorityBadge(announcement.priority)}
+                    <span class="text-sm text-gray-500">
+                        <i class="far fa-calendar mr-1"></i> ${new Date(announcement.published_at).toLocaleDateString()}
+                    </span>
+                </div>
+                
+                <div class="prose max-w-none">
+                    ${announcement.content.replace(/\n/g, '<br>')}
+                </div>
+                
+                ${announcement.link ? `
+                    <div class="mt-4">
+                        <a href="${announcement.link}" class="btn btn-primary" target="_blank">
+                            Learn More
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        document.getElementById('announcement-modal').classList.remove('hidden');
+        
+        const item = document.querySelector(`.announcement-item[data-id="${id}"]`);
+        if (item) {
+            item.classList.remove('border-l-4', 'border-blue-600');
+            const newBadge = item.querySelector('.bg-blue-100');
+            if (newBadge) newBadge.remove();
+        }
+        
+        updateUnreadBadge();
+        
+    } catch (error) {
+        alert('Failed to load announcement');
+    }
+}
+
+function updateUnreadBadge() {
+    const unreadCount = announcements.filter(a => !a.read).length;
+    
+    let badge = document.getElementById('unread-announcements-badge');
+    
+    if (unreadCount > 0) {
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.id = 'unread-announcements-badge';
+            badge.className = 'ml-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center';
+            document.querySelector('[href="/student/announcements/"]')?.appendChild(badge);
+        }
+        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+    } else if (badge) {
+        badge.remove();
+    }
+}
+</script>
+{% endblock %}

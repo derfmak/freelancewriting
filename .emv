@@ -1,0 +1,9 @@
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=fredrickwambua129@gmail.com
+EMAIL_HOST_PASSWORD=ufpf lzxv gkbc acsm
+DEFAULT_FROM_EMAIL=Academics <fredrickwambua129@gmail.com>
+SERVER_EMAIL=fredrickwambua129@gmail.com
+FRONTEND_URL=http://localhost:8000

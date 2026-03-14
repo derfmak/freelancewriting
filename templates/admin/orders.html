@@ -1,0 +1,374 @@
+
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Orders - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Manage <span class="text-blue-600">Orders</span></h1>
+            <p class="text-gray-600 mt-1">View and manage all student orders</p>
+        </div>
+        <div class="flex space-x-3">
+            <div class="flex">
+                <input type="text" class="border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors w-64" placeholder="Search orders..." id="search-orders">
+                <button class="bg-blue-600 text-white px-4 py-3 hover:bg-blue-700 transition-colors" id="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 p-4 mb-8">
+        <div class="flex flex-wrap gap-2 overflow-x-auto pb-2" id="status-filters">
+            <button class="px-4 py-2 text-sm font-medium bg-blue-600 text-white" data-status="all">All</button>
+            <button class="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" data-status="pending">Pending</button>
+            <button class="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" data-status="ongoing">Ongoing</button>
+            <button class="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" data-status="awaiting_review">Awaiting Review</button>
+            <button class="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" data-status="completed">Completed</button>
+            <button class="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" data-status="refund_pending">Refund Pending</button>
+            <button class="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" data-status="cancelled">Cancelled</button>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Topic</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Pages</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Deadline</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-list" class="divide-y divide-gray-200">
+                    <tr>
+                        <td colspan="9" class="px-6 py-8 text-center text-gray-500">Loading orders...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="border-t border-gray-200 p-4" id="pagination">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600" id="pagination-info"></div>
+                <div class="flex space-x-2" id="pagination-buttons"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="reject-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Reject Order</h3>
+        <p class="text-gray-600 mb-4">Please provide a reason for rejection:</p>
+        
+        <div class="mb-4">
+            <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="reject-reason" rows="3" placeholder="Reason for rejection..."></textarea>
+        </div>
+
+        <div class="flex space-x-3">
+            <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3" id="reject-modal-close">Cancel</button>
+            <button class="flex-1 bg-red-600 text-white hover:bg-red-700 transition-colors px-4 py-3" id="confirm-reject">Reject Order</button>
+        </div>
+    </div>
+</div>
+
+<div id="deliver-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Deliver Paper</h3>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Paper (PDF)</label>
+            <input type="file" class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="paper-file" accept=".pdf,.doc,.docx">
+        </div>
+
+        <div class="mb-4">
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" class="w-4 h-4 border border-gray-300 text-blue-600 focus:ring-blue-600" id="include-plagiarism">
+                <span class="text-sm text-gray-700">Include Plagiarism Report</span>
+            </label>
+        </div>
+
+        <div class="flex space-x-3">
+            <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3" id="deliver-modal-close">Cancel</button>
+            <button class="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors px-4 py-3" id="confirm-deliver">Deliver</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentStatus = 'all';
+let currentSearch = '';
+let totalPages = 1;
+let selectedOrderId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#status-filters button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('#status-filters button').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white');
+                b.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            
+            this.classList.remove('bg-gray-100', 'text-gray-700');
+            this.classList.add('bg-blue-600', 'text-white');
+            
+            currentStatus = this.dataset.status;
+            currentPage = 1;
+            loadOrders();
+        });
+    });
+    
+    document.getElementById('search-btn').addEventListener('click', function() {
+        currentSearch = document.getElementById('search-orders').value;
+        currentPage = 1;
+        loadOrders();
+    });
+    
+    document.getElementById('search-orders').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            currentSearch = this.value;
+            currentPage = 1;
+            loadOrders();
+        }
+    });
+    
+    document.getElementById('reject-modal-close').addEventListener('click', function() {
+        document.getElementById('reject-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-reject').addEventListener('click', rejectOrder);
+    
+    document.getElementById('deliver-modal-close').addEventListener('click', function() {
+        document.getElementById('deliver-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-deliver').addEventListener('click', deliverOrder);
+    
+    loadOrders();
+});
+
+async function loadOrders() {
+    try {
+        const params = { 
+            page: currentPage,
+            status: currentStatus !== 'all' ? currentStatus : undefined,
+            search: currentSearch || undefined
+        };
+        
+        const response = await api.get('/admin/orders/', params);
+        
+        displayOrders(response.results || []);
+        
+        totalPages = Math.ceil(response.total / response.page_size) || 1;
+        updatePagination(response.total, response.page, response.page_size);
+        
+    } catch (error) {
+        document.getElementById('orders-list').innerHTML = `
+            <tr>
+                <td colspan="9" class="px-6 py-8 text-center text-red-500">
+                    Failed to load orders
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displayOrders(orders) {
+    const tbody = document.getElementById('orders-list');
+    
+    if (orders.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                    No orders found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = orders.map(order => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 font-medium text-gray-800">${order.order_number || 'N/A'}</td>
+            <td class="px-6 py-4">
+                <a href="/admin/users/${order.student.id}/" class="text-blue-600 hover:text-blue-800 transition-colors">
+                    ${order.student_name}
+                </a>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${order.topic.substring(0, 40)}${order.topic.length > 40 ? '...' : ''}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${order.paper_type.replace('_', ' ')}</td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 text-xs ${getStatusClass(order.status)}">${order.status.replace('_', ' ')}</span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${order.pages}</td>
+            <td class="px-6 py-4 text-sm ${isUrgent(order.deadline) ? 'text-red-600 font-medium' : 'text-gray-600'}">
+                ${new Date(order.deadline).toLocaleDateString()}
+                ${isUrgent(order.deadline) ? '<i class="fas fa-exclamation-circle ml-1" title="Urgent"></i>' : ''}
+            </td>
+            <td class="px-6 py-4 text-sm font-medium text-gray-800">$${parseFloat(order.total_price).toFixed(2)}</td>
+            <td class="px-6 py-4">
+                <div class="flex space-x-2">
+                    <a href="/admin/orders/${order.id}/" class="text-blue-600 hover:text-blue-800 text-sm">View</a>
+                    ${order.status === 'pending' ? `
+                        <button class="text-green-600 hover:text-green-800 text-sm approve-btn" data-id="${order.id}">Approve</button>
+                        <button class="text-red-600 hover:text-red-800 text-sm reject-btn" data-id="${order.id}">Reject</button>
+                    ` : ''}
+                    ${order.status === 'ongoing' ? `
+                        <button class="text-purple-600 hover:text-purple-800 text-sm deliver-btn" data-id="${order.id}">Deliver</button>
+                    ` : ''}
+                    ${order.status === 'refund_pending' ? `
+                        <a href="/admin/refunds/${order.id}/" class="text-orange-600 hover:text-orange-800 text-sm">Review</a>
+                    ` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    attachActionButtons();
+}
+
+function getStatusClass(status) {
+    const classes = {
+        'pending': 'bg-yellow-100 text-yellow-700',
+        'ongoing': 'bg-blue-100 text-blue-700',
+        'awaiting_review': 'bg-purple-100 text-purple-700',
+        'completed': 'bg-green-100 text-green-700',
+        'refund_pending': 'bg-orange-100 text-orange-700',
+        'cancelled': 'bg-red-100 text-red-700'
+    };
+    return classes[status] || 'bg-gray-100 text-gray-700';
+}
+
+function attachActionButtons() {
+    document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => approveOrder(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedOrderId = btn.dataset.id;
+            document.getElementById('reject-modal').classList.remove('hidden');
+        });
+    });
+    
+    document.querySelectorAll('.deliver-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedOrderId = btn.dataset.id;
+            document.getElementById('deliver-modal').classList.remove('hidden');
+        });
+    });
+}
+
+function isUrgent(deadline) {
+    const deadlineDate = new Date(deadline);
+    const now = new Date();
+    const diff = deadlineDate - now;
+    return diff < 24 * 60 * 60 * 1000;
+}
+
+function updatePagination(total, page, pageSize) {
+    const start = ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+    
+    document.getElementById('pagination-info').textContent = `Showing ${start}-${end} of ${total} orders`;
+    
+    const buttonsContainer = document.getElementById('pagination-buttons');
+    
+    if (totalPages <= 1) {
+        buttonsContainer.innerHTML = '';
+        return;
+    }
+    
+    let buttons = '';
+    
+    if (page > 1) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 transition-colors" data-page="${page - 1}">Previous</button>`;
+    }
+    
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm ${i === page ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-50 transition-colors'}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (page < totalPages) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 transition-colors" data-page="${page + 1}">Next</button>`;
+    }
+    
+    buttonsContainer.innerHTML = buttons;
+    
+    buttonsContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentPage = parseInt(this.dataset.page);
+            loadOrders();
+        });
+    });
+}
+
+async function approveOrder(orderId) {
+    if (!confirm('Approve this order?')) return;
+    
+    try {
+        await api.post(`/admin/orders/${orderId}/approve/`);
+        loadOrders();
+    } catch (error) {
+        alert('Failed to approve order');
+    }
+}
+
+async function rejectOrder() {
+    const reason = document.getElementById('reject-reason').value;
+    
+    if (!reason.trim()) {
+        alert('Please provide a reason for rejection');
+        return;
+    }
+    
+    try {
+        await api.post(`/admin/orders/${selectedOrderId}/reject/`, {
+            reason: reason
+        });
+        
+        document.getElementById('reject-modal').classList.add('hidden');
+        document.getElementById('reject-reason').value = '';
+        loadOrders();
+        
+    } catch (error) {
+        alert('Failed to reject order');
+    }
+}
+
+async function deliverOrder() {
+    const fileInput = document.getElementById('paper-file');
+    const includePlagiarism = document.getElementById('include-plagiarism').checked;
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please select a file to upload');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('include_plagiarism', includePlagiarism);
+    
+    try {
+        await api.upload(`/admin/orders/${selectedOrderId}/deliver/`, formData);
+        
+        document.getElementById('deliver-modal').classList.add('hidden');
+        fileInput.value = '';
+        loadOrders();
+        
+    } catch (error) {
+        alert('Failed to deliver order');
+    }
+}
+</script>
+{% endblock %}

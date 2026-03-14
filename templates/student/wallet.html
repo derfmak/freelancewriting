@@ -1,0 +1,1008 @@
+{% extends "student_base.html" %}
+
+{% block title %}Wallet - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">My <span class="text-green-600">Wallet</span></h1>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="md:col-span-2 space-y-8">
+                
+                <div class="bg-white border border-gray-200 p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Current Balance</p>
+                            <p class="text-4xl font-bold text-gray-900" id="balance">$0.00</p>
+                            <p class="text-sm text-gray-500 mt-1" id="held-balance"></p>
+                        </div>
+                        <button class="bg-green-600 text-white px-6 py-3 font-medium hover:bg-green-700 transition-colors flex items-center" id="show-deposit-modal">
+                            <i class="fas fa-plus mr-2"></i>Add Funds
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 text-center border-t border-gray-200 pt-6">
+                        <div>
+                            <p class="text-sm text-gray-500">Total Deposited</p>
+                            <p class="text-lg font-semibold text-green-600" id="total-deposited">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Total Spent</p>
+                            <p class="text-lg font-semibold text-blue-600" id="total-spent">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Total Refunded</p>
+                            <p class="text-lg font-semibold text-orange-600" id="total-refunded">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Transactions</h2>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-list" class="divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                        Loading transactions...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 text-center" id="transactions-pagination">
+                        <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-2 text-sm" id="load-more">Load More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <div class="bg-white border border-gray-200 p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+                    
+                    <div class="space-y-3">
+                        <button class="bg-green-600 text-white w-full py-3 font-medium hover:bg-green-700 transition-colors flex items-center justify-center" id="quick-deposit">
+                            <i class="fas fa-plus-circle mr-2"></i>Add Funds
+                        </button>
+                        
+                        <button class="border border-gray-300 text-gray-700 w-full py-3 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center" id="withdraw-btn">
+                            <i class="fas fa-arrow-up mr-2"></i>Withdraw Funds
+                        </button>
+                        
+                        <a href="/student/orders/new/" class="border border-gray-300 text-gray-700 w-full py-3 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center">
+                            <i class="fas fa-file-alt mr-2"></i>Place Order
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">Payment Methods</h2>
+                        <button class="text-green-600 hover:text-green-700 text-sm font-medium" id="add-payment-method-btn">
+                            <i class="fas fa-plus mr-1"></i>Add New
+                        </button>
+                    </div>
+                    
+                    <div id="payment-methods-container" class="space-y-3">
+                        <div class="text-center text-gray-500 py-8" id="no-payment-methods">
+                            <i class="fas fa-credit-card text-4xl text-gray-300 mb-3"></i>
+                            <p class="mb-3">No payment methods saved</p>
+                            <button class="bg-green-600 text-white px-4 py-2 text-sm hover:bg-green-700 transition-colors" id="add-first-payment-method">
+                                Add Payment Method
+                            </button>
+                        </div>
+                        <div id="payment-methods-list" class="hidden space-y-3"></div>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 border border-green-100 p-4">
+                    <h3 class="font-bold text-gray-800 mb-2 flex items-center">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                        Tips
+                    </h3>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-2">•</span>
+                            Cards are validated in real-time for expiry and validity
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-2">•</span>
+                            PINless transactions for quick funding
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-2">•</span>
+                            Insufficient funds? Try another card
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="deposit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Add Funds</h3>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-deposit-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="deposit-step-1">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount ($)</label>
+                        <input type="number" 
+                               class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" 
+                               id="deposit-amount" 
+                               min="5" 
+                               step="5" 
+                               value="50"
+                               placeholder="Enter amount">
+                        <p class="text-xs text-gray-500 mt-1">Minimum deposit: $5.00</p>
+                    </div>
+
+                    <div id="payment-methods-selector" class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Payment Method</label>
+                        <div id="payment-methods-radio-group" class="space-y-2"></div>
+                    </div>
+
+                    <button class="w-full bg-green-600 text-white py-3 font-medium hover:bg-green-700 transition-colors" id="process-deposit">
+                        Continue to Payment
+                    </button>
+                </div>
+            </div>
+
+            <div id="deposit-step-2" class="hidden">
+                <div class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+                    <p class="text-gray-600 mb-2">Processing your payment...</p>
+                    <p class="text-sm text-gray-500" id="processing-message">Verifying card and checking funds</p>
+                </div>
+            </div>
+
+            <div id="deposit-step-3" class="hidden">
+                <div class="text-center py-6">
+                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">Payment Successful!</h4>
+                    <p class="text-gray-600 mb-4" id="success-message">$$ has been added to your wallet.</p>
+                    <button class="w-full bg-green-600 text-white py-2 hover:bg-green-700 transition-colors" id="deposit-success-close">Done</button>
+                </div>
+            </div>
+
+            <div id="deposit-step-4" class="hidden">
+                <div class="text-center py-6">
+                    <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">Payment Failed</h4>
+                    <p class="text-gray-600 mb-4" id="deposit-error-message"></p>
+                    <p class="text-sm text-gray-500 mb-4" id="deposit-error-details"></p>
+                    <div class="flex space-x-3">
+                        <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors py-2" id="deposit-fail-close">Close</button>
+                        <button class="flex-1 bg-green-600 text-white hover:bg-green-700 transition-colors py-2" id="deposit-fail-retry">Try Again</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="withdraw-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Withdraw Funds</h3>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-withdraw-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount ($)</label>
+                    <input type="number" 
+                           class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" 
+                           id="withdraw-amount" 
+                           min="10" 
+                           step="10"
+                           placeholder="Enter amount">
+                    <p class="text-xs text-gray-500 mt-1">Minimum withdrawal: $10.00</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Withdraw to</label>
+                    <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="withdraw-method">
+                        <option value="paypal">PayPal</option>
+                        <option value="bank">Bank Transfer</option>
+                    </select>
+                </div>
+
+                <div id="paypal-details" class="space-y-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">PayPal Email</label>
+                        <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="paypal-email">
+                    </div>
+                </div>
+
+                <div id="bank-details" class="hidden space-y-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Account Holder Name</label>
+                        <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="account-holder">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Routing Number</label>
+                        <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="routing-number">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
+                        <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="account-number">
+                    </div>
+                </div>
+
+                <button class="w-full bg-green-600 text-white py-3 font-medium hover:bg-green-700 transition-colors" id="process-withdraw">
+                    Request Withdrawal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="payment-method-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Add Payment Method</h3>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-payment-method-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+                    <input type="text" 
+                           class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" 
+                           id="card-number" 
+                           placeholder="1234 5678 9012 3456"
+                           maxlength="19">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cardholder Name</label>
+                    <input type="text" 
+                           class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" 
+                           id="cardholder-name" 
+                           placeholder="John Doe">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+                        <input type="text" 
+                               class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" 
+                               id="expiry-date" 
+                               placeholder="MM/YY"
+                               maxlength="5">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CVV</label>
+                        <input type="text" 
+                               class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" 
+                               id="cvv" 
+                               placeholder="123"
+                               maxlength="4">
+                    </div>
+                </div>
+
+                <div id="card-error" class="text-red-600 text-sm hidden"></div>
+                <div id="card-success" class="text-green-600 text-sm hidden"></div>
+
+                <div class="flex space-x-3 pt-4">
+                    <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors py-3" id="cancel-add-payment">Cancel</button>
+                    <button class="flex-1 bg-green-600 text-white hover:bg-green-700 transition-colors py-3" id="save-payment-method">Add Card</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let walletData = null;
+let transactions = [];
+let paymentMethods = [];
+let currentPage = 1;
+let hasMore = true;
+let currentDepositAmount = 0;
+let selectedPaymentMethod = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadWalletData();
+    loadTransactions();
+    loadPaymentMethods();
+    
+    document.getElementById('show-deposit-modal').addEventListener('click', showDepositModal);
+    document.getElementById('quick-deposit').addEventListener('click', showDepositModal);
+    document.getElementById('close-deposit-modal').addEventListener('click', hideDepositModal);
+    
+    document.getElementById('withdraw-btn').addEventListener('click', showWithdrawModal);
+    document.getElementById('close-withdraw-modal').addEventListener('click', hideWithdrawModal);
+    
+    document.getElementById('withdraw-method').addEventListener('change', toggleWithdrawDetails);
+    document.getElementById('process-withdraw').addEventListener('click', processWithdraw);
+    
+    document.getElementById('load-more').addEventListener('click', loadMoreTransactions);
+    
+    document.getElementById('add-payment-method-btn').addEventListener('click', showPaymentMethodModal);
+    document.getElementById('add-first-payment-method').addEventListener('click', showPaymentMethodModal);
+    document.getElementById('close-payment-method-modal').addEventListener('click', hidePaymentMethodModal);
+    document.getElementById('cancel-add-payment').addEventListener('click', hidePaymentMethodModal);
+    document.getElementById('save-payment-method').addEventListener('click', savePaymentMethod);
+    
+    document.getElementById('deposit-fail-close').addEventListener('click', hideDepositModal);
+    document.getElementById('deposit-fail-retry').addEventListener('click', function() {
+        document.getElementById('deposit-step-4').classList.add('hidden');
+        document.getElementById('deposit-step-1').classList.remove('hidden');
+    });
+    document.getElementById('deposit-success-close').addEventListener('click', function() {
+        hideDepositModal();
+        loadWalletData();
+        loadTransactions();
+    });
+    
+    document.getElementById('card-number').addEventListener('input', formatCardNumber);
+    document.getElementById('card-number').addEventListener('blur', validateCardNumber);
+    document.getElementById('expiry-date').addEventListener('input', formatExpiryDate);
+    document.getElementById('expiry-date').addEventListener('blur', validateExpiryDate);
+    document.getElementById('cvv').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+});
+
+async function loadWalletData() {
+    try {
+        walletData = await api.get('/wallet/');
+        displayWalletData();
+    } catch (error) {
+        console.error('Failed to load wallet data');
+    }
+}
+
+function displayWalletData() {
+    document.getElementById('balance').textContent = `$${parseFloat(walletData.balance).toFixed(2)}`;
+    document.getElementById('total-deposited').textContent = `$${parseFloat(walletData.total_deposited).toFixed(2)}`;
+    document.getElementById('total-spent').textContent = `$${parseFloat(walletData.total_spent).toFixed(2)}`;
+    document.getElementById('total-refunded').textContent = `$${parseFloat(walletData.total_refunded).toFixed(2)}`;
+    
+    if (walletData.held_balance > 0) {
+        document.getElementById('held-balance').textContent = `($${parseFloat(walletData.held_balance).toFixed(2)} held in escrow)`;
+    }
+}
+
+async function loadTransactions(page = 1) {
+    try {
+        const response = await api.get('/wallet/transactions/', { page: page });
+        
+        if (page === 1) {
+            transactions = response.results || response;
+        } else {
+            transactions = [...transactions, ...(response.results || response)];
+        }
+        
+        hasMore = response.next ? true : false;
+        displayTransactions();
+        
+        document.getElementById('load-more').style.display = hasMore ? 'inline-block' : 'none';
+        
+    } catch (error) {
+        console.error('Failed to load transactions');
+    }
+}
+
+function displayTransactions() {
+    const tbody = document.getElementById('transactions-list');
+    
+    if (transactions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                    No transactions yet
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = transactions.map(t => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm text-gray-600">${new Date(t.created_at).toLocaleDateString()}</td>
+            <td class="px-4 py-3 text-sm text-gray-600">${t.description}</td>
+            <td class="px-4 py-3">
+                <span class="px-2 py-1 text-xs ${getTypeClass(t.type)}">
+                    ${t.type}
+                </span>
+            </td>
+            <td class="px-4 py-3 text-sm font-medium ${parseFloat(t.amount) > 0 ? 'text-green-600' : 'text-red-600'}">
+                ${parseFloat(t.amount) > 0 ? '+' : ''}$${Math.abs(parseFloat(t.amount)).toFixed(2)}
+            </td>
+            <td class="px-4 py-3">
+                <span class="px-2 py-1 text-xs ${getStatusClass(t.status)}">
+                    ${t.status}
+                </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600">$${parseFloat(t.balance_after).toFixed(2)}</td>
+        </tr>
+    `).join('');
+}
+
+function getTypeClass(type) {
+    const classes = {
+        'deposit': 'bg-green-100 text-green-700',
+        'payment': 'bg-blue-100 text-blue-700',
+        'refund': 'bg-orange-100 text-orange-700',
+        'withdrawal': 'bg-purple-100 text-purple-700',
+        'hold': 'bg-yellow-100 text-yellow-700',
+        'release': 'bg-teal-100 text-teal-700'
+    };
+    return classes[type] || 'bg-gray-100 text-gray-700';
+}
+
+function getStatusClass(status) {
+    const classes = {
+        'completed': 'bg-green-100 text-green-700',
+        'pending': 'bg-yellow-100 text-yellow-700',
+        'processing': 'bg-blue-100 text-blue-700',
+        'failed': 'bg-red-100 text-red-700',
+        'held': 'bg-purple-100 text-purple-700'
+    };
+    return classes[status] || 'bg-gray-100 text-gray-700';
+}
+
+async function loadPaymentMethods() {
+    try {
+        paymentMethods = await api.get('/wallet/payment-methods/');
+        displayPaymentMethods();
+        updatePaymentMethodSelector();
+    } catch (error) {
+        console.error('Failed to load payment methods');
+    }
+}
+
+function displayPaymentMethods() {
+    const container = document.getElementById('payment-methods-list');
+    const noMethods = document.getElementById('no-payment-methods');
+    
+    if (paymentMethods.length === 0) {
+        noMethods.classList.remove('hidden');
+        container.classList.add('hidden');
+        return;
+    }
+    
+    noMethods.classList.add('hidden');
+    container.classList.remove('hidden');
+    
+    container.innerHTML = paymentMethods.map(m => `
+        <div class="flex items-center justify-between p-3 border border-gray-200 hover:border-green-300 transition-colors">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-${getCardIcon(m.card_brand)} text-2xl text-gray-600"></i>
+                <div>
+                    <p class="font-medium text-gray-800">${m.card_brand} •••• ${m.last_four}</p>
+                    <p class="text-xs text-gray-500">Expires ${m.expiry_month}/${m.expiry_year}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                ${m.is_default ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-1">Default</span>' : ''}
+                <button class="text-gray-400 hover:text-red-600 transition-colors delete-payment-method" data-id="${m.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    document.querySelectorAll('.delete-payment-method').forEach(btn => {
+        btn.addEventListener('click', function() {
+            deletePaymentMethod(this.dataset.id);
+        });
+    });
+}
+
+function updatePaymentMethodSelector() {
+    const container = document.getElementById('payment-methods-radio-group');
+    
+    if (paymentMethods.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 bg-gray-50 border border-gray-200">
+                <p class="text-gray-600 mb-2">No payment methods saved</p>
+                <button class="text-green-600 hover:text-green-700 text-sm font-medium" id="add-payment-from-deposit">
+                    Add Payment Method
+                </button>
+            </div>
+        `;
+        document.getElementById('add-payment-from-deposit')?.addEventListener('click', function() {
+            hideDepositModal();
+            showPaymentMethodModal();
+        });
+        return;
+    }
+    
+    container.innerHTML = paymentMethods.map((m, index) => `
+        <label class="flex items-center p-3 border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${index === 0 ? 'border-green-600 bg-green-50' : ''}">
+            <input type="radio" name="payment-method-select" value="${m.id}" class="w-4 h-4 text-green-600 focus:ring-green-500 mr-3" ${index === 0 ? 'checked' : ''}>
+            <div class="flex-1 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-${getCardIcon(m.card_brand)} text-2xl text-gray-600"></i>
+                    <div>
+                        <p class="font-medium text-gray-800">${m.card_brand} •••• ${m.last_four}</p>
+                        <p class="text-xs text-gray-500">Expires ${m.expiry_month}/${m.expiry_year}</p>
+                    </div>
+                </div>
+                ${m.is_default ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-1">Default</span>' : ''}
+            </div>
+        </label>
+    `).join('');
+}
+
+function getCardIcon(brand) {
+    const icons = {
+        'visa': 'cc-visa',
+        'mastercard': 'cc-mastercard',
+        'amex': 'cc-amex',
+        'discover': 'cc-discover',
+        'jcb': 'cc-jcb',
+        'diners': 'cc-diners-club'
+    };
+    return icons[brand.toLowerCase()] || 'credit-card';
+}
+
+function loadMoreTransactions() {
+    currentPage++;
+    loadTransactions(currentPage);
+}
+
+function showDepositModal() {
+    if (paymentMethods.length === 0) {
+        if (confirm('You need to add a payment method first. Add one now?')) {
+            showPaymentMethodModal();
+        }
+        return;
+    }
+    document.getElementById('deposit-step-1').classList.remove('hidden');
+    document.getElementById('deposit-step-2').classList.add('hidden');
+    document.getElementById('deposit-step-3').classList.add('hidden');
+    document.getElementById('deposit-step-4').classList.add('hidden');
+    document.getElementById('deposit-modal').classList.remove('hidden');
+}
+
+function hideDepositModal() {
+    document.getElementById('deposit-modal').classList.add('hidden');
+}
+
+function showWithdrawModal() {
+    document.getElementById('withdraw-modal').classList.remove('hidden');
+}
+
+function hideWithdrawModal() {
+    document.getElementById('withdraw-modal').classList.add('hidden');
+}
+
+function toggleWithdrawDetails() {
+    const method = document.getElementById('withdraw-method').value;
+    document.getElementById('paypal-details').classList.toggle('hidden', method !== 'paypal');
+    document.getElementById('bank-details').classList.toggle('hidden', method !== 'bank');
+}
+
+function showPaymentMethodModal() {
+    document.getElementById('payment-method-modal').classList.remove('hidden');
+    document.getElementById('card-number').value = '';
+    document.getElementById('cardholder-name').value = '';
+    document.getElementById('expiry-date').value = '';
+    document.getElementById('cvv').value = '';
+    document.getElementById('card-error').classList.add('hidden');
+    document.getElementById('card-success').classList.add('hidden');
+}
+
+function hidePaymentMethodModal() {
+    document.getElementById('payment-method-modal').classList.add('hidden');
+}
+
+function formatCardNumber(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    let formatted = '';
+    for (let i = 0; i < value.length; i++) {
+        if (i > 0 && i % 4 === 0) {
+            formatted += ' ';
+        }
+        formatted += value[i];
+    }
+    e.target.value = formatted;
+}
+
+function formatExpiryDate(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        e.target.value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    } else {
+        e.target.value = value;
+    }
+}
+
+function luhnCheck(cardNumber) {
+    let sum = 0;
+    let shouldDouble = false;
+    
+    for (let i = cardNumber.length - 1; i >= 0; i--) {
+        let digit = parseInt(cardNumber.charAt(i));
+        
+        if (shouldDouble) {
+            digit *= 2;
+            if (digit > 9) digit -= 9;
+        }
+        
+        sum += digit;
+        shouldDouble = !shouldDouble;
+    }
+    
+    return sum % 10 === 0;
+}
+
+function detectCardBrand(cardNumber) {
+    const firstDigit = cardNumber[0];
+    const firstTwo = cardNumber.slice(0, 2);
+    const firstFour = cardNumber.slice(0, 4);
+    
+    if (firstDigit === '4') return { brand: 'visa', length: 16 };
+    if (firstDigit === '5') return { brand: 'mastercard', length: 16 };
+    if (firstDigit === '3' && (firstTwo === '34' || firstTwo === '37')) return { brand: 'amex', length: 15 };
+    if (firstFour === '6011' || firstTwo === '65' || (parseInt(firstTwo) >= 622 && parseInt(firstTwo) <= 625)) return { brand: 'discover', length: 16 };
+    if (firstFour === '3088' || firstFour === '3096' || firstFour === '3112' || firstFour === '3158' || firstFour === '3337') return { brand: 'jcb', length: 16 };
+    if (firstTwo === '36' || firstTwo === '38' || firstTwo === '39') return { brand: 'diners', length: 14 };
+    
+    return { brand: 'unknown', length: 16 };
+}
+
+function validateCardNumber() {
+    const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
+    const errorEl = document.getElementById('card-error');
+    
+    if (!cardNumber) {
+        errorEl.textContent = 'Card number is required';
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    const cardInfo = detectCardBrand(cardNumber);
+    
+    if (cardInfo.brand === 'unknown') {
+        errorEl.textContent = 'Unsupported card type';
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    if (cardNumber.length !== cardInfo.length) {
+        errorEl.textContent = `Card must be ${cardInfo.length} digits`;
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    if (!luhnCheck(cardNumber)) {
+        errorEl.textContent = 'Invalid card number';
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    errorEl.classList.add('hidden');
+    return true;
+}
+
+function validateExpiryDate() {
+    const expiry = document.getElementById('expiry-date').value;
+    const errorEl = document.getElementById('card-error');
+    
+    if (!expiry || !/^\d{2}\/\d{2}$/.test(expiry)) {
+        errorEl.textContent = 'Invalid expiry format (MM/YY)';
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    const [month, year] = expiry.split('/').map(Number);
+    const now = new Date();
+    const currentYear = now.getFullYear() % 100;
+    const currentMonth = now.getMonth() + 1;
+    
+    if (month < 1 || month > 12) {
+        errorEl.textContent = 'Invalid month';
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+        errorEl.textContent = 'Card has expired';
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    errorEl.classList.add('hidden');
+    return true;
+}
+
+function validateCVV() {
+    const cvv = document.getElementById('cvv').value;
+    const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
+    const cardInfo = detectCardBrand(cardNumber);
+    const errorEl = document.getElementById('card-error');
+    
+    if (!cvv) {
+        errorEl.textContent = 'CVV is required';
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    const expectedLength = cardInfo.brand === 'amex' ? 4 : 3;
+    
+    if (!/^\d+$/.test(cvv) || cvv.length !== expectedLength) {
+        errorEl.textContent = `CVV must be ${expectedLength} digits`;
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    errorEl.classList.add('hidden');
+    return true;
+}
+
+function validateCardholderName() {
+    const name = document.getElementById('cardholder-name').value.trim();
+    const errorEl = document.getElementById('card-error');
+    
+    if (!name) {
+        errorEl.textContent = 'Cardholder name is required';
+        errorEl.classList.remove('hidden');
+        return false;
+    }
+    
+    errorEl.classList.add('hidden');
+    return true;
+}
+
+async function savePaymentMethod() {
+    document.getElementById('card-error').classList.add('hidden');
+    
+    if (!validateCardNumber()) return;
+    if (!validateCardholderName()) return;
+    if (!validateExpiryDate()) return;
+    if (!validateCVV()) return;
+    
+    const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
+    const cardholderName = document.getElementById('cardholder-name').value.trim();
+    const expiry = document.getElementById('expiry-date').value;
+    const [month, year] = expiry.split('/').map(Number);
+    const cvv = document.getElementById('cvv').value;
+    const cardInfo = detectCardBrand(cardNumber);
+    
+    const saveButton = document.getElementById('save-payment-method');
+    const originalText = saveButton.textContent;
+    saveButton.textContent = 'Validating...';
+    saveButton.disabled = true;
+    
+    setTimeout(async () => {
+        try {
+            const response = await api.post('/wallet/payment-methods/add/', {
+                last_four: cardNumber.slice(-4),
+                card_brand: cardInfo.brand,
+                cardholder_name: cardholderName,
+                expiry_month: month,
+                expiry_year: 2000 + year,
+                provider_method_id: 'manual_' + Date.now()
+            });
+            
+            document.getElementById('card-success').textContent = 'Card added successfully!';
+            document.getElementById('card-success').classList.remove('hidden');
+            
+            setTimeout(() => {
+                hidePaymentMethodModal();
+                loadPaymentMethods();
+            }, 1500);
+            
+        } catch (error) {
+            document.getElementById('card-error').textContent = 'Failed to add card. Please try again.';
+            document.getElementById('card-error').classList.remove('hidden');
+            saveButton.textContent = originalText;
+            saveButton.disabled = false;
+        }
+    }, 1000);
+}
+
+async function processDeposit() {
+    const amount = parseFloat(document.getElementById('deposit-amount').value);
+    const selectedRadio = document.querySelector('input[name="payment-method-select"]:checked');
+    
+    if (!selectedRadio) {
+        alert('Please select a payment method');
+        return;
+    }
+    
+    const paymentMethodId = selectedRadio.value;
+    
+    if (!amount || amount < 5) {
+        alert('Please enter a valid amount (minimum $5)');
+        return;
+    }
+    
+    currentDepositAmount = amount;
+    selectedPaymentMethod = paymentMethods.find(m => m.id === paymentMethodId);
+    
+    if (!selectedPaymentMethod) {
+        alert('Payment method not found');
+        return;
+    }
+    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    
+    if (selectedPaymentMethod.expiry_year < currentYear || 
+        (selectedPaymentMethod.expiry_year === currentYear && selectedPaymentMethod.expiry_month < currentMonth)) {
+        alert('This card has expired. Please use a different card.');
+        return;
+    }
+    
+    document.getElementById('deposit-step-1').classList.add('hidden');
+    document.getElementById('deposit-step-2').classList.remove('hidden');
+    document.getElementById('processing-message').textContent = 'Verifying card and checking funds...';
+    
+    try {
+        const response = await api.post('/wallet/deposit/', {
+            amount: amount,
+            payment_method: 'stripe',
+            payment_method_id: paymentMethodId
+        });
+        
+        document.getElementById('processing-message').textContent = 'Processing payment...';
+        
+        setTimeout(async () => {
+            try {
+                const confirmResponse = await api.post('/wallet/deposit/confirm/', {
+                    payment_intent_id: response.transaction_id
+                });
+                
+                if (confirmResponse.success) {
+                    document.getElementById('deposit-step-2').classList.add('hidden');
+                    document.getElementById('deposit-step-3').classList.remove('hidden');
+                    document.getElementById('success-message').textContent = `$${amount.toFixed(2)} has been added to your wallet.`;
+                    
+                    loadWalletData();
+                    loadTransactions();
+                } else {
+                    throw new Error(confirmResponse.error || 'Payment confirmation failed');
+                }
+                
+            } catch (confirmError) {
+                document.getElementById('deposit-step-2').classList.add('hidden');
+                document.getElementById('deposit-step-4').classList.remove('hidden');
+                
+                if (confirmError.data) {
+                    if (confirmError.data.error === 'insufficient_funds') {
+                        document.getElementById('deposit-error-message').textContent = 'Insufficient funds on card';
+                        document.getElementById('deposit-error-details').textContent = 'Please try another card or a lower amount.';
+                    } else if (confirmError.data.error === 'card_expired') {
+                        document.getElementById('deposit-error-message').textContent = 'Card has expired';
+                        document.getElementById('deposit-error-details').textContent = 'Please use a different card.';
+                    } else if (confirmError.data.error === 'card_declined') {
+                        document.getElementById('deposit-error-message').textContent = 'Card was declined';
+                        document.getElementById('deposit-error-details').textContent = 'Please contact your bank or try another card.';
+                    } else {
+                        document.getElementById('deposit-error-message').textContent = confirmError.data.error || 'Transaction failed';
+                        document.getElementById('deposit-error-details').textContent = confirmError.data.message || 'Please try again or use another card.';
+                    }
+                } else {
+                    document.getElementById('deposit-error-message').textContent = 'Transaction failed';
+                    document.getElementById('deposit-error-details').textContent = 'Please try again later.';
+                }
+            }
+        }, 2000);
+        
+    } catch (error) {
+        document.getElementById('deposit-step-2').classList.add('hidden');
+        document.getElementById('deposit-step-4').classList.remove('hidden');
+        
+        if (error.data) {
+            if (error.data.error === 'insufficient_funds') {
+                document.getElementById('deposit-error-message').textContent = 'Insufficient funds on card';
+                document.getElementById('deposit-error-details').textContent = 'Please try another card or a lower amount.';
+            } else if (error.data.error === 'card_expired') {
+                document.getElementById('deposit-error-message').textContent = 'Card has expired';
+                document.getElementById('deposit-error-details').textContent = 'Please use a different card.';
+            } else if (error.data.error === 'card_declined') {
+                document.getElementById('deposit-error-message').textContent = 'Card was declined';
+                document.getElementById('deposit-error-details').textContent = 'Please contact your bank or try another card.';
+            } else {
+                document.getElementById('deposit-error-message').textContent = error.data.error || 'Transaction failed';
+                document.getElementById('deposit-error-details').textContent = error.data.message || 'Please try again or use another card.';
+            }
+        } else {
+            document.getElementById('deposit-error-message').textContent = 'Transaction failed';
+            document.getElementById('deposit-error-details').textContent = 'Please try again later.';
+        }
+    }
+}
+
+async function processWithdraw() {
+    const amount = parseFloat(document.getElementById('withdraw-amount').value);
+    const method = document.getElementById('withdraw-method').value;
+    
+    if (!amount || amount < 10) {
+        alert('Please enter a valid amount (minimum $10)');
+        return;
+    }
+    
+    if (amount > parseFloat(walletData.balance)) {
+        alert('Insufficient balance');
+        return;
+    }
+    
+    let accountDetails = {};
+    
+    if (method === 'paypal') {
+        const email = document.getElementById('paypal-email').value;
+        if (!email) {
+            alert('Please enter PayPal email');
+            return;
+        }
+        accountDetails = { email };
+    } else {
+        const holder = document.getElementById('account-holder').value;
+        const routing = document.getElementById('routing-number').value;
+        const account = document.getElementById('account-number').value;
+        
+        if (!holder || !routing || !account) {
+            alert('Please fill in all bank details');
+            return;
+        }
+        accountDetails = { holder, routing, account };
+    }
+    
+    try {
+        await api.post('/wallet/withdraw/', {
+            amount: amount,
+            payment_method: method,
+            account_details: accountDetails
+        });
+        
+        hideWithdrawModal();
+        alert('Withdrawal request submitted successfully');
+        loadWalletData();
+        loadTransactions();
+        
+    } catch (error) {
+        alert('Failed to process withdrawal');
+    }
+}
+
+async function deletePaymentMethod(methodId) {
+    if (!confirm('Remove this payment method?')) return;
+    
+    try {
+        await api.delete(`/wallet/payment-methods/${methodId}/`);
+        loadPaymentMethods();
+    } catch (error) {
+        alert('Failed to remove payment method');
+    }
+}
+</script>
+{% endblock %}

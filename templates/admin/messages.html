@@ -1,0 +1,688 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Messages - Admin Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .conversation-list {
+        height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    .conversation-item.active {
+        background-color: #dbeafe;
+        border-left: 4px solid #2563eb;
+    }
+    .conversation-item.unread {
+        background-color: #eff6ff;
+    }
+    .message-bubble {
+        max-width: 70%;
+        word-wrap: break-word;
+    }
+    .message-bubble.sent {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        color: white;
+    }
+    .message-bubble.received {
+        background: #f3f4f6;
+        color: #1f2937;
+    }
+    .message-time {
+        font-size: 0.7rem;
+        opacity: 0.7;
+    }
+    .typing-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #9ca3af;
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30% { transform: translateY(-4px); opacity: 1; }
+    }
+    .message-actions {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .message-bubble:hover .message-actions {
+        opacity: 1;
+    }
+    .edited-indicator {
+        font-size: 0.7rem;
+        font-style: italic;
+        margin-right: 4px;
+    }
+    .student-avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="h-[calc(100vh-120px)]">
+    <div class="bg-white border border-gray-200 h-full flex overflow-hidden">
+        
+        <div class="w-96 border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-blue-600">Student Conversations</h2>
+                <div class="mt-2">
+                    <input type="text" 
+                           class="w-full border border-gray-300 px-4 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors text-sm" 
+                           placeholder="Search by student name or order #..."
+                           id="search-conversations">
+                </div>
+            </div>
+            
+            <div class="conversation-list flex-1" id="conversations-list">
+                <div class="text-center text-gray-500 py-8">Loading conversations...</div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col" id="chat-container">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center" id="chat-header">
+                <div class="flex items-center space-x-3">
+                    <div class="student-avatar hidden" id="student-avatar">S</div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800" id="current-student">Select a conversation</h3>
+                        <p class="text-sm text-gray-500" id="order-info"></p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="text-blue-600 hover:text-blue-700 text-sm font-medium hidden" id="recall-btn" title="Recall last message">
+                        <i class="fas fa-undo-alt mr-1"></i>Recall
+                    </button>
+                    <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium hidden" id="view-order-link">
+                        <i class="fas fa-external-link-alt mr-1"></i>View Order
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="messages-container">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-comments text-4xl text-gray-300 mb-3"></i>
+                    <p>Select a conversation to start messaging</p>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-200" id="message-input-container">
+                <div class="flex space-x-2">
+                    <input type="text" 
+                           class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors flex-1" 
+                           id="message-input"
+                           placeholder="Type your message..."
+                           disabled>
+                    <button class="bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" id="send-btn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="flex items-center justify-between mt-2">
+                    <div class="text-xs text-gray-400" id="typing-indicator"></div>
+                    <div class="text-xs text-gray-400" id="online-status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="edit-message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Message</h3>
+        <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="edit-message-content" rows="3"></textarea>
+        <div class="flex justify-end space-x-3 mt-4">
+            <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-2" id="cancel-edit">Cancel</button>
+            <button class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-4 py-2" id="save-edit">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentConversation = null;
+let conversations = [];
+let ws = null;
+let typingTimer = null;
+let isTyping = false;
+let currentUser = null;
+let selectedMessageId = null;
+let recallTimeout = null;
+let recalledMessage = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    getCurrentUser();
+    loadConversations();
+    
+    document.getElementById('search-conversations').addEventListener('input', function(e) {
+        filterConversations(e.target.value);
+    });
+    
+    document.getElementById('message-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+    
+    document.getElementById('message-input').addEventListener('input', function() {
+        if (currentConversation && ws && ws.readyState === WebSocket.OPEN) {
+            if (!isTyping) {
+                isTyping = true;
+                ws.send(JSON.stringify({
+                    type: 'typing',
+                    is_typing: true
+                }));
+            }
+            
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                if (isTyping) {
+                    isTyping = false;
+                    ws.send(JSON.stringify({
+                        type: 'typing',
+                        is_typing: false
+                    }));
+                }
+            }, 1000);
+        }
+    });
+    
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('recall-btn').addEventListener('click', recallLastMessage);
+    document.getElementById('cancel-edit').addEventListener('click', function() {
+        document.getElementById('edit-message-modal').classList.add('hidden');
+    });
+    document.getElementById('save-edit').addEventListener('click', saveEditedMessage);
+});
+
+async function getCurrentUser() {
+    try {
+        const profile = await api.get('/auth/profile/');
+        currentUser = profile;
+    } catch (error) {
+        console.error('Failed to get user profile');
+    }
+}
+
+async function loadConversations() {
+    try {
+        conversations = await api.get('/messages/conversations/');
+        displayConversations(conversations);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order');
+        if (orderId) {
+            const conv = conversations.find(c => c.order.id === orderId);
+            if (conv) {
+                selectConversation(conv);
+            }
+        }
+        
+    } catch (error) {
+        document.getElementById('conversations-list').innerHTML = `
+            <div class="text-center text-red-500 py-8">
+                Failed to load conversations
+            </div>
+        `;
+    }
+}
+
+function displayConversations(conversations) {
+    const container = document.getElementById('conversations-list');
+    
+    if (!conversations || conversations.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-comments text-4xl text-gray-300 mb-3"></i>
+                <p>No conversations yet</p>
+                <p class="text-sm mt-2">Students will appear here when they message</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = conversations.map(conv => {
+        const unreadCount = conv.unread_count || 0;
+        const studentInitial = conv.student_name ? conv.student_name.charAt(0).toUpperCase() : 'S';
+        
+        return `
+        <div class="conversation-item p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition ${unreadCount > 0 ? 'unread' : ''} ${currentConversation?.order.id === conv.order.id ? 'active' : ''}"
+             data-conversation-id="${conv.id}"
+             data-order-id="${conv.order.id}"
+             data-student="${conv.student_name}"
+             data-student-email="${conv.student_email}"
+             data-order-number="${conv.order.order_number}">
+            <div class="flex items-start space-x-3">
+                <div class="student-avatar flex-shrink-0">${studentInitial}</div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-medium text-gray-800">${conv.student_name || 'Student'}</p>
+                            <p class="text-xs text-gray-500">Order #${conv.order.order_number}</p>
+                        </div>
+                        ${unreadCount > 0 ? 
+                            `<span class="bg-blue-600 text-white text-xs px-2 py-1">${unreadCount}</span>` : ''}
+                    </div>
+                    <p class="text-sm text-gray-600 truncate mt-1">
+                        ${conv.last_message?.content || 'No messages yet'}
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        ${formatTime(conv.last_message?.created_at || conv.last_message_at)}
+                    </p>
+                </div>
+            </div>
+        </div>
+    `}).join('');
+    
+    container.querySelectorAll('.conversation-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const orderId = item.dataset.orderId;
+            const conversation = conversations.find(c => c.order.id === orderId);
+            selectConversation(conversation);
+        });
+    });
+}
+
+function filterConversations(search) {
+    if (!search.trim()) {
+        displayConversations(conversations);
+        return;
+    }
+    
+    const filtered = conversations.filter(conv => 
+        conv.order.order_number.includes(search) ||
+        (conv.student_name && conv.student_name.toLowerCase().includes(search.toLowerCase())) ||
+        (conv.student_email && conv.student_email.toLowerCase().includes(search.toLowerCase()))
+    );
+    
+    displayConversations(filtered);
+}
+
+async function selectConversation(conversation) {
+    currentConversation = conversation;
+    
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.orderId === conversation.order.id) {
+            item.classList.add('active');
+        }
+    });
+    
+    document.getElementById('student-avatar').classList.remove('hidden');
+    document.getElementById('student-avatar').textContent = conversation.student_name ? conversation.student_name.charAt(0).toUpperCase() : 'S';
+    
+    document.getElementById('current-student').innerHTML = `
+        ${conversation.student_name || 'Student'}
+        <span class="text-sm font-normal text-gray-500 ml-2">${conversation.student_email}</span>
+    `;
+    document.getElementById('order-info').innerHTML = `
+        Order #${conversation.order.order_number} - ${conversation.order.topic.substring(0, 50)}...
+        <span class="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700">${conversation.order.status.replace('_', ' ')}</span>
+    `;
+    
+    document.getElementById('view-order-link').classList.remove('hidden');
+    document.getElementById('view-order-link').href = `/admin/orders/${conversation.order.id}/`;
+    
+    document.getElementById('message-input').disabled = false;
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('message-input').focus();
+    
+    await loadMessages(conversation.order.id);
+    connectWebSocket(conversation.order.id);
+    await markConversationRead(conversation.id);
+}
+
+async function loadMessages(orderId) {
+    try {
+        const data = await api.get(`/messages/conversation/${orderId}/`);
+        displayMessages(data.messages);
+        
+    } catch (error) {
+        document.getElementById('messages-container').innerHTML = `
+            <div class="text-center text-red-500 py-8">
+                Failed to load messages
+            </div>
+        `;
+    }
+}
+
+function displayMessages(messages) {
+    const container = document.getElementById('messages-container');
+    
+    if (!messages || messages.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-comment-dots text-4xl text-gray-300 mb-3"></i>
+                <p>No messages yet</p>
+                <p class="text-sm mt-2">Send a message to start the conversation</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => {
+        const isSent = msg.sender === currentUser?.id;
+        return `
+            <div class="flex ${isSent ? 'justify-end' : 'justify-start'}" data-message-id="${msg.id}">
+                <div class="message-bubble ${isSent ? 'sent' : 'received'} rounded-lg p-3 relative group">
+                    <p class="text-sm">${escapeHtml(msg.content)}</p>
+                    <div class="flex justify-end items-center space-x-2 mt-1">
+                        ${msg.is_edited ? '<span class="edited-indicator ' + (isSent ? 'text-blue-200' : 'text-gray-500') + '">edited</span>' : ''}
+                        <span class="message-time ${isSent ? 'text-blue-200' : 'text-gray-500'}">
+                            ${formatMessageTime(msg.created_at)}
+                        </span>
+                        ${isSent ? `
+                            <span class="message-time text-blue-200">
+                                ${msg.is_read ? 
+                                    '<i class="fas fa-check-double" title="Read"></i>' : 
+                                    '<i class="fas fa-check" title="Delivered"></i>'}
+                            </span>
+                        ` : ''}
+                    </div>
+                    ${isSent ? `
+                        <div class="message-actions absolute top-1 right-1 space-x-1">
+                            <button class="text-xs text-white hover:text-gray-200 edit-message" data-id="${msg.id}" data-content="${escapeHtml(msg.content)}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-xs text-white hover:text-gray-200 delete-message" data-id="${msg.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.scrollTop = container.scrollHeight;
+    
+    document.querySelectorAll('.edit-message').forEach(btn => {
+        btn.addEventListener('click', function() {
+            showEditModal(this.dataset.id, this.dataset.content);
+        });
+    });
+    
+    document.querySelectorAll('.delete-message').forEach(btn => {
+        btn.addEventListener('click', function() {
+            deleteMessage(this.dataset.id);
+        });
+    });
+}
+
+function connectWebSocket(orderId) {
+    if (ws) {
+        ws.close();
+    }
+    
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/orders/${orderId}/chat/`;
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = function() {
+        document.getElementById('online-status').innerHTML = `
+            <span class="text-green-600"><i class="fas fa-circle text-xs mr-1"></i>Online</span>
+        `;
+    };
+    
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        
+        if (data.type === 'message') {
+            displayNewMessage(data.message);
+        } else if (data.type === 'typing') {
+            handleTypingIndicator(data);
+        } else if (data.type === 'read') {
+            updateMessageReadStatus(data.message_id);
+        } else if (data.type === 'edited') {
+            updateEditedMessage(data.message);
+        } else if (data.type === 'deleted') {
+            removeDeletedMessage(data.message_id);
+        } else if (data.type === 'recalled') {
+            handleRecalledMessage(data);
+        }
+    };
+    
+    ws.onclose = function() {
+        document.getElementById('online-status').innerHTML = '';
+    };
+}
+
+function displayNewMessage(message) {
+    const container = document.getElementById('messages-container');
+    const isSent = message.sender === currentUser?.id;
+    
+    const messageHtml = `
+        <div class="flex ${isSent ? 'justify-end' : 'justify-start'}" data-message-id="${message.id}">
+            <div class="message-bubble ${isSent ? 'sent' : 'received'} rounded-lg p-3">
+                <p class="text-sm">${escapeHtml(message.content)}</p>
+                <div class="flex justify-end items-center mt-1">
+                    <span class="message-time ${isSent ? 'text-blue-200' : 'text-gray-500'}">
+                        ${formatMessageTime(message.created_at)}
+                    </span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (container.children.length === 1 && container.children[0].classList.contains('text-center')) {
+        container.innerHTML = messageHtml;
+    } else {
+        container.insertAdjacentHTML('beforeend', messageHtml);
+    }
+    
+    container.scrollTop = container.scrollHeight;
+    
+    const conversationItem = document.querySelector(`[data-order-id="${currentConversation.order.id}"]`);
+    if (conversationItem && !isSent) {
+        const badge = conversationItem.querySelector('.bg-blue-600');
+        if (badge) {
+            const count = parseInt(badge.textContent) || 0;
+            badge.textContent = count + 1;
+        } else {
+            conversationItem.insertAdjacentHTML('beforeend', '<span class="bg-blue-600 text-white text-xs px-2 py-1 ml-2">1</span>');
+        }
+    }
+}
+
+function handleTypingIndicator(data) {
+    if (data.is_typing) {
+        document.getElementById('typing-indicator').innerHTML = `
+            <div class="typing-indicator">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="ml-1 text-gray-500">Student is typing...</span>
+            </div>
+        `;
+    } else {
+        document.getElementById('typing-indicator').innerHTML = '';
+    }
+}
+
+function updateMessageReadStatus(messageId) {
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (messageElement) {
+        const statusIcon = messageElement.querySelector('.fa-check');
+        if (statusIcon) {
+            statusIcon.classList.remove('fa-check');
+            statusIcon.classList.add('fa-check-double');
+            statusIcon.title = 'Read';
+        }
+    }
+}
+
+function updateEditedMessage(message) {
+    const messageElement = document.querySelector(`[data-message-id="${message.id}"] .message-bubble p`);
+    if (messageElement) {
+        messageElement.textContent = message.content;
+        
+        const bubble = messageElement.closest('.message-bubble');
+        if (!bubble.querySelector('.edited-indicator')) {
+            const timeSpan = bubble.querySelector('.message-time');
+            if (timeSpan) {
+                timeSpan.insertAdjacentHTML('beforebegin', '<span class="edited-indicator text-blue-200 mr-1">edited</span>');
+            }
+        }
+    }
+}
+
+function removeDeletedMessage(messageId) {
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (messageElement) {
+        messageElement.remove();
+    }
+}
+
+function handleRecalledMessage(data) {
+    if (data.message_id === recalledMessage) {
+        clearTimeout(recallTimeout);
+        recalledMessage = null;
+        document.getElementById('recall-btn').classList.add('hidden');
+    }
+}
+
+async function sendMessage() {
+    const input = document.getElementById('message-input');
+    const content = input.value.trim();
+    
+    if (!content || !currentConversation || !ws) return;
+    
+    input.value = '';
+    
+    if (isTyping) {
+        isTyping = false;
+        ws.send(JSON.stringify({
+            type: 'typing',
+            is_typing: false
+        }));
+    }
+    
+    ws.send(JSON.stringify({
+        type: 'message',
+        content: content
+    }));
+    
+    document.getElementById('recall-btn').classList.remove('hidden');
+    recalledMessage = 'pending';
+    
+    recallTimeout = setTimeout(() => {
+        document.getElementById('recall-btn').classList.add('hidden');
+        recalledMessage = null;
+    }, 10000);
+}
+
+function recallLastMessage() {
+    if (!ws || !recalledMessage) return;
+    
+    ws.send(JSON.stringify({
+        type: 'recall'
+    }));
+    
+    clearTimeout(recallTimeout);
+    document.getElementById('recall-btn').classList.add('hidden');
+    recalledMessage = null;
+}
+
+function showEditModal(messageId, content) {
+    selectedMessageId = messageId;
+    document.getElementById('edit-message-content').value = content;
+    document.getElementById('edit-message-modal').classList.remove('hidden');
+}
+
+async function saveEditedMessage() {
+    const newContent = document.getElementById('edit-message-content').value.trim();
+    
+    if (!newContent || !selectedMessageId || !ws) return;
+    
+    ws.send(JSON.stringify({
+        type: 'edit',
+        message_id: selectedMessageId,
+        content: newContent
+    }));
+    
+    document.getElementById('edit-message-modal').classList.add('hidden');
+}
+
+function deleteMessage(messageId) {
+    if (!confirm('Delete this message?')) return;
+    
+    if (ws) {
+        ws.send(JSON.stringify({
+            type: 'delete',
+            message_id: messageId
+        }));
+    }
+}
+
+async function markConversationRead(conversationId) {
+    try {
+        await api.post(`/messages/order/${currentConversation.order.id}/read/`, {});
+        
+        const conversationItem = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+        if (conversationItem) {
+            const badge = conversationItem.querySelector('.bg-blue-600');
+            if (badge) {
+                badge.remove();
+            }
+        }
+        
+    } catch (error) {
+        console.error('Failed to mark as read');
+    }
+}
+
+function formatMessageTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    
+    if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function formatTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    
+    return date.toLocaleDateString();
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+</script>
+{% endblock %}

@@ -1,0 +1,607 @@
+
+{% extends "admin_base.html" %}
+
+{% block title %}Refund Requests - Admin - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Refund <span class="text-blue-600">Requests</span></h1>
+            <p class="text-gray-600 mt-1">Review and process student refund requests</p>
+        </div>
+        <div class="flex space-x-3">
+            <select class="border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="status-filter">
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="denied">Denied</option>
+                <option value="all">All</option>
+            </select>
+            <div class="flex">
+                <input type="text" class="border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors w-64" placeholder="Search by order # or student..." id="search-refunds">
+                <button class="bg-blue-600 text-white px-4 py-3 hover:bg-blue-700 transition-colors" id="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Pending Requests</p>
+            <p class="text-3xl font-bold text-gray-900" id="pending-count">0</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Approved Today</p>
+            <p class="text-3xl font-bold text-green-600" id="approved-today">$0</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Total Refunded</p>
+            <p class="text-3xl font-bold text-orange-600" id="total-refunded">$0</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Avg. Processing</p>
+            <p class="text-3xl font-bold text-gray-900" id="avg-processing">0h</p>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Requested</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="refunds-list" class="divide-y divide-gray-200">
+                    <tr>
+                        <td colspan="8" class="px-6 py-8 text-center text-gray-500">Loading refund requests...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="border-t border-gray-200 p-4" id="pagination">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600" id="pagination-info"></div>
+                <div class="flex space-x-2" id="pagination-buttons"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="refund-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Review Refund Request</h3>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-refund-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="refund-details" class="space-y-4">
+                <div class="text-center py-4 text-gray-500">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="approve-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Approve Refund</h3>
+        
+        <div class="space-y-4">
+            <p class="text-gray-600">Are you sure you want to approve this refund request?</p>
+            
+            <div class="bg-yellow-50 border border-yellow-100 p-4">
+                <p class="text-sm font-medium text-gray-700 mb-2">Refund Summary:</p>
+                <p class="text-sm text-gray-600" id="approve-order"></p>
+                <p class="text-lg font-bold text-orange-600 mt-2" id="approve-amount"></p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Admin Notes (Optional)</label>
+                <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="approve-notes" rows="2"></textarea>
+            </div>
+
+            <div class="flex space-x-3 pt-2">
+                <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3" id="approve-modal-close">Cancel</button>
+                <button class="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors px-4 py-3" id="confirm-approve">Approve Refund</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="deny-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Deny Refund Request</h3>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Denial</label>
+                <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="deny-reason" rows="3" placeholder="Explain why the refund is being denied..."></textarea>
+            </div>
+
+            <div>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4 border border-gray-300 text-blue-600 focus:ring-blue-600" id="notify-student" checked>
+                    <span class="text-sm text-gray-700">Send email notification to student</span>
+                </label>
+            </div>
+
+            <div class="flex space-x-3 pt-2">
+                <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3" id="deny-modal-close">Cancel</button>
+                <button class="flex-1 bg-red-600 text-white hover:bg-red-700 transition-colors px-4 py-3" id="confirm-deny">Deny Refund</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="evidence-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Refund Evidence</h3>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-evidence-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="evidence-content" class="space-y-4">
+                <div class="text-center py-4 text-gray-500">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentStatus = 'pending';
+let currentSearch = '';
+let totalPages = 1;
+let selectedRefund = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('status-filter').addEventListener('change', function() {
+        currentStatus = this.value;
+        currentPage = 1;
+        loadRefunds();
+        loadRefundStats();
+    });
+    
+    document.getElementById('search-btn').addEventListener('click', function() {
+        currentSearch = document.getElementById('search-refunds').value;
+        currentPage = 1;
+        loadRefunds();
+    });
+    
+    document.getElementById('search-refunds').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            currentSearch = this.value;
+            currentPage = 1;
+            loadRefunds();
+        }
+    });
+    
+    document.getElementById('close-refund-modal').addEventListener('click', function() {
+        document.getElementById('refund-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('approve-modal-close').addEventListener('click', function() {
+        document.getElementById('approve-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-approve').addEventListener('click', approveRefund);
+    
+    document.getElementById('deny-modal-close').addEventListener('click', function() {
+        document.getElementById('deny-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-deny').addEventListener('click', denyRefund);
+    
+    document.getElementById('close-evidence-modal').addEventListener('click', function() {
+        document.getElementById('evidence-modal').classList.add('hidden');
+    });
+    
+    loadRefunds();
+    loadRefundStats();
+});
+
+async function loadRefundStats() {
+    try {
+        const stats = await api.get('/admin/refunds/stats/');
+        displayRefundStats(stats);
+    } catch (error) {
+        console.error('Failed to load refund stats');
+    }
+}
+
+function displayRefundStats(stats) {
+    document.getElementById('pending-count').textContent = stats.pending_count || 0;
+    document.getElementById('approved-today').textContent = `$${parseFloat(stats.approved_today || 0).toFixed(2)}`;
+    document.getElementById('total-refunded').textContent = `$${parseFloat(stats.total_refunded || 0).toFixed(2)}`;
+    document.getElementById('avg-processing').textContent = stats.avg_processing || '0h';
+}
+
+async function loadRefunds() {
+    try {
+        const params = { 
+            page: currentPage,
+            status: currentStatus !== 'all' ? currentStatus : undefined,
+            search: currentSearch || undefined
+        };
+        
+        const response = await api.get('/admin/refunds/', params);
+        
+        displayRefunds(response.results || []);
+        
+        totalPages = Math.ceil(response.total / response.page_size) || 1;
+        updatePagination(response.total, response.page, response.page_size);
+        
+    } catch (error) {
+        document.getElementById('refunds-list').innerHTML = `
+            <tr>
+                <td colspan="8" class="px-6 py-8 text-center text-red-500">
+                    Failed to load refund requests
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displayRefunds(refunds) {
+    const tbody = document.getElementById('refunds-list');
+    
+    if (refunds.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                    No refund requests found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = refunds.map(refund => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 font-medium">
+                <a href="/admin/orders/${refund.order_id}/" class="text-blue-600 hover:text-blue-800 transition-colors">
+                    #${refund.order_number}
+                </a>
+            </td>
+            <td class="px-6 py-4">
+                <a href="/admin/users/${refund.student_id}/" class="text-blue-600 hover:text-blue-800 transition-colors">
+                    ${refund.student_name}
+                </a>
+            </td>
+            <td class="px-6 py-4 font-medium text-orange-600">$${parseFloat(refund.amount).toFixed(2)}</td>
+            <td class="px-6 py-4">
+                <span class="text-sm text-gray-600">${refund.reason || 'Not specified'}</span>
+                ${refund.evidence ? 
+                    '<i class="fas fa-paperclip text-gray-400 ml-1" title="Evidence attached"></i>' : ''}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${refund.grade || '-'}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${new Date(refund.requested_at).toLocaleDateString()}</td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 text-xs ${refund.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : refund.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                    ${refund.status}
+                </span>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex space-x-2">
+                    <button class="text-blue-600 hover:text-blue-800 text-sm view-btn" data-id="${refund.id}">
+                        Review
+                    </button>
+                    ${refund.status === 'pending' ? `
+                        <button class="text-green-600 hover:text-green-800 text-sm approve-btn" data-id="${refund.id}">
+                            Approve
+                        </button>
+                        <button class="text-red-600 hover:text-red-800 text-sm deny-btn" data-id="${refund.id}">
+                            Deny
+                        </button>
+                    ` : ''}
+                    ${refund.evidence ? `
+                        <button class="text-purple-600 hover:text-purple-800 text-sm evidence-btn" data-id="${refund.id}">
+                            Evidence
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    attachRefundButtons();
+}
+
+function attachRefundButtons() {
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => viewRefund(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => showApproveModal(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.deny-btn').forEach(btn => {
+        btn.addEventListener('click', () => showDenyModal(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.evidence-btn').forEach(btn => {
+        btn.addEventListener('click', () => viewEvidence(btn.dataset.id));
+    });
+}
+
+function updatePagination(total, page, pageSize) {
+    const start = ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+    
+    document.getElementById('pagination-info').textContent = `Showing ${start}-${end} of ${total} requests`;
+    
+    const buttonsContainer = document.getElementById('pagination-buttons');
+    
+    if (totalPages <= 1) {
+        buttonsContainer.innerHTML = '';
+        return;
+    }
+    
+    let buttons = '';
+    
+    if (page > 1) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 transition-colors" data-page="${page - 1}">Previous</button>`;
+    }
+    
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm ${i === page ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-50 transition-colors'}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (page < totalPages) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 transition-colors" data-page="${page + 1}">Next</button>`;
+    }
+    
+    buttonsContainer.innerHTML = buttons;
+    
+    buttonsContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentPage = parseInt(this.dataset.page);
+            loadRefunds();
+        });
+    });
+}
+
+async function viewRefund(refundId) {
+    document.getElementById('refund-modal').classList.remove('hidden');
+    document.getElementById('refund-details').innerHTML = '<div class="text-center py-4 text-gray-500">Loading...</div>';
+    
+    try {
+        const refund = await api.get(`/admin/refunds/${refundId}/`);
+        displayRefundDetails(refund);
+    } catch (error) {
+        document.getElementById('refund-details').innerHTML = `
+            <div class="text-center text-red-500 py-4">Failed to load refund details</div>
+        `;
+    }
+}
+
+function displayRefundDetails(refund) {
+    const container = document.getElementById('refund-details');
+    
+    container.innerHTML = `
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="col-span-2 bg-yellow-50 border border-yellow-100 p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="font-bold text-lg text-gray-800">Refund Request #${refund.id}</h4>
+                        <p class="text-sm text-gray-600">Order #${refund.order_number}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs ${refund.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : refund.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                        ${refund.status}
+                    </span>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 p-4">
+                <h5 class="font-bold text-gray-800 mb-3">Student Information</h5>
+                <div class="space-y-2 text-sm">
+                    <p><span class="text-gray-600">Name:</span> <span class="text-gray-800">${refund.student_name}</span></p>
+                    <p><span class="text-gray-600">Email:</span> <span class="text-gray-800">${refund.student_email}</span></p>
+                    <p><span class="text-gray-600">Joined:</span> <span class="text-gray-800">${new Date(refund.student_joined).toLocaleDateString()}</span></p>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 p-4">
+                <h5 class="font-bold text-gray-800 mb-3">Order Information</h5>
+                <div class="space-y-2 text-sm">
+                    <p><span class="text-gray-600">Order #:</span> <span class="text-gray-800">${refund.order_number}</span></p>
+                    <p><span class="text-gray-600">Date:</span> <span class="text-gray-800">${new Date(refund.order_date).toLocaleDateString()}</span></p>
+                    <p><span class="text-gray-600">Amount:</span> <span class="text-gray-800 font-medium">$${parseFloat(refund.order_amount).toFixed(2)}</span></p>
+                    <p><span class="text-gray-600">Status:</span> <span class="text-gray-800">${refund.order_status}</span></p>
+                </div>
+            </div>
+
+            <div class="col-span-2 border border-gray-200 p-4">
+                <h5 class="font-bold text-gray-800 mb-3">Refund Details</h5>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-gray-600 text-sm">Reason for refund:</p>
+                        <p class="font-medium text-gray-800">${refund.reason || 'Not specified'}</p>
+                    </div>
+                    
+                    ${refund.grade ? `
+                        <div>
+                            <p class="text-gray-600 text-sm">Grade received:</p>
+                            <p class="font-medium ${refund.grade.includes('F') ? 'text-red-600' : 'text-gray-800'}">${refund.grade}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${refund.details ? `
+                        <div>
+                            <p class="text-gray-600 text-sm">Additional details:</p>
+                            <p class="text-sm text-gray-700">${refund.details}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div>
+                        <p class="text-gray-600 text-sm">Requested on:</p>
+                        <p class="text-sm text-gray-700">${new Date(refund.requested_at).toLocaleString()}</p>
+                    </div>
+                </div>
+            </div>
+
+            ${refund.evidence ? `
+                <div class="col-span-2 border border-gray-200 p-4">
+                    <h5 class="font-bold text-gray-800 mb-3">Evidence</h5>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-file-pdf text-red-500"></i>
+                            <span class="text-gray-700">${refund.evidence.filename}</span>
+                        </div>
+                        <button class="border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors px-4 py-2 text-sm" onclick="viewEvidence('${refund.id}')">
+                            <i class="fas fa-eye mr-2"></i>View
+                        </button>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-4">
+            <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-2" onclick="document.getElementById('close-refund-modal').click()">
+                Close
+            </button>
+            ${refund.status === 'pending' ? `
+                <button class="bg-green-600 text-white hover:bg-green-700 transition-colors px-4 py-2" onclick="showApproveModal('${refund.id}')">
+                    Approve Refund
+                </button>
+                <button class="bg-red-600 text-white hover:bg-red-700 transition-colors px-4 py-2" onclick="showDenyModal('${refund.id}')">
+                    Deny Refund
+                </button>
+            ` : ''}
+        </div>
+    `;
+}
+
+function showApproveModal(refundId) {
+    selectedRefund = refundId;
+    
+    const refund = getRefundById(refundId);
+    if (refund) {
+        document.getElementById('approve-order').textContent = `Order #${refund.order_number}`;
+        document.getElementById('approve-amount').textContent = `$${parseFloat(refund.amount).toFixed(2)}`;
+    }
+    
+    document.getElementById('approve-modal').classList.remove('hidden');
+}
+
+function showDenyModal(refundId) {
+    selectedRefund = refundId;
+    document.getElementById('deny-modal').classList.remove('hidden');
+}
+
+async function approveRefund() {
+    const notes = document.getElementById('approve-notes').value;
+    
+    try {
+        await api.post(`/admin/refunds/${selectedRefund}/approve/`, {
+            notes: notes
+        });
+        
+        document.getElementById('approve-modal').classList.add('hidden');
+        document.getElementById('refund-modal').classList.add('hidden');
+        document.getElementById('approve-notes').value = '';
+        
+        alert('Refund approved successfully');
+        loadRefunds();
+        loadRefundStats();
+        
+    } catch (error) {
+        alert('Failed to approve refund');
+    }
+}
+
+async function denyRefund() {
+    const reason = document.getElementById('deny-reason').value;
+    const notify = document.getElementById('notify-student').checked;
+    
+    if (!reason.trim()) {
+        alert('Please provide a reason for denial');
+        return;
+    }
+    
+    try {
+        await api.post(`/admin/refunds/${selectedRefund}/deny/`, {
+            reason: reason,
+            notify: notify
+        });
+        
+        document.getElementById('deny-modal').classList.add('hidden');
+        document.getElementById('refund-modal').classList.add('hidden');
+        document.getElementById('deny-reason').value = '';
+        
+        alert('Refund denied');
+        loadRefunds();
+        loadRefundStats();
+        
+    } catch (error) {
+        alert('Failed to deny refund');
+    }
+}
+
+async function viewEvidence(refundId) {
+    document.getElementById('evidence-modal').classList.remove('hidden');
+    document.getElementById('evidence-content').innerHTML = '<div class="text-center py-4 text-gray-500">Loading evidence...</div>';
+    
+    try {
+        const evidence = await api.get(`/admin/refunds/${refundId}/evidence/`);
+        displayEvidence(evidence);
+    } catch (error) {
+        document.getElementById('evidence-content').innerHTML = `
+            <div class="text-center text-red-500 py-4">Failed to load evidence</div>
+        `;
+    }
+}
+
+function displayEvidence(evidence) {
+    const container = document.getElementById('evidence-content');
+    
+    if (evidence.type === 'image') {
+        container.innerHTML = `
+            <img src="${evidence.url}" alt="Refund Evidence" class="max-w-full mx-auto border border-gray-200">
+        `;
+    } else if (evidence.type === 'pdf') {
+        container.innerHTML = `
+            <embed src="${evidence.url}" type="application/pdf" width="100%" height="600px" class="border border-gray-200">
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-file text-5xl text-gray-400 mb-4"></i>
+                <p class="mb-4 text-gray-700">${evidence.filename}</p>
+                <a href="${evidence.url}" download class="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-6 py-3 inline-flex items-center">
+                    <i class="fas fa-download mr-2"></i>Download File
+                </a>
+            </div>
+        `;
+    }
+}
+
+function getRefundById(refundId) {
+    const row = document.querySelector(`[data-id="${refundId}"]`)?.closest('tr');
+    if (row) {
+        const cells = row.querySelectorAll('td');
+        return {
+            order_number: cells[0]?.textContent?.replace('#', '').trim() || '',
+            amount: parseFloat(cells[2]?.textContent?.replace('$', '') || 0)
+        };
+    }
+    return null;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,671 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Students - Academic Writing Platform{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Manage <span class="text-blue-600">Students</span></h1>
+            <p class="text-gray-600 mt-1">View and manage all registered students</p>
+        </div>
+        <div class="flex space-x-3">
+            <select class="border border-gray-300 px-4 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none rounded-lg" id="status-filter">
+                <option value="all">All Students</option>
+                <option value="active">Active</option>
+                <option value="deactivated">Deactivated</option>
+                <option value="pending">Pending Verification</option>
+            </select>
+            <div class="flex">
+                <input type="text" class="border border-gray-300 px-4 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none rounded-l-lg w-64" placeholder="Search students..." id="search-users">
+                <button class="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors rounded-r-lg" id="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white border border-gray-200 p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Students</p>
+                    <p class="text-2xl font-bold text-gray-900" id="total-users-count">0</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Active Students</p>
+                    <p class="text-2xl font-bold text-green-600" id="active-users-count">0</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <i class="fas fa-user-check text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Deactivated</p>
+                    <p class="text-2xl font-bold text-red-600" id="deactivated-count">0</p>
+                </div>
+                <div class="bg-red-100 p-3 rounded-lg">
+                    <i class="fas fa-user-slash text-red-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Pending Verification</p>
+                    <p class="text-2xl font-bold text-orange-600" id="pending-count">0</p>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-lg">
+                    <i class="fas fa-clock text-orange-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Email / Phone</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Verified</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Wallet</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-list" class="divide-y divide-gray-200">
+                    <tr>
+                        <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                            <div class="flex justify-center items-center">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+                                Loading students...
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="border-t border-gray-200 p-4" id="pagination">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600" id="pagination-info"></div>
+                <div class="flex space-x-2" id="pagination-buttons"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="user-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity p-4">
+    <div class="bg-white max-w-2xl w-full mx-auto rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900" id="modal-title">Student Details</h3>
+                <button class="text-gray-400 hover:text-gray-600 transition-colors" id="close-user-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="user-details-content" class="space-y-4">
+                <div class="text-center py-4 text-gray-500">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="deactivate-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity p-4">
+    <div class="bg-white max-w-md w-full mx-auto p-6 rounded-lg shadow-xl">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Deactivate Student Account</h3>
+        
+        <div class="space-y-4">
+            <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                <p class="text-sm text-yellow-800 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    This student will not be able to log in or create new orders.
+                </p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Reason for deactivation <span class="text-red-500">*</span></label>
+                <textarea class="w-full border border-gray-300 px-4 py-3 rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" id="deactivate-reason" rows="3" placeholder="Please provide a reason for deactivation..."></textarea>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" id="send-email" checked>
+                <label for="send-email" class="text-sm text-gray-700">Send email notification to student</label>
+            </div>
+
+            <div class="flex space-x-3 pt-4">
+                <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3 rounded-lg" id="deactivate-modal-close">Cancel</button>
+                <button class="flex-1 bg-red-600 text-white hover:bg-red-700 transition-colors px-4 py-3 rounded-lg" id="confirm-deactivate">Deactivate Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="reactivate-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity p-4">
+    <div class="bg-white max-w-md w-full mx-auto p-6 rounded-lg shadow-xl">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Reactivate Student Account</h3>
+        
+        <div class="space-y-4">
+            <div class="bg-green-50 border border-green-200 p-3 rounded-lg">
+                <p class="text-sm text-green-800 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    This student will be able to log in and use the platform again.
+                </p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Reason (Optional)</label>
+                <textarea class="w-full border border-gray-300 px-4 py-3 rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" id="reactivate-reason" rows="3" placeholder="Reason for reactivation..."></textarea>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" id="reactivate-send-email" checked>
+                <label for="reactivate-send-email" class="text-sm text-gray-700">Send email notification to student</label>
+            </div>
+
+            <div class="flex space-x-3 pt-4">
+                <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3 rounded-lg" id="reactivate-modal-close">Cancel</button>
+                <button class="flex-1 bg-green-600 text-white hover:bg-green-700 transition-colors px-4 py-3 rounded-lg" id="confirm-reactivate">Reactivate Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentStatus = 'all';
+let currentSearch = '';
+let totalPages = 1;
+let pageSize = 10;
+let selectedUserId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadStudentStats();
+    loadStudents();
+    
+    document.getElementById('status-filter').addEventListener('change', function() {
+        currentStatus = this.value;
+        currentPage = 1;
+        loadStudents();
+    });
+    
+    document.getElementById('search-btn').addEventListener('click', function() {
+        currentSearch = document.getElementById('search-users').value;
+        currentPage = 1;
+        loadStudents();
+    });
+    
+    document.getElementById('search-users').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            currentSearch = this.value;
+            currentPage = 1;
+            loadStudents();
+        }
+    });
+    
+    document.getElementById('close-user-modal').addEventListener('click', function() {
+        document.getElementById('user-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('deactivate-modal-close').addEventListener('click', function() {
+        document.getElementById('deactivate-modal').classList.add('hidden');
+        document.getElementById('deactivate-reason').value = '';
+    });
+    
+    document.getElementById('confirm-deactivate').addEventListener('click', deactivateStudent);
+    
+    document.getElementById('reactivate-modal-close').addEventListener('click', function() {
+        document.getElementById('reactivate-modal').classList.add('hidden');
+        document.getElementById('reactivate-reason').value = '';
+    });
+    
+    document.getElementById('confirm-reactivate').addEventListener('click', reactivateStudent);
+    
+    window.addEventListener('click', function(e) {
+        const userModal = document.getElementById('user-modal');
+        const deactivateModal = document.getElementById('deactivate-modal');
+        const reactivateModal = document.getElementById('reactivate-modal');
+        
+        if (e.target === userModal) userModal.classList.add('hidden');
+        if (e.target === deactivateModal) deactivateModal.classList.add('hidden');
+        if (e.target === reactivateModal) reactivateModal.classList.add('hidden');
+    });
+});
+
+async function loadStudentStats() {
+    try {
+        const response = await api.get('/admin/dashboard/');
+        
+        const totalStudents = response.total_users || 0;
+        const activeStudents = response.active_users || 0;
+        const deactivatedStudents = response.deactivated_users || 0;
+        const pendingStudents = response.pending_users || 0;
+        
+        document.getElementById('total-users-count').textContent = totalStudents;
+        document.getElementById('active-users-count').textContent = activeStudents;
+        document.getElementById('deactivated-count').textContent = deactivatedStudents;
+        document.getElementById('pending-count').textContent = pendingStudents;
+    } catch (error) {
+        console.error('Failed to load student stats:', error);
+    }
+}
+
+async function loadStudents() {
+    const tbody = document.getElementById('users-list');
+    
+    try {
+        const params = new URLSearchParams({
+            page: currentPage,
+            page_size: pageSize
+        });
+        
+        if (currentStatus !== 'all') {
+            params.append('status', currentStatus);
+        }
+        
+        if (currentSearch) {
+            params.append('search', currentSearch);
+        }
+        
+        params.append('role', 'student');
+        
+        const response = await api.get(`/admin/users/?${params.toString()}`);
+        
+        let students = [];
+        let total = 0;
+        
+        if (response.results) {
+            students = response.results;
+            total = response.count || 0;
+        } else if (Array.isArray(response)) {
+            students = response;
+            total = response.length;
+        } else if (response.users) {
+            students = response.users;
+            total = response.total || students.length;
+        } else {
+            students = response;
+            total = students.length;
+        }
+        
+        students = students.filter(s => s.role !== 'admin');
+        
+        displayStudents(students);
+        
+        totalPages = Math.ceil(total / pageSize) || 1;
+        updatePagination(total, currentPage, pageSize);
+        
+    } catch (error) {
+        console.error('Failed to load students:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="px-6 py-8 text-center text-red-500">
+                    Failed to load students. 
+                    <button onclick="loadStudents()" class="text-blue-600 hover:text-blue-800 ml-2">
+                        <i class="fas fa-sync-alt mr-1"></i>Retry
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displayStudents(students) {
+    const tbody = document.getElementById('users-list');
+    
+    if (!students || students.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                    No students found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = students.map(student => {
+        const isDeactivated = student.is_deactivated || student.status === 'deactivated' || false;
+        const isPending = student.status === 'pending' || !student.email_verified;
+        
+        return `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-graduate text-blue-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-800">${student.full_name || student.name || 'No name'}</p>
+                        <p class="text-xs text-gray-500">ID: ${student.id}</p>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <p class="text-sm text-gray-600">${student.email || 'No email'}</p>
+                <p class="text-xs text-gray-500">${student.phone || 'No phone'}</p>
+            </td>
+            <td class="px-6 py-4">
+                ${isDeactivated ? 
+                    '<span class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">Deactivated</span>' : 
+                    isPending ?
+                    '<span class="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-full">Pending</span>' :
+                    '<span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">Active</span>'}
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex space-x-1">
+                    ${student.email_verified ? 
+                        '<i class="fas fa-check-circle text-green-600" title="Email verified"></i>' : 
+                        '<i class="fas fa-times-circle text-red-500" title="Email not verified"></i>'}
+                    ${student.phone_verified ? 
+                        '<i class="fas fa-check-circle text-green-600 ml-1" title="Phone verified"></i>' : ''}
+                </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${student.total_orders || 0}</td>
+            <td class="px-6 py-4">
+                <span class="text-sm font-medium ${parseFloat(student.wallet_balance || 0) > 0 ? 'text-green-600' : 'text-gray-600'}">
+                    $${parseFloat(student.wallet_balance || 0).toFixed(2)}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+                ${student.date_joined ? new Date(student.date_joined).toLocaleDateString() : 'N/A'}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+                ${student.last_login ? new Date(student.last_login).toLocaleDateString() : 'Never'}
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex space-x-2">
+                    <button class="text-blue-600 hover:text-blue-800 text-sm view-btn" data-id="${student.id}" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${!isDeactivated ? `
+                        <button class="text-red-600 hover:text-red-800 text-sm deactivate-btn" data-id="${student.id}" title="Deactivate Student">
+                            <i class="fas fa-user-slash"></i>
+                        </button>
+                    ` : `
+                        <button class="text-green-600 hover:text-green-800 text-sm reactivate-btn" data-id="${student.id}" title="Reactivate Student">
+                            <i class="fas fa-user-check"></i>
+                        </button>
+                    `}
+                </div>
+            </td>
+        </tr>
+    `}).join('');
+    
+    attachStudentButtons();
+}
+
+function attachStudentButtons() {
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => viewStudent(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.deactivate-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedUserId = btn.dataset.id;
+            document.getElementById('deactivate-modal').classList.remove('hidden');
+        });
+    });
+    
+    document.querySelectorAll('.reactivate-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedUserId = btn.dataset.id;
+            document.getElementById('reactivate-modal').classList.remove('hidden');
+        });
+    });
+}
+
+function updatePagination(total, page, pageSize) {
+    const start = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+    
+    document.getElementById('pagination-info').textContent = 
+        total > 0 ? `Showing ${start} to ${end} of ${total} students` : 'No students found';
+    
+    const buttonsContainer = document.getElementById('pagination-buttons');
+    
+    if (totalPages <= 1) {
+        buttonsContainer.innerHTML = '';
+        return;
+    }
+    
+    let buttons = '';
+    
+    if (page > 1) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 transition-colors rounded" data-page="${page - 1}">Previous</button>`;
+    }
+    
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm ${i === page ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-50 transition-colors'} rounded" data-page="${i}">${i}</button>`;
+    }
+    
+    if (page < totalPages) {
+        buttons += `<button class="border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 transition-colors rounded" data-page="${page + 1}">Next</button>`;
+    }
+    
+    buttonsContainer.innerHTML = buttons;
+    
+    buttonsContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentPage = parseInt(this.dataset.page);
+            loadStudents();
+        });
+    });
+}
+
+async function viewStudent(studentId) {
+    document.getElementById('user-modal').classList.remove('hidden');
+    document.getElementById('user-details-content').innerHTML = '<div class="text-center py-4 text-gray-500">Loading...</div>';
+    
+    try {
+        const student = await api.get(`/admin/users/${studentId}/`);
+        displayStudentDetails(student);
+    } catch (error) {
+        console.error('Failed to load student details:', error);
+        document.getElementById('user-details-content').innerHTML = `
+            <div class="text-center text-red-500 py-4">
+                Failed to load student details
+                <button onclick="viewStudent('${studentId}')" class="text-blue-600 hover:text-blue-800 block mx-auto mt-2">
+                    <i class="fas fa-sync-alt mr-1"></i>Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+function displayStudentDetails(student) {
+    document.getElementById('modal-title').textContent = `Student Details - ${student.full_name || student.email || 'Student'}`;
+    
+    const isDeactivated = student.is_deactivated || student.status === 'deactivated';
+    
+    const content = document.getElementById('user-details-content');
+    
+    content.innerHTML = `
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="col-span-2 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-graduate text-blue-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-bold text-gray-800">${student.full_name || 'No name'}</h4>
+                        <p class="text-gray-600">${student.email || 'No email'}</p>
+                        <p class="text-sm text-gray-500 mt-1">Member since ${student.date_joined ? new Date(student.date_joined).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 p-4 rounded-lg">
+                <h5 class="font-bold text-gray-800 mb-2">Account Status</h5>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Status:</span>
+                        <span class="font-medium ${isDeactivated ? 'text-red-600' : 'text-green-600'}">
+                            ${isDeactivated ? 'Deactivated' : 'Active'}
+                        </span>
+                    </div>
+                    ${student.deactivation_reason ? `
+                        <div class="mt-2 pt-2 border-t">
+                            <span class="text-gray-600">Deactivation reason:</span>
+                            <p class="text-sm mt-1 bg-red-50 p-2 rounded">${student.deactivation_reason}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div class="border border-gray-200 p-4 rounded-lg">
+                <h5 class="font-bold text-gray-800 mb-2">Verification</h5>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Email:</span>
+                        <span class="font-medium ${student.email_verified ? 'text-green-600' : 'text-red-600'}">
+                            ${student.email_verified ? 'Verified' : 'Not Verified'}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Phone:</span>
+                        <span class="font-medium ${student.phone_verified ? 'text-green-600' : 'text-gray-600'}">
+                            ${student.phone_verified ? 'Verified' : 'Not Verified'}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Phone number:</span>
+                        <span class="font-medium text-gray-800">${student.phone || 'Not provided'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 p-4 rounded-lg">
+                <h5 class="font-bold text-gray-800 mb-2">Academic Info</h5>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Institution:</span>
+                        <span class="font-medium text-gray-800">${student.institution || 'Not provided'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Course:</span>
+                        <span class="font-medium text-gray-800">${student.course || 'Not provided'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Year of study:</span>
+                        <span class="font-medium text-gray-800">${student.year_of_study || 'Not provided'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 p-4 rounded-lg">
+                <h5 class="font-bold text-gray-800 mb-2">Statistics</h5>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total orders:</span>
+                        <span class="font-medium text-gray-800">${student.total_orders || 0}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Wallet balance:</span>
+                        <span class="font-medium text-blue-600">$${parseFloat(student.wallet_balance || 0).toFixed(2)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-4">
+            <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-2 rounded-lg" onclick="document.getElementById('close-user-modal').click()">
+                Close
+            </button>
+            ${!isDeactivated ? `
+                <button class="bg-red-600 text-white hover:bg-red-700 transition-colors px-4 py-2 rounded-lg deactivate-from-details" data-id="${student.id}">
+                    <i class="fas fa-user-slash mr-2"></i>Deactivate
+                </button>
+            ` : `
+                <button class="bg-green-600 text-white hover:bg-green-700 transition-colors px-4 py-2 rounded-lg reactivate-from-details" data-id="${student.id}">
+                    <i class="fas fa-user-check mr-2"></i>Reactivate
+                </button>
+            `}
+        </div>
+    `;
+    
+    const deactivateBtn = content.querySelector('.deactivate-from-details');
+    if (deactivateBtn) {
+        deactivateBtn.addEventListener('click', () => {
+            document.getElementById('user-modal').classList.add('hidden');
+            selectedUserId = student.id;
+            document.getElementById('deactivate-modal').classList.remove('hidden');
+        });
+    }
+    
+    const reactivateBtn = content.querySelector('.reactivate-from-details');
+    if (reactivateBtn) {
+        reactivateBtn.addEventListener('click', () => {
+            document.getElementById('user-modal').classList.add('hidden');
+            selectedUserId = student.id;
+            document.getElementById('reactivate-modal').classList.remove('hidden');
+        });
+    }
+}
+
+async function deactivateStudent() {
+    const reason = document.getElementById('deactivate-reason').value.trim();
+    const sendEmail = document.getElementById('send-email').checked;
+    
+    if (!reason) {
+        alert('Please provide a reason for deactivation');
+        return;
+    }
+    
+    try {
+        await api.post(`/admin/users/${selectedUserId}/deactivate/`, {
+            reason: reason,
+            send_email: sendEmail
+        });
+        
+        document.getElementById('deactivate-modal').classList.add('hidden');
+        document.getElementById('deactivate-reason').value = '';
+        alert('Student deactivated successfully');
+        await loadStudents();
+        await loadStudentStats();
+        
+    } catch (error) {
+        console.error('Failed to deactivate student:', error);
+        alert('Failed to deactivate student');
+    }
+}
+
+async function reactivateStudent() {
+    const reason = document.getElementById('reactivate-reason').value.trim();
+    const sendEmail = document.getElementById('reactivate-send-email').checked;
+    
+    try {
+        await api.post(`/admin/users/${selectedUserId}/reactivate/`, {
+            reason: reason,
+            send_email: sendEmail
+        });
+        
+        document.getElementById('reactivate-modal').classList.add('hidden');
+        document.getElementById('reactivate-reason').value = '';
+        alert('Student reactivated successfully');
+        await loadStudents();
+        await loadStudentStats();
+        
+    } catch (error) {
+        console.error('Failed to reactivate student:', error);
+        alert('Failed to reactivate student');
+    }
+}
+</script>
+{% endblock %}

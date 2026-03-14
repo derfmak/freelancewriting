@@ -1,0 +1,87 @@
+{% extends "student_base.html" %}
+
+{% block title %}Edit Profile - Student Portal{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white border border-gray-200 p-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Edit <span class="text-green-600">Profile</span></h1>
+            <p class="text-gray-600 mb-8">Update your personal information</p>
+
+            <form id="profileForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="fullName" value="{{ user.full_name }}">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="email" value="{{ user.email }}" disabled>
+                    <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    <input type="tel" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="phone" value="{{ user.phone|default:'' }}">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Institution</label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="institution" value="{{ user.institution|default:'' }}">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="course" value="{{ user.course|default:'' }}">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Year of Study</label>
+                    <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="yearOfStudy">
+                        <option value="">Select year</option>
+                        <option value="1" {% if user.year_of_study == '1' %}selected{% endif %}>1st Year</option>
+                        <option value="2" {% if user.year_of_study == '2' %}selected{% endif %}>2nd Year</option>
+                        <option value="3" {% if user.year_of_study == '3' %}selected{% endif %}>3rd Year</option>
+                        <option value="4" {% if user.year_of_study == '4' %}selected{% endif %}>4th Year</option>
+                        <option value="5" {% if user.year_of_study == '5' %}selected{% endif %}>5th Year</option>
+                        <option value="graduate" {% if user.year_of_study == 'graduate' %}selected{% endif %}>Graduate</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <a href="/student/profile/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-3">Cancel</a>
+                    <button type="submit" class="bg-green-600 text-white hover:bg-green-700 transition-colors px-6 py-3">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    try {
+        if (window.Loading) window.Loading.show();
+        
+        const data = {
+            full_name: document.getElementById('fullName').value,
+            phone: document.getElementById('phone').value,
+            institution: document.getElementById('institution').value,
+            course: document.getElementById('course').value,
+            year_of_study: document.getElementById('yearOfStudy').value
+        };
+        
+        await api.put('/student/profile/', data);
+        
+        window.location.href = '/student/profile/';
+        
+    } catch (error) {
+        alert('Failed to update profile');
+    } finally {
+        if (window.Loading) window.Loading.hide();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,496 @@
+
+{% extends "admin_base.html" %}
+
+{% block title %}Finances - Admin - Academic Writing Platform{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Financial <span class="text-blue-600">Overview</span></h1>
+            <p class="text-gray-600 mt-1">Track revenue, deposits and transactions</p>
+        </div>
+        <div class="flex space-x-3">
+            <select class="border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="date-range">
+                <option value="today">Today</option>
+                <option value="week" selected>This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
+            </select>
+            <button class="bg-blue-600 text-white px-6 py-3 font-medium hover:bg-blue-700 transition-colors flex items-center" id="export-btn">
+                <i class="fas fa-download mr-2"></i>Export Report
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Total Revenue</p>
+            <p class="text-3xl font-bold text-gray-900" id="total-revenue">$0</p>
+            <p class="text-sm text-green-600 mt-2" id="revenue-change">+0% vs previous</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Total Deposits</p>
+            <p class="text-3xl font-bold text-gray-900" id="total-deposits">$0</p>
+            <p class="text-sm text-gray-600 mt-2" id="deposits-count">0 transactions</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Total Refunds</p>
+            <p class="text-3xl font-bold text-gray-900" id="total-refunds">$0</p>
+            <p class="text-sm text-red-600 mt-2" id="refund-rate">0% refund rate</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6">
+            <p class="text-sm text-gray-500 mb-2">Average Order</p>
+            <p class="text-3xl font-bold text-gray-900" id="avg-order">$0</p>
+            <p class="text-sm text-gray-600 mt-2" id="order-count">0 orders</p>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Revenue Overview</h2>
+            <canvas id="revenue-chart" height="300"></canvas>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Transaction Distribution</h2>
+            <canvas id="distribution-chart" height="300"></canvas>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8 mb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h3 class="font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">Payment Methods</h3>
+            <div class="space-y-3" id="payment-methods">
+                <div class="text-center text-gray-500 py-4">Loading...</div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-6">
+            <h3 class="font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">Top Subjects</h3>
+            <div class="space-y-3" id="top-subjects">
+                <div class="text-center text-gray-500 py-4">Loading...</div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-6">
+            <h3 class="font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">Daily Stats</h3>
+            <div class="space-y-3" id="daily-stats">
+                <div class="text-center text-gray-500 py-4">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Transactions</h2>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions-list" class="divide-y divide-gray-200">
+                    <tr>
+                        <td colspan="8" class="px-6 py-8 text-center text-gray-500">Loading transactions...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6 text-center">
+            <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-2" id="load-more">Load More</button>
+        </div>
+    </div>
+</div>
+
+<div id="export-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Export Financial Report</h3>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+                <select class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="export-type">
+                    <option value="transactions">Transactions</option>
+                    <option value="revenue">Revenue Summary</option>
+                    <option value="orders">Orders</option>
+                    <option value="refunds">Refunds</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" class="border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="export-start">
+                    <input type="date" class="border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="export-end">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                <select class="w-full border border-gray-300 px-4 py-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-colors" id="export-format">
+                    <option value="csv">CSV</option>
+                    <option value="excel">Excel</option>
+                    <option value="pdf">PDF</option>
+                </select>
+            </div>
+
+            <div class="flex space-x-3 pt-4">
+                <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3" id="export-modal-close">Cancel</button>
+                <button class="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors px-4 py-3" id="confirm-export">Export</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+let revenueChart = null;
+let distributionChart = null;
+let currentPage = 1;
+let hasMore = true;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadFinancialData();
+    loadTransactions();
+    
+    document.getElementById('date-range').addEventListener('change', function() {
+        if (this.value === 'custom') {
+            showCustomDateRange();
+        } else {
+            loadFinancialData();
+        }
+    });
+    
+    document.getElementById('export-btn').addEventListener('click', function() {
+        document.getElementById('export-modal').classList.remove('hidden');
+    });
+    
+    document.getElementById('export-modal-close').addEventListener('click', function() {
+        document.getElementById('export-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-export').addEventListener('click', exportReport);
+    
+    document.getElementById('load-more').addEventListener('click', loadMoreTransactions);
+});
+
+async function loadFinancialData() {
+    try {
+        const range = document.getElementById('date-range').value;
+        const stats = await api.get('/admin/finances/', { range: range });
+        displayFinancialStats(stats);
+        updateCharts(stats);
+        loadPaymentMethods(stats);
+        loadTopSubjects(stats);
+        loadDailyStats(stats);
+    } catch (error) {
+        console.error('Failed to load financial data');
+    }
+}
+
+function displayFinancialStats(stats) {
+    document.getElementById('total-revenue').textContent = `$${parseFloat(stats.total_revenue || 0).toFixed(2)}`;
+    document.getElementById('revenue-change').textContent = `${stats.revenue_change || 0}% vs previous`;
+    document.getElementById('total-deposits').textContent = `$${parseFloat(stats.total_deposits || 0).toFixed(2)}`;
+    document.getElementById('deposits-count').textContent = `${stats.deposit_count || 0} transactions`;
+    document.getElementById('total-refunds').textContent = `$${parseFloat(stats.total_refunds || 0).toFixed(2)}`;
+    document.getElementById('refund-rate').textContent = `${stats.refund_rate || 0}% refund rate`;
+    document.getElementById('avg-order').textContent = `$${parseFloat(stats.average_order || 0).toFixed(2)}`;
+    document.getElementById('order-count').textContent = `${stats.order_count || 0} orders`;
+}
+
+function updateCharts(stats) {
+    if (revenueChart) revenueChart.destroy();
+    if (distributionChart) distributionChart.destroy();
+    
+    const revenueCtx = document.getElementById('revenue-chart').getContext('2d');
+    revenueChart = new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: stats.revenue_labels || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Revenue',
+                data: stats.revenue_data || [0, 0, 0, 0, 0, 0, 0],
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#2563eb',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    const distCtx = document.getElementById('distribution-chart').getContext('2d');
+    distributionChart = new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+            labels: stats.distribution_labels || ['Completed', 'Pending', 'Refunded'],
+            datasets: [{
+                data: stats.distribution_data || [70, 20, 10],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+}
+
+function loadPaymentMethods(stats) {
+    const container = document.getElementById('payment-methods');
+    
+    if (!stats.payment_methods || stats.payment_methods.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-4">No data available</div>';
+        return;
+    }
+    
+    container.innerHTML = stats.payment_methods.map(method => `
+        <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-${method.icon || 'credit-card'} text-gray-400 w-4"></i>
+                <span class="text-gray-700">${method.name}</span>
+            </div>
+            <div class="text-right">
+                <span class="font-medium text-gray-800">$${parseFloat(method.amount).toFixed(2)}</span>
+                <span class="text-xs text-gray-500 ml-2">(${method.percentage}%)</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function loadTopSubjects(stats) {
+    const container = document.getElementById('top-subjects');
+    
+    if (!stats.top_subjects || stats.top_subjects.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-4">No data available</div>';
+        return;
+    }
+    
+    container.innerHTML = stats.top_subjects.map(subject => `
+        <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+            <span class="text-gray-700">${subject.name}</span>
+            <div class="text-right">
+                <span class="font-medium text-gray-800">${subject.count} orders</span>
+                <span class="text-xs text-gray-500 ml-2">$${parseFloat(subject.revenue).toFixed(2)}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function loadDailyStats(stats) {
+    const container = document.getElementById('daily-stats');
+    
+    if (!stats.daily || stats.daily.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-4">No data available</div>';
+        return;
+    }
+    
+    container.innerHTML = stats.daily.map(day => `
+        <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+            <div>
+                <p class="font-medium text-gray-800">${day.date}</p>
+                <p class="text-xs text-gray-500">${day.orders} orders</p>
+            </div>
+            <div class="text-right">
+                <p class="font-medium text-gray-800">$${parseFloat(day.revenue).toFixed(2)}</p>
+                <p class="text-xs ${day.change >= 0 ? 'text-green-600' : 'text-red-600'}">
+                    ${day.change >= 0 ? '+' : ''}${day.change}%
+                </p>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadTransactions(page = 1) {
+    try {
+        const response = await api.get('/admin/transactions/', { page: page });
+        
+        if (page === 1) {
+            displayTransactions(response.results || []);
+        } else {
+            appendTransactions(response.results || []);
+        }
+        
+        hasMore = response.next ? true : false;
+        
+        if (!hasMore) {
+            document.getElementById('load-more').style.display = 'none';
+        } else {
+            document.getElementById('load-more').style.display = 'inline-block';
+        }
+        
+    } catch (error) {
+        console.error('Failed to load transactions');
+    }
+}
+
+function displayTransactions(transactions) {
+    const tbody = document.getElementById('transactions-list');
+    
+    if (transactions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                    No transactions found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = transactions.map(t => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 font-mono text-sm text-gray-600">${t.transaction_id}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${new Date(t.created_at).toLocaleString()}</td>
+            <td class="px-6 py-4 text-sm">
+                <a href="/admin/users/${t.user_id}/" class="text-blue-600 hover:text-blue-800 transition-colors">
+                    ${t.user_name || t.user_email}
+                </a>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${t.description}</td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 text-xs ${t.type === 'deposit' ? 'bg-green-100 text-green-700' : t.type === 'payment' ? 'bg-blue-100 text-blue-700' : t.type === 'refund' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'}">
+                    ${t.type}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm font-medium ${parseFloat(t.amount) > 0 ? 'text-green-600' : 'text-red-600'}">
+                ${parseFloat(t.amount) > 0 ? '+' : ''}$${Math.abs(parseFloat(t.amount)).toFixed(2)}
+            </td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 text-xs ${t.status === 'completed' ? 'bg-green-100 text-green-700' : t.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : t.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}">
+                    ${t.status}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${t.payment_method || 'wallet'}</td>
+        </tr>
+    `).join('');
+}
+
+function appendTransactions(transactions) {
+    const tbody = document.getElementById('transactions-list');
+    
+    transactions.forEach(t => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        row.innerHTML = `
+            <td class="px-6 py-4 font-mono text-sm text-gray-600">${t.transaction_id}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${new Date(t.created_at).toLocaleString()}</td>
+            <td class="px-6 py-4 text-sm">
+                <a href="/admin/users/${t.user_id}/" class="text-blue-600 hover:text-blue-800 transition-colors">
+                    ${t.user_name || t.user_email}
+                </a>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${t.description}</td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 text-xs ${t.type === 'deposit' ? 'bg-green-100 text-green-700' : t.type === 'payment' ? 'bg-blue-100 text-blue-700' : t.type === 'refund' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'}">
+                    ${t.type}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm font-medium ${parseFloat(t.amount) > 0 ? 'text-green-600' : 'text-red-600'}">
+                ${parseFloat(t.amount) > 0 ? '+' : ''}$${Math.abs(parseFloat(t.amount)).toFixed(2)}
+            </td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 text-xs ${t.status === 'completed' ? 'bg-green-100 text-green-700' : t.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : t.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}">
+                    ${t.status}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${t.payment_method || 'wallet'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function loadMoreTransactions() {
+    currentPage++;
+    loadTransactions(currentPage);
+}
+
+function showCustomDateRange() {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    document.getElementById('export-start').value = thirtyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('export-end').value = today.toISOString().split('T')[0];
+}
+
+async function exportReport() {
+    const type = document.getElementById('export-type').value;
+    const start = document.getElementById('export-start').value;
+    const end = document.getElementById('export-end').value;
+    const format = document.getElementById('export-format').value;
+    
+    try {
+        const response = await api.get('/admin/finances/export/', {
+            type: type,
+            start: start,
+            end: end,
+            format: format
+        });
+        
+        const blob = new Blob([response], { type: getMimeType(format) });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `financial_report_${start}_to_${end}.${format}`;
+        a.click();
+        
+        document.getElementById('export-modal').classList.add('hidden');
+        
+    } catch (error) {
+        alert('Failed to export report');
+    }
+}
+
+function getMimeType(format) {
+    const types = {
+        'csv': 'text/csv',
+        'excel': 'application/vnd.ms-excel',
+        'pdf': 'application/pdf'
+    };
+    return types[format] || 'application/octet-stream';
+}
+</script>
+{% endblock %}
