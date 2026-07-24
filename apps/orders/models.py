@@ -1,8 +1,10 @@
 import uuid
+from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from apps.accounts.models import User
+
 
 class Attachment(models.Model):
     SCAN_STATUS = [
@@ -26,7 +28,7 @@ class Attachment(models.Model):
     is_corrupt = models.BooleanField(default=False)
     corruption_error = models.TextField(blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    
+
     class Meta:
         indexes = [
             models.Index(fields=['uploaded_by', 'uploaded_at']),
@@ -39,113 +41,110 @@ class Attachment(models.Model):
     def __str__(self):
         return self.filename
 
+
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'pending'),
-        ('ongoing', 'ongoing'),
-        ('awaiting_review', 'awaiting_review'),
+        ('request', 'request'),
+        ('in_progress', 'in_progress'),
+        ('awaiting_approval', 'awaiting_approval'),
         ('completed', 'completed'),
         ('cancelled', 'cancelled'),
         ('refund_pending', 'refund_pending'),
     ]
-    
+
     ACADEMIC_LEVELS = [
         ('high_school', 'high_school'),
         ('undergraduate', 'undergraduate'),
         ('masters', 'masters'),
         ('phd', 'phd'),
     ]
-    
+
     PAPER_TYPES = [
         ('essay', 'essay'),
         ('research_paper', 'research_paper'),
-        ('term_paper', 'term_paper'),
-        ('thesis', 'thesis'),
         ('dissertation', 'dissertation'),
+        ('thesis', 'thesis'),
         ('case_study', 'case_study'),
-        ('coursework', 'coursework'),
-        ('lab_report', 'lab_report'),
-        ('book_review', 'book_review'),
-        ('article', 'article'),
+        ('literature_review', 'literature_review'),
+        ('article_review', 'article_review'),
+        ('book_report', 'book_report'),
+        ('speech', 'speech'),
+        ('presentation', 'presentation'),
     ]
-    
+
     FORMATS = [
         ('apa', 'apa'),
         ('mla', 'mla'),
         ('chicago', 'chicago'),
         ('harvard', 'harvard'),
+        ('turabian', 'turabian'),
+        ('vancouver', 'vancouver'),
+        ('oscola', 'oscola'),
         ('ieee', 'ieee'),
     ]
 
-    WRITER_LEVELS = [
-        ('any', 'any'),
-        ('master', 'master'),
-        ('phd', 'phd'),
-    ]
-    
+    PRICE_PER_PAGE = Decimal('15.00')
+    PRICE_PER_SLIDE = Decimal('5.00')
+    REVISION_WINDOW_HOURS = 48
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.CharField(max_length=20, unique=True, db_index=True)
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', db_index=True)
-    
+    writer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='writer_orders', db_index=True)
+
     academic_level = models.CharField(max_length=20, choices=ACADEMIC_LEVELS)
-    paper_type = models.CharField(max_length=20, choices=PAPER_TYPES)
+    paper_type = models.CharField(max_length=30, choices=PAPER_TYPES)
     subject = models.CharField(max_length=200)
     topic = models.CharField(max_length=500)
     instructions = models.TextField()
     pages = models.IntegerField(validators=[MinValueValidator(1)])
     words = models.IntegerField(validators=[MinValueValidator(1)], null=True, blank=True)
+    slides = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1)])
     sources_count = models.IntegerField(default=0)
     deadline = models.DateTimeField(db_index=True)
     format = models.CharField(max_length=20, choices=FORMATS)
-    preferred_writer_level = models.CharField(max_length=20, choices=WRITER_LEVELS, default='any')
-    
+
     attachments = models.ManyToManyField(Attachment, blank=True, related_name='orders')
     links = models.JSONField(default=list, blank=True)
-    
-    base_price = models.DecimalField(max_digits=10, decimal_places=2)
-    writer_premium = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    extras_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    plagiarism_report = models.BooleanField(default=False)
-    abstract = models.BooleanField(default=False)
-    proofreading = models.BooleanField(default=False)
-    one_page_summary = models.BooleanField(default=False)
-    
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='request', db_index=True)
     progress_percentage = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
-    
+
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    approved_at = models.DateTimeField(null=True, blank=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     auto_approve_at = models.DateTimeField(null=True, blank=True)
-    
+
     cancelled_at = models.DateTimeField(null=True, blank=True)
     cancelled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='cancelled_orders')
     cancellation_reason = models.TextField(blank=True)
-    
+
     delivered_file = models.ForeignKey(Attachment, on_delete=models.SET_NULL, null=True, blank=True, related_name='delivered_orders')
-    plagiarism_report_file = models.ForeignKey(Attachment, on_delete=models.SET_NULL, null=True, blank=True, related_name='plagiarism_orders')
-    
+
     revision_count = models.IntegerField(default=0)
     last_revision_requested_at = models.DateTimeField(null=True, blank=True)
-    
+
+    escrow_released_at = models.DateTimeField(null=True, blank=True)
+
     refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     refund_reason = models.TextField(blank=True)
     refund_approved_at = models.DateTimeField(null=True, blank=True)
     grade_received = models.CharField(max_length=10, blank=True)
-    
+
     rating = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
     feedback = models.TextField(blank=True)
-    
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         indexes = [
             models.Index(fields=['student', 'status']),
             models.Index(fields=['student', 'created_at']),
+            models.Index(fields=['writer', 'status']),
             models.Index(fields=['status', 'deadline']),
             models.Index(fields=['auto_approve_at']),
         ]
@@ -153,9 +152,34 @@ class Order(models.Model):
 
     def __str__(self):
         return self.order_number
-        
+
+    @staticmethod
+    def urgency_multiplier(deadline):
+        hours_remaining = (deadline - timezone.now()).total_seconds() / 3600
+        if hours_remaining <= 6:
+            return Decimal('0.25')
+        if hours_remaining <= 12:
+            return Decimal('0.20')
+        if hours_remaining <= 24:
+            return Decimal('0.15')
+        if hours_remaining <= 72:
+            return Decimal('0.10')
+        if hours_remaining <= 168:
+            return Decimal('0.05')
+        return Decimal('0.00')
+
+    @classmethod
+    def calculate_price(cls, paper_type, pages, slides, deadline):
+        if paper_type == 'presentation' and slides:
+            base_price = cls.PRICE_PER_SLIDE * slides
+        else:
+            base_price = cls.PRICE_PER_PAGE * pages
+        multiplier = cls.urgency_multiplier(deadline)
+        total_price = (base_price + (base_price * multiplier)).quantize(Decimal('0.01'))
+        return base_price.quantize(Decimal('0.01')), multiplier, total_price
+
     def save(self, *args, **kwargs):
-        if not self.words and self.pages:
+        if not self.words and self.pages and self.paper_type != 'presentation':
             self.words = self.pages * 275
         if not self.order_number:
             import random
@@ -166,15 +190,17 @@ class Order(models.Model):
             self.order_number = f"ORD-{year}-{random_part}"
         super().save(*args, **kwargs)
 
+
 class OrderHistory(models.Model):
     ACTIONS = [
         ('create', 'create'),
-        ('approve', 'approve'),
+        ('accept', 'accept'),
+        ('reject', 'reject'),
         ('start', 'start'),
         ('deliver', 'deliver'),
         ('complete', 'complete'),
+        ('auto_approve', 'auto_approve'),
         ('cancel', 'cancel'),
-        ('reject', 'reject'),
         ('refund_request', 'refund_request'),
         ('refund_approve', 'refund_approve'),
         ('refund_deny', 'refund_deny'),

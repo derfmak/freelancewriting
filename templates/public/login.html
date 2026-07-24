@@ -1,264 +1,741 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Academic Writing Platform{% endblock %}
+{% block title %}Login - AcademicWrite{% endblock %}
+
+{% block extra_css %}
+<style>
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+        20%, 40%, 60%, 80% { transform: translateX(6px); }
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes progressBar {
+        from { width: 0%; }
+        to { width: 100%; }
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .login-container {
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        border: 1px solid #e5e7eb;
+    }
+
+    .login-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .login-title span {
+        color: #059669;
+    }
+
+    .login-subtitle {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .divider-line {
+        width: 2.5rem;
+        height: 2px;
+        background: #059669;
+        margin: 0.5rem auto 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.4rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.6rem 0.8rem;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        background: #fafbfc;
+        outline: none;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #059669;
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        background: white;
+    }
+
+    .form-input.error {
+        border-color: #ef4444;
+        background: #fef2f2;
+        animation: shake 0.5s ease;
+    }
+
+    .form-input:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 30px #fafbfc inset !important;
+        -webkit-text-fill-color: #1e293b !important;
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 0.2rem;
+        transition: color 0.3s ease;
+    }
+
+    .password-toggle:hover {
+        color: #059669;
+    }
+
+    .error-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.3rem;
+        animation: slideDown 0.3s ease;
+    }
+
+    .error-message.show {
+        display: block;
+    }
+
+    .login-btn {
+        width: 100%;
+        padding: 0.7rem;
+        background: #9ca3af;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: not-allowed;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        opacity: 0.6;
+    }
+
+    .login-btn.active {
+        background: #059669;
+        cursor: pointer;
+        opacity: 1;
+    }
+
+    .login-btn.active:hover {
+        background: #047857;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    }
+
+    .login-btn:disabled {
+        cursor: not-allowed;
+    }
+
+    .login-btn .btn-text {
+        position: relative;
+        z-index: 2;
+    }
+
+    .login-btn .btn-loader {
+        display: none;
+        position: relative;
+        z-index: 2;
+    }
+
+    .login-btn.loading .btn-text {
+        display: none;
+    }
+
+    .login-btn.loading .btn-loader {
+        display: inline-block;
+    }
+
+    .login-btn .progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: #fbbf24;
+        width: 0%;
+        z-index: 3;
+        transition: width 0.1s linear;
+    }
+
+    .login-btn .progress-bar.active {
+        animation: progressBar 5s linear forwards;
+    }
+
+    .login-btn .progress-bar.error {
+        background: #ef4444;
+    }
+
+    .login-btn .progress-bar.success {
+        background: #22c55e;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 1.2rem;
+        height: 1.2rem;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.6s linear infinite;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+        width: 1rem;
+        height: 1rem;
+        accent-color: #059669;
+        cursor: pointer;
+    }
+
+    .forgot-link {
+        font-size: 0.8rem;
+        color: #059669;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .forgot-link:hover {
+        color: #047857;
+        text-decoration: underline;
+    }
+
+    .register-link {
+        color: #059669;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .register-link:hover {
+        color: #047857;
+        text-decoration: underline;
+    }
+
+    .toast-notification {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        z-index: 1000;
+        animation: slideDown 0.4s ease;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    .toast-content {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1.25rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        border-left: 4px solid #059669;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .toast-content.error {
+        border-left-color: #ef4444;
+    }
+
+    .toast-content.success {
+        border-left-color: #059669;
+    }
+
+    .toast-icon {
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .toast-icon.success {
+        color: #059669;
+    }
+
+    .toast-icon.error {
+        color: #ef4444;
+    }
+
+    .toast-message {
+        font-size: 0.85rem;
+        color: #1e293b;
+        font-weight: 500;
+        word-break: break-word;
+        flex: 1;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 0.2rem;
+        transition: color 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .toast-close:hover {
+        color: #1e293b;
+    }
+
+    @media (max-width: 640px) {
+        .login-card {
+            padding: 1.5rem;
+        }
+
+        .toast-notification {
+            top: 1rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto">
-    <div class="bg-white border border-gray-200 p-8">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Welcome <span class="text-green-600">Back</span></h1>
-            <div class="w-16 h-0.5 bg-green-600 mx-auto mt-2 mb-3"></div>
-            <p class="text-gray-600">Sign in to your account</p>
+<div class="login-container">
+    <div class="login-card">
+        <div class="text-center">
+            <h1 class="login-title">Welcome <span>Back</span></h1>
+            <div class="divider-line"></div>
+            <p class="login-subtitle">Sign in to your account</p>
         </div>
 
-        <div class="mb-6">
-            <div class="flex border border-gray-300 bg-gray-50 p-1">
-                <button class="flex-1 py-3 text-center font-medium bg-green-600 text-white" id="student-tab" data-role="student">
-                    Student Login
-                </button>
-                <button class="flex-1 py-3 text-center font-medium text-gray-600 hover:text-green-600" id="admin-tab" data-role="admin">
-                    Admin Login
-                </button>
-            </div>
-        </div>
+        <form id="loginForm" class="mt-6" novalidate>
+            <input type="hidden" id="role" name="role" value="client">
 
-        <form id="login-form" class="space-y-6">
-            <input type="hidden" id="role" name="role" value="student">
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="email" required autocomplete="email">
-                <div class="hidden text-red-600 text-sm mt-1" id="email-error"></div>
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email" spellcheck="false">
+                <div class="error-message" id="emailError">Please enter a valid email address</div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <input type="password" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="password" required autocomplete="current-password">
-                <div class="hidden text-red-600 text-sm mt-1" id="password-error"></div>
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" spellcheck="false">
+                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="error-message" id="passwordError">Password must be at least 6 characters</div>
             </div>
 
-            <div class="flex items-center justify-between">
-                <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="remember">
-                    <span class="text-sm text-gray-600">Remember me</span>
+            <div class="flex items-center justify-between mb-6">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="remember">
+                    Remember me
                 </label>
-                <a href="/forgot-password/" class="text-sm text-green-600 hover:text-green-700 font-medium">Forgot Password?</a>
+                <a href="/forgot-password/" class="forgot-link">Forgot Password?</a>
             </div>
 
-            <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 hover:bg-green-700 transition-colors" id="login-btn">
-                Sign In
+            <button type="submit" class="login-btn" id="loginBtn" disabled>
+                <span class="btn-text">Sign In</span>
+                <span class="btn-loader"><span class="spinner"></span> Signing in...</span>
+                <span class="progress-bar" id="progressBar"></span>
             </button>
         </form>
 
         <div class="mt-6 text-center">
-            <p class="text-gray-600">
-                Don't have an account? 
-                <a href="/register/" class="text-green-600 hover:text-green-700 font-medium">Sign up as Student</a>
+            <p class="text-sm text-gray-600">
+                Don't have an account?
+                <a href="/register/" class="register-link">Sign up</a>
             </p>
         </div>
 
-        <div class="mt-4 text-xs text-gray-500 text-center">
-            By signing in, you agree to our 
-            <a href="/terms/" class="text-green-600 hover:text-green-700">Terms</a> 
-            and 
+        <div class="mt-4 text-center text-xs text-gray-500">
+            By signing in, you agree to our
+            <a href="/terms/" class="text-green-600 hover:text-green-700">Terms</a>
+            and
             <a href="/privacy/" class="text-green-600 hover:text-green-700">Privacy Policy</a>
         </div>
     </div>
 
-    <div class="mt-6 text-center">
-        <p class="text-gray-500 text-sm">Having trouble? <a href="/contact/" class="text-green-600 hover:text-green-700 font-medium">Contact Support</a></p>
+    <div class="mt-4 text-center">
+        <p class="text-sm text-gray-500">
+            Having trouble? <a href="/contact/" class="text-green-600 hover:text-green-700 font-medium">Contact Support</a>
+        </p>
     </div>
 </div>
 
-<div id="twofa-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white border border-gray-200 max-w-md w-full mx-4 p-8">
-        <h3 class="text-xl font-bold mb-2 text-gray-900">Two-Factor Authentication</h3>
-        <p class="text-gray-600 mb-6">Please enter the verification code from your authenticator app.</p>
-        
-        <div class="mb-6">
-            <input type="text" class="w-full text-center text-2xl tracking-widest border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="twofa-code" maxlength="6" placeholder="000000">
-        </div>
+<div id="toastContainer" class="toast-notification" style="display:none;"></div>
+{% endblock %}
 
-        <div class="flex space-x-3">
-            <button class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors" id="twofa-cancel">Cancel</button>
-            <button class="flex-1 px-4 py-3 bg-green-600 text-white hover:bg-green-700 font-medium transition-colors" id="twofa-verify">Verify</button>
-        </div>
-    </div>
-</div>
-
+{% block extra_js %}
 <script>
-if (typeof window.auth === 'undefined') {
-    window.auth = {
-        setTokens: function(access, refresh) {
-            localStorage.setItem('access_token', access);
-            localStorage.setItem('refresh_token', refresh);
-        },
-        clearTokens: function() {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-        },
-        getAccessToken: function() {
-            return localStorage.getItem('access_token');
-        },
-        getRefreshToken: function() {
-            return localStorage.getItem('refresh_token');
-        },
-        isAuthenticated: function() {
-            return !!this.getAccessToken();
-        }
-    };
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    const studentTab = document.getElementById('student-tab');
-    const adminTab = document.getElementById('admin-tab');
-    const roleInput = document.getElementById('role');
-    const form = document.getElementById('login-form');
+    const form = document.getElementById('loginForm');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    const loginBtn = document.getElementById('loginBtn');
+    const progressBar = document.getElementById('progressBar');
+    const togglePassword = document.getElementById('togglePassword');
+    const rememberCheck = document.getElementById('remember');
 
-    studentTab.addEventListener('click', function() {
-        studentTab.classList.add('bg-green-600', 'text-white');
-        studentTab.classList.remove('text-gray-600', 'hover:text-green-600');
-        adminTab.classList.remove('bg-green-600', 'text-white');
-        adminTab.classList.add('text-gray-600', 'hover:text-green-600');
-        roleInput.value = 'student';
+    let isEmailValid = false;
+    let isPasswordValid = false;
+    let emailTouched = false;
+    let emailValidated = false;
+
+    function validateEmail(value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(value);
+    }
+
+    function updateButtonState() {
+        if (isEmailValid && isPasswordValid) {
+            loginBtn.disabled = false;
+            loginBtn.classList.add('active');
+        } else {
+            loginBtn.disabled = true;
+            loginBtn.classList.remove('active');
+        }
+    }
+
+    function showError(input, errorEl, message) {
+        input.classList.add('error');
+        errorEl.textContent = message || errorEl.textContent;
+        errorEl.classList.add('show');
+    }
+
+    function clearError(input, errorEl) {
+        input.classList.remove('error');
+        errorEl.classList.remove('show');
+    }
+
+    email.addEventListener('blur', function() {
+        emailTouched = true;
+        const value = this.value.trim();
+        if (!value) {
+            isEmailValid = false;
+            emailValidated = true;
+            showError(this, emailError, 'Email is required');
+        } else if (!validateEmail(value)) {
+            isEmailValid = false;
+            emailValidated = true;
+            showError(this, emailError, 'Please enter a valid email address');
+        } else {
+            isEmailValid = true;
+            emailValidated = true;
+            clearError(this, emailError);
+        }
+        updateButtonState();
     });
 
-    adminTab.addEventListener('click', function() {
-        adminTab.classList.add('bg-green-600', 'text-white');
-        adminTab.classList.remove('text-gray-600', 'hover:text-green-600');
-        studentTab.classList.remove('bg-green-600', 'text-white');
-        studentTab.classList.add('text-gray-600', 'hover:text-green-600');
-        roleInput.value = 'admin';
+    email.addEventListener('input', function() {
+        if (!emailTouched || !emailValidated) {
+            return;
+        }
+        const value = this.value.trim();
+        if (value && !validateEmail(value)) {
+            isEmailValid = false;
+            showError(this, emailError, 'Please enter a valid email address');
+        } else if (value && validateEmail(value)) {
+            isEmailValid = true;
+            clearError(this, emailError);
+        } else if (!value) {
+            isEmailValid = false;
+            showError(this, emailError, 'Email is required');
+        }
+        updateButtonState();
     });
+
+    password.addEventListener('blur', function() {
+        const value = this.value;
+        if (!value) {
+            isPasswordValid = false;
+            showError(this, passwordError, 'Password is required');
+        } else if (value.length < 6) {
+            isPasswordValid = false;
+            showError(this, passwordError, 'Password must be at least 6 characters');
+        } else {
+            isPasswordValid = true;
+            clearError(this, passwordError);
+        }
+        updateButtonState();
+    });
+
+    password.addEventListener('input', function() {
+        const value = this.value;
+        if (value && value.length < 6) {
+            isPasswordValid = false;
+            showError(this, passwordError, 'Password must be at least 6 characters');
+        } else if (value && value.length >= 6) {
+            isPasswordValid = true;
+            clearError(this, passwordError);
+        } else {
+            isPasswordValid = false;
+            clearError(this, passwordError);
+        }
+        updateButtonState();
+    });
+
+    togglePassword.addEventListener('click', function() {
+        const icon = this.querySelector('i');
+        if (password.type === 'password') {
+            password.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            password.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+
+    function showToast(message, type) {
+        const container = document.getElementById('toastContainer');
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const iconColor = type === 'success' ? 'success' : 'error';
+        
+        container.innerHTML = `
+            <div class="toast-content ${type}">
+                <span class="toast-icon ${iconColor}"><i class="fas ${icon}"></i></span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.closest('.toast-notification').style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        container.style.display = 'block';
+
+        setTimeout(() => {
+            container.style.display = 'none';
+        }, 6000);
+    }
+
+    function startProgressBar(type) {
+        progressBar.classList.remove('error', 'success', 'active');
+        progressBar.style.width = '0%';
+        
+        if (type === 'error') {
+            progressBar.classList.add('error');
+        } else if (type === 'success') {
+            progressBar.classList.add('success');
+        }
+        
+        progressBar.classList.add('active');
+    }
+
+    function getCsrfToken() {
+        const token = document.querySelector('[name=csrf-token]')?.content;
+        if (token) return token;
+        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
+    }
+
+    function resetButton() {
+        loginBtn.classList.remove('loading');
+        loginBtn.disabled = !(isEmailValid && isPasswordValid);
+        if (isEmailValid && isPasswordValid) {
+            loginBtn.classList.add('active');
+        } else {
+            loginBtn.classList.remove('active');
+        }
+        progressBar.classList.remove('active', 'error', 'success');
+        progressBar.style.width = '0%';
+        
+        if (progressTimer) {
+            clearTimeout(progressTimer);
+            progressTimer = null;
+        }
+        if (loginTimeout) {
+            clearTimeout(loginTimeout);
+            loginTimeout = null;
+        }
+    }
+
+    let progressTimer = null;
+    let loginTimeout = null;
+
+    function handleLoginSuccess() {
+        loginBtn.classList.remove('loading');
+        startProgressBar('success');
+        showToast('Login successful! Redirecting...', 'success');
+        
+        loginTimeout = setTimeout(() => {
+            window.location.href = '/dashboard/';
+        }, 1500);
+    }
+
+    function handleLoginError(message) {
+        loginBtn.classList.remove('loading');
+        startProgressBar('error');
+        showToast(message || 'Login failed. Please try again.', 'error');
+        
+        loginTimeout = setTimeout(() => {
+            resetButton();
+        }, 5000);
+    }
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        clearErrors();
-        
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const role = document.getElementById('role').value;
-        
-        if (!email || !password) {
-            if (!email) showError('email', 'Email is required');
-            if (!password) showError('password', 'Password is required');
+
+        if (!isEmailValid || !isPasswordValid) {
             return;
         }
-        
-        const submitBtn = document.getElementById('login-btn');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Signing in...';
-        submitBtn.disabled = true;
-        
+
+        const emailValue = email.value.trim();
+        const passwordValue = password.value;
+
+        loginBtn.classList.add('loading');
+        loginBtn.disabled = true;
+        startProgressBar('loading');
+
+        const csrfToken = getCsrfToken();
+        const apiBase = window.location.origin;
+        const loginUrl = apiBase + '/auth/login/';
+
         try {
-            const response = await api.post('/auth/login/', {
-                email: email,
-                password: password
+            const response = await fetch(loginUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    email: emailValue,
+                    password: passwordValue
+                })
             });
-            
-            if (response && response.access) {
-                auth.setTokens(response.access, response.refresh);
-                
-                let userRole = 'student';
-                if (response.user && response.user.role) {
-                    userRole = response.user.role;
-                }
-                
-                if (userRole === 'admin') {
-                    window.location.href = '/admin/dashboard/';
+
+            const data = await response.json();
+
+            if (response.ok) {
+                if (data.access) {
+                    localStorage.setItem('access_token', data.access);
+                    if (data.refresh) {
+                        localStorage.setItem('refresh_token', data.refresh);
+                    }
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
+                    
+                    if (rememberCheck.checked) {
+                        localStorage.setItem('saved_email', emailValue);
+                    } else {
+                        localStorage.removeItem('saved_email');
+                    }
+                    
+                    handleLoginSuccess();
                 } else {
-                    window.location.href = '/student/dashboard/';
+                    handleLoginError('Invalid server response');
                 }
             } else {
-                showError('email', 'Invalid server response');
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
+                let errorMessage = 'Invalid credentials. Please try again.';
+                if (data.error) {
+                    errorMessage = data.error;
+                } else if (data.message) {
+                    errorMessage = data.message;
+                } else if (data.non_field_errors) {
+                    errorMessage = data.non_field_errors[0];
+                } else if (data.detail) {
+                    errorMessage = data.detail;
+                }
+                handleLoginError(errorMessage);
             }
-            
         } catch (error) {
-            let errorMessage = 'Login failed. Please try again.';
+            console.error('Login error:', error);
             
-            if (error && error.data) {
-                if (error.data.error) {
-                    errorMessage = error.data.error;
-                } else if (error.data.message) {
-                    errorMessage = error.data.message;
-                } else if (error.data.non_field_errors) {
-                    errorMessage = error.data.non_field_errors[0];
-                }
-            }
-            
-            if (errorMessage.includes('2fa') || errorMessage.includes('two-factor')) {
-                showTwoFAModal(email, password);
+            if (error.message === 'Failed to fetch') {
+                handleLoginError('Cannot connect to server. Please check your connection.');
             } else {
-                showError('email', errorMessage);
+                handleLoginError('Something went wrong. Please try again.');
             }
-            
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
         }
     });
+
+    const savedEmail = localStorage.getItem('saved_email');
+    if (savedEmail) {
+        email.value = savedEmail;
+        rememberCheck.checked = true;
+        emailTouched = true;
+        emailValidated = true;
+        if (validateEmail(savedEmail)) {
+            isEmailValid = true;
+            updateButtonState();
+        }
+    }
+
+    rememberCheck.addEventListener('change', function() {
+        if (this.checked) {
+            localStorage.setItem('saved_email', email.value.trim());
+        } else {
+            localStorage.removeItem('saved_email');
+        }
+    });
+
+    email.addEventListener('change', function() {
+        if (rememberCheck.checked && this.value.trim()) {
+            localStorage.setItem('saved_email', this.value.trim());
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const toast = document.querySelector('.toast-notification');
+            if (toast && toast.style.display !== 'none') {
+                toast.style.display = 'none';
+            }
+        }
+    });
+
+    updateButtonState();
 });
-
-function showError(field, message) {
-    const errorDiv = document.getElementById(`${field}-error`);
-    errorDiv.textContent = message;
-    errorDiv.classList.remove('hidden');
-    document.getElementById(field).classList.add('border-red-500', 'focus:border-red-500');
-}
-
-function clearErrors() {
-    ['email', 'password'].forEach(field => {
-        const errorDiv = document.getElementById(`${field}-error`);
-        errorDiv.classList.add('hidden');
-        document.getElementById(field).classList.remove('border-red-500', 'focus:border-red-500');
-    });
-}
-
-function showTwoFAModal(email, password) {
-    const modal = document.getElementById('twofa-modal');
-    modal.classList.remove('hidden');
-    
-    document.getElementById('twofa-cancel').onclick = () => {
-        modal.classList.add('hidden');
-        document.getElementById('twofa-code').value = '';
-    };
-    
-    document.getElementById('twofa-verify').onclick = async () => {
-        const code = document.getElementById('twofa-code').value;
-        
-        if (code.length !== 6) {
-            alert('Please enter a valid 6-digit code');
-            return;
-        }
-        
-        try {
-            const response = await api.post('/auth/verify-2fa/', {
-                email: email,
-                password: password,
-                code: code
-            });
-            
-            if (response && response.access) {
-                auth.setTokens(response.access, response.refresh);
-                
-                let userRole = 'student';
-                if (response.user && response.user.role) {
-                    userRole = response.user.role;
-                }
-                
-                if (userRole === 'admin') {
-                    window.location.href = '/admin/dashboard/';
-                } else {
-                    window.location.href = '/student/dashboard/';
-                }
-            }
-            
-        } catch (error) {
-            alert('Invalid verification code');
-        }
-    };
-}
 </script>
 {% endblock %}

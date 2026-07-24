@@ -1,70 +1,322 @@
 from django import forms
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 from apps.accounts.models import User
 from apps.orders.models import Order
-from .models import Announcement, SystemSetting, SiteContent
+from .models import Announcement, SystemSetting, SiteContent, AdminNote
+
 
 class UserAdminForm(forms.ModelForm):
+    suspension_reason = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'placeholder': 'Reason for suspension...',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+        })
+    )
+    
+    suspended_until = forms.DateTimeField(
+        required=False,
+        widget=forms.DateTimeInput(attrs={
+            'type': 'datetime-local',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+        })
+    )
+
     class Meta:
         model = User
-        fields = ['email', 'full_name', 'role', 'is_active', 'is_suspended', 
-                  'suspension_reason', 'suspended_until', 'email_verified', 'phone_verified']
+        fields = [
+            'email', 'full_name', 'role', 'is_active', 'is_suspended',
+            'suspension_reason', 'suspended_until', 'email_verified', 'phone_verified'
+        ]
         widgets = {
-            'suspension_reason': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
-            'suspended_until': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local'}),
+            'email': forms.EmailInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition',
+                'readonly': True
+            }),
+            'full_name': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'role': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
+            'is_suspended': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
+            'email_verified': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
+            'phone_verified': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
         }
 
+    def clean_suspended_until(self):
+        suspended_until = self.cleaned_data.get('suspended_until')
+        if suspended_until and suspended_until < timezone.now():
+            raise forms.ValidationError('Suspension end date must be in the future.')
+        return suspended_until
+
+
 class OrderAdminForm(forms.ModelForm):
+    progress_percentage = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=100,
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition',
+            'min': 0,
+            'max': 100
+        })
+    )
+    
+    rating = forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_value=5,
+        decimal_places=1,
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition',
+            'step': 0.1,
+            'min': 0,
+            'max': 5
+        })
+    )
+    
+    feedback = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'placeholder': 'Client feedback...',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+        })
+    )
+
     class Meta:
         model = Order
         fields = ['status', 'progress_percentage', 'rating', 'feedback']
         widgets = {
-            'feedback': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
-            'progress_percentage': forms.NumberInput(attrs={'class': 'form-input', 'min': 0, 'max': 100}),
+            'status': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
         }
+
+    def clean_rating(self):
+        rating = self.cleaned_data.get('rating')
+        if rating and (rating < 0 or rating > 5):
+            raise forms.ValidationError('Rating must be between 0 and 5.')
+        return rating
+
 
 class RefundActionForm(forms.Form):
     reason = forms.CharField(
         required=True,
-        widget=forms.Textarea(attrs={'class': 'form-input', 'rows': 3, 'placeholder': 'Reason for decision...'})
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'placeholder': 'Reason for decision...',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+        })
     )
-    notify_student = forms.BooleanField(required=False, initial=True)
+    
+    notify_client = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+        })
+    )
+    
+    amount = forms.DecimalField(
+        required=False,
+        min_value=0,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition',
+            'step': 0.01,
+            'min': 0
+        })
+    )
+
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount and amount <= 0:
+            raise forms.ValidationError('Amount must be greater than zero.')
+        return amount
+
 
 class AnnouncementForm(forms.ModelForm):
+    target_audience = forms.MultipleChoiceField(
+        choices=[
+            ('all', 'All Users'),
+            ('clients', 'Clients Only'),
+            ('admin', 'Admin Only'),
+        ],
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'space-y-2'
+        }),
+        required=False,
+        initial=['all']
+    )
+    
+    send_notification = forms.BooleanField(
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+        })
+    )
+
     class Meta:
         model = Announcement
         fields = ['title', 'content', 'priority', 'is_active', 'starts_at', 'expires_at']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-input'}),
-            'content': forms.Textarea(attrs={'class': 'form-input', 'rows': 6}),
-            'priority': forms.Select(attrs={'class': 'form-input'}),
-            'starts_at': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local'}),
-            'expires_at': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local', 'required': False}),
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'content': forms.Textarea(attrs={
+                'rows': 6,
+                'placeholder': 'Announcement content...',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'priority': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
+            'starts_at': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'expires_at': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
         }
 
-    target_audience = forms.MultipleChoiceField(
-        choices=[('all', 'All Users'), ('students', 'Students Only'), ('admins', 'Admins Only')],
-        widget=forms.CheckboxSelectMultiple,
-        required=False
-    )
-    send_notification = forms.BooleanField(required=False, initial=False)
+    def clean_starts_at(self):
+        starts_at = self.cleaned_data.get('starts_at')
+        if starts_at and starts_at < timezone.now():
+            raise forms.ValidationError('Start date must be in the future.')
+        return starts_at
+
+    def clean_expires_at(self):
+        expires_at = self.cleaned_data.get('expires_at')
+        starts_at = self.cleaned_data.get('starts_at')
+        if expires_at and starts_at and expires_at <= starts_at:
+            raise forms.ValidationError('Expiry date must be after start date.')
+        return expires_at
+
 
 class SystemSettingForm(forms.ModelForm):
     class Meta:
         model = SystemSetting
         fields = ['key', 'value', 'type', 'description', 'is_public']
         widgets = {
-            'key': forms.TextInput(attrs={'class': 'form-input'}),
-            'value': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
-            'type': forms.Select(attrs={'class': 'form-input'}),
-            'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 2}),
+            'key': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition',
+                'placeholder': 'setting_key_name'
+            }),
+            'value': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Setting value...',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'type': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'description': forms.Textarea(attrs={
+                'rows': 2,
+                'placeholder': 'What does this setting do?',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'is_public': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
         }
+
+    def clean_key(self):
+        key = self.cleaned_data.get('key')
+        if key:
+            key = key.lower().strip()
+            if ' ' in key:
+                raise forms.ValidationError('Key cannot contain spaces. Use underscores instead.')
+            if not key[0].isalpha():
+                raise forms.ValidationError('Key must start with a letter.')
+        return key
+
 
 class SiteContentForm(forms.ModelForm):
     class Meta:
         model = SiteContent
         fields = ['title', 'content', 'meta_data', 'is_active']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-input'}),
-            'content': forms.Textarea(attrs={'class': 'form-input', 'rows': 10}),
-            'meta_data': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'content': forms.Textarea(attrs={
+                'rows': 10,
+                'placeholder': 'Page content...',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-mono'
+            }),
+            'meta_data': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': '{"key": "value"}',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-mono'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
         }
+
+    def clean_meta_data(self):
+        meta_data = self.cleaned_data.get('meta_data')
+        if meta_data:
+            import json
+            try:
+                if isinstance(meta_data, str):
+                    return json.loads(meta_data)
+                return meta_data
+            except json.JSONDecodeError:
+                raise forms.ValidationError('Invalid JSON format.')
+        return {}
+
+
+class AdminNoteForm(forms.ModelForm):
+    class Meta:
+        model = AdminNote
+        fields = ['title', 'content', 'order', 'client', 'is_pinned', 'is_archived']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'content': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Note content...',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'order': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'client': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+            }),
+            'is_pinned': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
+            'is_archived': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
+            }),
+        }
+
+    def clean_title(self):
+        title = self.cleaned_data.get('title')
+        if title:
+            title = title.strip()
+            if len(title) < 3:
+                raise forms.ValidationError('Title must be at least 3 characters.')
+        return title

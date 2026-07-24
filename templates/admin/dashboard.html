@@ -1,272 +1,437 @@
-
 {% extends "admin_base.html" %}
 
-{% block title %}Admin Dashboard - Academic Writing Platform{% endblock %}
+{% block title %}Admin Dashboard - AcademicWrite{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-8">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Admin <span class="text-blue-600">Dashboard</span></h1>
-            <p class="text-gray-600 mt-1">Welcome back, {{ user.full_name }}</p>
+            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p class="text-sm text-gray-500 mt-1">Welcome back, {{ user.full_name }}</p>
         </div>
-        <div class="text-sm text-gray-500 bg-gray-100 px-4 py-2" id="last-updated"></div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white border border-gray-200 p-6">
-            <p class="text-sm text-gray-500 mb-2">Total Users</p>
-            <p class="text-3xl font-bold text-gray-900" id="total-users">0</p>
-            <p class="text-sm text-green-600 mt-2" id="new-users">+0 today</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6">
-            <p class="text-sm text-gray-500 mb-2">Active Orders</p>
-            <p class="text-3xl font-bold text-gray-900" id="active-orders">0</p>
-            <p class="text-sm text-gray-600 mt-2" id="pending-orders">0 pending</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6">
-            <p class="text-sm text-gray-500 mb-2">Revenue</p>
-            <p class="text-3xl font-bold text-gray-900" id="total-revenue">$0</p>
-            <p class="text-sm text-green-600 mt-2" id="revenue-today">+$0 today</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6">
-            <p class="text-sm text-gray-500 mb-2">Completion Rate</p>
-            <p class="text-3xl font-bold text-gray-900" id="completion-rate">0%</p>
-            <p class="text-sm text-yellow-600 mt-2" id="avg-rating">★ 0.0</p>
+        <div class="text-xs text-gray-400 mt-2 sm:mt-0">
+            Last updated: <span id="updateTime">--:--:--</span>
         </div>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-8 mb-8">
-        <div class="bg-white border border-gray-200 p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Pending Actions</h2>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center p-4 bg-yellow-50 border border-yellow-100">
-                    <div>
-                        <p class="font-medium text-gray-800">Orders Pending Approval</p>
-                        <p class="text-sm text-gray-600 mt-1" id="pending-approval">0 orders</p>
-                    </div>
-                    <a href="/admin/orders/?status=pending" class="bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition-colors">Review</a>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Review</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1" id="pendingOrders">0</p>
+            <p class="text-xs text-gray-400 mt-1">Orders waiting for you</p>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1" id="inProgressOrders">0</p>
+            <p class="text-xs text-gray-400 mt-1">Orders you are writing</p>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Awaiting Approval</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1" id="awaitingApproval">0</p>
+            <p class="text-xs text-gray-400 mt-1">Waiting for client to confirm</p>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">This Month</p>
+            <p class="text-2xl font-bold text-green-600 mt-1" id="totalEarnings">$0</p>
+            <p class="text-xs text-gray-400 mt-1">Total earnings</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Priority Queue</h3>
+            <div id="priorityQueue" class="space-y-2 min-h-[120px]">
+                <div class="text-center text-gray-400 text-sm py-4">No urgent orders</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Pending Actions</h3>
+            <div class="space-y-2">
+                <a href="/api/v1/admin/orders/pending/" class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-100 rounded hover:bg-yellow-100 transition-colors">
+                    <span class="text-sm text-gray-700">Review Orders</span>
+                    <span class="text-sm font-medium text-yellow-700" id="pendingReview">0</span>
+                </a>
+                <a href="/api/v1/admin/orders/revisions/" class="flex items-center justify-between p-3 bg-purple-50 border border-purple-100 rounded hover:bg-purple-100 transition-colors">
+                    <span class="text-sm text-gray-700">Revisions</span>
+                    <span class="text-sm font-medium text-purple-700" id="revisionCount">0</span>
+                </a>
+                <a href="/api/v1/admin/orders/overdue/" class="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded hover:bg-red-100 transition-colors">
+                    <span class="text-sm text-gray-700">Overdue</span>
+                    <span class="text-sm font-medium text-red-700" id="overdueCount">0</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-2">
+                <a href="/api/v1/admin/orders/pending/" class="border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors py-2 text-xs rounded text-center text-gray-600 hover:text-green-600">Review Orders</a>
+                <a href="/api/v1/admin/orders/active/" class="border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors py-2 text-xs rounded text-center text-gray-600 hover:text-green-600">Active Orders</a>
+                <a href="/api/v1/admin/users/" class="border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors py-2 text-xs rounded text-center text-gray-600 hover:text-green-600">Clients</a>
+                <a href="/api/v1/admin/finances/" class="border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors py-2 text-xs rounded text-center text-gray-600 hover:text-green-600">Finances</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-gray-700">Recent Orders</h3>
+                <a href="/api/v1/admin/orders/" class="text-xs text-green-600 hover:text-green-700">View all</a>
+            </div>
+            <div id="recentOrders" class="space-y-2 min-h-[120px]">
+                <div class="text-center text-gray-400 text-sm py-4">No recent orders</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-gray-700">Recent Clients</h3>
+                <a href="/api/v1/admin/users/" class="text-xs text-green-600 hover:text-green-700">View all</a>
+            </div>
+            <div id="recentClients" class="space-y-2 min-h-[120px]">
+                <div class="text-center text-gray-400 text-sm py-4">No recent clients</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-5">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-700">Activity Log</h3>
+            <a href="/api/v1/admin/logs/" class="text-xs text-green-600 hover:text-green-700">View all</a>
+        </div>
+        <div id="recentActivity" class="space-y-2 min-h-[120px]">
+            <div class="text-center text-gray-400 text-sm py-4">No recent activity</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Weekly Earnings</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">This week</span>
+                    <span class="font-medium text-gray-900" id="weekEarnings">$0</span>
                 </div>
-                <div class="flex justify-between items-center p-4 bg-blue-50 border border-blue-100">
-                    <div>
-                        <p class="font-medium text-gray-800">Refund Requests</p>
-                        <p class="text-sm text-gray-600 mt-1" id="refund-requests">0 requests</p>
-                    </div>
-                    <a href="/admin/refunds/" class="bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition-colors">Process</a>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Last week</span>
+                    <span class="font-medium text-gray-900" id="lastWeekEarnings">$0</span>
                 </div>
-                <div class="flex justify-between items-center p-4 bg-purple-50 border border-purple-100">
-                    <div>
-                        <p class="font-medium text-gray-800">Unread Messages</p>
-                        <p class="text-sm text-gray-600 mt-1" id="unread-messages">0 messages</p>
-                    </div>
-                    <a href="/admin/messages/" class="bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition-colors">View</a>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Change</span>
+                    <span class="font-medium text-gray-900" id="weekChange">0%</span>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white border border-gray-200 p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
-            <div class="grid grid-cols-2 gap-3">
-                <a href="/admin/orders/pending/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
-                    <i class="fas fa-clock mr-2"></i>Pending
-                </a>
-                <a href="/admin/orders/active/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
-                    <i class="fas fa-spinner mr-2"></i>Active
-                </a>
-                <a href="/admin/users/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
-                    <i class="fas fa-users mr-2"></i>Users
-                </a>
-                <a href="/admin/finances/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
-                    <i class="fas fa-dollar-sign mr-2"></i>Finances
-                </a>
-                <a href="/admin/announcements/create/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
-                    <i class="fas fa-bullhorn mr-2"></i>Announce
-                </a>
-                <a href="/admin/content/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-600 hover:text-blue-600 transition-colors py-3 px-2 text-sm flex items-center justify-center">
-                    <i class="fas fa-edit mr-2"></i>Content
-                </a>
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Order Statistics</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Completion rate</span>
+                    <span class="font-medium text-gray-900" id="completionRate">0%</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Average rating</span>
+                    <span class="font-medium text-gray-900" id="avgRating">0.0</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Total orders</span>
+                    <span class="font-medium text-gray-900" id="totalOrders">0</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="grid md:grid-cols-2 gap-8 mb-8">
-        <div class="bg-white border border-gray-200 p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Orders</h2>
-            <div id="recent-orders" class="space-y-3">
-                <div class="text-center text-gray-500 py-8">Loading...</div>
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Client Overview</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Total clients</span>
+                    <span class="font-medium text-gray-900" id="totalClients">0</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Active clients</span>
+                    <span class="font-medium text-gray-900" id="activeClients">0</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">New this month</span>
+                    <span class="font-medium text-gray-900" id="newClients">0</span>
+                </div>
             </div>
-            <a href="/admin/orders/" class="text-blue-600 text-sm hover:text-blue-700 mt-4 inline-block">View All Orders →</a>
-        </div>
-
-        <div class="bg-white border border-gray-200 p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Users</h2>
-            <div id="recent-users" class="space-y-3">
-                <div class="text-center text-gray-500 py-8">Loading...</div>
-            </div>
-            <a href="/admin/users/" class="text-blue-600 text-sm hover:text-blue-700 mt-4 inline-block">View All Users →</a>
-        </div>
-    </div>
-
-    <div class="bg-white border border-gray-200 p-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
-        <div id="recent-activity" class="space-y-3">
-            <div class="text-center text-gray-500 py-8">Loading...</div>
         </div>
     </div>
 </div>
 
 <script>
+var API_BASE = '/api/v1/admin';
+
 document.addEventListener('DOMContentLoaded', function() {
-    loadDashboardStats();
-    loadRecentOrders();
-    loadRecentUsers();
-    loadRecentActivity();
-    
-    setInterval(loadDashboardStats, 60000);
+    loadAllData();
+    setInterval(loadAllData, 30000);
 });
 
-async function loadDashboardStats() {
-    try {
-        const stats = await api.get('/admin/dashboard/');
-        displayStats(stats);
-        document.getElementById('last-updated').textContent = 
-            `Last updated: ${new Date().toLocaleTimeString()}`;
-    } catch (error) {
-        console.error('Failed to load stats');
-    }
+function getCsrfToken() {
+    var token = document.querySelector('[name=csrf-token]')?.content;
+    if (token) return token;
+    var cookie = document.cookie.split('; ').find(function(row) { return row.startsWith('csrftoken='); });
+    return cookie ? cookie.split('=')[1] : '';
 }
 
-function displayStats(stats) {
-    document.getElementById('total-users').textContent = stats.total_users;
-    document.getElementById('new-users').textContent = `+${stats.new_users_today} today`;
-    document.getElementById('active-orders').textContent = stats.ongoing_orders;
-    document.getElementById('pending-orders').textContent = `${stats.pending_orders} pending`;
-    document.getElementById('total-revenue').textContent = `$${parseFloat(stats.total_revenue).toFixed(2)}`;
-    document.getElementById('revenue-today').textContent = `+$${parseFloat(stats.revenue_today).toFixed(2)} today`;
-    document.getElementById('completion-rate').textContent = `${parseFloat(stats.completion_rate).toFixed(1)}%`;
-    document.getElementById('avg-rating').textContent = `★ ${parseFloat(stats.average_rating).toFixed(1)}`;
-    
-    document.getElementById('pending-approval').textContent = `${stats.pending_orders} orders`;
-    document.getElementById('refund-requests').textContent = '0 requests';
-    document.getElementById('unread-messages').textContent = '0 messages';
+function formatCurrency(amount) {
+    var num = parseFloat(amount) || 0;
+    if (num >= 1000) {
+        return '$' + (num / 1000).toFixed(1) + 'k';
+    }
+    return '$' + num.toFixed(0);
+}
+
+function formatPercent(value) {
+    var num = parseFloat(value) || 0;
+    return num.toFixed(1) + '%';
+}
+
+function formatNumber(value) {
+    return parseInt(value) || 0;
+}
+
+function getStatusClass(status) {
+    var classes = {
+        'request': 'bg-yellow-100 text-yellow-700',
+        'in_progress': 'bg-blue-100 text-blue-700',
+        'awaiting_approval': 'bg-purple-100 text-purple-700',
+        'completed': 'bg-green-100 text-green-700',
+        'delivered': 'bg-green-100 text-green-700',
+        'cancelled': 'bg-red-100 text-red-700',
+        'revision': 'bg-orange-100 text-orange-700'
+    };
+    return classes[status] || 'bg-gray-100 text-gray-600';
+}
+
+async function loadAllData() {
+    try {
+        var statsResponse = await fetch(API_BASE + '/dashboard/', {
+            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
+            credentials: 'include'
+        });
+        
+        if (!statsResponse.ok) {
+            document.getElementById('updateTime').textContent = 'Failed to load';
+            return;
+        }
+        
+        var stats = await statsResponse.json();
+        
+        var pending = formatNumber(stats.pending_orders);
+        var inProgress = formatNumber(stats.in_progress_orders);
+        var awaiting = formatNumber(stats.awaiting_approval);
+        var earnings = parseFloat(stats.earnings) || 0;
+        var revisions = formatNumber(stats.revisions);
+        var overdue = formatNumber(stats.overdue_orders);
+        var weekEarnings = parseFloat(stats.week_earnings) || 0;
+        var lastWeekEarnings = parseFloat(stats.last_week_earnings) || 0;
+        var weekChange = parseFloat(stats.week_change) || 0;
+        var completionRate = parseFloat(stats.completion_rate) || 0;
+        var avgRating = parseFloat(stats.average_rating) || 0;
+        var totalOrders = formatNumber(stats.total_orders);
+        var totalClients = formatNumber(stats.total_clients);
+        var activeClients = formatNumber(stats.active_clients);
+        var newClients = formatNumber(stats.new_clients);
+
+        document.getElementById('pendingOrders').textContent = pending;
+        document.getElementById('inProgressOrders').textContent = inProgress;
+        document.getElementById('awaitingApproval').textContent = awaiting;
+        document.getElementById('totalEarnings').textContent = formatCurrency(earnings);
+        document.getElementById('pendingReview').textContent = pending;
+        document.getElementById('revisionCount').textContent = revisions;
+        document.getElementById('overdueCount').textContent = overdue;
+
+        document.getElementById('weekEarnings').textContent = formatCurrency(weekEarnings);
+        document.getElementById('lastWeekEarnings').textContent = formatCurrency(lastWeekEarnings);
+        document.getElementById('weekChange').textContent = (weekChange >= 0 ? '+' : '') + weekChange.toFixed(1) + '%';
+        document.getElementById('weekChange').className = 'font-medium ' + (weekChange >= 0 ? 'text-green-600' : 'text-red-600');
+
+        document.getElementById('completionRate').textContent = formatPercent(completionRate);
+        document.getElementById('avgRating').textContent = avgRating.toFixed(1);
+        document.getElementById('totalOrders').textContent = totalOrders;
+
+        document.getElementById('totalClients').textContent = totalClients;
+        document.getElementById('activeClients').textContent = activeClients;
+        document.getElementById('newClients').textContent = newClients;
+
+        document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
+    } catch (error) {
+        console.error('Dashboard load error:', error);
+        document.getElementById('updateTime').textContent = 'Error loading';
+    }
+
+    loadPriorityQueue();
+    loadRecentOrders();
+    loadRecentClients();
+    loadRecentActivity();
+}
+
+async function loadPriorityQueue() {
+    var container = document.getElementById('priorityQueue');
+    try {
+        var response = await fetch(API_BASE + '/dashboard/priority/', {
+            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+            return;
+        }
+        var items = await response.json();
+
+        if (!items || items.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">No urgent orders</div>';
+            return;
+        }
+
+        container.innerHTML = items.slice(0, 4).map(function(item) {
+            var borderColor = item.urgency === 'high' ? 'border-red-500 bg-red-50' :
+                              item.urgency === 'medium' ? 'border-yellow-500 bg-yellow-50' :
+                              'border-blue-500 bg-blue-50';
+            return `
+                <div class="border-l-4 ${borderColor} px-3 py-2 rounded-r">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium text-gray-800">#${item.order_number}</span>
+                        <span class="text-xs text-gray-500">${item.deadline}</span>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">${item.client_name}</p>
+                    <div class="flex gap-3 mt-1.5">
+                        <a href="${API_BASE}/orders/${item.id}/" class="text-xs text-green-600 hover:text-green-700">View</a>
+                        <a href="${API_BASE}/orders/${item.id}/workspace/" class="text-xs text-green-600 hover:text-green-700">Work</a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+    }
 }
 
 async function loadRecentOrders() {
+    var container = document.getElementById('recentOrders');
     try {
-        const orders = await api.get('/admin/orders/?page=1&page_size=5');
-        displayRecentOrders(orders.results || []);
+        var response = await fetch(API_BASE + '/orders/?page=1&page_size=5', {
+            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+            return;
+        }
+        var data = await response.json();
+        var orders = data.results || [];
+
+        if (orders.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">No recent orders</div>';
+            return;
+        }
+
+        container.innerHTML = orders.map(function(order) {
+            return `
+                <div class="border border-gray-100 rounded p-3 hover:bg-gray-50 transition-colors">
+                    <div class="flex justify-between items-start">
+                        <a href="${API_BASE}/orders/${order.id}/" class="text-sm font-medium text-green-600 hover:text-green-700">
+                            #${order.order_number || order.id.slice(0, 8)}
+                        </a>
+                        <span class="text-xs px-2 py-0.5 rounded ${getStatusClass(order.status)}">${order.status.replace(/_/g, ' ')}</span>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">${order.student_name || order.student_email || 'N/A'}</p>
+                    <div class="flex justify-between items-center mt-1.5">
+                        <span class="text-xs font-medium text-gray-700">${formatCurrency(order.total_price || 0)}</span>
+                        <span class="text-xs text-gray-400">Due ${new Date(order.deadline).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
     } catch (error) {
-        document.getElementById('recent-orders').innerHTML = 
-            '<div class="text-center text-red-500 py-4">Failed to load orders</div>';
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
     }
 }
 
-function displayRecentOrders(orders) {
-    const container = document.getElementById('recent-orders');
-    
-    if (orders.length === 0) {
-        container.innerHTML = '<div class="text-center text-gray-500 py-4">No recent orders</div>';
-        return;
-    }
-    
-    container.innerHTML = orders.map(order => `
-        <div class="border border-gray-200 p-4">
-            <div class="flex justify-between items-start mb-2">
-                <a href="/admin/orders/${order.id}/" class="font-medium text-blue-600 hover:text-blue-700">
-                    #${order.order_number || order.id}
-                </a>
-                <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700">${order.status.replace('_', ' ')}</span>
-            </div>
-            <p class="text-sm text-gray-600">${order.student_name || order.user?.email || 'N/A'}</p>
-            <p class="text-sm text-gray-500 mt-2">$${parseFloat(order.total_price || 0).toFixed(2)}</p>
-        </div>
-    `).join('');
-}
-
-async function loadRecentUsers() {
+async function loadRecentClients() {
+    var container = document.getElementById('recentClients');
     try {
-        const users = await api.get('/admin/users/?page=1&page_size=5');
-        displayRecentUsers(users.results || []);
-    } catch (error) {
-        document.getElementById('recent-users').innerHTML = 
-            '<div class="text-center text-red-500 py-4">Failed to load users</div>';
-    }
-}
+        var response = await fetch(API_BASE + '/users/?page=1&page_size=5', {
+            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+            return;
+        }
+        var data = await response.json();
+        var users = data.results || [];
 
-function displayRecentUsers(users) {
-    const container = document.getElementById('recent-users');
-    
-    if (users.length === 0) {
-        container.innerHTML = '<div class="text-center text-gray-500 py-4">No recent users</div>';
-        return;
+        if (users.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">No recent clients</div>';
+            return;
+        }
+
+        container.innerHTML = users.map(function(user) {
+            return `
+                <div class="border border-gray-100 rounded p-3 hover:bg-gray-50 transition-colors">
+                    <div class="flex justify-between items-start">
+                        <a href="${API_BASE}/users/${user.id}/" class="text-sm font-medium text-green-600 hover:text-green-700">
+                            ${user.full_name || user.email}
+                        </a>
+                        <span class="text-xs px-2 py-0.5 rounded ${user.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                            ${user.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">${user.email}</p>
+                    <p class="text-xs text-gray-400 mt-1">Joined ${new Date(user.created_at).toLocaleDateString()}</p>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
     }
-    
-    container.innerHTML = users.map(user => `
-        <div class="border border-gray-200 p-4">
-            <div class="flex justify-between items-start mb-2">
-                <a href="/admin/users/${user.id}/" class="font-medium text-blue-600 hover:text-blue-700">
-                    ${user.full_name || user.email}
-                </a>
-                <span class="text-xs px-2 py-1 ${user.is_suspended ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
-                    ${user.is_suspended ? 'Suspended' : 'Active'}
-                </span>
-            </div>
-            <p class="text-sm text-gray-600">${user.email}</p>
-            <p class="text-xs text-gray-500 mt-2">Joined ${new Date(user.date_joined).toLocaleDateString()}</p>
-        </div>
-    `).join('');
 }
 
 async function loadRecentActivity() {
+    var container = document.getElementById('recentActivity');
     try {
-        const logs = await api.get('/admin/logs/?page=1&page_size=10');
-        displayRecentActivity(logs.results || []);
-    } catch (error) {
-        document.getElementById('recent-activity').innerHTML = 
-            '<div class="text-center text-red-500 py-4">Failed to load activity</div>';
-    }
-}
+        var response = await fetch(API_BASE + '/logs/?page=1&page_size=8', {
+            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+            return;
+        }
+        var data = await response.json();
+        var logs = data.results || [];
 
-function displayRecentActivity(logs) {
-    const container = document.getElementById('recent-activity');
-    
-    if (logs.length === 0) {
-        container.innerHTML = '<div class="text-center text-gray-500 py-4">No recent activity</div>';
-        return;
-    }
-    
-    container.innerHTML = logs.map(log => `
-        <div class="border-b border-gray-100 last:border-b-0 py-3">
-            <div class="flex items-start space-x-3">
-                <i class="fas fa-${getActionIcon(log.action_type)} text-blue-600 mt-1 w-4"></i>
-                <div class="flex-1">
-                    <p class="text-sm text-gray-800">
-                        <span class="font-medium">${log.admin_name || 'Admin'}</span>
-                        ${log.action_type.replace(/_/g, ' ')}
-                        ${log.target_user_email ? `user ${log.target_user_email}` : ''}
-                        ${log.target_order_number ? `order #${log.target_order_number}` : ''}
-                    </p>
-                    <p class="text-xs text-gray-500 mt-1">${new Date(log.created_at).toLocaleString()}</p>
+        if (logs.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">No recent activity</div>';
+            return;
+        }
+
+        container.innerHTML = logs.map(function(log) {
+            var message = log.message || log.action_type?.replace(/_/g, ' ') || '';
+            return `
+                <div class="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0">
+                    <div class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 text-xs flex-shrink-0">
+                        •
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-700 truncate">${message}</p>
+                        <p class="text-xs text-gray-400">${new Date(log.created_at).toLocaleString()}</p>
+                    </div>
                 </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function getActionIcon(action) {
-    const icons = {
-        'user_suspend': 'ban',
-        'user_reactivate': 'user-check',
-        'user_delete': 'user-minus',
-        'order_approve': 'check-circle',
-        'order_reject': 'times-circle',
-        'order_deliver': 'file-download',
-        'refund_approve': 'undo-alt',
-        'refund_deny': 'ban',
-        'content_edit': 'edit',
-        'settings_change': 'cog'
-    };
-    return icons[action] || 'history';
+            `;
+        }).join('');
+    } catch (error) {
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+    }
 }
 </script>
 {% endblock %}

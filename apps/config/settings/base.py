@@ -22,12 +22,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    'axes',
     'apps.accounts',
-    'apps.orders',
-    'apps.messaging',
-    'apps.payments',
     'apps.admin_portal',
+    'apps.messaging',
+    'apps.orders',
+    'apps.payments',
 ]
 
 MIDDLEWARE = [
@@ -39,7 +38,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'apps.config.urls'
@@ -105,16 +103,18 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
-        'apps.accounts.throttles.RegisterThrottle',
-        'apps.accounts.throttles.LoginThrottle',
-        'apps.accounts.throttles.PasswordResetThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '1000/day',
-        'user': '10000/day',
-        'register': '100/hour',
-        'login': '100/minute',
-        'password_reset': '10/hour',
+        'anon': '100/day',
+        'user': '1000/day',
+        'register': '5/hour',
+        'login': '10/minute',
+        'password_reset': '3/hour',
+        'resend_otp': '3/hour',
+        'verify_otp': '10/minute',
+        'profile_update': '10/minute',
+        'change_password': '5/hour',
+        'deletion_request': '2/hour',
     }
 }
 
@@ -136,14 +136,8 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 AUTHENTICATION_BACKENDS = [
-    'axes.backends.AxesStandaloneBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
-
-AXES_FAILURE_LIMIT = 200
-AXES_COOLOFF_TIME = timedelta(minutes=15)
-AXES_LOCK_OUT_AT_FAILURE = True
-AXES_RESET_ON_SUCCESS = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
@@ -151,8 +145,8 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Academics <fredrickwambua129@gmail.com>')
-SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'fredrickwambua129@gmail.com')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'AcademicWrite <noreply@academicwrite.com>')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'noreply@academicwrite.com')
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:8000')
 
 LOGIN_URL = '/login/'

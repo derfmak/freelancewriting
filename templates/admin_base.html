@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>{% block title %}Admin Portal - Academic Write{% endblock %}</title>
+    <title>{% block title %}Admin Portal - AcademicWrite{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -24,7 +24,13 @@
         .container {
             max-width: 1800px;
             margin: 0 auto;
-            padding: 0 1.5rem;
+            padding: 0 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 0 1.5rem;
+            }
         }
 
         @media (min-width: 1280px) {
@@ -48,28 +54,40 @@
             align-items: center;
             height: 4rem;
             width: 100%;
-            gap: 1rem;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .header-content {
+                height: 3.5rem;
+                gap: 0.3rem;
+            }
         }
 
         .logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 3rem;
-            height: 3rem;
+            width: 2.8rem;
+            height: 2.8rem;
             background: white;
             border-radius: 50%;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             font-weight: 700;
             letter-spacing: 0.05em;
             color: #1e40af;
             text-decoration: none;
             transition: all 0.3s ease;
-            white-space: nowrap;
-            text-align: center;
-            line-height: 1.2;
             border: 2px solid white;
             flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .logo {
+                width: 3rem;
+                height: 3rem;
+                font-size: 0.8rem;
+            }
         }
 
         .logo:hover {
@@ -84,18 +102,45 @@
             height: 100%;
             flex: 1;
             justify-content: center;
+            gap: 0.15rem;
+        }
+
+        @media (min-width: 1024px) {
+            .admin-nav {
+                display: flex;
+            }
         }
 
         .admin-nav a {
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.85);
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.85rem;
-            padding: 0.5rem 0.75rem;
-            margin: 0 0.1rem;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.7rem;
             transition: all 0.3s ease;
             white-space: nowrap;
             border-radius: 4px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        @media (min-width: 1280px) {
+            .admin-nav a {
+                font-size: 0.85rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        .admin-nav a i {
+            font-size: 0.85rem;
+        }
+
+        @media (min-width: 1280px) {
+            .admin-nav a i {
+                font-size: 1rem;
+            }
         }
 
         .admin-nav a:hover {
@@ -109,11 +154,42 @@
             border-bottom: 2px solid #fbbf24;
         }
 
+        .admin-nav a .nav-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.5rem;
+            font-weight: 600;
+            min-width: 1rem;
+            height: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid #1e40af;
+        }
+
+        @media (min-width: 1280px) {
+            .admin-nav a .nav-badge {
+                font-size: 0.6rem;
+                min-width: 1.1rem;
+                height: 1.1rem;
+            }
+        }
+
         .auth-section {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .auth-section {
+                gap: 0.75rem;
+            }
         }
 
         .user-menu {
@@ -124,17 +200,25 @@
             display: flex;
             align-items: center;
             gap: 0.4rem;
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.6rem;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
             font-weight: 500;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             cursor: pointer;
             transition: all 0.3s ease;
             white-space: nowrap;
             border-radius: 4px;
-            max-width: 180px;
+            max-width: 130px;
+        }
+
+        @media (min-width: 768px) {
+            .user-menu-button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.85rem;
+                max-width: 180px;
+            }
         }
 
         .user-menu-button span {
@@ -153,7 +237,7 @@
             right: 0;
             top: 100%;
             margin-top: 0.5rem;
-            width: 12rem;
+            width: 11rem;
             background: white;
             border: 1px solid #e2e8f0;
             box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
@@ -165,6 +249,12 @@
             border-radius: 4px;
         }
 
+        @media (min-width: 768px) {
+            .user-menu-dropdown {
+                width: 12rem;
+            }
+        }
+
         .user-menu-dropdown.show {
             opacity: 1;
             visibility: visible;
@@ -172,12 +262,21 @@
         }
 
         .user-menu-item {
-            display: block;
-            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
             color: #1e293b;
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             transition: all 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .user-menu-item {
+                padding: 0.75rem 1rem;
+                font-size: 0.85rem;
+            }
         }
 
         .user-menu-item:hover {
@@ -188,12 +287,12 @@
         .user-menu-divider {
             height: 1px;
             background: #e2e8f0;
-            margin: 0.5rem 0;
+            margin: 0.3rem 0;
         }
 
         .notification-bell {
             position: relative;
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.6rem;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
@@ -203,6 +302,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .notification-bell {
+                padding: 0.5rem 0.75rem;
+            }
         }
 
         .notification-bell:hover {
@@ -216,10 +321,10 @@
             right: -5px;
             background: #ef4444;
             color: white;
-            font-size: 0.65rem;
+            font-size: 0.55rem;
             font-weight: 600;
-            min-width: 1.2rem;
-            height: 1.2rem;
+            min-width: 1.1rem;
+            height: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -228,15 +333,31 @@
         }
 
         .mobile-menu-button {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.6rem;
             color: white;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.85rem;
             border-radius: 4px;
+            min-width: 2.2rem;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-menu-button {
+                padding: 0.5rem 0.75rem;
+                min-width: 2.5rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .mobile-menu-button {
+                display: none;
+            }
         }
 
         .mobile-menu-button:hover {
@@ -246,37 +367,69 @@
 
         .mobile-menu {
             position: fixed;
-            top: 4rem;
+            top: 3.5rem;
             left: 0;
             right: 0;
             bottom: 0;
             background: white;
-            padding: 1.5rem;
+            padding: 1rem;
             transform: translateX(-100%);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 40;
             overflow-y: auto;
             border-top: 2px solid #1e40af;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-menu {
+                top: 4rem;
+                padding: 1.5rem;
+            }
         }
 
         .mobile-menu.open {
             transform: translateX(0);
         }
 
+        .mobile-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 39;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .mobile-nav {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.15rem;
         }
 
         .mobile-nav a {
             color: #1e293b;
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.95rem;
-            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            padding: 0.6rem 1rem;
             transition: all 0.3s ease;
             border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-nav a {
+                font-size: 0.95rem;
+                padding: 0.7rem 1rem;
+            }
         }
 
         .mobile-nav a:hover {
@@ -290,92 +443,258 @@
             border-left: 3px solid #1e40af;
         }
 
+        .mobile-nav a i {
+            width: 1.3rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .mobile-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 0.5rem 0.5rem;
+        }
+
         .mobile-logout {
-            margin-top: 2rem;
-            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            margin: 0.5rem 0.5rem 0;
             background: #ef4444;
             color: white;
-            text-align: center;
             border-radius: 4px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
+        @media (min-width: 768px) {
+            .mobile-logout {
+                padding: 0.7rem 1rem;
+            }
+        }
+
         .mobile-logout:hover {
             background: #dc2626;
         }
 
+        .mobile-logout i {
+            width: 1.3rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
         .main-content {
-            min-height: calc(100vh - 4rem);
-            padding: 2rem 0;
+            min-height: calc(100vh - 3.5rem - 14rem);
+            padding: 1rem 0;
             background: white;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                min-height: calc(100vh - 4rem - 16rem);
+                padding: 1.5rem 0;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .main-content {
+                min-height: calc(100vh - 4rem - 18rem);
+                padding: 2rem 0;
+            }
         }
 
         .footer {
             background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-            padding: 1.5rem 0;
+            padding: 1.5rem 0 1rem;
+            margin-top: 0;
         }
 
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
+        @media (min-width: 768px) {
+            .footer {
+                padding: 2rem 0 1.5rem;
+            }
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .footer-grid {
+                grid-template-columns: 2fr 1fr 1fr;
+                gap: 2rem;
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        .footer-section h4 {
+            color: #fbbf24;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-section h4 {
+                font-size: 0.8rem;
+                margin-bottom: 0.75rem;
+            }
         }
 
         .footer-links {
             display: flex;
-            gap: 2rem;
             flex-wrap: wrap;
+            gap: 0.4rem 0.8rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-links {
+                gap: 0.5rem 1rem;
+            }
         }
 
         .footer-links a {
             color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             transition: color 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .footer-links a {
+                font-size: 0.8rem;
+            }
         }
 
         .footer-links a:hover {
             color: #fbbf24;
         }
 
-        .copyright {
-            color: rgba(255, 255, 255, 0.6);
+        .footer-contact {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.7rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-contact {
+                font-size: 0.8rem;
+            }
+        }
+
+        .footer-contact p {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-contact p {
+                gap: 0.6rem;
+                margin-bottom: 0.4rem;
+            }
+        }
+
+        .footer-contact i {
+            color: #fbbf24;
+            width: 1rem;
             font-size: 0.8rem;
         }
 
-        @media (min-width: 1024px) {
-            .admin-nav {
-                display: flex;
-            }
-            
-            .mobile-menu-button {
-                display: none;
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.4rem;
+        }
+
+        @media (min-width: 640px) {
+            .footer-bottom {
+                flex-direction: row;
+                padding-top: 1rem;
+                gap: 0.5rem;
             }
         }
 
-        @media (max-width: 1280px) {
-            .admin-nav a {
-                padding: 0.5rem 0.5rem;
-                font-size: 0.8rem;
-            }
-            
-            .user-menu-button {
-                max-width: 140px;
+        .copyright {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.65rem;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .copyright {
+                font-size: 0.7rem;
             }
         }
 
-        .active-page {
-            color: white !important;
-            background: rgba(255, 255, 255, 0.2) !important;
-            border-bottom: 2px solid #fbbf24 !important;
+        .footer-social {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-social {
+                gap: 0.75rem;
+            }
+        }
+
+        .footer-social a {
+            color: rgba(255, 255, 255, 0.4);
+            transition: color 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-social a {
+                font-size: 0.9rem;
+            }
+        }
+
+        .footer-social a:hover {
+            color: #fbbf24;
         }
 
         .hidden {
-            display: none;
+            display: none !important;
+        }
+
+        @media (max-width: 640px) {
+            .admin-nav a span {
+                display: none;
+            }
+            .admin-nav a i {
+                font-size: 1rem;
+            }
+            .admin-nav a {
+                padding: 0.3rem 0.5rem;
+            }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .admin-nav a span {
+                font-size: 0.7rem;
+            }
+            .admin-nav a {
+                padding: 0.3rem 0.5rem;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -389,19 +708,28 @@
                     <a href="/admin/dashboard/" class="logo">AW</a>
                     
                     <div class="admin-nav">
-                        <a href="/admin/dashboard/" class="{% if request.path == '/admin/dashboard/' %}active{% endif %}">DASHBOARD</a>
-                        <a href="/admin/orders/" class="{% if request.path == '/admin/orders/' %}active{% endif %}">ORDERS</a>
-                        <a href="/admin/users/" class="{% if request.path == '/admin/users/' %}active{% endif %}">USERS</a>
-                        <a href="/admin/finances/" class="{% if request.path == '/admin/finances/' %}active{% endif %}">FINANCES</a>
-                        <a href="/admin/refunds/" class="{% if request.path == '/admin/refunds/' %}active{% endif %}">REFUNDS</a>
-                        <a href="/admin/announcements/" class="{% if request.path == '/admin/announcements/' %}active{% endif %}">ANNOUNCEMENTS</a>
-                        <a href="/admin/content/" class="{% if request.path == '/admin/content/' %}active{% endif %}">CONTENT</a>
-                        <a href="/admin/logs/" class="{% if request.path == '/admin/logs/' %}active{% endif %}">LOGS</a>
-                        <a href="/admin/messages/" class="relative {% if request.path == '/admin/messages/' %}active{% endif %}" id="messagesLink">
-                            MESSAGES
-                            <span class="notification-badge hidden" id="unreadMessagesBadge">0</span>
+                        <a href="/admin/dashboard/" class="{% if request.path == '/admin/dashboard/' %}active{% endif %}">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
                         </a>
-                        <a href="/admin/settings/" class="{% if request.path == '/admin/settings/' %}active{% endif %}">SETTINGS</a>
+                        <a href="/admin/orders/" class="{% if request.path == '/admin/orders/' %}active{% endif %}">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Orders</span>
+                            <span class="nav-badge" id="ordersBadge" style="display:none;">0</span>
+                        </a>
+                        <a href="/admin/finances/" class="{% if request.path == '/admin/finances/' %}active{% endif %}">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>Finances</span>
+                        </a>
+                        <a href="/admin/messages/" class="{% if request.path == '/admin/messages/' %}active{% endif %}">
+                            <i class="fas fa-envelope"></i>
+                            <span>Messages</span>
+                            <span class="nav-badge" id="messagesBadge" style="display:none;">0</span>
+                        </a>
+                        <a href="/admin/settings/" class="{% if request.path == '/admin/settings/' %}active{% endif %}">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
                     </div>
 
                     <div class="auth-section">
@@ -413,15 +741,15 @@
                         <div class="user-menu">
                             <button class="user-menu-button" id="userMenuButton">
                                 <i class="fas fa-user-circle"></i>
-                                <span>{{ user.full_name|default:user.email|truncatechars:15 }}</span>
+                                <span>{{ user.full_name|default:user.email|truncatechars:12 }}</span>
                                 <i class="fas fa-chevron-down fa-xs"></i>
                             </button>
                             
                             <div class="user-menu-dropdown" id="userMenuDropdown">
-                                <a href="/admin/profile/" class="user-menu-item">Profile</a>
-                                <a href="/admin/settings/" class="user-menu-item">Settings</a>
+                                <a href="/admin/profile/" class="user-menu-item"><i class="fas fa-user"></i> Profile</a>
+                                <a href="/admin/settings/" class="user-menu-item"><i class="fas fa-cog"></i> Settings</a>
                                 <div class="user-menu-divider"></div>
-                                <a href="#" class="user-menu-item" id="logoutBtn">Logout</a>
+                                <a href="#" class="user-menu-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
                             </div>
                         </div>
 
@@ -433,32 +761,36 @@
             </div>
         </header>
 
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+
         <div class="mobile-menu" id="mobileMenu">
             <div class="mobile-nav">
-                <a href="/admin/dashboard/">DASHBOARD</a>
-                <a href="/admin/orders/">ORDERS</a>
-                <a href="/admin/users/">USERS</a>
-                <a href="/admin/finances/">FINANCES</a>
-                <a href="/admin/refunds/">REFUNDS</a>
-                <a href="/admin/announcements/">ANNOUNCEMENTS</a>
-                <a href="/admin/content/">CONTENT</a>
-                <a href="/admin/logs/">LOGS</a>
-                <a href="/admin/messages/">MESSAGES</a>
-                <a href="/admin/settings/">SETTINGS</a>
+                <a href="/admin/dashboard/"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="/admin/orders/"><i class="fas fa-file-alt"></i> Orders</a>
+                <a href="/admin/finances/"><i class="fas fa-dollar-sign"></i> Finances</a>
+                <a href="/admin/messages/"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="/admin/settings/"><i class="fas fa-cog"></i> Settings</a>
+                <div class="mobile-divider"></div>
+                <a href="/admin/users/"><i class="fas fa-users"></i> Clients</a>
+                <a href="/admin/refunds/"><i class="fas fa-undo-alt"></i> Refunds</a>
+                <a href="/admin/announcements/"><i class="fas fa-bullhorn"></i> Announcements</a>
+                <a href="/admin/content/"><i class="fas fa-edit"></i> Content</a>
+                <a href="/admin/logs/"><i class="fas fa-history"></i> Logs</a>
+                <div class="mobile-divider"></div>
                 <div class="mobile-logout" id="mobileLogoutBtn">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </div>
             </div>
         </div>
         {% else %}
         <div class="min-h-screen flex items-center justify-center bg-gray-50">
-            <div class="max-w-md w-full bg-white border border-gray-200 p-8 text-center">
-                <div class="w-20 h-20 bg-red-100 text-red-600 flex items-center justify-center text-4xl mx-auto mb-4">
+            <div class="max-w-md w-full bg-white border border-gray-200 p-6 sm:p-8 text-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 text-red-600 flex items-center justify-center text-3xl sm:text-4xl mx-auto mb-4">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-                <p class="text-gray-600 mb-6">You must be logged in as an administrator to access this page.</p>
-                <a href="/login/" class="inline-block bg-blue-600 text-white px-6 py-3 font-medium hover:bg-blue-700 transition-colors">Go to Login</a>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+                <p class="text-sm sm:text-base text-gray-600 mb-6">You must be logged in as an administrator to access this page.</p>
+                <a href="/login/" class="inline-block bg-blue-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 font-medium hover:bg-blue-700 transition-colors">Go to Login</a>
             </div>
         </div>
         {% endif %}
@@ -467,9 +799,9 @@
         <main class="main-content">
             <div class="container">
                 {% if messages %}
-                    <div class="mb-6">
+                    <div class="mb-4 sm:mb-6">
                         {% for message in messages %}
-                            <div class="p-3 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 text-green-700 border-l-4 border-green-500{% else %}bg-blue-50 text-blue-700 border-l-4 border-blue-500{% endif %}">
+                            <div class="p-2.5 sm:p-3 text-xs sm:text-sm rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
                                 {{ message }}
                             </div>
                         {% endfor %}
@@ -481,31 +813,57 @@
         </main>
 
         <footer class="footer">
-            <div class="container mx-auto px-4">
-                <div class="text-center text-white">
-                    <div class="mb-4">
-                        <i class="fas fa-map-marker-alt text-yellow-400 mr-2"></i>
-                        <span>Nairobi, Kenya</span>
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-section">
+                        <h4>Quick Links</h4>
+                        <div class="footer-links">
+                            <a href="/admin/users/">Clients</a>
+                            <a href="/admin/refunds/">Refunds</a>
+                            <a href="/admin/announcements/">Announcements</a>
+                            <a href="/admin/content/">Content</a>
+                            <a href="/admin/logs/">Logs</a>
+                            <a href="/admin/profile/">Profile</a>
+                        </div>
                     </div>
-                    <div class="mb-4">
-                        <i class="fas fa-envelope text-yellow-400 mr-2"></i>
-                        <span>fredrickwambua@gmail.com</span>
+                    
+                    <div class="footer-section">
+                        <h4>Support</h4>
+                        <div class="footer-links">
+                            <a href="/faq/">FAQ</a>
+                            <a href="/contact/">Contact</a>
+                            <a href="/terms/">Terms</a>
+                            <a href="/privacy/">Privacy</a>
+                            <a href="/refund-policy/">Refund</a>
+                        </div>
                     </div>
-                    <div class="mb-6">
-                        <i class="fas fa-phone text-yellow-400 mr-2"></i>
-                        <span>0740618550</span>
+                    
+                    <div class="footer-section">
+                        <h4>Contact</h4>
+                        <div class="footer-contact">
+                            <p><i class="fas fa-envelope"></i> fredrickwambua@gmail.com</p>
+                            <p><i class="fas fa-phone"></i> 0740618550</p>
+                            <p><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</p>
+                        </div>
+                        <div class="footer-social">
+                            <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        </div>
                     </div>
-                    <div class="border-t border-white border-opacity-20 pt-6">
-                        <p class="text-sm text-white text-opacity-80">
-                            &copy; 2026 Academic Write. All rights reserved.
-                        </p>
+                </div>
+                
+                <div class="footer-bottom">
+                    <div class="copyright">
+                        &copy; 2026 AcademicWrite. All rights reserved.
                     </div>
                 </div>
             </div>
         </footer>
 
         <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay">
-            <div class="bg-white max-w-md w-full mx-4 p-6" id="modalContent"></div>
+            <div class="bg-white max-w-md w-full mx-4 p-4 sm:p-6 rounded-lg" id="modalContent"></div>
         </div>
 
         <div class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" id="loadingOverlay">
@@ -524,29 +882,66 @@
             {% if user.is_authenticated and user.role == 'admin' %}
             const mobileMenuButton = document.getElementById('mobileMenuButton');
             const mobileMenu = document.getElementById('mobileMenu');
+            const mobileOverlay = document.getElementById('mobileOverlay');
             
+            function closeMobileMenu() {
+                mobileMenu.classList.remove('open');
+                mobileOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+                const icon = mobileMenuButton.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            }
+
+            function openMobileMenu() {
+                mobileMenu.classList.add('open');
+                mobileOverlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                const icon = mobileMenuButton.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                }
+            }
+
             if (mobileMenuButton && mobileMenu) {
                 mobileMenuButton.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    mobileMenu.classList.toggle('open');
-                    const icon = this.querySelector('i');
-                    if (icon) {
-                        icon.classList.toggle('fa-bars');
-                        icon.classList.toggle('fa-times');
+                    if (mobileMenu.classList.contains('open')) {
+                        closeMobileMenu();
+                    } else {
+                        openMobileMenu();
                     }
                 });
                 
+                if (mobileOverlay) {
+                    mobileOverlay.addEventListener('click', function() {
+                        closeMobileMenu();
+                    });
+                }
+                
                 document.addEventListener('click', function(e) {
-                    if (!mobileMenu.contains(e.target) && !mobileMenuButton.contains(e.target)) {
-                        mobileMenu.classList.remove('open');
-                        const icon = mobileMenuButton.querySelector('i');
-                        if (icon) {
-                            icon.classList.remove('fa-times');
-                            icon.classList.add('fa-bars');
-                        }
+                    if (mobileMenu.classList.contains('open') && 
+                        !mobileMenu.contains(e.target) && 
+                        !mobileMenuButton.contains(e.target)) {
+                        closeMobileMenu();
+                    }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+                        closeMobileMenu();
                     }
                 });
             }
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024 && mobileMenu.classList.contains('open')) {
+                    closeMobileMenu();
+                }
+            });
 
             const userMenuButton = document.getElementById('userMenuButton');
             const userMenuDropdown = document.getElementById('userMenuDropdown');
@@ -557,12 +952,10 @@
                     userMenuDropdown.classList.toggle('show');
                 });
                 
-                document.addEventListener('click', function() {
-                    userMenuDropdown.classList.remove('show');
-                });
-                
-                userMenuDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
+                document.addEventListener('click', function(e) {
+                    if (!userMenuDropdown.contains(e.target) && !userMenuButton.contains(e.target)) {
+                        userMenuDropdown.classList.remove('show');
+                    }
                 });
             }
 
@@ -604,23 +997,32 @@
                 });
             }
 
-            loadUnreadCounts();
-            setInterval(loadUnreadCounts, 30000);
+            loadCounts();
+            setInterval(loadCounts, 30000);
             {% endif %}
         });
 
-        async function loadUnreadCounts() {
+        async function loadCounts() {
             try {
-                const response = await api.get('/messages/unread/');
-                const badge = document.getElementById('unreadMessagesBadge');
-                if (response.unread_count > 0) {
-                    badge.textContent = response.unread_count > 9 ? '9+' : response.unread_count;
-                    badge.classList.remove('hidden');
+                const response = await api.get('/admin/counts/');
+                
+                const ordersBadge = document.getElementById('ordersBadge');
+                if (response.pending_orders > 0) {
+                    ordersBadge.textContent = response.pending_orders > 9 ? '9+' : response.pending_orders;
+                    ordersBadge.style.display = 'flex';
                 } else {
-                    badge.classList.add('hidden');
+                    ordersBadge.style.display = 'none';
+                }
+                
+                const messagesBadge = document.getElementById('messagesBadge');
+                if (response.unread_messages > 0) {
+                    messagesBadge.textContent = response.unread_messages > 9 ? '9+' : response.unread_messages;
+                    messagesBadge.style.display = 'flex';
+                } else {
+                    messagesBadge.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Failed to load unread counts');
+                console.error('Failed to load counts');
             }
         }
 
@@ -633,11 +1035,13 @@
                 }
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
             },
             hide: function() {
                 const modal = document.getElementById('modalOverlay');
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
+                document.body.style.overflow = '';
             }
         };
 
@@ -653,6 +1057,12 @@
                 loading.classList.remove('flex');
             }
         };
+
+        document.getElementById('modalOverlay')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.Modal.hide();
+            }
+        });
     </script>
     
     {% block extra_js %}{% endblock %}

@@ -1,186 +1,245 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Order, Attachment, OrderHistory
-from .services import OrderNumberGenerator, PricingEngine, OrderWorkflow
+from django.db.models import Sum, Count, Q
+from apps.accounts.models import User
+from apps.orders.models import Order
+from apps.payments.models import Transaction, Wallet
+from .models import AdminActionLog, SystemSetting, SiteContent, Announcement, AdminNote, PlatformStats
 
-class AttachmentSerializer(serializers.ModelSerializer):
+
+class UserAdminSerializer(serializers.ModelSerializer):
+    wallet_balance = serializers.SerializerMethodField()
+    total_orders = serializers.SerializerMethodField()
+    total_spent = serializers.SerializerMethodField()
+    total_revenue = serializers.SerializerMethodField()
+    active_orders = serializers.SerializerMethodField()
+    completed_orders = serializers.SerializerMethodField()
+
     class Meta:
-        model = Attachment
-        fields = ['id', 'filename', 'file_size', 'mime_type', 'uploaded_at']
-        read_only_fields = ['id', 'filename', 'file_size', 'mime_type', 'uploaded_at']
-
-class OrderCreateSerializer(serializers.Serializer):
-    academic_level = serializers.ChoiceField(choices=Order.ACADEMIC_LEVELS)
-    paper_type = serializers.ChoiceField(choices=Order.PAPER_TYPES)
-    subject = serializers.CharField(max_length=200)
-    topic = serializers.CharField(max_length=500)
-    instructions = serializers.CharField()
-    pages = serializers.IntegerField(min_value=1)
-    sources_count = serializers.IntegerField(default=0, min_value=0)
-    deadline = serializers.DateTimeField()
-    format = serializers.ChoiceField(choices=Order.FORMATS)
-    preferred_writer_level = serializers.ChoiceField(choices=Order.WRITER_LEVELS, default='any')
-    links = serializers.JSONField(default=list, required=False)
-    attachment_ids = serializers.ListField(child=serializers.UUIDField(), required=False)
-    
-    plagiarism_report = serializers.BooleanField(default=False)
-    abstract = serializers.BooleanField(default=False)
-    proofreading = serializers.BooleanField(default=False)
-    one_page_summary = serializers.BooleanField(default=False)
-    
-    def validate_deadline(self, value):
-        min_deadline = timezone.now() + timezone.timedelta(hours=6)
-        if value < min_deadline:
-            raise serializers.ValidationError('Deadline must be at least 6 hours from now')
-        return value
-    
-    def validate(self, data):
-        request = self.context.get('request')
-        user = request.user
-        
-        extras = []
-        if data.get('plagiarism_report'):
-            extras.append('plagiarism_report')
-        if data.get('abstract'):
-            extras.append('abstract')
-        if data.get('proofreading'):
-            extras.append('proofreading')
-        if data.get('one_page_summary'):
-            extras.append('one_page_summary')
-        
-        pricing = PricingEngine.calculate(
-            data['academic_level'],
-            data['pages'],
-            data['deadline'],
-            extras
-        )
-        
-        try:
-            wallet = user.wallet
-            balance = wallet.balance
-        except:
-            from apps.payments.models import Wallet
-            wallet, created = Wallet.objects.get_or_create(user=user)
-            balance = wallet.balance
-        
-        total_price = pricing['total_price']
-        
-        if balance < total_price:
-            raise serializers.ValidationError({
-                'wallet': f'Insufficient funds. Required: ${total_price}, Available: ${balance}'
-            })
-        
-        data['calculated_price'] = pricing
-        return data
-    
-    def create(self, validated_data):
-        request = self.context.get('request')
-        attachment_ids = validated_data.pop('attachment_ids', [])
-        pricing = validated_data.pop('calculated_price')
-        
-        from apps.payments.services import WalletService
-        
-        order = Order.objects.create(
-            order_number=OrderNumberGenerator.generate(),
-            student=request.user,
-            **validated_data,
-            base_price=pricing['base_price'],
-            urgency_multiplier=pricing['urgency_multiplier'],
-            extras_price=pricing['extras_price'],
-            total_price=pricing['total_price']
-        )
-        
-        try:
-            WalletService.debit(
-                wallet=request.user.wallet,
-                amount=pricing['total_price'],
-                transaction_type='order_payment',
-                description=f'Payment for order {order.order_number}',
-                order=order
-            )
-        except Exception as e:
-            order.delete()
-            raise serializers.ValidationError({
-                'payment': f'Payment failed: {str(e)}'
-            })
-        
-        if attachment_ids:
-            attachments = Attachment.objects.filter(id__in=attachment_ids, uploaded_by=request.user)
-            order.attachments.set(attachments)
-        
-        return order
-
-class OrderDetailSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='student.full_name', read_only=True)
-    student_email = serializers.EmailField(source='student.email', read_only=True)
-    attachments = AttachmentSerializer(many=True, read_only=True)
-    available_actions = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Order
-        fields = '__all__'
-        read_only_fields = ['order_number', 'created_at', 'approved_at', 'started_at', 
-                           'delivered_at', 'completed_at', 'updated_at']
-    
-    def get_available_actions(self, obj):
-        return OrderWorkflow.get_student_actions(obj)
-
-class OrderListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ['id', 'order_number', 'topic', 'status', 'pages', 'total_price', 
-                 'deadline', 'created_at', 'progress_percentage']
-
-class OrderUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ['instructions', 'attachments']
-        extra_kwargs = {
-            'instructions': {'required': False},
-            'attachments': {'required': False}
-        }
-
-class OrderActionSerializer(serializers.Serializer):
-    ACTION_CHOICES = [
-        ('cancel', 'cancel'),
-        ('request_revision', 'request_revision'),
-        ('approve', 'approve'),
-        ('request_refund', 'request_refund'),
-    ]
-    
-    action = serializers.ChoiceField(choices=ACTION_CHOICES)
-    reason = serializers.CharField(required=False, allow_blank=True)
-    grade = serializers.CharField(required=False, allow_blank=True)
-
-class OrderRatingSerializer(serializers.Serializer):
-    rating = serializers.IntegerField(min_value=1, max_value=5)
-    feedback = serializers.CharField(required=False, allow_blank=True)
-
-class OrderHistorySerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True)
-    
-    class Meta:
-        model = OrderHistory
-        fields = ['id', 'action', 'from_status', 'to_status', 'data', 'created_at', 'user_email']
-
-class FileUploadSerializer(serializers.Serializer):
-    file = serializers.FileField()
-    
-    def validate_file(self, value):
-        if value.size > 10 * 1024 * 1024:
-            raise serializers.ValidationError('File size cannot exceed 10MB')
-        
-        allowed_types = [
-            'image/jpeg', 'image/png', 'image/gif',
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'text/plain'
+        model = User
+        fields = [
+            'id', 'email', 'full_name', 'role', 'is_active', 'is_suspended',
+            'email_verified', 'phone_verified', 'institution', 'phone',
+            'last_login', 'date_joined', 'created_at',
+            'wallet_balance', 'total_orders', 'total_spent', 'total_revenue',
+            'active_orders', 'completed_orders',
+            'failed_login_attempts', 'account_locked_until', 'suspension_reason'
         ]
-        
-        if value.content_type not in allowed_types:
-            raise serializers.ValidationError(f'File type {value.content_type} is not allowed')
-        
+        read_only_fields = ['id', 'last_login', 'date_joined', 'created_at']
+
+    def get_wallet_balance(self, obj):
+        try:
+            return float(obj.wallet.balance) if hasattr(obj, 'wallet') else 0
+        except:
+            return 0
+
+    def get_total_orders(self, obj):
+        return obj.orders.count()
+
+    def get_total_spent(self, obj):
+        try:
+            return float(obj.wallet.total_spent) if hasattr(obj, 'wallet') else 0
+        except:
+            return 0
+
+    def get_total_revenue(self, obj):
+        return obj.orders.filter(status='completed').aggregate(
+            total=Sum('total_price')
+        )['total'] or 0
+
+    def get_active_orders(self, obj):
+        return obj.orders.filter(
+            status__in=['pending', 'ongoing', 'awaiting_review']
+        ).count()
+
+    def get_completed_orders(self, obj):
+        return obj.orders.filter(status='completed').count()
+
+
+class OrderAdminSerializer(serializers.ModelSerializer):
+    client = serializers.PrimaryKeyRelatedField(source='student', read_only=True)
+    client_name = serializers.CharField(source='student.full_name', default='N/A')
+    client_email = serializers.EmailField(source='student.email', default='N/A')
+    title = serializers.CharField(source='topic')
+    description = serializers.CharField(source='instructions')
+    word_count = serializers.IntegerField(source='words')
+    total = serializers.DecimalField(source='total_price', max_digits=10, decimal_places=2)
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'order_number', 'client', 'client_name', 'client_email',
+            'title', 'description', 'word_count', 'deadline', 'status',
+            'total_price', 'total', 'progress_percentage',
+            'paper_type', 'academic_level', 'format',
+            'rating', 'feedback', 'delivered_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'order_number', 'created_at', 'updated_at',
+            'delivered_at', 'client'
+        ]
+
+
+class TransactionAdminSerializer(serializers.ModelSerializer):
+    client_email = serializers.EmailField(source='user.email', default='N/A')
+    client_name = serializers.CharField(source='user.full_name', default='N/A')
+    order_number = serializers.CharField(source='order.order_number', default='N/A')
+
+    class Meta:
+        model = Transaction
+        fields = [
+            'id', 'user', 'client_email', 'client_name',
+            'order', 'order_number', 'amount', 'type', 'status',
+            'payment_method', 'reference', 'description',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class DashboardStatsSerializer(serializers.Serializer):
+    total_users = serializers.IntegerField()
+    new_users_today = serializers.IntegerField()
+    active_users = serializers.IntegerField()
+
+    total_orders = serializers.IntegerField()
+    pending_orders = serializers.IntegerField()
+    in_progress_orders = serializers.IntegerField()
+    completed_today = serializers.IntegerField()
+
+    total_revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
+    revenue_today = serializers.DecimalField(max_digits=12, decimal_places=2)
+    pending_payouts = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+    average_rating = serializers.DecimalField(max_digits=3, decimal_places=2)
+    completion_rate = serializers.DecimalField(max_digits=5, decimal_places=2)
+    overdue_orders = serializers.IntegerField()
+    unread_messages = serializers.IntegerField()
+
+
+class PriorityQueueSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    order_number = serializers.CharField()
+    client_name = serializers.CharField()
+    deadline = serializers.CharField()
+    urgency = serializers.CharField()
+    status = serializers.CharField()
+
+
+class SystemSettingSerializer(serializers.ModelSerializer):
+    typed_value = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SystemSetting
+        fields = [
+            'id', 'key', 'value', 'typed_value', 'type',
+            'description', 'is_public', 'updated_at', 'created_at'
+        ]
+        read_only_fields = ['id', 'updated_at', 'created_at']
+
+    def get_typed_value(self, obj):
+        return obj.get_typed_value()
+
+
+class SiteContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteContent
+        fields = [
+            'id', 'page', 'section', 'title', 'content',
+            'meta_data', 'is_active', 'updated_at', 'created_at'
+        ]
+        read_only_fields = ['id', 'updated_at', 'created_at']
+
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    is_current = serializers.SerializerMethodField()
+    created_by_name = serializers.CharField(source='created_by.full_name', default='System')
+
+    class Meta:
+        model = Announcement
+        fields = [
+            'id', 'title', 'content', 'priority', 'target_audience',
+            'is_active', 'is_current', 'starts_at', 'expires_at',
+            'created_by', 'created_by_name', 'viewed_count',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'viewed_count', 'created_at', 'updated_at']
+
+    def get_is_current(self, obj):
+        return obj.is_current()
+
+
+class AdminActionLogSerializer(serializers.ModelSerializer):
+    admin_name = serializers.CharField(source='admin.full_name', default='System')
+    admin_email = serializers.EmailField(source='admin.email', default='')
+    target_user_email = serializers.EmailField(source='target_user.email', default=None)
+    target_order_number = serializers.CharField(source='target_order.order_number', default=None)
+    action_display = serializers.CharField(source='get_action_type_display')
+
+    class Meta:
+        model = AdminActionLog
+        fields = [
+            'id', 'admin', 'admin_name', 'admin_email',
+            'action_type', 'action_display',
+            'target_user', 'target_user_email',
+            'target_order', 'target_order_number',
+            'details', 'ip_address', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
+
+
+class WalletAdjustSerializer(serializers.Serializer):
+    user_id = serializers.UUIDField(required=True)
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0.01,
+        required=True
+    )
+    reason = serializers.CharField(max_length=500, required=True)
+    type = serializers.ChoiceField(choices=['credit', 'debit'], required=True)
+    reference = serializers.CharField(max_length=100, required=False, allow_blank=True)
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Amount must be greater than zero.')
+        return value
+
+
+class AdminNoteSerializer(serializers.ModelSerializer):
+    admin_name = serializers.CharField(source='admin.full_name', default='')
+    order_number = serializers.CharField(source='order.order_number', default=None)
+    client_name = serializers.CharField(source='client.full_name', default=None)
+    client_email = serializers.EmailField(source='client.email', default=None)
+
+    class Meta:
+        model = AdminNote
+        fields = [
+            'id', 'admin', 'admin_name', 'title', 'content',
+            'order', 'order_number', 'client', 'client_name', 'client_email',
+            'is_pinned', 'is_archived', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'admin', 'created_at', 'updated_at']
+
+
+class PlatformStatsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlatformStats
+        fields = '__all__'
+        read_only_fields = ['id', 'created_at']
+
+
+class RefundActionSerializer(serializers.Serializer):
+    order_id = serializers.UUIDField(required=True)
+    reason = serializers.CharField(max_length=500, required=True)
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True
+    )
+    notify_client = serializers.BooleanField(default=True)
+
+    def validate_amount(self, value):
+        if value is not None and value <= 0:
+            raise serializers.ValidationError('Amount must be greater than zero.')
         return value
