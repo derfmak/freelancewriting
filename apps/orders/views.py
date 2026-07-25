@@ -42,7 +42,7 @@ def create_timeline(order, status, title, description='', icon='', color='gray')
 
 
 def is_owner(order, user):
-    return order.student_id == user.id
+    return order.client_id == user.id
 
 
 def is_assigned_writer(order, user):
@@ -52,10 +52,10 @@ def is_assigned_writer(order, user):
 def sanitize_links(links):
     if not links:
         return []
-    
+
     sanitized = []
     dangerous_protocols = ['javascript:', 'data:', 'vbscript:', 'file:']
-    
+
     for link in links:
         if isinstance(link, dict):
             url = link.get('url', '')
@@ -73,7 +73,7 @@ def sanitize_links(links):
                     break
             link = link.replace('<', '&lt;').replace('>', '&gt;')
             sanitized.append({'url': link, 'title': ''})
-    
+
     return sanitized
 
 
@@ -108,7 +108,7 @@ def price_quote(request):
                     {'error': 'Either words or pages must be provided'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             if pages:
                 pages = Decimal(str(pages))
                 if not words:
@@ -137,13 +137,13 @@ def price_quote(request):
                 deadline_dt = timezone.datetime.fromisoformat(deadline.replace('Z', '+00:00'))
         else:
             deadline_dt = deadline
-            
+
         if timezone.is_naive(deadline_dt):
             deadline_dt = timezone.make_aware(deadline_dt)
-            
+
         deadline_utc = deadline_dt.astimezone(dt_timezone.utc)
         now_utc = timezone.now()
-        
+
         if deadline_utc < now_utc + timedelta(hours=12):
             return Response(
                 {'error': 'Deadline must be at least 12 hours from now'},
@@ -246,7 +246,7 @@ def create_order(request):
     sanitized_links = sanitize_links(links)
 
     order = Order.objects.create(
-        student=request.user,
+        client=request.user,
         academic_level=data['academic_level'],
         paper_type=data['paper_type'],
         subject=data['subject'],
@@ -275,7 +275,7 @@ def create_order(request):
         'spacing': spacing
     })
 
-    create_timeline(order, 'request', 'Order Created', 
+    create_timeline(order, 'request', 'Order Created',
                    'Your order has been submitted and is waiting for a writer',
                    'fa-file-alt', 'green')
 
@@ -287,12 +287,12 @@ def create_order(request):
 def my_orders(request):
     status_filter = request.GET.get('status')
     search = request.GET.get('search')
-    
-    orders = Order.objects.filter(student=request.user).order_by('-created_at')
+
+    orders = Order.objects.filter(client=request.user).order_by('-created_at')
 
     if status_filter and status_filter in dict(Order.STATUS_CHOICES):
         orders = orders.filter(status=status_filter)
-    
+
     if search:
         orders = orders.filter(
             Q(order_number__icontains=search) |
@@ -310,14 +310,14 @@ def search_orders(request):
     search = request.GET.get('q', '')
     if not search or len(search) < 2:
         return Response([])
-    
+
     orders = Order.objects.filter(
-        student=request.user
+        client=request.user
     ).filter(
         Q(order_number__icontains=search) |
         Q(topic__icontains=search)
     ).order_by('-created_at')[:10]
-    
+
     results = []
     for order in orders:
         results.append({
@@ -327,7 +327,7 @@ def search_orders(request):
             'status': order.status,
             'created_at': order.created_at.isoformat()
         })
-    
+
     return Response(results)
 
 
@@ -336,12 +336,12 @@ def search_orders(request):
 def assigned_orders(request):
     status_filter = request.GET.get('status')
     search = request.GET.get('search')
-    
+
     orders = Order.objects.filter(writer=request.user).order_by('deadline')
 
     if status_filter and status_filter in dict(Order.STATUS_CHOICES):
         orders = orders.filter(status=status_filter)
-    
+
     if search:
         orders = orders.filter(
             Q(order_number__icontains=search) |
@@ -391,7 +391,7 @@ def order_timeline(request, order_id):
             'color': item.color,
             'created_at': item.created_at.isoformat()
         })
-    
+
     return Response(data)
 
 
@@ -420,7 +420,7 @@ def accept_order(request, order_id):
     order.save()
 
     log_history(order, request.user, 'accept', 'request', 'in_progress')
-    create_timeline(order, 'in_progress', 'Order Accepted', 
+    create_timeline(order, 'in_progress', 'Order Accepted',
                    'A writer has been assigned to your order',
                    'fa-check-circle', 'blue')
 
@@ -440,7 +440,7 @@ def reject_order(request, order_id):
     order.save()
 
     WalletService.credit(
-        wallet=order.student.wallet,
+        wallet=order.client.wallet,
         amount=order.total_price,
         transaction_type='refund',
         description=f'Refund for rejected order {order.order_number}',
@@ -448,7 +448,7 @@ def reject_order(request, order_id):
     )
 
     log_history(order, request.user, 'decline', 'request', 'declined', {'reason': reason})
-    create_timeline(order, 'declined', 'Order Declined', 
+    create_timeline(order, 'declined', 'Order Declined',
                    'Your order was declined. Please review the feedback and resubmit.',
                    'fa-times-circle', 'red')
 
@@ -458,12 +458,12 @@ def reject_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def cancel_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, student=request.user)
-    
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+
     serializer = CancelOrderSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     if not order.can_cancel(request.user):
         return Response(
             {'error': 'This order cannot be cancelled'},
@@ -480,7 +480,7 @@ def cancel_order(request, order_id):
 
     if order.status in ['awaiting_approval', 'in_progress']:
         WalletService.credit(
-            wallet=order.student.wallet,
+            wallet=order.client.wallet,
             amount=order.total_price,
             transaction_type='refund',
             description=f'Refund for cancelled order {order.order_number}',
@@ -491,8 +491,8 @@ def cancel_order(request, order_id):
         'reason': order.cancellation_reason,
         'feedback': order.cancellation_feedback
     })
-    
-    create_timeline(order, 'cancelled', 'Order Cancelled', 
+
+    create_timeline(order, 'cancelled', 'Order Cancelled',
                    'Order was cancelled by client',
                    'fa-ban', 'red')
 
@@ -503,10 +503,10 @@ def cancel_order(request, order_id):
 @permission_classes([IsAuthenticated])
 def decline_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    
+
     if not is_assigned_writer(order, request.user) and not request.user.is_staff:
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     if order.status != 'request':
         return Response(
             {'error': 'Only orders in request status can be declined'},
@@ -526,7 +526,7 @@ def decline_order(request, order_id):
     order.save()
 
     WalletService.credit(
-        wallet=order.student.wallet,
+        wallet=order.client.wallet,
         amount=order.total_price,
         transaction_type='refund',
         description=f'Refund for declined order {order.order_number}',
@@ -537,8 +537,8 @@ def decline_order(request, order_id):
         'reason': order.declined_reason,
         'feedback': order.declined_feedback
     })
-    
-    create_timeline(order, 'declined', 'Order Declined', 
+
+    create_timeline(order, 'declined', 'Order Declined',
                    f'Order declined: {order.declined_reason}',
                    'fa-times-circle', 'red')
 
@@ -548,8 +548,8 @@ def decline_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def resubmit_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, student=request.user)
-    
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+
     if not order.can_resubmit(request.user):
         return Response(
             {'error': 'This order cannot be resubmitted'},
@@ -570,8 +570,8 @@ def resubmit_order(request, order_id):
     log_history(order, request.user, 'resubmit', 'declined', 'request', {
         'notes': serializer.validated_data.get('notes', '')
     })
-    
-    create_timeline(order, 'request', 'Order Resubmitted', 
+
+    create_timeline(order, 'request', 'Order Resubmitted',
                    'Order has been resubmitted for review',
                    'fa-redo', 'green')
 
@@ -581,8 +581,8 @@ def resubmit_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reorder_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, student=request.user)
-    
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+
     if not order.can_reorder(request.user):
         return Response(
             {'error': 'This order cannot be reordered'},
@@ -599,7 +599,7 @@ def reorder_order(request, order_id):
     )
 
     new_order = Order.objects.create(
-        student=request.user,
+        client=request.user,
         academic_level=order.academic_level,
         paper_type=order.paper_type,
         subject=order.subject,
@@ -639,8 +639,8 @@ def reorder_order(request, order_id):
         'original_order': str(order.id),
         'version': new_order.version
     })
-    
-    create_timeline(new_order, 'request', 'Order Reordered', 
+
+    create_timeline(new_order, 'request', 'Order Reordered',
                    f'Reordered from Order #{order.order_number}',
                    'fa-copy', 'green')
 
@@ -650,8 +650,8 @@ def reorder_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def split_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, student=request.user)
-    
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+
     if not order.can_split(request.user):
         return Response(
             {'error': 'This order cannot be split'},
@@ -668,7 +668,7 @@ def split_order(request, order_id):
     total_pages = order.pages or 0
     total_words = order.words or 0
     total_price = order.total_price
-    
+
     pages_per_part = total_pages / parts if total_pages else 0
     words_per_part = total_words / parts if total_words else 0
     price_per_part = total_price / parts
@@ -687,7 +687,7 @@ def split_order(request, order_id):
         )
 
         new_order = Order.objects.create(
-            student=request.user,
+            client=request.user,
             academic_level=order.academic_level,
             paper_type=order.paper_type,
             subject=order.subject,
@@ -731,11 +731,11 @@ def split_order(request, order_id):
             'split_part': i+1,
             'split_total': parts
         })
-        
-        create_timeline(new_order, 'request', f'Order Part {i+1} of {parts}', 
+
+        create_timeline(new_order, 'request', f'Order Part {i+1} of {parts}',
                        f'Split from Order #{order.order_number}',
                        'fa-cut', 'blue')
-        
+
         split_orders.append(new_order)
 
     order.status = 'cancelled'
@@ -803,7 +803,7 @@ def deliver_order(request, order_id):
     order.save()
 
     log_history(order, request.user, 'deliver', 'in_progress', 'awaiting_approval')
-    create_timeline(order, 'awaiting_approval', 'Order Delivered', 
+    create_timeline(order, 'awaiting_approval', 'Order Delivered',
                    'Your order has been delivered and is awaiting approval',
                    'fa-file-check', 'green')
 
@@ -813,7 +813,7 @@ def deliver_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def approve_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, student=request.user, status='awaiting_approval')
+    order = get_object_or_404(Order, id=order_id, client=request.user, status='awaiting_approval')
 
     order.status = 'completed'
     order.completed_at = timezone.now()
@@ -830,7 +830,7 @@ def approve_order(request, order_id):
         )
 
     log_history(order, request.user, 'complete', 'awaiting_approval', 'completed')
-    create_timeline(order, 'completed', 'Order Completed', 
+    create_timeline(order, 'completed', 'Order Completed',
                    'Order has been completed and approved',
                    'fa-check-circle', 'green')
 
@@ -840,7 +840,7 @@ def approve_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def request_revision(request, order_id):
-    order = get_object_or_404(Order, id=order_id, student=request.user, status='awaiting_approval')
+    order = get_object_or_404(Order, id=order_id, client=request.user, status='awaiting_approval')
 
     serializer = RevisionRequestSerializer(data=request.data)
     if not serializer.is_valid():
@@ -856,8 +856,8 @@ def request_revision(request, order_id):
         order, request.user, 'revise', 'awaiting_approval', 'in_progress',
         {'notes': serializer.validated_data.get('notes', '')}
     )
-    
-    create_timeline(order, 'in_progress', 'Revision Requested', 
+
+    create_timeline(order, 'in_progress', 'Revision Requested',
                    f'Revision #{order.revision_count} requested',
                    'fa-edit', 'orange')
 
@@ -867,7 +867,7 @@ def request_revision(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def request_refund(request, order_id):
-    order = get_object_or_404(Order, id=order_id, student=request.user)
+    order = get_object_or_404(Order, id=order_id, client=request.user)
 
     if order.status not in ['awaiting_approval', 'completed']:
         return Response({'error': 'Order is not eligible for a refund'}, status=status.HTTP_400_BAD_REQUEST)
@@ -885,8 +885,8 @@ def request_refund(request, order_id):
         order, request.user, 'refund_request', from_status, 'refund_pending',
         {'reason': order.refund_reason}
     )
-    
-    create_timeline(order, 'refund_pending', 'Refund Requested', 
+
+    create_timeline(order, 'refund_pending', 'Refund Requested',
                    'Refund has been requested',
                    'fa-hand-holding-usd', 'orange')
 
@@ -896,7 +896,7 @@ def request_refund(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def rate_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, student=request.user, status='completed')
+    order = get_object_or_404(Order, id=order_id, client=request.user, status='completed')
 
     serializer = RatingSerializer(data=request.data)
     if not serializer.is_valid():
@@ -914,14 +914,14 @@ def rate_order(request, order_id):
 def update_presence(request):
     is_online = request.data.get('is_online', True)
     current_room = request.data.get('current_room', '')
-    
+
     presence, created = UserPresence.objects.get_or_create(user=request.user)
     presence.is_online = is_online
     presence.current_room = current_room
     if is_online:
         presence.last_seen_at = timezone.now()
     presence.save()
-    
+
     return Response({
         'is_online': presence.is_online,
         'last_seen_at': presence.last_seen_at.isoformat()
@@ -948,12 +948,12 @@ def get_presence(request, user_id):
 @permission_classes([IsAuthenticated])
 def get_online_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    
+
     if not (is_owner(order, request.user) or is_assigned_writer(order, request.user)):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    other_user = order.writer if is_owner(order, request.user) else order.student
-    
+
+    other_user = order.writer if is_owner(order, request.user) else order.client
+
     if other_user:
         try:
             presence = UserPresence.objects.get(user=other_user)
@@ -966,7 +966,7 @@ def get_online_status(request, order_id):
                 'is_online': False,
                 'last_seen_at': None
             })
-    
+
     return Response({
         'is_online': False,
         'last_seen_at': None
@@ -993,6 +993,6 @@ def process_auto_approvals():
             )
 
         log_history(order, None, 'auto_approve', 'awaiting_approval', 'completed')
-        create_timeline(order, 'completed', 'Auto-Approved', 
+        create_timeline(order, 'completed', 'Auto-Approved',
                        'Order was automatically approved after review period',
                        'fa-clock', 'gray')

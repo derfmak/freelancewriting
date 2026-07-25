@@ -96,38 +96,6 @@ function getApiHeaders() {
     };
 }
 
-function showToast(message, type) {
-    const container = document.querySelector('.toast-container') || createToastContainer();
-    const toast = document.createElement('div');
-    toast.className = 'toast ' + type;
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-            <span class="message">${message}</span>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
-    `;
-    container.appendChild(toast);
-    const progressFill = toast.querySelector('.progress-fill');
-    progressFill.style.width = '100%';
-    setTimeout(() => {
-        progressFill.style.width = '0%';
-        setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
-    }, 100);
-}
-
-function createToastContainer() {
-    const container = document.createElement('div');
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-    return container;
-}
-
 function formatCurrency(amount) {
     return '$' + parseFloat(amount || 0).toFixed(2);
 }
@@ -157,9 +125,11 @@ function getStatusClass(status) {
     const statusMap = {
         'request': 'bg-yellow-100 text-yellow-700',
         'in_progress': 'bg-blue-100 text-blue-700',
+        'awaiting_approval': 'bg-purple-100 text-purple-700',
         'completed': 'bg-green-100 text-green-700',
         'cancelled': 'bg-red-100 text-red-700',
-        'revision': 'bg-purple-100 text-purple-700'
+        'declined': 'bg-red-100 text-red-700',
+        'refund_pending': 'bg-orange-100 text-orange-700'
     };
     return statusMap[status] || 'bg-gray-100 text-gray-700';
 }
@@ -168,15 +138,23 @@ function getStatusLabel(status) {
     const labelMap = {
         'request': 'Request',
         'in_progress': 'In Progress',
+        'awaiting_approval': 'Awaiting Approval',
         'completed': 'Completed',
         'cancelled': 'Cancelled',
-        'revision': 'Revision'
+        'declined': 'Declined',
+        'refund_pending': 'Refund Pending'
     };
     return labelMap[status] || status.replace('_', ' ');
 }
 
 async function loadDashboardStats() {
     try {
+        const token = getAuthToken();
+        if (!token) {
+            console.warn('No auth token found');
+            return;
+        }
+
         const [walletRes, ordersRes] = await Promise.all([
             fetch('/api/v1/client/wallet/', { headers: getApiHeaders() }),
             fetch('/api/v1/client/orders/', { headers: getApiHeaders() })
@@ -184,17 +162,22 @@ async function loadDashboardStats() {
 
         if (walletRes.ok) {
             const wallet = await walletRes.json();
-            document.getElementById('wallet-balance').textContent = formatCurrency(wallet.balance);
+            document.getElementById('wallet-balance').textContent = formatCurrency(wallet.balance || 0);
+        } else {
+            console.warn('Wallet API returned:', walletRes.status);
         }
 
         if (ordersRes.ok) {
             const orders = await ordersRes.json();
-            const total = orders.length;
-            const active = orders.filter(o => ['request', 'in_progress'].includes(o.status)).length;
-            const completed = orders.filter(o => o.status === 'completed').length;
+            const results = orders.results || orders;
+            const total = results.length || 0;
+            const active = results.filter(o => ['request', 'in_progress', 'awaiting_approval'].includes(o.status)).length || 0;
+            const completed = results.filter(o => o.status === 'completed').length || 0;
             document.getElementById('total-orders').textContent = total;
             document.getElementById('active-orders').textContent = active;
             document.getElementById('completed-orders').textContent = completed;
+        } else {
+            console.warn('Orders API returned:', ordersRes.status);
         }
     } catch (error) {
         console.error('Failed to load stats:', error);
@@ -207,18 +190,29 @@ async function loadDashboardStats() {
 async function loadActiveOrders() {
     const container = document.getElementById('active-orders-list');
     try {
-        const response = await fetch('/api/v1/client/orders/?status=request,in_progress', {
+        const token = getAuthToken();
+        if (!token) {
+            container.innerHTML = '<div class="text-center text-red-500 py-4 text-sm">Please login to view orders</div>';
+            return;
+        }
+
+        const response = await fetch('/api/v1/client/orders/?status=request,in_progress,awaiting_approval', {
             headers: getApiHeaders()
         });
+        
         if (!response.ok) {
             container.innerHTML = '<div class="text-center text-red-500 py-4 text-sm">Unable to load orders</div>';
             return;
         }
-        const orders = await response.json();
+        
+        const data = await response.json();
+        const orders = data.results || data;
+        
         if (!orders || orders.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-4 text-sm">No active orders</div>';
             return;
         }
+        
         container.innerHTML = orders.slice(0, 3).map(order => `
             <div class="border border-gray-200 p-3 sm:p-4">
                 <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
@@ -245,19 +239,30 @@ async function loadActiveOrders() {
 async function loadRecentMessages() {
     const container = document.getElementById('recent-messages');
     try {
+        const token = getAuthToken();
+        if (!token) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-4 text-sm">Please login to view messages</div>';
+            return;
+        }
+
         const response = await fetch('/api/v1/messaging/conversations/', {
             headers: getApiHeaders()
         });
+        
         if (!response.ok) {
             container.innerHTML = '<div class="text-center text-gray-500 py-4 text-sm">No messages available</div>';
             return;
         }
+        
         const conversations = await response.json();
-        if (!conversations || conversations.length === 0) {
+        const results = conversations.results || conversations;
+        
+        if (!results || results.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-4 text-sm">No messages</div>';
             return;
         }
-        container.innerHTML = conversations.slice(0, 3).map(conv => {
+        
+        container.innerHTML = results.slice(0, 3).map(conv => {
             const lastMessage = conv.last_message || {};
             const order = conv.order || {};
             return `
@@ -282,18 +287,29 @@ async function loadRecentMessages() {
 async function loadRecentOrders() {
     const tbody = document.getElementById('recent-orders');
     try {
-        const response = await fetch('/api/v1/client/orders/', {
+        const token = getAuthToken();
+        if (!token) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-4">Please login to view orders</td></tr>';
+            return;
+        }
+
+        const response = await fetch('/api/v1/client/orders/?limit=5', {
             headers: getApiHeaders()
         });
+        
         if (!response.ok) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-4">Unable to load orders</td></tr>';
             return;
         }
-        const orders = await response.json();
+        
+        const data = await response.json();
+        const orders = data.results || data;
+        
         if (!orders || orders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">No orders found</td></tr>';
             return;
         }
+        
         tbody.innerHTML = orders.slice(0, 5).map(order => `
             <tr class="border-b border-gray-100">
                 <td class="py-2 sm:py-3 font-medium">${order.order_number || 'N/A'}</td>

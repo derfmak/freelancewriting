@@ -15,11 +15,13 @@ from django.views.decorators.http import require_POST
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework import status
 from decimal import Decimal
 from apps.accounts.models import User
 from apps.orders.models import Order, OrderHistory
 from apps.admin_portal.models import Blog, Sample
 from apps.messaging.models import Conversation
+from apps.orders.serializers import OrderListSerializer
 import hashlib
 import json
 from datetime import timedelta
@@ -941,93 +943,99 @@ def admin_messages(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def client_counts(request):
-    orders = Order.objects.filter(student=request.user)
-    
-    active_orders = orders.filter(
-        status__in=['request', 'in_progress', 'awaiting_approval']
-    ).count()
-    
-    completed_orders = orders.filter(status='completed').count()
-    total_orders = orders.count()
-    cancelled_orders = orders.filter(status='cancelled').count()
-    declined_orders = orders.filter(status='declined').count()
-    
-    unread_messages = 0
     try:
-        conversations = Conversation.objects.filter(student=request.user)
-        for conv in conversations:
-            unread_messages += conv.get_unread_count(request.user)
-    except:
-        pass
-    
-    return Response({
-        'active_orders': active_orders,
-        'completed_orders': completed_orders,
-        'total_orders': total_orders,
-        'cancelled_orders': cancelled_orders,
-        'declined_orders': declined_orders,
-        'unread_messages': unread_messages,
-    })
+        orders = Order.objects.filter(client=request.user)
+        
+        active_orders = orders.filter(
+            status__in=['request', 'in_progress', 'awaiting_approval']
+        ).count()
+        
+        completed_orders = orders.filter(status='completed').count()
+        total_orders = orders.count()
+        cancelled_orders = orders.filter(status='cancelled').count()
+        declined_orders = orders.filter(status='declined').count()
+        
+        unread_messages = 0
+        try:
+            conversations = Conversation.objects.filter(student=request.user)
+            for conv in conversations:
+                unread_messages += conv.get_unread_count(request.user)
+        except Exception:
+            pass
+        
+        return Response({
+            'active_orders': active_orders,
+            'completed_orders': completed_orders,
+            'total_orders': total_orders,
+            'cancelled_orders': cancelled_orders,
+            'declined_orders': declined_orders,
+            'unread_messages': unread_messages,
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def admin_counts(request):
-    total_users = User.objects.count()
-    total_clients = User.objects.filter(role='client').count()
-    total_writers = User.objects.filter(role='writer').count()
-    
-    total_orders = Order.objects.count()
-    active_orders = Order.objects.filter(
-        status__in=['request', 'in_progress', 'awaiting_approval']
-    ).count()
-    pending_orders = Order.objects.filter(status='request').count()
-    in_progress_orders = Order.objects.filter(status='in_progress').count()
-    awaiting_orders = Order.objects.filter(status='awaiting_approval').count()
-    completed_orders = Order.objects.filter(status='completed').count()
-    cancelled_orders = Order.objects.filter(status='cancelled').count()
-    declined_orders = Order.objects.filter(status='declined').count()
-    
-    from apps.payments.models import Transaction
-    total_revenue = Transaction.objects.filter(
-        type='payout',
-        status='completed'
-    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
-    pending_payouts = Transaction.objects.filter(
-        type='payout',
-        status='pending'
-    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
-    avg_rating = Order.objects.filter(rating__isnull=False).aggregate(
-        avg=Avg('rating')
-    )['avg'] or 0
-    
-    unread_messages = 0
     try:
-        conversations = Conversation.objects.filter(admin=request.user)
-        for conv in conversations:
-            unread_messages += conv.get_unread_count(request.user)
-    except:
-        pass
-    
-    return Response({
-        'total_users': total_users,
-        'total_clients': total_clients,
-        'total_writers': total_writers,
-        'total_orders': total_orders,
-        'active_orders': active_orders,
-        'pending_orders': pending_orders,
-        'in_progress_orders': in_progress_orders,
-        'awaiting_orders': awaiting_orders,
-        'completed_orders': completed_orders,
-        'cancelled_orders': cancelled_orders,
-        'declined_orders': declined_orders,
-        'total_revenue': float(total_revenue),
-        'pending_payouts': float(pending_payouts),
-        'average_rating': float(avg_rating),
-        'unread_messages': unread_messages,
-    })
+        total_users = User.objects.count()
+        total_clients = User.objects.filter(role='client').count()
+        total_writers = User.objects.filter(role='writer').count()
+        
+        total_orders = Order.objects.count()
+        active_orders = Order.objects.filter(
+            status__in=['request', 'in_progress', 'awaiting_approval']
+        ).count()
+        pending_orders = Order.objects.filter(status='request').count()
+        in_progress_orders = Order.objects.filter(status='in_progress').count()
+        awaiting_orders = Order.objects.filter(status='awaiting_approval').count()
+        completed_orders = Order.objects.filter(status='completed').count()
+        cancelled_orders = Order.objects.filter(status='cancelled').count()
+        declined_orders = Order.objects.filter(status='declined').count()
+        
+        from apps.payments.models import Transaction
+        total_revenue = Transaction.objects.filter(
+            type='payout',
+            status='completed'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        
+        pending_payouts = Transaction.objects.filter(
+            type='payout',
+            status='pending'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        
+        avg_rating = Order.objects.filter(rating__isnull=False).aggregate(
+            avg=Avg('rating')
+        )['avg'] or 0
+        
+        unread_messages = 0
+        try:
+            conversations = Conversation.objects.filter(admin=request.user)
+            for conv in conversations:
+                unread_messages += conv.get_unread_count(request.user)
+        except Exception:
+            pass
+        
+        return Response({
+            'total_users': total_users,
+            'total_clients': total_clients,
+            'total_writers': total_writers,
+            'total_orders': total_orders,
+            'active_orders': active_orders,
+            'pending_orders': pending_orders,
+            'in_progress_orders': in_progress_orders,
+            'awaiting_orders': awaiting_orders,
+            'completed_orders': completed_orders,
+            'cancelled_orders': cancelled_orders,
+            'declined_orders': declined_orders,
+            'total_revenue': float(total_revenue),
+            'pending_payouts': float(pending_payouts),
+            'average_rating': float(avg_rating),
+            'unread_messages': unread_messages,
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -1037,37 +1045,64 @@ def client_wallet_data(request):
         wallet = request.user.wallet
         return Response({
             'balance': float(wallet.balance),
+            'held_balance': float(wallet.held_balance),
+            'available_balance': float(wallet.available_balance),
             'total_deposited': float(wallet.total_deposited),
             'total_spent': float(wallet.total_spent),
-            'escrow_balance': float(getattr(wallet, 'escrow_balance', 0)),
+            'total_refunded': float(wallet.total_refunded),
+            'total_withdrawn': float(wallet.total_withdrawn),
+            'currency': wallet.currency
         })
-    except:
+    except Exception:
         return Response({
             'balance': 0.00,
+            'held_balance': 0.00,
+            'available_balance': 0.00,
             'total_deposited': 0.00,
             'total_spent': 0.00,
-            'escrow_balance': 0.00,
+            'total_refunded': 0.00,
+            'total_withdrawn': 0.00,
+            'currency': 'USD'
         })
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def client_orders_data(request):
-    status_filter = request.GET.get('status')
-    search = request.GET.get('search')
-    
-    orders = Order.objects.filter(student=request.user).order_by('-created_at')
-    
-    if status_filter and status_filter in dict(Order.STATUS_CHOICES):
-        orders = orders.filter(status=status_filter)
-    
-    if search:
-        orders = orders.filter(
-            Q(order_number__icontains=search) |
-            Q(topic__icontains=search) |
-            Q(subject__icontains=search)
-        )
-    
-    from apps.orders.serializers import OrderListSerializer
-    serializer = OrderListSerializer(orders, many=True, context={'request': request})
-    return Response(serializer.data)
+    try:
+        status_filter = request.GET.get('status')
+        search = request.GET.get('search')
+        limit = request.GET.get('limit')
+        
+        orders = Order.objects.filter(client=request.user).order_by('-created_at')
+        
+        if status_filter:
+            status_list = status_filter.split(',')
+            orders = orders.filter(status__in=status_list)
+        
+        if search:
+            orders = orders.filter(
+                Q(order_number__icontains=search) |
+                Q(topic__icontains=search) |
+                Q(subject__icontains=search)
+            )
+        
+        total = orders.count()
+        
+        if limit:
+            try:
+                limit_int = int(limit)
+                orders = orders[:limit_int]
+            except ValueError:
+                pass
+        
+        serializer = OrderListSerializer(orders, many=True, context={'request': request})
+        
+        return Response({
+            'results': serializer.data,
+            'total': total,
+            'page': 1,
+            'page_size': len(serializer.data)
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
