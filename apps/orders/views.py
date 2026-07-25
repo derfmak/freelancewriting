@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
+from datetime import timezone as dt_timezone
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import Q
@@ -140,7 +141,7 @@ def price_quote(request):
         if timezone.is_naive(deadline_dt):
             deadline_dt = timezone.make_aware(deadline_dt)
             
-        deadline_utc = deadline_dt.astimezone(timezone.utc)
+        deadline_utc = deadline_dt.astimezone(dt_timezone.utc)
         now_utc = timezone.now()
         
         if deadline_utc < now_utc + timedelta(hours=12):

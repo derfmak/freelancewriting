@@ -106,7 +106,7 @@ class Order(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.CharField(max_length=20, unique=True, db_index=True)
-    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', db_index=True)
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', db_index=True)
     writer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='writer_orders', db_index=True)
 
     academic_level = models.CharField(max_length=20, choices=ACADEMIC_LEVELS)
@@ -183,8 +183,8 @@ class Order(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['student', 'status']),
-            models.Index(fields=['student', 'created_at']),
+            models.Index(fields=['client', 'status']),
+            models.Index(fields=['client', 'created_at']),
             models.Index(fields=['writer', 'status']),
             models.Index(fields=['status', 'deadline']),
             models.Index(fields=['auto_approve_at']),
@@ -193,7 +193,7 @@ class Order(models.Model):
             models.Index(fields=['status', 'cancelled_at']),
             models.Index(fields=['last_activity_at']),
             models.Index(fields=['order_number', 'topic']),
-            models.Index(fields=['student', 'order_number', 'topic']),
+            models.Index(fields=['client', 'order_number', 'topic']),
         ]
         db_table = 'orders'
 
@@ -328,7 +328,7 @@ class Order(models.Model):
         }
 
     def can_cancel(self, user):
-        if self.student_id != user.id:
+        if self.client_id != user.id:
             return False
         if self.status == 'completed':
             return False
@@ -343,7 +343,7 @@ class Order(models.Model):
         return False
 
     def can_edit(self, user):
-        if self.student_id != user.id:
+        if self.client_id != user.id:
             return False
         if self.status in ['cancelled', 'completed']:
             return False
@@ -354,17 +354,17 @@ class Order(models.Model):
         return False
 
     def can_resubmit(self, user):
-        if self.student_id != user.id:
+        if self.client_id != user.id:
             return False
         return self.status == 'declined'
 
     def can_reorder(self, user):
-        if self.student_id != user.id:
+        if self.client_id != user.id:
             return False
         return self.status in ['completed', 'cancelled']
 
     def can_split(self, user):
-        if self.student_id != user.id:
+        if self.client_id != user.id:
             return False
         if self.status not in ['request', 'in_progress']:
             return False

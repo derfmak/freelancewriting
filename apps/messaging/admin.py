@@ -5,8 +5,8 @@ from .models import Conversation, Message, MessageStatus, TypingStatus
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'order', 'student', 'admin', 'last_message_at']
-    search_fields = ['order__order_number', 'student__email', 'admin__email']
+    list_display = ['id', 'order', 'client', 'admin', 'last_message_at']
+    search_fields = ['order__order_number', 'client__email', 'admin__email']
     list_filter = ['created_at']
 
 

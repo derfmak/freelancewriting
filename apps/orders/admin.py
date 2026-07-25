@@ -26,7 +26,7 @@ class OrderHistoryInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
-        'order_number', 'student', 'writer', 'topic_short', 'status',
+        'order_number', 'client', 'writer', 'topic_short', 'status',
         'total_price', 'deadline_display', 'created_at'
     ]
     list_filter = [
@@ -34,8 +34,8 @@ class OrderAdmin(admin.ModelAdmin):
         'deadline', 'cancelled_at'
     ]
     search_fields = [
-        'order_number', 'topic', 'subject', 'student__email',
-        'student__full_name', 'writer__email', 'writer__full_name'
+        'order_number', 'topic', 'subject', 'client__email',
+        'client__full_name', 'writer__email', 'writer__full_name'
     ]
     readonly_fields = [
         'id', 'order_number', 'created_at', 'updated_at',
@@ -48,7 +48,7 @@ class OrderAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Basic Information', {
             'fields': (
-                'order_number', 'student', 'writer', 'status',
+                'order_number', 'client', 'writer', 'status',
                 'academic_level', 'paper_type', 'topic', 'subject',
                 'instructions'
             )
@@ -108,7 +108,7 @@ class OrderAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            'student', 'writer', 'cancelled_by', 'declined_by'
+            'client', 'writer', 'cancelled_by', 'declined_by'
         )
     
     actions = ['mark_completed', 'mark_cancelled', 'refund_order']
@@ -129,7 +129,7 @@ class OrderAdmin(admin.ModelAdmin):
         for order in queryset:
             if order.status not in ['completed', 'cancelled']:
                 WalletService.credit(
-                    wallet=order.student.wallet,
+                    wallet=order.client.wallet,
                     amount=order.total_price,
                     transaction_type='refund',
                     description=f'Admin refund for order {order.order_number}',

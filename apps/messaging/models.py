@@ -10,10 +10,10 @@ from apps.orders.models import Order
 class Conversation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='conversation')
-    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_conversations')
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_conversations')
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_conversations')
     last_message_at = models.DateTimeField(default=timezone.now)
-    student_last_seen = models.DateTimeField(null=True, blank=True)
+    client_last_seen = models.DateTimeField(null=True, blank=True)
     admin_last_seen = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -23,7 +23,7 @@ class Conversation(models.Model):
         ordering = ['-last_message_at']
         indexes = [
             models.Index(fields=['order', 'last_message_at']),
-            models.Index(fields=['student', 'last_message_at']),
+            models.Index(fields=['client', 'last_message_at']),
             models.Index(fields=['admin', 'last_message_at']),
         ]
 
@@ -31,15 +31,15 @@ class Conversation(models.Model):
         return f'Conversation for Order {self.order.order_number}'
 
     def other_participant(self, user):
-        return self.admin if user == self.student else self.student
+        return self.admin if user == self.client else self.client
 
     def is_participant(self, user):
-        return user == self.student or user == self.admin
+        return user == self.client or user == self.admin
 
     def get_unread_count(self, user):
         if not self.is_participant(user):
             return 0
-        last_seen = self.student_last_seen if user == self.student else self.admin_last_seen
+        last_seen = self.client_last_seen if user == self.client else self.admin_last_seen
         qs = self.messages.exclude(sender=user).filter(is_recalled=False)
         if last_seen:
             qs = qs.filter(created_at__gt=last_seen)
@@ -47,9 +47,9 @@ class Conversation(models.Model):
 
     def mark_seen(self, user):
         now = timezone.now()
-        if user == self.student:
-            self.student_last_seen = now
-            self.save(update_fields=['student_last_seen'])
+        if user == self.client:
+            self.client_last_seen = now
+            self.save(update_fields=['client_last_seen'])
         elif user == self.admin:
             self.admin_last_seen = now
             self.save(update_fields=['admin_last_seen'])
