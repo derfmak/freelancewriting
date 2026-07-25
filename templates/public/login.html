@@ -101,11 +101,6 @@
         animation: shake 0.5s ease;
     }
 
-    .form-input:-webkit-autofill {
-        -webkit-box-shadow: 0 0 0 30px #fafbfc inset !important;
-        -webkit-text-fill-color: #1e293b !important;
-    }
-
     .password-wrapper {
         position: relative;
     }
@@ -165,10 +160,6 @@
         background: #047857;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-    }
-
-    .login-btn:disabled {
-        cursor: not-allowed;
     }
 
     .login-btn .btn-text {
@@ -354,7 +345,7 @@
         </div>
 
         <form id="loginForm" class="mt-6" novalidate>
-            <input type="hidden" id="role" name="role" value="client">
+            {% csrf_token %}
 
             <div class="form-group">
                 <label for="email" class="form-label">Email Address</label>
@@ -455,6 +446,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearError(input, errorEl) {
         input.classList.remove('error');
         errorEl.classList.remove('show');
+    }
+
+    function getCsrfToken() {
+        const token = document.querySelector('[name=csrf-token]')?.content;
+        if (token) return token;
+        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
     }
 
     email.addEventListener('blur', function() {
@@ -569,13 +567,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         progressBar.classList.add('active');
-    }
-
-    function getCsrfToken() {
-        const token = document.querySelector('[name=csrf-token]')?.content;
-        if (token) return token;
-        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
-        return cookie ? cookie.split('=')[1] : '';
     }
 
     function resetButton() {

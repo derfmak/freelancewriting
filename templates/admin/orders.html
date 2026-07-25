@@ -23,7 +23,7 @@
     .status-dot.awaiting_approval { background: #8b5cf6; }
     .status-dot.completed { background: #22c55e; }
     .status-dot.cancelled { background: #ef4444; }
-    .status-dot.revision { background: #f97316; }
+    .status-dot.declined { background: #ef4444; }
     .status-dot.refund_pending { background: #f59e0b; }
     
     .urgency-high { border-left: 4px solid #ef4444; }
@@ -80,7 +80,6 @@
                     </svg>
                 </button>
             </div>
-            <button id="exportBtn" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">Export</button>
             <button id="refreshBtn" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">Refresh</button>
         </div>
     </div>
@@ -90,10 +89,10 @@
         <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="request">Requests</button>
         <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="in_progress">In Progress</button>
         <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="awaiting_approval">Awaiting Approval</button>
-        <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="revision">Revision</button>
         <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="completed">Completed</button>
-        <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="refund_pending">Refund</button>
         <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="cancelled">Cancelled</button>
+        <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="declined">Declined</button>
+        <button class="filter-btn px-4 py-1.5 text-sm rounded-full border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all" data-status="refund_pending">Refund</button>
     </div>
 
     <div id="ordersContainer" class="space-y-3">
@@ -177,10 +176,6 @@ function setupEventListeners() {
         loadOrders();
     });
 
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        exportOrders();
-    });
-
     document.getElementById('pageSizeSelect').addEventListener('change', function() {
         pageSize = parseInt(this.value);
         currentPage = 1;
@@ -220,6 +215,28 @@ function startAutoRefresh() {
     }, 30000);
 }
 
+function formatCurrency(amount) {
+    if (amount === undefined || amount === null || amount === '') {
+        return '$0.00';
+    }
+    const num = parseFloat(amount);
+    if (isNaN(num)) {
+        return '$0.00';
+    }
+    return '$' + num.toFixed(2);
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) {
+        return 'N/A';
+    }
+}
+
 async function loadOrders(silent = false) {
     if (isLoading) return;
     isLoading = true;
@@ -246,8 +263,9 @@ async function loadOrders(silent = false) {
         }
 
         const data = await response.json();
-        totalPages = Math.ceil(data.total / data.page_size) || 1;
-        displayOrders(data.results || [], data);
+        const orders = data.results || data || [];
+        totalPages = Math.ceil((data.total || orders.length) / (data.page_size || pageSize)) || 1;
+        displayOrders(orders, data);
         updatePagination(data);
 
     } catch (error) {
@@ -282,32 +300,35 @@ function displayOrders(orders, data) {
     }
 
     container.innerHTML = orders.map((order) => {
-        const urgencyClass = order.deadline && isUrgent(order.deadline) ? 'urgency-high' : '';
+        const clientName = order.client_name || order.client?.full_name || order.client?.email || 'N/A';
+        const orderNumber = order.order_number || 'N/A';
+        const topic = order.topic || order.title || 'Untitled';
+        const totalPrice = order.total_price || order.total || 0;
         const statusColor = getStatusColor(order.status);
         const statusLabel = formatStatus(order.status);
         const isOverdue = order.deadline && new Date(order.deadline) < new Date();
         const isRequest = order.status === 'request';
 
         return `
-            <div class="order-card bg-white border border-gray-200 rounded-lg p-4 ${urgencyClass}">
+            <div class="order-card bg-white border border-gray-200 rounded-lg p-4 ${isOverdue ? 'urgency-high' : ''}">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-3 flex-wrap">
                             <a href="/admin/orders/${order.id}/" class="text-sm font-medium ${isRequest ? 'text-amber-600' : 'text-green-600'} hover:${isRequest ? 'text-amber-700' : 'text-green-700'}">
-                                #${order.order_number || order.id.slice(0, 8)}
+                                #${orderNumber}
                             </a>
                             ${isRequest ? '<span class="request-badge">Request</span>' : ''}
                             <span class="text-xs px-2 py-0.5 rounded-full ${statusColor}">${statusLabel}</span>
                             ${isOverdue && order.status !== 'completed' ? '<span class="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">Overdue</span>' : ''}
                         </div>
-                        <h4 class="text-sm font-medium text-gray-800 mt-1 truncate">${order.title || order.topic || 'Untitled'}</h4>
+                        <h4 class="text-sm font-medium text-gray-800 mt-1 truncate">${topic}</h4>
                         <div class="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-500">
-                            <span>${order.client_name || order.client?.email || 'N/A'}</span>
+                            <span>${clientName}</span>
                             <span>•</span>
-                            <span>${order.word_count || 0} words</span>
+                            <span>${order.words || order.word_count || 0} words</span>
                             <span>•</span>
                             <span>${order.academic_level || 'Standard'}</span>
-                            ${order.deadline ? `<span>•</span><span class="${isOverdue ? 'text-red-600 font-medium' : ''}">Due ${new Date(order.deadline).toLocaleDateString()}</span>` : ''}
+                            ${order.deadline ? `<span>•</span><span class="${isOverdue ? 'text-red-600 font-medium' : ''}">Due ${formatDate(order.deadline)}</span>` : ''}
                         </div>
                         ${isRequest ? `
                             <div class="mt-2 text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded border border-amber-200 inline-block">
@@ -316,7 +337,7 @@ function displayOrders(orders, data) {
                         ` : ''}
                     </div>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-sm font-medium text-gray-900">$${(order.total || 0).toFixed(2)}</span>
+                        <span class="text-sm font-medium text-gray-900">${formatCurrency(totalPrice)}</span>
                         ${order.progress_percentage > 0 ? `
                             <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div class="h-full bg-green-500 rounded-full" style="width: ${order.progress_percentage}%"></div>
@@ -356,12 +377,6 @@ function getActionButtons(order) {
         `);
     }
 
-    if (order.status === 'revision') {
-        actions.push(`
-            <a href="/admin/orders/${order.id}/workspace/" class="px-3 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors">Revise</a>
-        `);
-    }
-
     if (order.status === 'awaiting_approval') {
         actions.push(`
             <span class="text-xs text-gray-500">Waiting for client</span>
@@ -374,9 +389,9 @@ function getActionButtons(order) {
         `);
     }
 
-    if (order.status === 'completed' || order.status === 'cancelled') {
+    if (order.status === 'completed' || order.status === 'cancelled' || order.status === 'declined') {
         actions.push(`
-            <span class="text-xs text-gray-400">${order.status === 'completed' ? 'Completed' : 'Cancelled'}</span>
+            <span class="text-xs text-gray-400">${order.status === 'completed' ? 'Completed' : order.status === 'cancelled' ? 'Cancelled' : 'Declined'}</span>
         `);
     }
 
@@ -388,9 +403,9 @@ function getStatusColor(status) {
         'request': 'bg-amber-100 text-amber-700',
         'in_progress': 'bg-blue-100 text-blue-700',
         'awaiting_approval': 'bg-purple-100 text-purple-700',
-        'revision': 'bg-orange-100 text-orange-700',
         'completed': 'bg-green-100 text-green-700',
         'cancelled': 'bg-red-100 text-red-700',
+        'declined': 'bg-red-100 text-red-700',
         'refund_pending': 'bg-yellow-100 text-yellow-700'
     };
     return classes[status] || 'bg-gray-100 text-gray-600';
@@ -401,17 +416,12 @@ function formatStatus(status) {
         'request': 'Request',
         'in_progress': 'In Progress',
         'awaiting_approval': 'Awaiting Approval',
-        'revision': 'Revision',
         'completed': 'Completed',
         'cancelled': 'Cancelled',
+        'declined': 'Declined',
         'refund_pending': 'Refund Pending'
     };
     return labels[status] || status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
-
-function isUrgent(deadline) {
-    const diff = new Date(deadline) - new Date();
-    return diff < 24 * 60 * 60 * 1000 && diff > 0;
 }
 
 function getTimeRemaining(deadline) {
@@ -429,9 +439,9 @@ function getTimeRemaining(deadline) {
 function updatePagination(data) {
     const total = data.total || 0;
     const page = data.page || 1;
-    const pageSize = data.page_size || 200;
-    const start = (page - 1) * pageSize + 1;
-    const end = Math.min(page * pageSize, total);
+    const pageSizeVal = data.page_size || pageSize;
+    const start = (page - 1) * pageSizeVal + 1;
+    const end = Math.min(page * pageSizeVal, total);
 
     document.getElementById('paginationInfo').textContent = `Showing ${total > 0 ? start : 0}-${end} of ${total} orders`;
     document.getElementById('pageInfo').textContent = `Page ${page} of ${totalPages}`;
@@ -476,7 +486,7 @@ async function rejectOrder() {
                 'X-CSRFToken': getCsrfToken()
             },
             credentials: 'include',
-            body: JSON.stringify({ reason })
+            body: JSON.stringify({ reason: reason })
         });
         if (!response.ok) throw new Error('Failed to reject');
         document.getElementById('rejectModal').classList.add('hidden');
@@ -546,17 +556,6 @@ function getCsrfToken() {
     if (token) return token;
     const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
     return cookie ? cookie.split('=')[1] : '';
-}
-
-async function exportOrders() {
-    try {
-        const params = new URLSearchParams();
-        if (currentStatus !== 'all') params.append('status', currentStatus);
-        if (currentSearch) params.append('search', currentSearch);
-        window.location.href = `${API_BASE}/orders/export/?${params.toString()}`;
-    } catch (error) {
-        showToast('Failed to export orders', 'error');
-    }
 }
 </script>
 {% endblock %}

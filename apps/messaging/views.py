@@ -41,10 +41,10 @@ def invalidate_user_caches(*user_ids):
 class ConversationAccessMixin:
     def get_conversation(self, order_id):
         conversation = get_object_or_404(
-            Conversation.objects.select_related('order', 'student', 'admin'),
+            Conversation.objects.select_related('order', 'client', 'admin'),
             order_id=order_id,
         )
-        if self.request.user not in (conversation.student, conversation.admin):
+        if self.request.user not in (conversation.client, conversation.admin):
             return None
         return conversation
 
@@ -69,10 +69,10 @@ class ConversationListView(APIView):
         if request.user.role == 'admin':
             conversations = Conversation.objects.filter(admin=request.user)
         else:
-            conversations = Conversation.objects.filter(student=request.user)
+            conversations = Conversation.objects.filter(client=request.user)
 
         conversations = conversations.select_related(
-            'order', 'student', 'admin',
+            'order', 'client', 'admin',
         ).prefetch_related('messages').order_by('-last_message_at')
 
         data = ConversationSerializer(
@@ -94,7 +94,7 @@ class UnreadCountView(APIView):
         if request.user.role == 'admin':
             conversations = Conversation.objects.filter(admin=request.user)
         else:
-            conversations = Conversation.objects.filter(student=request.user)
+            conversations = Conversation.objects.filter(client=request.user)
 
         total = sum(conversation.get_unread_count(request.user) for conversation in conversations)
         cache.set(cache_key, total, UNREAD_CACHE_TTL)
@@ -169,7 +169,7 @@ class SendMessageView(ConversationAccessMixin, APIView):
         conversation.last_message_at = message.created_at
         conversation.save(update_fields=['last_message_at'])
 
-        recipient = conversation.admin if request.user == conversation.student else conversation.student
+        recipient = conversation.admin if request.user == conversation.client else conversation.client
         MessageStatus.objects.create(
             message=message, user=recipient, is_delivered=True, delivered_at=timezone.now(),
         )
@@ -239,7 +239,7 @@ class TypingStatusView(ConversationAccessMixin, APIView):
         if conversation is None:
             return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
 
-        other_user = conversation.admin if request.user == conversation.student else conversation.student
+        other_user = conversation.admin if request.user == conversation.client else conversation.client
         typing = TypingStatus.objects.filter(
             conversation=conversation, user=other_user, is_typing=True,
         ).first()

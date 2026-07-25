@@ -11,9 +11,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from datetime import timedelta
 from apps.accounts.models import User
-from apps.orders.models import Order, OrderHistory
+from apps.orders.models import Order, OrderHistory, OrderTimeline, Attachment
 from apps.payments.models import Transaction, Wallet
 from apps.payments.services import WalletService
+from apps.messaging.models import Conversation, Message
 from .models import AdminActionLog, SystemSetting, SiteContent, Blog, PlatformStats, AdminNote, Sample
 from .serializers import (
     UserAdminSerializer, OrderAdminSerializer, TransactionAdminSerializer,
@@ -43,6 +44,36 @@ def admin_required(view_func):
             return render(request, 'access_denied.html')
         return view_func(request, *args, **kwargs)
     return wrapper
+
+
+@login_required
+@admin_required
+def admin_order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    
+    try:
+        conversation = Conversation.objects.get(order=order)
+        messages = conversation.messages.all().order_by('created_at')[:50]
+    except Conversation.DoesNotExist:
+        conversation = None
+        messages = []
+    
+    client_online = False
+    try:
+        from apps.orders.models import UserPresence
+        presence = UserPresence.objects.get(user=order.client)
+        client_online = presence.is_online
+    except:
+        pass
+    
+    context = {
+        'order': order,
+        'messages': messages,
+        'conversation': conversation,
+        'client_online': client_online,
+        'now': timezone.now(),
+    }
+    return render(request, 'admin/order-detail.html', context)
 
 
 @api_view(['GET'])
@@ -137,18 +168,18 @@ def priority_queue(request):
     urgent_orders = Order.objects.filter(
         status__in=['request', 'in_progress'],
         deadline__lte=six_hours
-    ).select_related('student')
+    ).select_related('client')
     
     medium_orders = Order.objects.filter(
         status__in=['request', 'in_progress'],
         deadline__gt=six_hours,
         deadline__lte=tomorrow
-    ).select_related('student')
+    ).select_related('client')
     
     normal_orders = Order.objects.filter(
         status__in=['request', 'in_progress'],
         deadline__gt=tomorrow
-    ).select_related('student')[:5]
+    ).select_related('client')[:5]
     
     items = []
     
@@ -156,7 +187,7 @@ def priority_queue(request):
         items.append({
             'id': order.id,
             'order_number': order.order_number,
-            'client_name': order.student.full_name if order.student else 'N/A',
+            'client_name': order.client.full_name if order.client else 'N/A',
             'deadline': order.deadline.strftime('%I:%M %p') if order.deadline else 'N/A',
             'urgency': 'high',
             'status': order.status
@@ -166,7 +197,7 @@ def priority_queue(request):
         items.append({
             'id': order.id,
             'order_number': order.order_number,
-            'client_name': order.student.full_name if order.student else 'N/A',
+            'client_name': order.client.full_name if order.client else 'N/A',
             'deadline': order.deadline.strftime('%I:%M %p') if order.deadline else 'N/A',
             'urgency': 'medium',
             'status': order.status
@@ -176,7 +207,7 @@ def priority_queue(request):
         items.append({
             'id': order.id,
             'order_number': order.order_number,
-            'client_name': order.student.full_name if order.student else 'N/A',
+            'client_name': order.client.full_name if order.client else 'N/A',
             'deadline': order.deadline.strftime('%I:%M %p') if order.deadline else 'N/A',
             'urgency': 'low',
             'status': order.status
@@ -352,7 +383,7 @@ def list_orders(request):
     status_filter = request.GET.get('status')
     search = request.GET.get('search')
     
-    orders = Order.objects.all().select_related('student', 'writer').order_by('-created_at')
+    orders = Order.objects.all().select_related('client', 'writer').order_by('-created_at')
     
     if status_filter:
         orders = orders.filter(status=status_filter)
@@ -360,8 +391,8 @@ def list_orders(request):
     if search:
         orders = orders.filter(
             models.Q(order_number__icontains=search) |
-            models.Q(student__email__icontains=search) |
-            models.Q(student__full_name__icontains=search) |
+            models.Q(client__email__icontains=search) |
+            models.Q(client__full_name__icontains=search) |
             models.Q(topic__icontains=search)
         )
     
@@ -387,7 +418,7 @@ def pending_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    orders = Order.objects.filter(status='request').select_related('student').order_by('deadline')
+    orders = Order.objects.filter(status='request').select_related('client').order_by('deadline')
     serializer = OrderAdminSerializer(orders, many=True)
     return Response(serializer.data)
 
@@ -398,7 +429,7 @@ def active_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    orders = Order.objects.filter(status='in_progress').select_related('student').order_by('deadline')
+    orders = Order.objects.filter(status='in_progress').select_related('client').order_by('deadline')
     serializer = OrderAdminSerializer(orders, many=True)
     return Response(serializer.data)
 
@@ -413,7 +444,7 @@ def overdue_orders(request):
     orders = Order.objects.filter(
         status__in=['request', 'in_progress'],
         deadline__lt=now
-    ).select_related('student').order_by('deadline')
+    ).select_related('client').order_by('deadline')
     
     serializer = OrderAdminSerializer(orders, many=True)
     return Response(serializer.data)
@@ -425,7 +456,7 @@ def completed_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    orders = Order.objects.filter(status='completed').select_related('student').order_by('-updated_at')
+    orders = Order.objects.filter(status='completed').select_related('client').order_by('-updated_at')
     serializer = OrderAdminSerializer(orders, many=True)
     return Response(serializer.data)
 
@@ -442,24 +473,13 @@ def search_orders(request):
     
     orders = Order.objects.filter(
         models.Q(order_number__icontains=query) |
-        models.Q(student__email__icontains=query) |
-        models.Q(student__full_name__icontains=query) |
+        models.Q(client__email__icontains=query) |
+        models.Q(client__full_name__icontains=query) |
         models.Q(topic__icontains=query)
-    ).select_related('student')[:20]
+    ).select_related('client')[:20]
     
     serializer = OrderAdminSerializer(orders, many=True)
     return Response({'results': serializer.data})
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def order_detail(request, order_id):
-    if not is_admin(request.user):
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    order = get_object_or_404(Order, id=order_id)
-    serializer = OrderAdminSerializer(order)
-    return Response(serializer.data)
 
 
 @api_view(['GET'])
@@ -483,7 +503,7 @@ def order_workspace(request, order_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def approve_order(request, order_id):
+def admin_accept_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
@@ -502,6 +522,15 @@ def approve_order(request, order_id):
         to_status='in_progress'
     )
     
+    OrderTimeline.objects.create(
+        order=order,
+        status='in_progress',
+        title='Order Accepted',
+        description='The order has been accepted and is now in progress',
+        icon='fa-check-circle',
+        color='green'
+    )
+    
     log_admin_action(
         admin=request.user,
         action_type='order_approve',
@@ -509,30 +538,51 @@ def approve_order(request, order_id):
         target_order=order
     )
     
-    return Response({'message': 'Order accepted and started'})
+    return Response({'success': True, 'message': 'Order accepted successfully'})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def reject_order(request, order_id):
+def admin_reject_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='request')
-    reason = request.data.get('reason', '').strip()
+    reason = request.data.get('reason', 'No reason provided')
     
-    order.status = 'cancelled'
-    order.cancelled_at = timezone.now()
-    order.cancellation_reason = reason
+    order.status = 'declined'
+    order.declined_at = timezone.now()
+    order.declined_by = request.user
+    order.declined_reason = reason
     order.save()
+    
+    try:
+        WalletService.credit(
+            wallet=order.client.wallet,
+            amount=order.total_price,
+            transaction_type='refund',
+            description=f'Refund for rejected order {order.order_number}',
+            order=order
+        )
+    except:
+        pass
     
     OrderHistory.objects.create(
         order=order,
         user=request.user,
-        action='reject',
+        action='decline',
         from_status='request',
-        to_status='cancelled',
+        to_status='declined',
         data={'reason': reason}
+    )
+    
+    OrderTimeline.objects.create(
+        order=order,
+        status='declined',
+        title='Order Declined',
+        description=f'Order declined: {reason}',
+        icon='fa-times-circle',
+        color='red'
     )
     
     log_admin_action(
@@ -543,21 +593,36 @@ def reject_order(request, order_id):
         details={'reason': reason}
     )
     
-    return Response({'message': 'Order rejected'})
+    return Response({'success': True, 'message': 'Order rejected successfully'})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def deliver_order(request, order_id):
+def admin_deliver_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='in_progress')
     
+    file = request.FILES.get('file')
+    if not file:
+        return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    attachment = Attachment.objects.create(
+        file=file,
+        filename=file.name,
+        file_size=file.size,
+        mime_type=file.content_type,
+        uploaded_by=request.user
+    )
+    
     order.status = 'awaiting_approval'
     order.delivered_at = timezone.now()
-    order.auto_approve_at = timezone.now() + timedelta(hours=48)
+    order.delivered_file = attachment
+    order.auto_approve_at = timezone.now() + timedelta(hours=Order.REVISION_WINDOW_HOURS)
     order.save()
+    
+    order.attachments.add(attachment)
     
     OrderHistory.objects.create(
         order=order,
@@ -567,6 +632,15 @@ def deliver_order(request, order_id):
         to_status='awaiting_approval'
     )
     
+    OrderTimeline.objects.create(
+        order=order,
+        status='awaiting_approval',
+        title='Order Delivered',
+        description='The order has been delivered and is awaiting client approval',
+        icon='fa-file-check',
+        color='purple'
+    )
+    
     log_admin_action(
         admin=request.user,
         action_type='order_deliver',
@@ -574,12 +648,12 @@ def deliver_order(request, order_id):
         target_order=order
     )
     
-    return Response({'message': 'Order delivered'})
+    return Response({'success': True, 'message': 'Order delivered successfully'})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def complete_order(request, order_id):
+def admin_approve_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
@@ -587,7 +661,20 @@ def complete_order(request, order_id):
     
     order.status = 'completed'
     order.completed_at = timezone.now()
+    order.escrow_released_at = timezone.now()
     order.save()
+    
+    if order.writer:
+        try:
+            WalletService.credit(
+                wallet=order.writer.wallet,
+                amount=order.total_price,
+                transaction_type='payout',
+                description=f'Payment for order {order.order_number}',
+                order=order
+            )
+        except:
+            pass
     
     OrderHistory.objects.create(
         order=order,
@@ -597,6 +684,15 @@ def complete_order(request, order_id):
         to_status='completed'
     )
     
+    OrderTimeline.objects.create(
+        order=order,
+        status='completed',
+        title='Order Completed',
+        description='The order has been completed and approved',
+        icon='fa-check-circle',
+        color='green'
+    )
+    
     log_admin_action(
         admin=request.user,
         action_type='order_complete',
@@ -604,12 +700,12 @@ def complete_order(request, order_id):
         target_order=order
     )
     
-    return Response({'message': 'Order completed'})
+    return Response({'success': True, 'message': 'Order approved successfully'})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def cancel_order(request, order_id):
+def admin_cancel_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
@@ -636,6 +732,15 @@ def cancel_order(request, order_id):
         data={'reason': reason}
     )
     
+    OrderTimeline.objects.create(
+        order=order,
+        status='cancelled',
+        title='Order Cancelled',
+        description=f'Order cancelled: {reason}',
+        icon='fa-ban',
+        color='red'
+    )
+    
     log_admin_action(
         admin=request.user,
         action_type='order_cancel',
@@ -644,12 +749,12 @@ def cancel_order(request, order_id):
         details={'reason': reason}
     )
     
-    return Response({'message': 'Order cancelled'})
+    return Response({'success': True, 'message': 'Order cancelled successfully'})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def request_revision(request, order_id):
+def admin_request_revision(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
@@ -659,8 +764,10 @@ def request_revision(request, order_id):
     if not reason:
         return Response({'error': 'Revision reason is required'}, status=status.HTTP_400_BAD_REQUEST)
     
-    order.status = 'revision'
+    order.status = 'in_progress'
+    order.revision_count += 1
     order.last_revision_requested_at = timezone.now()
+    order.auto_approve_at = None
     order.save()
     
     OrderHistory.objects.create(
@@ -668,8 +775,17 @@ def request_revision(request, order_id):
         user=request.user,
         action='revise',
         from_status='awaiting_approval',
-        to_status='revision',
+        to_status='in_progress',
         data={'reason': reason}
+    )
+    
+    OrderTimeline.objects.create(
+        order=order,
+        status='in_progress',
+        title='Revision Requested',
+        description=f'Revision requested: {reason}',
+        icon='fa-edit',
+        color='orange'
     )
     
     log_admin_action(
@@ -680,7 +796,7 @@ def request_revision(request, order_id):
         details={'reason': reason}
     )
     
-    return Response({'message': 'Revision requested'})
+    return Response({'success': True, 'message': 'Revision requested successfully'})
 
 
 @api_view(['GET'])
@@ -689,7 +805,7 @@ def refund_requests(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    orders = Order.objects.filter(status='refund_pending').select_related('student').order_by('-updated_at')
+    orders = Order.objects.filter(status='refund_pending').select_related('client').order_by('-updated_at')
     serializer = OrderAdminSerializer(orders, many=True)
     return Response(serializer.data)
 
@@ -708,7 +824,7 @@ def approve_refund(request, order_id):
     
     try:
         WalletService.credit(
-            wallet=order.student.wallet,
+            wallet=order.client.wallet,
             amount=order.total_price,
             transaction_type='refund',
             description=f'Refund for order {order.order_number}',
@@ -768,6 +884,93 @@ def deny_refund(request, order_id):
     )
     
     return Response({'message': 'Refund denied'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_message(request, order_id):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+    
+    order = get_object_or_404(Order, id=order_id)
+    content = request.data.get('content', '').strip()
+    
+    if not content:
+        return Response({'error': 'Message content is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    conversation, created = Conversation.objects.get_or_create(
+        order=order,
+        defaults={
+            'student': order.client,
+            'admin': request.user
+        }
+    )
+    
+    message = Message.objects.create(
+        conversation=conversation,
+        sender=request.user,
+        content=content,
+        message_type='text'
+    )
+    
+    conversation.last_message_at = timezone.now()
+    conversation.admin_last_seen = timezone.now()
+    conversation.save()
+    
+    return Response({
+        'success': True,
+        'message': {
+            'id': str(message.id),
+            'content': message.content,
+            'sender': str(request.user.id),
+            'sender_name': request.user.full_name or request.user.email,
+            'created_at': message.created_at.isoformat()
+        }
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_messages(request, order_id):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+    
+    order = get_object_or_404(Order, id=order_id)
+    
+    try:
+        conversation = Conversation.objects.get(order=order)
+        messages = conversation.messages.all().order_by('created_at')[:100]
+        
+        conversation.admin_last_seen = timezone.now()
+        conversation.save()
+        
+        return Response({
+            'messages': [{
+                'id': str(msg.id),
+                'content': msg.content,
+                'sender': str(msg.sender_id),
+                'sender_name': msg.sender.full_name or msg.sender.email,
+                'created_at': msg.created_at.isoformat(),
+                'is_admin': msg.sender_id == request.user.id
+            } for msg in messages]
+        })
+    except Conversation.DoesNotExist:
+        return Response({'messages': []})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_unread_count(request):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+    
+    conversations = Conversation.objects.filter(admin=request.user)
+    unread_count = 0
+    
+    for conv in conversations:
+        unread_count += conv.get_unread_count(request.user)
+    
+    return Response({'unread_count': unread_count})
 
 
 @api_view(['GET'])

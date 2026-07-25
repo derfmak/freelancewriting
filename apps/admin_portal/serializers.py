@@ -69,15 +69,15 @@ class UserAdminSerializer(serializers.ModelSerializer):
 
 
 class OrderAdminSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='student.full_name', default='N/A')
-    student_email = serializers.EmailField(source='student.email', default='N/A')
+    student_name = serializers.CharField(source='client.full_name', default='N/A')
+    student_email = serializers.EmailField(source='client.email', default='N/A')
     writer_name = serializers.CharField(source='writer.full_name', default='N/A')
     total = serializers.DecimalField(source='total_price', max_digits=10, decimal_places=2)
     
     class Meta:
         model = Order
         fields = [
-            'id', 'order_number', 'student', 'student_name', 'student_email',
+            'id', 'order_number', 'client', 'student_name', 'student_email',
             'writer', 'writer_name',
             'academic_level', 'paper_type', 'subject', 'topic', 'instructions',
             'pages', 'words', 'slides', 'sources_count', 'deadline', 'format',

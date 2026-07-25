@@ -4,7 +4,7 @@ from . import views
 app_name = 'admin_portal'
 
 urlpatterns = [
-    path('dashboard/', views.dashboard_stats, name='dashboard-stats'),
+    path('dashboard/stats/', views.dashboard_stats, name='dashboard-stats'),
     path('dashboard/priority/', views.priority_queue, name='priority-queue'),
     
     path('users/', views.list_users, name='list-users'),
@@ -15,19 +15,22 @@ urlpatterns = [
     path('users/search/', views.search_users, name='search-users'),
     
     path('orders/', views.list_orders, name='list-orders'),
-    path('orders/<uuid:order_id>/', views.order_detail, name='order-detail'),
+    path('orders/<uuid:order_id>/', views.admin_order_detail, name='admin-order-detail'),
     path('orders/<uuid:order_id>/workspace/', views.order_workspace, name='order-workspace'),
-    path('orders/<uuid:order_id>/approve/', views.approve_order, name='approve-order'),
-    path('orders/<uuid:order_id>/reject/', views.reject_order, name='reject-order'),
-    path('orders/<uuid:order_id>/deliver/', views.deliver_order, name='deliver-order'),
-    path('orders/<uuid:order_id>/complete/', views.complete_order, name='complete-order'),
-    path('orders/<uuid:order_id>/cancel/', views.cancel_order, name='cancel-order'),
-    path('orders/<uuid:order_id>/revision/', views.request_revision, name='request-revision'),
+    path('orders/<uuid:order_id>/accept/', views.admin_accept_order, name='admin-accept-order'),
+    path('orders/<uuid:order_id>/reject/', views.admin_reject_order, name='admin-reject-order'),
+    path('orders/<uuid:order_id>/deliver/', views.admin_deliver_order, name='admin-deliver-order'),
+    path('orders/<uuid:order_id>/approve/', views.admin_approve_order, name='admin-approve-order'),
+    path('orders/<uuid:order_id>/cancel/', views.admin_cancel_order, name='admin-cancel-order'),
+    path('orders/<uuid:order_id>/revision/', views.admin_request_revision, name='admin-request-revision'),
     path('orders/pending/', views.pending_orders, name='pending-orders'),
     path('orders/active/', views.active_orders, name='active-orders'),
     path('orders/overdue/', views.overdue_orders, name='overdue-orders'),
     path('orders/completed/', views.completed_orders, name='completed-orders'),
     path('orders/search/', views.search_orders, name='search-orders'),
+    
+    path('orders/<uuid:order_id>/messages/', views.get_messages, name='get-messages'),
+    path('orders/<uuid:order_id>/messages/send/', views.send_message, name='send-message'),
     
     path('refunds/', views.refund_requests, name='refund-requests'),
     path('refunds/<uuid:order_id>/approve/', views.approve_refund, name='approve-refund'),

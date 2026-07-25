@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
+from apps.admin_portal.views import admin_order_detail
 
 app_name = 'config'
 
@@ -75,6 +76,8 @@ urlpatterns = [
     path('admin/settings/', views.admin_settings, name='admin-settings'),
     path('admin/profile/', views.admin_profile, name='admin-profile'),
     path('admin/notifications/', views.admin_notifications, name='admin-notifications'),
+    
+    path('admin/orders/<uuid:order_id>/', admin_order_detail, name='admin-order-detail'),
     
     path('admin/', admin.site.urls),
     
