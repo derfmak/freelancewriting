@@ -18,7 +18,7 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f8fafc;
             color: #1e293b;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .container {
@@ -38,7 +38,7 @@
             position: sticky;
             top: 0;
             z-index: 50;
-            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3);
+            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.25);
             width: 100%;
         }
 
@@ -66,7 +66,7 @@
             height: 2.6rem;
             background: white;
             border-radius: 50%;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 700;
             letter-spacing: 0.05em;
             color: #059669;
@@ -83,7 +83,7 @@
             .logo {
                 width: 3rem;
                 height: 3rem;
-                font-size: 0.8rem;
+                font-size: 0.85rem;
             }
         }
 
@@ -492,14 +492,14 @@
         }
 
         .main-content {
-            min-height: calc(100vh - 4rem - 16rem);
+            min-height: calc(100vh - 4rem - 14rem);
             padding: 1rem 0;
             background: white;
         }
 
         @media (min-width: 768px) {
             .main-content {
-                min-height: calc(100vh - 4.5rem - 18rem);
+                min-height: calc(100vh - 4.5rem - 16rem);
                 padding: 1.5rem 0;
             }
         }
@@ -512,13 +512,7 @@
 
         .footer {
             background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-            padding: 1.5rem 0 1rem;
-        }
-
-        @media (min-width: 768px) {
-            .footer {
-                padding: 2rem 0 1.5rem;
-            }
+            padding: 2rem 0 1.5rem;
         }
 
         .footer-content {
@@ -529,54 +523,42 @@
         .footer-info {
             display: flex;
             justify-content: center;
-            gap: 1rem 2rem;
+            gap: 1.5rem 2.5rem;
             flex-wrap: wrap;
-            margin-bottom: 1rem;
-        }
-
-        @media (min-width: 768px) {
-            .footer-info {
-                gap: 2rem;
-                margin-bottom: 1.5rem;
-            }
+            margin-bottom: 1.5rem;
         }
 
         .footer-info-item {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.8);
+            gap: 0.6rem;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
         }
 
-        @media (min-width: 768px) {
+        @media (max-width: 640px) {
             .footer-info-item {
-                font-size: 0.85rem;
+                font-size: 0.75rem;
+                gap: 0.4rem;
             }
         }
 
         .footer-info-item i {
             color: #fbbf24;
-            font-size: 0.85rem;
-        }
-
-        @media (min-width: 768px) {
-            .footer-info-item i {
-                font-size: 1rem;
-            }
+            font-size: 1rem;
         }
 
         .footer-copyright {
             border-top: 1px solid rgba(255, 255, 255, 0.15);
-            padding-top: 1rem;
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.6);
+            padding-top: 1.5rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.65);
         }
 
-        @media (min-width: 768px) {
+        @media (max-width: 640px) {
             .footer-copyright {
-                font-size: 0.8rem;
-                padding-top: 1.5rem;
+                font-size: 0.7rem;
+                padding-top: 1rem;
             }
         }
 
@@ -700,44 +682,44 @@
         <header class="client-header">
             <div class="container">
                 <div class="header-content">
-                    <a href="/client/dashboard/" class="logo">AW</a>
-                    
-                    <nav class="client-nav">
+                    <a href="/client/dashboard/" class="logo" aria-label="AcademicWrite Home">AW</a>
+
+                    <nav class="client-nav" aria-label="Main navigation">
                         <a href="/client/dashboard/" class="{% if request.path == '/client/dashboard/' %}active{% endif %}">
-                            <i class="fas fa-th-large"></i>
+                            <i class="fas fa-th-large" aria-hidden="true"></i>
                             <span>Dashboard</span>
                         </a>
                         <a href="/client/orders/" class="{% if request.path == '/client/orders/' %}active{% endif %}">
-                            <i class="fas fa-file-alt"></i>
+                            <i class="fas fa-file-alt" aria-hidden="true"></i>
                             <span>My Orders</span>
                             <span class="nav-badge" id="ordersBadge" style="display:none;">0</span>
                         </a>
                         <a href="/client/orders/new/" class="{% if request.path == '/client/orders/new/' %}active{% endif %}">
-                            <i class="fas fa-plus"></i>
+                            <i class="fas fa-plus" aria-hidden="true"></i>
                             <span>New Order</span>
                         </a>
                         <a href="/client/wallet/" class="{% if request.path == '/client/wallet/' %}active{% endif %}">
-                            <i class="fas fa-wallet"></i>
+                            <i class="fas fa-wallet" aria-hidden="true"></i>
                             <span>Wallet</span>
                         </a>
                         <a href="/client/messages/" class="{% if request.path == '/client/messages/' %}active{% endif %}">
-                            <i class="fas fa-envelope"></i>
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
                             <span>Messages</span>
                             <span class="nav-badge" id="messagesBadge" style="display:none;">0</span>
                         </a>
                     </nav>
 
                     <div class="auth-section">
-                        <button class="notification-bell" id="notificationBell">
-                            <i class="fas fa-bell"></i>
+                        <button class="notification-bell" id="notificationBell" aria-label="Notifications">
+                            <i class="fas fa-bell" aria-hidden="true"></i>
                             <span class="notification-badge hidden" id="notificationBadge">0</span>
                         </button>
-                        
+
                         <div class="user-menu">
-                            <div class="user-profile" id="userProfileButton">
+                            <div class="user-profile" id="userProfileButton" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
                                 <div class="profile-image" id="profileImageDisplay">
                                     {% if user.profile_image %}
-                                        <img src="{{ user.profile_image.url }}" alt="Profile">
+                                        <img src="{{ user.profile_image.url }}" alt="Profile photo of {{ user.full_name }}">
                                     {% else %}
                                         <span>{{ user.full_name|first|upper }}</span>
                                     {% endif %}
@@ -746,45 +728,45 @@
                                     <span class="profile-name">{{ user.full_name|default:user.email|truncatechars:15 }}</span>
                                     <span class="profile-role">Client</span>
                                 </div>
-                                <i class="fas fa-chevron-down fa-xs text-white opacity-60"></i>
+                                <i class="fas fa-chevron-down fa-xs text-white opacity-60" aria-hidden="true"></i>
                             </div>
-                            
-                            <div class="user-menu-dropdown" id="userMenuDropdown">
-                                <a href="/client/profile/" class="user-menu-item"><i class="fas fa-user"></i> Profile</a>
-                                <a href="/client/settings/" class="user-menu-item"><i class="fas fa-cog"></i> Settings</a>
-                                <div class="user-menu-divider"></div>
-                                <a href="#" class="user-menu-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+
+                            <div class="user-menu-dropdown" id="userMenuDropdown" role="menu">
+                                <a href="/client/profile/" class="user-menu-item" role="menuitem"><i class="fas fa-user" aria-hidden="true"></i> Profile</a>
+                                <a href="/client/settings/" class="user-menu-item" role="menuitem"><i class="fas fa-cog" aria-hidden="true"></i> Settings</a>
+                                <div class="user-menu-divider" role="separator"></div>
+                                <a href="#" class="user-menu-item" id="logoutBtn" role="menuitem"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout</a>
                             </div>
                         </div>
 
-                        <button class="mobile-menu-button" id="mobileMenuButton">
-                            <i class="fas fa-bars"></i>
+                        <button class="mobile-menu-button" id="mobileMenuButton" aria-label="Toggle menu">
+                            <i class="fas fa-bars" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <div class="mobile-overlay" id="mobileOverlay"></div>
+        <div class="mobile-overlay" id="mobileOverlay" aria-hidden="true"></div>
 
-        <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Mobile navigation">
             <nav class="mobile-nav">
-                <a href="/client/dashboard/"><i class="fas fa-th-large"></i> Dashboard</a>
-                <a href="/client/orders/"><i class="fas fa-file-alt"></i> My Orders</a>
-                <a href="/client/orders/new/"><i class="fas fa-plus"></i> New Order</a>
-                <a href="/client/wallet/"><i class="fas fa-wallet"></i> Wallet</a>
-                <a href="/client/messages/"><i class="fas fa-envelope"></i> Messages</a>
-                <div class="mobile-divider"></div>
-                <a href="/client/profile/"><i class="fas fa-user"></i> Profile</a>
-                <a href="/client/settings/"><i class="fas fa-cog"></i> Settings</a>
-                <div class="mobile-divider"></div>
-                <div class="mobile-logout" id="mobileLogoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                <a href="/client/dashboard/"><i class="fas fa-th-large" aria-hidden="true"></i> Dashboard</a>
+                <a href="/client/orders/"><i class="fas fa-file-alt" aria-hidden="true"></i> My Orders</a>
+                <a href="/client/orders/new/"><i class="fas fa-plus" aria-hidden="true"></i> New Order</a>
+                <a href="/client/wallet/"><i class="fas fa-wallet" aria-hidden="true"></i> Wallet</a>
+                <a href="/client/messages/"><i class="fas fa-envelope" aria-hidden="true"></i> Messages</a>
+                <div class="mobile-divider" role="separator"></div>
+                <a href="/client/profile/"><i class="fas fa-user" aria-hidden="true"></i> Profile</a>
+                <a href="/client/settings/"><i class="fas fa-cog" aria-hidden="true"></i> Settings</a>
+                <div class="mobile-divider" role="separator"></div>
+                <div class="mobile-logout" id="mobileLogoutBtn" role="button" tabindex="0">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
                 </div>
             </nav>
         </div>
 
-        <main class="main-content">
+        <main class="main-content" id="mainContent">
             <div class="container">
                 {% if messages %}
                     <div class="mb-4 sm:mb-6">
@@ -795,25 +777,21 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                
+
                 {% block content %}{% endblock %}
             </div>
         </main>
 
-        <footer class="footer">
+        <footer class="footer" role="contentinfo">
             <div class="container">
                 <div class="footer-content">
                     <div class="footer-info">
                         <div class="footer-info-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Nairobi, Kenya</span>
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
+                            <span>fredrickwambua129@gmail.com</span>
                         </div>
                         <div class="footer-info-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>fredrickwambua@gmail.com</span>
-                        </div>
-                        <div class="footer-info-item">
-                            <i class="fas fa-phone"></i>
+                            <i class="fas fa-phone" aria-hidden="true"></i>
                             <span>0740618550</span>
                         </div>
                     </div>
@@ -824,20 +802,20 @@
             </div>
         </footer>
 
-        <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay">
+        <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay" role="dialog" aria-modal="true">
             <div class="bg-white max-w-md w-full mx-4 p-4 sm:p-6" id="modalContent"></div>
         </div>
 
-        <div class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" id="loadingOverlay">
+        <div class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" id="loadingOverlay" aria-hidden="true">
             <div class="bg-white p-6 rounded-lg">
-                <div class="w-10 h-10 border-4 border-green-600 border-t-transparent animate-spin"></div>
+                <div class="w-10 h-10 border-4 border-green-600 border-t-transparent animate-spin" role="status" aria-label="Loading"></div>
             </div>
         </div>
         {% else %}
         <div class="min-h-screen flex items-center justify-center bg-gray-50">
             <div class="max-w-md w-full bg-white border border-gray-200 p-6 sm:p-8 text-center">
                 <div class="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 text-red-600 flex items-center justify-center text-3xl sm:text-4xl mx-auto mb-4">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 </div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
                 <p class="text-sm sm:text-base text-gray-600 mb-6">You must be logged in as a client to access this page.</p>
@@ -856,7 +834,7 @@
             const mobileMenuButton = document.getElementById('mobileMenuButton');
             const mobileMenu = document.getElementById('mobileMenu');
             const mobileOverlay = document.getElementById('mobileOverlay');
-            
+
             function closeMobileMenu() {
                 mobileMenu.classList.remove('open');
                 mobileOverlay.classList.remove('show');
@@ -866,6 +844,7 @@
                     icon.classList.remove('fa-times');
                     icon.classList.add('fa-bars');
                 }
+                mobileMenuButton.setAttribute('aria-expanded', 'false');
             }
 
             function openMobileMenu() {
@@ -877,6 +856,7 @@
                     icon.classList.remove('fa-bars');
                     icon.classList.add('fa-times');
                 }
+                mobileMenuButton.setAttribute('aria-expanded', 'true');
             }
 
             if (mobileMenuButton && mobileMenu) {
@@ -888,16 +868,16 @@
                         openMobileMenu();
                     }
                 });
-                
+
                 if (mobileOverlay) {
                     mobileOverlay.addEventListener('click', function() {
                         closeMobileMenu();
                     });
                 }
-                
+
                 document.addEventListener('click', function(e) {
-                    if (mobileMenu.classList.contains('open') && 
-                        !mobileMenu.contains(e.target) && 
+                    if (mobileMenu.classList.contains('open') &&
+                        !mobileMenu.contains(e.target) &&
                         !mobileMenuButton.contains(e.target)) {
                         closeMobileMenu();
                     }
@@ -918,16 +898,19 @@
 
             const userProfileButton = document.getElementById('userProfileButton');
             const userMenuDropdown = document.getElementById('userMenuDropdown');
-            
+
             if (userProfileButton && userMenuDropdown) {
                 userProfileButton.addEventListener('click', function(e) {
                     e.stopPropagation();
+                    const isOpen = userMenuDropdown.classList.contains('show');
                     userMenuDropdown.classList.toggle('show');
+                    userProfileButton.setAttribute('aria-expanded', !isOpen);
                 });
-                
+
                 document.addEventListener('click', function(e) {
                     if (!userMenuDropdown.contains(e.target) && !userProfileButton.contains(e.target)) {
                         userMenuDropdown.classList.remove('show');
+                        userProfileButton.setAttribute('aria-expanded', 'false');
                     }
                 });
             }
@@ -978,7 +961,7 @@
         async function loadCounts() {
             try {
                 const response = await api.get('/client/counts/');
-                
+
                 const ordersBadge = document.getElementById('ordersBadge');
                 if (response.active_orders > 0) {
                     ordersBadge.textContent = response.active_orders > 9 ? '9+' : response.active_orders;
@@ -986,7 +969,7 @@
                 } else {
                     ordersBadge.style.display = 'none';
                 }
-                
+
                 const messagesBadge = document.getElementById('messagesBadge');
                 if (response.unread_messages > 0) {
                     messagesBadge.textContent = response.unread_messages > 9 ? '9+' : response.unread_messages;
@@ -1037,7 +1020,7 @@
             }
         });
     </script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
