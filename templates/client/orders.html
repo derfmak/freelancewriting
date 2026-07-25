@@ -1,56 +1,66 @@
-{% extends "student_base.html" %}
+{% extends "client_base.html" %}
 
-{% block title %}My Orders - Academic Writing Platform{% endblock %}
+{% block title %}My Orders - AcademicWrite{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-    
-    <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900">My Orders</h1>
-        <a href="/student/orders/new/" class="btn btn-primary">
+<div class="container mx-auto px-4 py-6 sm:py-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">My Orders</h1>
+            <p class="text-gray-600 text-sm sm:text-base mt-1">Manage and track all your academic orders</p>
+        </div>
+        <a href="/client/orders/new/" class="bg-green-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 font-medium hover:bg-green-700 transition-colors text-sm sm:text-base w-full sm:w-auto text-center">
             <i class="fas fa-plus mr-2"></i>New Order
         </a>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm p-4">
-        <div class="flex space-x-2 overflow-x-auto pb-2" id="status-filters">
-            <button class="px-4 py-2 rounded-full text-sm font-medium bg-blue-600 text-white" data-status="all">All</button>
-            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="pending">Pending</button>
-            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="ongoing">Ongoing</button>
-            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="awaiting_review">Awaiting Review</button>
-            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="completed">Completed</button>
-            <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="cancelled">Cancelled</button>
+    <div class="bg-white border border-gray-200 p-3 sm:p-4">
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div class="flex-1 relative">
+                <input type="text" id="order-search-input" placeholder="Search orders by topic, order number..." class="w-full border border-gray-300 px-4 py-2.5 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm">
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div id="search-suggestions" class="absolute top-full left-0 right-0 bg-white border border-gray-200 shadow-lg z-50 hidden max-h-64 overflow-y-auto"></div>
+            </div>
+            <div class="flex flex-wrap gap-2 overflow-x-auto pb-2 sm:pb-0" id="status-filters">
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-green-600 text-white whitespace-nowrap" data-status="all">All</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="request">Request</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="in_progress">In Progress</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="completed">Completed</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="cancelled">Cancelled</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="revision">Revision</button>
+            </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div class="bg-white border border-gray-200 overflow-hidden mt-6">
         <div class="overflow-x-auto">
-            <table class="table">
+            <table class="w-full text-left text-xs sm:text-sm">
                 <thead>
-                    <tr>
-                        <th>Order #</th>
-                        <th>Topic</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Pages</th>
-                        <th>Deadline</th>
-                        <th>Total</th>
-                        <th>Progress</th>
-                        <th>Actions</th>
+                    <tr class="bg-gray-50 border-b border-gray-200">
+                        <th class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-500">Order</th>
+                        <th class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-500 hidden sm:table-cell">Topic</th>
+                        <th class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-500">Status</th>
+                        <th class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-500 hidden md:table-cell">Pages</th>
+                        <th class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-500 hidden lg:table-cell">Deadline</th>
+                        <th class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-500">Total</th>
+                        <th class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-500 hidden sm:table-cell">Progress</th>
+                        <th class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-500">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="orders-list">
                     <tr>
-                        <td colspan="9" class="text-center py-8 text-gray-500">Loading orders...</td>
+                        <td colspan="8" class="text-center py-6 sm:py-8 text-gray-500 text-sm">Loading orders...</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="p-4 border-t" id="pagination">
-            <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-600" id="pagination-info"></div>
-                <div class="flex space-x-2" id="pagination-buttons"></div>
+        <div class="p-3 sm:p-4 border-t border-gray-200" id="pagination">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="text-xs sm:text-sm text-gray-600" id="pagination-info"></div>
+                <div class="flex flex-wrap gap-1 sm:gap-2" id="pagination-buttons"></div>
             </div>
         </div>
     </div>
@@ -59,43 +69,130 @@
 <script>
 let currentPage = 1;
 let currentStatus = 'all';
+let currentSearch = '';
 let totalPages = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('#status-filters button').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('#status-filters button').forEach(b => {
-                b.classList.remove('bg-blue-600', 'text-white');
+                b.classList.remove('bg-green-600', 'text-white');
                 b.classList.add('bg-gray-100', 'text-gray-700');
             });
             
             this.classList.remove('bg-gray-100', 'text-gray-700');
-            this.classList.add('bg-blue-600', 'text-white');
+            this.classList.add('bg-green-600', 'text-white');
             
             currentStatus = this.dataset.status;
             currentPage = 1;
             loadOrders();
         });
     });
+
+    const searchInput = document.getElementById('order-search-input');
+    const suggestionsContainer = document.getElementById('search-suggestions');
+    let debounceTimer;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+            currentSearch = query;
+            
+            if (query.length < 2) {
+                suggestionsContainer.style.display = 'none';
+                if (query.length === 0) {
+                    currentPage = 1;
+                    loadOrders();
+                }
+                return;
+            }
+            
+            suggestionsContainer.innerHTML = '<div class="px-4 py-2 text-gray-500 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Searching...</div>';
+            suggestionsContainer.style.display = 'block';
+            
+            debounceTimer = setTimeout(function() {
+                fetch('/api/v1/client/orders/search/?q=' + encodeURIComponent(query))
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('Search failed');
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.suggestions && data.suggestions.length > 0) {
+                            let html = '';
+                            data.suggestions.forEach(function(order) {
+                                html += '<a href="/client/orders/' + order.id + '/" class="block px-4 py-2 hover:bg-gray-50 border-b border-gray-100">';
+                                html += '<div class="font-medium text-gray-800 text-sm">' + (order.order_number || 'Order #' + order.id) + '</div>';
+                                html += '<div class="text-xs text-gray-500">' + (order.topic || 'No topic') + '</div>';
+                                html += '</a>';
+                            });
+                            suggestionsContainer.innerHTML = html;
+                            suggestionsContainer.style.display = 'block';
+                        } else {
+                            suggestionsContainer.innerHTML = '<div class="px-4 py-2 text-gray-500 text-sm">No orders found</div>';
+                            suggestionsContainer.style.display = 'block';
+                        }
+                        
+                        currentPage = 1;
+                        loadOrders();
+                    })
+                    .catch(function() {
+                        suggestionsContainer.style.display = 'none';
+                        currentPage = 1;
+                        loadOrders();
+                    });
+            }, 300);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!suggestionsContainer.contains(e.target) && e.target !== searchInput) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const firstLink = suggestionsContainer.querySelector('a');
+                if (firstLink) {
+                    window.location.href = firstLink.href;
+                }
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+    }
     
     loadOrders();
 });
 
 async function loadOrders() {
     try {
-        const params = { page: currentPage };
+        const params = new URLSearchParams({ page: currentPage });
         if (currentStatus !== 'all') {
-            params.status = currentStatus;
+            params.append('status', currentStatus);
+        }
+        if (currentSearch && currentSearch.length >= 2) {
+            params.append('search', currentSearch);
         }
         
-        const response = await api.get('/orders/', params);
+        const response = await fetch('/api/v1/client/orders/?' + params.toString(), {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
         
-        if (!response.results || response.results.length === 0) {
+        if (!response.ok) {
+            throw new Error('Failed to load orders');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.results || data.results.length === 0) {
             document.getElementById('orders-list').innerHTML = `
                 <tr>
-                    <td colspan="9" class="text-center py-8 text-gray-500">
+                    <td colspan="8" class="text-center py-6 sm:py-8 text-gray-500 text-sm">
                         No orders found
-                        <a href="/student/orders/new/" class="block mt-2 text-blue-600">Create your first order</a>
+                        <a href="/client/orders/new/" class="block mt-2 text-green-600 hover:text-green-700">Create your first order</a>
                     </td>
                 </tr>
             `;
@@ -103,53 +200,86 @@ async function loadOrders() {
             return;
         }
         
-        displayOrders(response.results);
+        displayOrders(data.results);
         
-        totalPages = Math.ceil(response.total / response.page_size) || 1;
-        updatePagination(response.total, response.page, response.page_size);
+        totalPages = Math.ceil(data.total / data.page_size) || 1;
+        updatePagination(data.total, data.page, data.page_size);
+        document.getElementById('pagination').classList.remove('hidden');
         
     } catch (error) {
+        console.error('Failed to load orders:', error);
         document.getElementById('orders-list').innerHTML = `
             <tr>
-                <td colspan="9" class="text-center py-8 text-red-500">
-                    Failed to load orders. Please try again.
+                <td colspan="8" class="text-center py-6 sm:py-8 text-red-500 text-sm">
+                    Unable to load orders. Please try again.
                 </td>
             </tr>
         `;
     }
 }
 
+function getStatusClass(status) {
+    const statusMap = {
+        'request': 'bg-yellow-100 text-yellow-700',
+        'in_progress': 'bg-blue-100 text-blue-700',
+        'completed': 'bg-green-100 text-green-700',
+        'cancelled': 'bg-red-100 text-red-700',
+        'revision': 'bg-purple-100 text-purple-700'
+    };
+    return statusMap[status] || 'bg-gray-100 text-gray-700';
+}
+
+function getStatusLabel(status) {
+    const labelMap = {
+        'request': 'Request',
+        'in_progress': 'In Progress',
+        'completed': 'Completed',
+        'cancelled': 'Cancelled',
+        'revision': 'Revision'
+    };
+    return labelMap[status] || status.replace('_', ' ');
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function formatCurrency(amount) {
+    return '$' + parseFloat(amount || 0).toFixed(2);
+}
+
 function displayOrders(orders) {
     const tbody = document.getElementById('orders-list');
     
     tbody.innerHTML = orders.map(order => `
-        <tr>
-            <td class="font-medium">${order.order_number || 'N/A'}</td>
-            <td>${order.topic.substring(0, 40)}${order.topic.length > 40 ? '...' : ''}</td>
-            <td>${order.paper_type.replace('_', ' ')}</td>
-            <td><span class="status-badge status-${order.status}">${order.status.replace('_', ' ')}</span></td>
-            <td>${order.pages}</td>
-            <td>${new Date(order.deadline).toLocaleDateString()}</td>
-            <td>$${parseFloat(order.total_price).toFixed(2)}</td>
-            <td>
+        <tr class="border-b border-gray-100 hover:bg-gray-50">
+            <td class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-800 text-xs sm:text-sm">
+                <a href="/client/orders/${order.id}/" class="hover:text-green-600">${order.order_number || 'N/A'}</a>
+            </td>
+            <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden sm:table-cell">
+                ${order.topic ? order.topic.substring(0, 40) : 'No topic'}${order.topic && order.topic.length > 40 ? '...' : ''}
+            </td>
+            <td class="px-3 sm:px-4 py-2.5 sm:py-3">
+                <span class="text-xs px-2 py-1 ${getStatusClass(order.status)} rounded">${getStatusLabel(order.status)}</span>
+            </td>
+            <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden md:table-cell">${order.pages || 0}</td>
+            <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden lg:table-cell">${formatDate(order.deadline)}</td>
+            <td class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-800 text-xs sm:text-sm">${formatCurrency(order.total_price)}</td>
+            <td class="px-3 sm:px-4 py-2.5 sm:py-3 hidden sm:table-cell">
                 <div class="flex items-center space-x-2">
-                    <div class="progress-bar w-16">
-                        <div class="progress-fill" style="width: ${order.progress_percentage || 0}%"></div>
+                    <div class="w-16 sm:w-20 h-1.5 bg-gray-200 rounded">
+                        <div class="h-1.5 bg-green-600 rounded" style="width: ${order.progress_percentage || 0}%"></div>
                     </div>
                     <span class="text-xs text-gray-600">${order.progress_percentage || 0}%</span>
                 </div>
             </td>
-            <td>
-                <a href="/student/orders/${order.id}/" class="text-blue-600 hover:underline text-sm">View</a>
-                ${order.status === 'awaiting_review' ? 
-                    `<button class="text-green-600 hover:underline text-sm ml-2 approve-btn" data-id="${order.id}">Approve</button>` : ''}
+            <td class="px-3 sm:px-4 py-2.5 sm:py-3">
+                <a href="/client/orders/${order.id}/" class="text-green-600 hover:text-green-700 text-xs sm:text-sm">View</a>
             </td>
         </tr>
     `).join('');
-    
-    document.querySelectorAll('.approve-btn').forEach(btn => {
-        btn.addEventListener('click', () => approveOrder(btn.dataset.id));
-    });
 }
 
 function updatePagination(total, page, pageSize) {
@@ -168,15 +298,15 @@ function updatePagination(total, page, pageSize) {
     let buttons = '';
     
     if (page > 1) {
-        buttons += `<button class="pagination-item" data-page="${page - 1}">Previous</button>`;
+        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded hover:bg-gray-50" data-page="${page - 1}">Previous</button>`;
     }
     
     for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
-        buttons += `<button class="pagination-item ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border ${i === page ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 hover:bg-gray-50'}" data-page="${i}">${i}</button>`;
     }
     
     if (page < totalPages) {
-        buttons += `<button class="pagination-item" data-page="${page + 1}">Next</button>`;
+        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded hover:bg-gray-50" data-page="${page + 1}">Next</button>`;
     }
     
     buttonsContainer.innerHTML = buttons;
@@ -185,21 +315,9 @@ function updatePagination(total, page, pageSize) {
         btn.addEventListener('click', function() {
             currentPage = parseInt(this.dataset.page);
             loadOrders();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
-}
-
-async function approveOrder(orderId) {
-    try {
-        await api.post(`/orders/${orderId}/action/`, {
-            action: 'approve'
-        });
-        
-        loadOrders();
-        
-    } catch (error) {
-        alert('Failed to approve order');
-    }
 }
 </script>
 {% endblock %}

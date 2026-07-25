@@ -1,13 +1,24 @@
-{% extends "student_base.html" %}
+{% extends "client_base.html" %}
 
-{% block title %}New Order - Student Portal{% endblock %}
+{% block title %}New Order - AcademicWrite{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-6 sm:py-8">
     <div class="max-w-4xl mx-auto">
-        <div class="bg-white border border-gray-200 p-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Place <span class="text-green-600">New Order</span></h1>
-            <p class="text-gray-600 mb-8">Fill in the details below to place your order</p>
+        <div class="bg-white border border-gray-200 p-4 sm:p-6 md:p-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Place New Order</h1>
+            <p class="text-gray-600 text-sm sm:text-base mb-6 sm:mb-8">Fill in the details below to place your order</p>
+
+            <div id="priceError" class="hidden bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700" id="priceErrorMessage">Unable to calculate price. Please check your inputs.</p>
+                    </div>
+                </div>
+            </div>
 
             <div id="verificationBanner" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
                 <div class="flex">
@@ -21,9 +32,9 @@
             </div>
 
             <form id="orderForm" enctype="multipart/form-data" class="space-y-6">
-                <div class="grid md:grid-cols-2 gap-6">
+                <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Level</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Level <span class="text-red-500">*</span></label>
                         <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="academicLevel" required>
                             <option value="">Select level</option>
                             <option value="high_school">High School</option>
@@ -34,73 +45,94 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Paper Type</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Paper Type <span class="text-red-500">*</span></label>
                         <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="paperType" required>
                             <option value="">Select type</option>
                             <option value="essay">Essay</option>
                             <option value="research_paper">Research Paper</option>
-                            <option value="term_paper">Term Paper</option>
-                            <option value="thesis">Thesis</option>
                             <option value="dissertation">Dissertation</option>
+                            <option value="thesis">Thesis</option>
                             <option value="case_study">Case Study</option>
-                            <option value="coursework">Coursework</option>
-                            <option value="lab_report">Lab Report</option>
-                            <option value="book_review">Book Review</option>
-                            <option value="article">Article</option>
+                            <option value="literature_review">Literature Review</option>
+                            <option value="article_review">Article Review</option>
+                            <option value="book_report">Book Report</option>
+                            <option value="speech">Speech</option>
+                            <option value="presentation">Presentation</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="subject" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject <span class="text-red-500">*</span></label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="subject" required placeholder="e.g., Psychology, History, Mathematics">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Topic</label>
-                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="topic" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Topic <span class="text-red-500">*</span></label>
+                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="topic" required placeholder="Your paper topic">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Instructions</label>
-                    <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="instructions" rows="6" required></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Instructions <span class="text-red-500">*</span></label>
+                    <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="instructions" rows="6" required placeholder="Detailed instructions for your order..."></textarea>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-6">
+                <div id="slidesSection" class="hidden">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Pages</label>
-                        <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="pages" value="1" min="1" required>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Number of Slides <span class="text-red-500">*</span></label>
+                        <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="slides" min="1" value="5" placeholder="Number of slides">
+                        <p class="text-xs text-gray-500 mt-1">$8.00 per slide, fixed price regardless of academic level</p>
                     </div>
+                </div>
 
+                <div id="paperFields">
+                    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Pages</label>
+                            <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="pages" value="1" min="0.5" step="0.5">
+                            <p class="text-xs text-gray-500 mt-1">Minimum 0.5 pages</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Words</label>
+                            <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="words" value="275" min="1">
+                            <p class="text-xs text-gray-500 mt-1">Minimum 1 word</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Spacing</label>
+                            <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="spacing">
+                                <option value="single">Single (550 words/page)</option>
+                                <option value="one_point_five">1.5 (367 words/page)</option>
+                                <option value="double" selected>Double (275 words/page)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Sources</label>
                         <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="sources" value="5" min="0">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Deadline</label>
-                        <input type="date" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="deadline" required>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Deadline <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="deadline" required>
+                        <p class="text-xs text-gray-500 mt-1">Minimum 12 hours from now</p>
                     </div>
-                </div>
 
-                <div class="grid md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Citation Style</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Citation Style <span class="text-red-500">*</span></label>
                         <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="format" required>
                             <option value="apa">APA (7th Edition)</option>
                             <option value="mla">MLA (9th Edition)</option>
                             <option value="chicago">Chicago</option>
                             <option value="harvard">Harvard</option>
+                            <option value="turabian">Turabian</option>
+                            <option value="vancouver">Vancouver</option>
+                            <option value="oscola">OSCOLA</option>
                             <option value="ieee">IEEE</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Writer Level</label>
-                        <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="writerLevel">
-                            <option value="any">Any writer</option>
-                            <option value="master">Master's level (+$5/page)</option>
-                            <option value="phd">PhD level (+$10/page)</option>
                         </select>
                     </div>
                 </div>
@@ -145,7 +177,7 @@
 
                 <div class="border-t border-gray-200 pt-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">Additional Services</h3>
-                    <div class="grid md:grid-cols-2 gap-4">
+                    <div class="grid sm:grid-cols-2 gap-3 sm:gap-4">
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="plagiarismReport">
                             <span class="text-sm text-gray-700">Plagiarism Report (+$10.00)</span>
@@ -165,16 +197,43 @@
                     </div>
                 </div>
 
-                <div class="bg-gray-50 border border-gray-200 p-6">
-                    <div class="flex justify-between items-center">
-                        <span class="text-lg font-medium text-gray-700">Total Price:</span>
-                        <span class="text-3xl font-bold text-green-600" id="totalPrice">$0.00</span>
+                <div class="bg-gray-50 border border-gray-200 p-4 sm:p-6">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 pb-4 border-b border-gray-200">
+                        <div>
+                            <p class="text-xs text-gray-500">Base Price</p>
+                            <p class="text-sm font-semibold text-gray-700" id="displayBasePrice">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Level Multiplier</p>
+                            <p class="text-sm font-semibold text-gray-700" id="displayLevelMultiplier">1.00x</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Level Adjusted</p>
+                            <p class="text-sm font-semibold text-gray-700" id="displayLevelAdjusted">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Urgency Multiplier</p>
+                            <p class="text-sm font-semibold text-gray-700" id="displayUrgencyMultiplier">1.00x</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Pages</p>
+                            <p class="text-sm font-semibold text-gray-700" id="displayPages">0</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Words</p>
+                            <p class="text-sm font-semibold text-gray-700" id="displayWords">0</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <span class="text-base sm:text-lg font-medium text-gray-700">Total Price:</span>
+                        <span class="text-2xl sm:text-3xl font-bold text-green-600" id="totalPrice">$0.00</span>
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                    <a href="/student/orders/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-3">Cancel</a>
-                    <button type="submit" class="bg-green-600 text-white hover:bg-green-700 transition-colors px-6 py-3" id="submitBtn">Place Order</button>
+                <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
+                    <a href="/client/orders/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-3 text-center">Cancel</a>
+                    <button type="submit" class="bg-green-600 text-white hover:bg-green-700 transition-colors px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed" id="submitBtn">Place Order</button>
                 </div>
             </form>
         </div>
@@ -184,20 +243,86 @@
 <script>
 let filesToUpload = [];
 let verifiedFiles = [];
+let priceData = null;
+let priceUpdateTimeout = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    const priceInputs = ['academicLevel', 'pages', 'writerLevel', 'plagiarismReport', 'abstract', 'proofreading', 'onePageSummary'];
+    setDefaultDeadline();
+    
+    document.getElementById('paperType').addEventListener('change', function() {
+        togglePaperTypeFields(this.value);
+        clearTimeout(priceUpdateTimeout);
+        priceUpdateTimeout = setTimeout(calculatePrice, 300);
+    });
+    
+    const priceInputs = ['academicLevel', 'pages', 'words', 'spacing', 'deadline', 'slides'];
     priceInputs.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
-            element.addEventListener('change', calculatePrice);
+            element.addEventListener('change', function() {
+                clearTimeout(priceUpdateTimeout);
+                priceUpdateTimeout = setTimeout(calculatePrice, 300);
+            });
             if (element.type === 'number') {
-                element.addEventListener('input', calculatePrice);
+                element.addEventListener('input', function() {
+                    clearTimeout(priceUpdateTimeout);
+                    priceUpdateTimeout = setTimeout(calculatePrice, 300);
+                });
+            }
+            if (element.type === 'datetime-local') {
+                element.addEventListener('change', function() {
+                    clearTimeout(priceUpdateTimeout);
+                    priceUpdateTimeout = setTimeout(calculatePrice, 300);
+                });
             }
         }
     });
     
-    calculatePrice();
+    document.getElementById('pages').addEventListener('input', function() {
+        const pages = parseFloat(this.value) || 0;
+        const spacing = document.getElementById('spacing').value;
+        if (pages > 0) {
+            const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
+            const words = Math.round(pages * (wordsPerPage[spacing] || 275));
+            document.getElementById('words').value = words;
+        }
+        clearTimeout(priceUpdateTimeout);
+        priceUpdateTimeout = setTimeout(calculatePrice, 300);
+    });
+    
+    document.getElementById('words').addEventListener('input', function() {
+        const words = parseInt(this.value) || 0;
+        const spacing = document.getElementById('spacing').value;
+        if (words > 0) {
+            const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
+            const pages = words / (wordsPerPage[spacing] || 275);
+            document.getElementById('pages').value = pages.toFixed(1);
+        }
+        clearTimeout(priceUpdateTimeout);
+        priceUpdateTimeout = setTimeout(calculatePrice, 300);
+    });
+    
+    document.getElementById('spacing').addEventListener('change', function() {
+        const words = parseInt(document.getElementById('words').value) || 0;
+        const pages = parseFloat(document.getElementById('pages').value) || 0;
+        if (words > 0) {
+            const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
+            const newPages = words / (wordsPerPage[this.value] || 275);
+            document.getElementById('pages').value = newPages.toFixed(1);
+        } else if (pages > 0) {
+            const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
+            const newWords = Math.round(pages * (wordsPerPage[this.value] || 275));
+            document.getElementById('words').value = newWords;
+        }
+        clearTimeout(priceUpdateTimeout);
+        priceUpdateTimeout = setTimeout(calculatePrice, 300);
+    });
+
+    document.getElementById('deadline').addEventListener('change', function() {
+        validateDeadline(this);
+        clearTimeout(priceUpdateTimeout);
+        priceUpdateTimeout = setTimeout(calculatePrice, 300);
+    });
 
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
@@ -231,7 +356,164 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('addLinkBtn').addEventListener('click', addLinkField);
     document.getElementById('orderForm').addEventListener('submit', submitOrder);
+    
+    togglePaperTypeFields(document.getElementById('paperType').value);
+    calculatePrice();
 });
+
+function togglePaperTypeFields(paperType) {
+    const slidesSection = document.getElementById('slidesSection');
+    const paperFields = document.getElementById('paperFields');
+    
+    if (paperType === 'presentation') {
+        slidesSection.classList.remove('hidden');
+        paperFields.classList.add('hidden');
+        document.getElementById('pages').required = false;
+        document.getElementById('words').required = false;
+        document.getElementById('slides').required = true;
+    } else {
+        slidesSection.classList.add('hidden');
+        paperFields.classList.remove('hidden');
+        document.getElementById('pages').required = true;
+        document.getElementById('words').required = true;
+        document.getElementById('slides').required = false;
+    }
+}
+
+function validateDeadline(input) {
+    const selectedDate = new Date(input.value);
+    const now = new Date();
+    const minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+    
+    if (selectedDate < now) {
+        input.setCustomValidity('Deadline cannot be in the past');
+        input.reportValidity();
+        return false;
+    }
+    
+    if (selectedDate < minDate) {
+        input.setCustomValidity('Deadline must be at least 12 hours from now');
+        input.reportValidity();
+        return false;
+    }
+    
+    input.setCustomValidity('');
+    return true;
+}
+
+function setDefaultDeadline() {
+    const now = new Date();
+    const minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+    const year = minDate.getFullYear();
+    const month = String(minDate.getMonth() + 1).padStart(2, '0');
+    const day = String(minDate.getDate()).padStart(2, '0');
+    const hours = String(minDate.getHours()).padStart(2, '0');
+    const minutes = String(minDate.getMinutes()).padStart(2, '0');
+    document.getElementById('deadline').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+async function calculatePrice() {
+    const academicLevel = document.getElementById('academicLevel').value;
+    const words = parseInt(document.getElementById('words').value) || 0;
+    const pages = parseFloat(document.getElementById('pages').value) || 0;
+    const spacing = document.getElementById('spacing').value;
+    const deadline = document.getElementById('deadline').value;
+    const paperType = document.getElementById('paperType').value;
+    const slides = parseInt(document.getElementById('slides').value) || 0;
+    const errorEl = document.getElementById('priceError');
+    const errorMsg = document.getElementById('priceErrorMessage');
+    
+    if (!academicLevel || !deadline) {
+        return;
+    }
+    
+    if (paperType === 'presentation') {
+        if (!slides || slides < 1) {
+            errorMsg.textContent = 'Please enter the number of slides for your presentation.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+    } else {
+        if (words === 0 && pages === 0) {
+            errorMsg.textContent = 'Please enter either pages or words for your order.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+    }
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            errorMsg.textContent = 'Please login to continue.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        
+        const requestData = {
+            academic_level: academicLevel,
+            spacing: spacing,
+            deadline: deadline,
+            paper_type: paperType
+        };
+        
+        if (paperType === 'presentation') {
+            requestData.slides = slides;
+        } else {
+            if (words > 0) {
+                requestData.words = words;
+            } else if (pages > 0) {
+                requestData.pages = pages;
+            }
+        }
+        
+        const response = await fetch('/api/v1/orders/price-quote/', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            let errorMessage = 'Failed to calculate price';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch (e) {
+                errorMessage = response.statusText || errorMessage;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        priceData = await response.json();
+        updatePriceDisplay(priceData);
+        errorEl.classList.add('hidden');
+        
+    } catch (error) {
+        console.error('Price calculation error:', error);
+        errorMsg.textContent = error.message || 'Unable to calculate price. Please check your inputs.';
+        errorEl.classList.remove('hidden');
+        
+        document.getElementById('displayBasePrice').textContent = '$0.00';
+        document.getElementById('displayLevelMultiplier').textContent = '1.00x';
+        document.getElementById('displayLevelAdjusted').textContent = '$0.00';
+        document.getElementById('displayUrgencyMultiplier').textContent = '1.00x';
+        document.getElementById('displayPages').textContent = '0';
+        document.getElementById('displayWords').textContent = '0';
+        document.getElementById('totalPrice').textContent = '$0.00';
+    }
+}
+
+function updatePriceDisplay(data) {
+    document.getElementById('displayBasePrice').textContent = '$' + data.base_price.toFixed(2);
+    document.getElementById('displayLevelMultiplier').textContent = data.level_multiplier.toFixed(2) + 'x';
+    document.getElementById('displayLevelAdjusted').textContent = '$' + data.level_adjusted.toFixed(2);
+    document.getElementById('displayUrgencyMultiplier').textContent = data.urgency_multiplier.toFixed(2) + 'x';
+    document.getElementById('displayPages').textContent = data.pages.toFixed(1);
+    document.getElementById('displayWords').textContent = data.words;
+    document.getElementById('totalPrice').textContent = '$' + data.total_price.toFixed(2);
+}
 
 async function handleFiles(files) {
     const verificationBanner = document.getElementById('verificationBanner');
@@ -239,7 +521,7 @@ async function handleFiles(files) {
     
     for (let file of files) {
         if (file.size > 10 * 1024 * 1024) {
-            alert(`File "${file.name}" exceeds 10MB limit`);
+            alert('File "' + file.name + '" exceeds 10MB limit');
             continue;
         }
 
@@ -249,7 +531,7 @@ async function handleFiles(files) {
                             'text/plain'];
         
         if (!allowedTypes.includes(file.type)) {
-            alert(`File type "${file.type}" not supported`);
+            alert('File type "' + file.type + '" not supported');
             continue;
         }
 
@@ -257,7 +539,7 @@ async function handleFiles(files) {
         addFileToList(file, 'pending');
         
         verificationBanner.classList.remove('hidden');
-        verificationMessage.textContent = `Verifying "${file.name}"...`;
+        verificationMessage.textContent = 'Verifying "' + file.name + '"...';
         
         setTimeout(() => {
             verifiedFiles.push(file);
@@ -303,7 +585,7 @@ function addFileToList(file, status) {
 }
 
 function updateFileStatus(filename, status) {
-    const statusSpan = document.getElementById(`status-${filename}`);
+    const statusSpan = document.getElementById('status-' + filename);
     if (statusSpan) {
         statusSpan.innerHTML = '<i class="fas fa-check-circle text-green-500"></i> Verified';
     }
@@ -326,69 +608,52 @@ function addLinkField() {
     });
 }
 
-function calculatePrice() {
-    const level = document.getElementById('academicLevel').value;
-    const pages = parseInt(document.getElementById('pages').value) || 1;
-    const writerLevel = document.getElementById('writerLevel').value;
-    
-    const baseRates = {
-        'high_school': 10,
-        'undergraduate': 12,
-        'masters': 18,
-        'phd': 25
-    };
-    
-    const writerPremiums = {
-        'master': 5,
-        'phd': 10
-    };
-    
-    const baseRate = baseRates[level] || 0;
-    let basePrice = pages * baseRate;
-    
-    if (writerLevel !== 'any' && writerPremiums[writerLevel]) {
-        basePrice += pages * writerPremiums[writerLevel];
-    }
-    
-    let extrasTotal = 0;
-    if (document.getElementById('plagiarismReport').checked) extrasTotal += 10;
-    if (document.getElementById('abstract').checked) extrasTotal += 15;
-    if (document.getElementById('proofreading').checked) extrasTotal += 8;
-    if (document.getElementById('onePageSummary').checked) extrasTotal += 12;
-    
-    const total = basePrice + extrasTotal;
-    document.getElementById('totalPrice').textContent = `$${total.toFixed(2)}`;
-}
-
 async function submitOrder(e) {
     e.preventDefault();
+    
+    const deadlineInput = document.getElementById('deadline');
+    if (!validateDeadline(deadlineInput)) {
+        return;
+    }
+    
+    const paperType = document.getElementById('paperType').value;
+    
+    if (paperType === 'presentation') {
+        const slides = parseInt(document.getElementById('slides').value) || 0;
+        if (slides < 1) {
+            alert('Please enter the number of slides for your presentation.');
+            return;
+        }
+    }
     
     const linkInputs = document.querySelectorAll('#linksContainer input[type="url"]');
     const links = Array.from(linkInputs)
         .map(input => input.value.trim())
         .filter(url => url !== '');
     
-    if (filesToUpload.length > verifiedFiles.length) {
+    if (filesToUpload.length > 0 && filesToUpload.length > verifiedFiles.length) {
         alert('Please wait for files to be verified');
         return;
     }
     
     const formData = new FormData();
     formData.append('academic_level', document.getElementById('academicLevel').value);
-    formData.append('paper_type', document.getElementById('paperType').value);
+    formData.append('paper_type', paperType);
     formData.append('subject', document.getElementById('subject').value);
     formData.append('topic', document.getElementById('topic').value);
     formData.append('instructions', document.getElementById('instructions').value);
-    formData.append('pages', document.getElementById('pages').value);
+    formData.append('pages', document.getElementById('pages').value || '');
+    formData.append('words', document.getElementById('words').value || '');
+    formData.append('spacing', document.getElementById('spacing').value);
+    formData.append('slides', document.getElementById('slides').value || '');
     formData.append('sources_count', document.getElementById('sources').value);
     formData.append('deadline', document.getElementById('deadline').value);
     formData.append('format', document.getElementById('format').value);
-    formData.append('preferred_writer_level', document.getElementById('writerLevel').value);
+    formData.append('links', JSON.stringify(links));
     formData.append('plagiarism_report', document.getElementById('plagiarismReport').checked);
     formData.append('abstract', document.getElementById('abstract').checked);
     formData.append('proofreading', document.getElementById('proofreading').checked);
     formData.append('one_page_summary', document.getElementById('onePageSummary').checked);
-    formData.append('links', JSON.stringify(links));
     
     verifiedFiles.forEach(file => {
         formData.append('attachments', file);
@@ -398,39 +663,53 @@ async function submitOrder(e) {
         if (window.Loading) window.Loading.show();
         document.getElementById('submitBtn').disabled = true;
         
-        const response = await api.upload('/orders/create/', formData);
+        const response = await fetch('/api/v1/orders/create/', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            },
+            body: formData
+        });
         
-        if (response && response.id) {
-            window.location.href = `/student/orders/${response.id}/`;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw errorData;
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.id) {
+            window.location.href = '/client/orders/' + data.id + '/';
         }
         
     } catch (error) {
         console.error('Order creation error:', error);
         
-        if (error.data) {
-            if (error.data.wallet) {
-                alert(`Wallet Error: ${error.data.wallet}`);
-            } else if (error.data.payment) {
-                alert(`Payment Error: ${error.data.payment}`);
-            } else if (error.data.non_field_errors) {
-                alert(error.data.non_field_errors[0]);
-            } else if (typeof error.data === 'object') {
-                const messages = [];
-                for (const key in error.data) {
-                    if (Array.isArray(error.data[key])) {
-                        messages.push(`${key}: ${error.data[key].join(', ')}`);
-                    } else if (typeof error.data[key] === 'string') {
-                        messages.push(`${key}: ${error.data[key]}`);
-                    }
+        let errorMessage = 'Failed to create order. Please try again.';
+        
+        if (error.wallet) {
+            errorMessage = 'Wallet Error: ' + error.wallet;
+        } else if (error.payment) {
+            errorMessage = 'Payment Error: ' + error.payment;
+        } else if (error.non_field_errors) {
+            errorMessage = error.non_field_errors[0];
+        } else if (error.error) {
+            errorMessage = error.error;
+        } else if (typeof error === 'object') {
+            const messages = [];
+            for (const key in error) {
+                if (Array.isArray(error[key])) {
+                    messages.push(key + ': ' + error[key].join(', '));
+                } else if (typeof error[key] === 'string') {
+                    messages.push(key + ': ' + error[key]);
                 }
-                alert(messages.join('\n'));
-            } else {
-                alert('Failed to create order. Please check your wallet balance.');
             }
-        } else {
-            alert('Failed to create order. Please try again.');
+            if (messages.length > 0) {
+                errorMessage = messages.join('\n');
+            }
         }
         
+        alert(errorMessage);
         document.getElementById('submitBtn').disabled = false;
     } finally {
         if (window.Loading) window.Loading.hide();
