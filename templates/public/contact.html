@@ -1,119 +1,505 @@
-
 {% extends "base.html" %}
 
-{% block title %}Contact Us - Academic Writing Platform{% endblock %}
+{% block title %}Contact Us - AcademicWrite{% endblock %}
+
+{% block extra_css %}
+<style>
+.contact-hero {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.contact-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.contact-hero h1 span {
+    color: #059669;
+}
+
+.contact-hero p {
+    color: #64748b;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+.contact-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.contact-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+}
+
+.contact-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .contact-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.contact-info-card {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.contact-info-card:hover {
+    border-color: #059669;
+    transform: translateY(-2px);
+}
+
+.contact-info-card .icon {
+    font-size: 2rem;
+    color: #059669;
+    margin-bottom: 0.75rem;
+}
+
+.contact-info-card h3 {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.contact-info-card p {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.contact-form label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: all 0.2s;
+    background: white;
+    font-size: 0.95rem;
+}
+
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+    border-color: #059669;
+    ring: 2px solid #059669;
+}
+
+.contact-form input.error,
+.contact-form select.error,
+.contact-form textarea.error {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+.contact-form textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.contact-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.submit-btn {
+    width: 100%;
+    background: #059669;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.submit-btn:hover:not(:disabled) {
+    background: #047857;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.required-star {
+    color: #ef4444;
+    margin-left: 0.2rem;
+}
+
+.form-hint {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+.error-message {
+    font-size: 0.8rem;
+    color: #ef4444;
+    margin-top: 0.25rem;
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+}
+
+.success-message {
+    display: none;
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    color: #059669;
+    animation: fadeIn 0.5s ease;
+}
+
+.success-message.show {
+    display: block;
+}
+
+.success-message i {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.success-message h3 {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.success-message p {
+    font-size: 0.95rem;
+    opacity: 0.8;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.progress-bar.show {
+    display: block;
+}
+
+.progress-bar .progress-fill {
+    height: 100%;
+    background: #059669;
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.image-wrapper {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+}
+
+.image-wrapper img {
+    width: 100%;
+    height: 12rem;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.image-wrapper:hover img {
+    transform: scale(1.02);
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     
-    <section class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">Contact <span class="text-green-600">Us</span></h1>
-        <div class="w-20 h-1 bg-green-600 mx-auto mb-6"></div>
-        <p class="text-xl text-gray-600">We're here to help 24/7</p>
+    <section class="contact-hero">
+        <h1>Contact <span>Us</span></h1>
+        <div class="w-20 h-1 bg-green-600 mx-auto my-4"></div>
+        <p>We're here to help. Reach out to us anytime.</p>
     </section>
 
-    <div class="grid md:grid-cols-3 gap-4 mb-12">
-        <div class="bg-white border border-gray-200 p-6 text-center hover:border-green-600 transition duration-300">
-            <i class="fas fa-envelope text-2xl text-green-600 mb-3"></i>
-            <h3 class="font-semibold text-gray-800 mb-2">Email</h3>
-            <p class="text-gray-600 text-sm">fredrickwambua@gmail.com</p>
-            <p class="text-gray-500 text-xs mt-2">Response within 2 hours</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6 text-center hover:border-green-600 transition duration-300">
-            <i class="fas fa-phone text-2xl text-green-600 mb-3"></i>
-            <h3 class="font-semibold text-gray-800 mb-2">Phone</h3>
-            <p class="text-gray-600 text-sm">0740618550</p>
-            <p class="text-gray-500 text-xs mt-2">Mon-Fri, 9am-6pm</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6 text-center hover:border-green-600 transition duration-300">
-            <i class="fas fa-comment text-2xl text-green-600 mb-3"></i>
-            <h3 class="font-semibold text-gray-800 mb-2">Live Chat</h3>
-            <p class="text-gray-600 text-sm">Available 24/7</p>
-            <button class="text-green-600 text-xs mt-2 hover:text-green-700 font-medium" id="start-chat">Start Chat</button>
-        </div>
-    </div>
-
-    <div class="bg-white border border-gray-200 p-8 mb-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Send Us a Message</h2>
+    <div class="contact-section">
+        <h2>Get in Touch</h2>
         
-        <form id="contact-form" class="space-y-4">
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="name" required>
+        <div class="contact-grid">
+            <div>
+                <div class="contact-info-card">
+                    <div class="icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3>Email</h3>
+                    <p>fredrickwambua129@gmail.com</p>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="email" required>
+
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=800&h=200&fit=crop&crop=center" 
+                         alt="Contact us" 
+                         loading="lazy">
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="subject" required>
-                    <option value="">Select a subject</option>
-                    <option value="general">General Inquiry</option>
-                    <option value="support">Technical Support</option>
-                    <option value="billing">Billing Question</option>
-                    <option value="order">Order Issue</option>
-                    <option value="other">Other</option>
-                </select>
+                <form class="contact-form" id="contact-form" method="POST" action="/contact/">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="name">Full Name <span class="required-star">*</span></label>
+                        <input type="text" id="name" name="name" placeholder="John Doe" required>
+                        <div class="error-message" id="name-error">Please enter your full name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required-star">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="john@example.com" required>
+                        <div class="error-message" id="email-error">Please enter a valid email address</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject <span class="required-star">*</span></label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Select a subject...</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="order">Order Related</option>
+                            <option value="payment">Payment Issue</option>
+                            <option value="technical">Technical Support</option>
+                            <option value="feedback">Feedback</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <div class="error-message" id="subject-error">Please select a subject</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message <span class="required-star">*</span></label>
+                        <textarea id="message" name="message" placeholder="How can we help you?" required></textarea>
+                        <div class="error-message" id="message-error">Please enter your message (minimum 10 characters)</div>
+                        <p class="form-hint">Please provide as much detail as possible.</p>
+                    </div>
+                    
+                    <div class="progress-bar" id="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submit-btn" disabled>
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </form>
+
+                <div class="success-message" id="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Message Sent Successfully!</h3>
+                    <p>We'll respond to your inquiry within 2 hours.</p>
+                </div>
             </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none" id="message" rows="5" required></textarea>
-            </div>
-
-            <div class="flex items-center">
-                <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="copy-self">
-                <label for="copy-self" class="ml-2 text-sm text-gray-600">Send a copy to myself</label>
-            </div>
-
-            <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 hover:bg-green-700 transition-colors" id="submit-btn">
-                Send Message
-            </button>
-        </form>
-
-        <div id="success-message" class="hidden mt-4 p-4 bg-green-50 text-green-700 border border-green-200 text-center">
-            Thank you for contacting us. We'll respond within 2 hours.
         </div>
     </div>
 
-    <div class="bg-gray-100 w-full h-48 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300">
-        <span class="text-lg">Image Placeholder - Contact</span>
-    </div>
 </div>
 
 <script>
-document.getElementById('contact-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contact-form');
     const submitBtn = document.getElementById('submit-btn');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Sending...';
-    submitBtn.disabled = true;
-    
-    try {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        document.getElementById('contact-form').classList.add('hidden');
-        document.getElementById('success-message').classList.remove('hidden');
-        
-    } catch (error) {
-        alert('Failed to send message. Please try again or email us directly.');
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    }
-});
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const subjectInput = document.getElementById('subject');
+    const messageInput = document.getElementById('message');
+    const successMessage = document.getElementById('success-message');
+    const progressBar = document.getElementById('progress-bar');
+    const progressFill = document.getElementById('progress-fill');
 
-document.getElementById('start-chat').addEventListener('click', function() {
-    if (window.auth && window.auth.isAuthenticated()) {
-        window.location.href = '/messages/';
-    } else {
-        alert('Please log in or register to start a chat session.');
-        window.location.href = '/login/';
+    const nameError = document.getElementById('name-error');
+    const emailError = document.getElementById('email-error');
+    const subjectError = document.getElementById('subject-error');
+    const messageError = document.getElementById('message-error');
+
+    function validateField(input, errorElement, validator) {
+        const isValid = validator(input.value);
+        if (!isValid && input.value) {
+            input.classList.add('error');
+            errorElement.classList.add('show');
+        } else {
+            input.classList.remove('error');
+            errorElement.classList.remove('show');
+        }
+        return isValid;
     }
+
+    function validateName(value) {
+        return value.trim().length >= 2;
+    }
+
+    function validateEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+    }
+
+    function validateSubject(value) {
+        return value !== '';
+    }
+
+    function validateMessage(value) {
+        return value.trim().length >= 10;
+    }
+
+    function validateAll() {
+        const isNameValid = validateName(nameInput.value);
+        const isEmailValid = validateEmail(emailInput.value);
+        const isSubjectValid = validateSubject(subjectInput.value);
+        const isMessageValid = validateMessage(messageInput.value);
+
+        nameInput.classList.toggle('error', !isNameValid && nameInput.value);
+        nameError.classList.toggle('show', !isNameValid && nameInput.value);
+
+        emailInput.classList.toggle('error', !isEmailValid && emailInput.value);
+        emailError.classList.toggle('show', !isEmailValid && emailInput.value);
+
+        subjectInput.classList.toggle('error', !isSubjectValid && subjectInput.value);
+        subjectError.classList.toggle('show', !isSubjectValid && subjectInput.value);
+
+        messageInput.classList.toggle('error', !isMessageValid && messageInput.value);
+        messageError.classList.toggle('show', !isMessageValid && messageInput.value);
+
+        submitBtn.disabled = !(isNameValid && isEmailValid && isSubjectValid && isMessageValid);
+    }
+
+    nameInput.addEventListener('input', function() {
+        validateField(this, nameError, validateName);
+        validateAll();
+    });
+
+    emailInput.addEventListener('input', function() {
+        validateField(this, emailError, validateEmail);
+        validateAll();
+    });
+
+    subjectInput.addEventListener('change', function() {
+        validateField(this, subjectError, validateSubject);
+        validateAll();
+    });
+
+    messageInput.addEventListener('input', function() {
+        validateField(this, messageError, validateMessage);
+        validateAll();
+    });
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        validateAll();
+
+        if (submitBtn.disabled) {
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        progressBar.classList.add('show');
+        progressFill.style.width = '0%';
+
+        const formData = new FormData(form);
+
+        try {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15 + 5;
+                if (progress > 90) {
+                    progress = 90;
+                    clearInterval(interval);
+                }
+                progressFill.style.width = progress + '%';
+            }, 200);
+
+            const response = await fetch('/contact/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            clearInterval(interval);
+            progressFill.style.width = '100%';
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            if (response.ok) {
+                form.style.display = 'none';
+                successMessage.classList.add('show');
+                progressBar.classList.remove('show');
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to send message');
+            }
+
+            setTimeout(() => {
+                progressBar.classList.remove('show');
+                progressFill.style.width = '0%';
+            }, 1000);
+
+        } catch (error) {
+            progressBar.classList.remove('show');
+            progressFill.style.width = '0%';
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message show';
+            errorDiv.style.cssText = 'background: #fef2f2; color: #dc2626; padding: 0.75rem; border-radius: 0.5rem; margin-top: 0.5rem; text-align: center;';
+            errorDiv.textContent = error.message || 'Failed to send message. Please try again.';
+            
+            const existingError = form.querySelector('.error-message.global-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            errorDiv.className = 'error-message show global-error';
+            form.appendChild(errorDiv);
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+        }
+    });
 });
 </script>
 {% endblock %}

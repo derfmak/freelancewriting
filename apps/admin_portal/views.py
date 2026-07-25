@@ -5,17 +5,20 @@ from rest_framework.response import Response
 from django.db import models
 from django.db.models import Count, Sum, Avg, Q
 from django.utils import timezone
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from datetime import timedelta
 from apps.accounts.models import User
 from apps.orders.models import Order, OrderHistory
 from apps.payments.models import Transaction, Wallet
 from apps.payments.services import WalletService
-from .models import AdminActionLog, SystemSetting, SiteContent, Announcement, PlatformStats, AdminNote
+from .models import AdminActionLog, SystemSetting, SiteContent, Blog, PlatformStats, AdminNote, Sample
 from .serializers import (
     UserAdminSerializer, OrderAdminSerializer, TransactionAdminSerializer,
     DashboardStatsSerializer, SystemSettingSerializer, SiteContentSerializer,
-    AnnouncementSerializer, AdminActionLogSerializer, WalletAdjustSerializer,
+    BlogSerializer, AdminActionLogSerializer, WalletAdjustSerializer,
     PriorityQueueSerializer, AdminNoteSerializer, PlatformStatsSerializer
 )
 
@@ -30,15 +33,26 @@ def log_admin_action(admin, action_type, request, **kwargs):
     )
 
 
+def is_admin(user):
+    return user.is_authenticated and user.role == 'admin'
+
+
+def admin_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not is_admin(request.user):
+            return render(request, 'access_denied.html')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def dashboard_stats(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     today = timezone.now().date()
     start_of_week = today - timedelta(days=today.weekday())
-    start_of_month = today.replace(day=1)
     last_week = start_of_week - timedelta(days=7)
     
     users = User.objects.all()
@@ -113,7 +127,7 @@ def dashboard_stats(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def priority_queue(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     now = timezone.now()
@@ -177,7 +191,7 @@ def priority_queue(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_users(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     role = request.GET.get('role')
@@ -221,7 +235,7 @@ def list_users(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_users(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     query = request.GET.get('q', '')
@@ -240,7 +254,7 @@ def search_users(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_detail(request, user_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     user = get_object_or_404(User, id=user_id)
@@ -251,12 +265,18 @@ def user_detail(request, user_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def suspend_user(request, user_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     user = get_object_or_404(User, id=user_id)
-    reason = request.data.get('reason', '')
+    reason = request.data.get('reason', '').strip()
     days = int(request.data.get('days', 7))
+    
+    if not reason:
+        return Response({'error': 'Suspension reason is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if days < 1 or days > 365:
+        return Response({'error': 'Suspension days must be between 1 and 365'}, status=status.HTTP_400_BAD_REQUEST)
     
     user.is_suspended = True
     user.suspension_reason = reason
@@ -277,10 +297,13 @@ def suspend_user(request, user_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reactivate_user(request, user_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     user = get_object_or_404(User, id=user_id)
+    
+    if not user.is_suspended:
+        return Response({'error': 'User is not suspended'}, status=status.HTTP_400_BAD_REQUEST)
     
     user.is_suspended = False
     user.suspension_reason = ''
@@ -300,10 +323,13 @@ def reactivate_user(request, user_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_user(request, user_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     user = get_object_or_404(User, id=user_id)
+    
+    if user.role == 'admin':
+        return Response({'error': 'Cannot delete another admin user'}, status=status.HTTP_403_FORBIDDEN)
     
     log_admin_action(
         admin=request.user,
@@ -320,7 +346,7 @@ def delete_user(request, user_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_orders(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     status_filter = request.GET.get('status')
@@ -358,7 +384,7 @@ def list_orders(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def pending_orders(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     orders = Order.objects.filter(status='request').select_related('student').order_by('deadline')
@@ -369,7 +395,7 @@ def pending_orders(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def active_orders(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     orders = Order.objects.filter(status='in_progress').select_related('student').order_by('deadline')
@@ -380,7 +406,7 @@ def active_orders(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def overdue_orders(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     now = timezone.now()
@@ -396,7 +422,7 @@ def overdue_orders(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def completed_orders(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     orders = Order.objects.filter(status='completed').select_related('student').order_by('-updated_at')
@@ -407,7 +433,7 @@ def completed_orders(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_orders(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     query = request.GET.get('q', '')
@@ -428,7 +454,7 @@ def search_orders(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def order_detail(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id)
@@ -439,7 +465,7 @@ def order_detail(request, order_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def order_workspace(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id)
@@ -458,7 +484,7 @@ def order_workspace(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def approve_order(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='request')
@@ -489,11 +515,11 @@ def approve_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reject_order(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='request')
-    reason = request.data.get('reason', '')
+    reason = request.data.get('reason', '').strip()
     
     order.status = 'cancelled'
     order.cancelled_at = timezone.now()
@@ -523,7 +549,7 @@ def reject_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def deliver_order(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='in_progress')
@@ -554,7 +580,7 @@ def deliver_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def complete_order(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='awaiting_approval')
@@ -584,14 +610,17 @@ def complete_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def cancel_order(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id)
-    reason = request.data.get('reason', '')
+    reason = request.data.get('reason', '').strip()
     
     if order.status in ['completed', 'cancelled']:
         return Response({'error': 'Cannot cancel completed or cancelled order'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not reason:
+        return Response({'error': 'Cancellation reason is required'}, status=status.HTTP_400_BAD_REQUEST)
     
     order.status = 'cancelled'
     order.cancelled_at = timezone.now()
@@ -621,11 +650,14 @@ def cancel_order(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def request_revision(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='awaiting_approval')
-    reason = request.data.get('reason', '')
+    reason = request.data.get('reason', '').strip()
+    
+    if not reason:
+        return Response({'error': 'Revision reason is required'}, status=status.HTTP_400_BAD_REQUEST)
     
     order.status = 'revision'
     order.last_revision_requested_at = timezone.now()
@@ -654,7 +686,7 @@ def request_revision(request, order_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def refund_requests(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     orders = Order.objects.filter(status='refund_pending').select_related('student').order_by('-updated_at')
@@ -665,7 +697,7 @@ def refund_requests(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def approve_refund(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='refund_pending')
@@ -706,11 +738,14 @@ def approve_refund(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def deny_refund(request, order_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='refund_pending')
-    reason = request.data.get('reason', '')
+    reason = request.data.get('reason', '').strip()
+    
+    if not reason:
+        return Response({'error': 'Reason for denial is required'}, status=status.HTTP_400_BAD_REQUEST)
     
     order.status = 'completed'
     order.save()
@@ -738,7 +773,7 @@ def deny_refund(request, order_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_transactions(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     transactions = Transaction.objects.all().select_related(
@@ -764,7 +799,7 @@ def list_transactions(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def transaction_detail(request, transaction_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     transaction = get_object_or_404(Transaction, id=transaction_id)
@@ -775,7 +810,7 @@ def transaction_detail(request, transaction_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def client_wallet(request, user_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     user = get_object_or_404(User, id=user_id)
@@ -797,7 +832,7 @@ def client_wallet(request, user_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def adjust_wallet(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     serializer = WalletAdjustSerializer(data=request.data)
@@ -846,7 +881,7 @@ def adjust_wallet(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_settings(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     settings = SystemSetting.objects.all().order_by('key')
@@ -857,7 +892,7 @@ def list_settings(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_setting(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     serializer = SystemSettingSerializer(data=request.data)
@@ -870,7 +905,7 @@ def create_setting(request):
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_setting(request, setting_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     setting = get_object_or_404(SystemSetting, id=setting_id)
@@ -894,7 +929,7 @@ def update_setting(request, setting_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_setting(request, setting_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     setting = get_object_or_404(SystemSetting, id=setting_id)
@@ -905,7 +940,7 @@ def delete_setting(request, setting_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_content(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     page = request.GET.get('page')
@@ -921,7 +956,7 @@ def list_content(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_content(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     serializer = SiteContentSerializer(data=request.data)
@@ -934,7 +969,7 @@ def create_content(request):
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_content(request, content_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     content = get_object_or_404(SiteContent, id=content_id)
@@ -958,7 +993,7 @@ def update_content(request, content_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_content(request, content_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     content = get_object_or_404(SiteContent, id=content_id)
@@ -968,65 +1003,64 @@ def delete_content(request, content_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_announcements(request):
-    if request.user.role != 'admin':
+def list_blog_posts(request):
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    announcements = Announcement.objects.all().order_by('-created_at')
-    serializer = AnnouncementSerializer(announcements, many=True)
-    return Response(serializer.data)
+    search = request.GET.get('search')
+    posts = Blog.objects.all().order_by('-published_at')
+    
+    if search:
+        posts = posts.filter(
+            models.Q(title__icontains=search) |
+            models.Q(content__icontains=search) |
+            models.Q(excerpt__icontains=search)
+        )
+    
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 20))
+    start = (page - 1) * page_size
+    end = start + page_size
+    
+    paginated = posts[start:end]
+    serializer = BlogSerializer(paginated, many=True)
+    
+    return Response({
+        'total': posts.count(),
+        'page': page,
+        'page_size': page_size,
+        'results': serializer.data
+    })
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def active_announcements(request):
-    if request.user.role != 'admin':
+def blog_post_detail(request, blog_id):
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    announcements = Announcement.get_active_announcements()
-    serializer = AnnouncementSerializer(announcements, many=True)
+    post = get_object_or_404(Blog, id=blog_id)
+    serializer = BlogSerializer(post)
     return Response(serializer.data)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_announcement(request):
-    if request.user.role != 'admin':
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    serializer = AnnouncementSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(created_by=request.user)
-        
-        log_admin_action(
-            admin=request.user,
-            action_type='announcement_create',
-            request=request,
-            details={'title': serializer.validated_data.get('title')}
-        )
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def update_announcement(request, announcement_id):
-    if request.user.role != 'admin':
+def update_blog_post(request, blog_id):
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    announcement = get_object_or_404(Announcement, id=announcement_id)
-    serializer = AnnouncementSerializer(announcement, data=request.data, partial=True)
+    post = get_object_or_404(Blog, id=blog_id)
+    serializer = BlogSerializer(post, data=request.data, partial=True)
     
     if serializer.is_valid():
         serializer.save()
         
         log_admin_action(
             admin=request.user,
-            action_type='announcement_update',
+            action_type='blog_update',
             request=request,
-            details={'title': serializer.validated_data.get('title')}
+            details={'title': post.title}
         )
         
         return Response(serializer.data)
@@ -1036,19 +1070,41 @@ def update_announcement(request, announcement_id):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_announcement(request, announcement_id):
-    if request.user.role != 'admin':
+def delete_blog_post(request, blog_id):
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    announcement = get_object_or_404(Announcement, id=announcement_id)
-    announcement.delete()
-    return Response({'message': 'Announcement deleted'})
+    post = get_object_or_404(Blog, id=blog_id)
+    title = post.title
+    
+    log_admin_action(
+        admin=request.user,
+        action_type='blog_delete',
+        request=request,
+        details={'title': title}
+    )
+    
+    post.delete()
+    return Response({'message': 'Blog post deleted successfully'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def publish_blog_post(request, blog_id):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+    
+    post = get_object_or_404(Blog, id=blog_id)
+    post.published_at = timezone.now()
+    post.save()
+    
+    return Response({'message': 'Blog post published successfully'})
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_logs(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     action_type = request.GET.get('type')
@@ -1091,7 +1147,7 @@ def list_logs(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def log_detail(request, log_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     log = get_object_or_404(AdminActionLog, id=log_id)
@@ -1102,7 +1158,7 @@ def log_detail(request, log_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def export_logs(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     import csv
@@ -1132,7 +1188,7 @@ def export_logs(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_notes(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     notes = AdminNote.objects.filter(admin=request.user).order_by('-is_pinned', '-created_at')
@@ -1143,7 +1199,7 @@ def list_notes(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_note(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     serializer = AdminNoteSerializer(data=request.data)
@@ -1156,7 +1212,7 @@ def create_note(request):
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_note(request, note_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     note = get_object_or_404(AdminNote, id=note_id, admin=request.user)
@@ -1171,7 +1227,7 @@ def update_note(request, note_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_note(request, note_id):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     note = get_object_or_404(AdminNote, id=note_id, admin=request.user)
@@ -1182,7 +1238,7 @@ def delete_note(request, note_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def analytics_overview(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     thirty_days_ago = timezone.now() - timedelta(days=30)
@@ -1211,7 +1267,7 @@ def analytics_overview(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def revenue_analytics(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     period = request.GET.get('period', 'month')
@@ -1242,7 +1298,7 @@ def revenue_analytics(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def order_analytics(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     status_counts = Order.objects.values('status').annotate(count=Count('id'))
@@ -1262,7 +1318,7 @@ def order_analytics(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def client_analytics(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     top_clients = User.objects.filter(
@@ -1281,7 +1337,7 @@ def client_analytics(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_counts(request):
-    if request.user.role != 'admin':
+    if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     now = timezone.now()
@@ -1299,3 +1355,68 @@ def get_counts(request):
         'overdue_orders': overdue_orders,
         'refund_requests': Order.objects.filter(status='refund_pending').count()
     })
+
+
+@login_required
+@admin_required
+def admin_samples(request):
+    samples = Sample.objects.all().order_by('-created_at')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        file = request.FILES.get('file')
+        is_active = request.POST.get('is_active') == 'true'
+        
+        if not file:
+            messages.error(request, 'Please select a file to upload.')
+            context = {'samples': samples}
+            return render(request, 'admin/samples.html', context)
+        
+        if not title:
+            messages.error(request, 'Please provide a title for the sample.')
+            context = {'samples': samples}
+            return render(request, 'admin/samples.html', context)
+        
+        sample = Sample.objects.create(
+            title=title,
+            description=description,
+            file=file,
+            file_name=file.name,
+            file_size=file.size,
+            file_type=file.content_type,
+            uploaded_by=request.user,
+            is_active=is_active
+        )
+        
+        messages.success(request, f'Sample "{title}" uploaded successfully.')
+        return redirect('admin-samples')
+    
+    context = {'samples': samples}
+    return render(request, 'admin/samples.html', context)
+
+
+@login_required
+@admin_required
+def admin_toggle_sample(request, sample_id):
+    try:
+        sample = get_object_or_404(Sample, id=sample_id)
+        sample.is_active = not sample.is_active
+        sample.save()
+        
+        status = 'activated' if sample.is_active else 'deactivated'
+        return JsonResponse({'success': True, 'message': f'Sample "{sample.title}" {status}.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@login_required
+@admin_required
+def admin_delete_sample(request, sample_id):
+    try:
+        sample = get_object_or_404(Sample, id=sample_id)
+        title = sample.title
+        sample.delete()
+        return JsonResponse({'success': True, 'message': f'Sample "{title}" deleted.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

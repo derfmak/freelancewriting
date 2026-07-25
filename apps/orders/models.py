@@ -72,6 +72,12 @@ class Order(models.Model):
         ('presentation', 'presentation'),
     ]
 
+    SPACING_CHOICES = [
+        ('single', 'single'),
+        ('one_point_five', 'one_point_five'),
+        ('double', 'double'),
+    ]
+
     FORMATS = [
         ('apa', 'apa'),
         ('mla', 'mla'),
@@ -83,8 +89,6 @@ class Order(models.Model):
         ('ieee', 'ieee'),
     ]
 
-    PRICE_PER_PAGE = Decimal('15.00')
-    PRICE_PER_SLIDE = Decimal('5.00')
     REVISION_WINDOW_HOURS = 48
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -97,8 +101,9 @@ class Order(models.Model):
     subject = models.CharField(max_length=200)
     topic = models.CharField(max_length=500)
     instructions = models.TextField()
-    pages = models.IntegerField(validators=[MinValueValidator(1)])
+    pages = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0.01)])
     words = models.IntegerField(validators=[MinValueValidator(1)], null=True, blank=True)
+    spacing = models.CharField(max_length=20, choices=SPACING_CHOICES, default='double')
     slides = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1)])
     sources_count = models.IntegerField(default=0)
     deadline = models.DateTimeField(db_index=True)
@@ -107,6 +112,10 @@ class Order(models.Model):
     attachments = models.ManyToManyField(Attachment, blank=True, related_name='orders')
     links = models.JSONField(default=list, blank=True)
 
+    base_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    level_multiplier = models.DecimalField(max_digits=4, decimal_places=2, default=1.00)
+    level_adjusted = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    urgency_multiplier = models.DecimalField(max_digits=4, decimal_places=2, default=1.00)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='request', db_index=True)
@@ -154,33 +163,76 @@ class Order(models.Model):
         return self.order_number
 
     @staticmethod
-    def urgency_multiplier(deadline):
+    def get_spacing_data(spacing):
+        spacing_data = {
+            'single': {'multiplier': 1.0, 'words_per_page': 550, 'cost_per_page': Decimal('20.00')},
+            'one_point_five': {'multiplier': 1.5, 'words_per_page': 367, 'cost_per_page': Decimal('15.00')},
+            'double': {'multiplier': 2.0, 'words_per_page': 275, 'cost_per_page': Decimal('10.00')}
+        }
+        return spacing_data.get(spacing, spacing_data['double'])
+
+    @staticmethod
+    def get_level_multiplier(academic_level):
+        level_multipliers = {
+            'high_school': Decimal('1.00'),
+            'undergraduate': Decimal('1.10'),
+            'masters': Decimal('1.20'),
+            'phd': Decimal('1.30'),
+        }
+        return level_multipliers.get(academic_level, Decimal('1.00'))
+
+    @staticmethod
+    def get_urgency_multiplier(deadline):
         hours_remaining = (deadline - timezone.now()).total_seconds() / 3600
-        if hours_remaining <= 6:
-            return Decimal('0.25')
         if hours_remaining <= 12:
-            return Decimal('0.20')
-        if hours_remaining <= 24:
-            return Decimal('0.15')
-        if hours_remaining <= 72:
-            return Decimal('0.10')
-        if hours_remaining <= 168:
-            return Decimal('0.05')
-        return Decimal('0.00')
+            return Decimal('1.30')
+        elif hours_remaining <= 24:
+            return Decimal('1.25')
+        elif hours_remaining <= 48:
+            return Decimal('1.20')
+        elif hours_remaining <= 72:
+            return Decimal('1.15')
+        elif hours_remaining <= 120:
+            return Decimal('1.10')
+        elif hours_remaining <= 312:
+            return Decimal('1.05')
+        return Decimal('1.00')
 
     @classmethod
-    def calculate_price(cls, paper_type, pages, slides, deadline):
-        if paper_type == 'presentation' and slides:
-            base_price = cls.PRICE_PER_SLIDE * slides
-        else:
-            base_price = cls.PRICE_PER_PAGE * pages
-        multiplier = cls.urgency_multiplier(deadline)
-        total_price = (base_price + (base_price * multiplier)).quantize(Decimal('0.01'))
-        return base_price.quantize(Decimal('0.01')), multiplier, total_price
+    def words_to_pages(cls, words, spacing):
+        data = cls.get_spacing_data(spacing)
+        return Decimal(str(words)) / Decimal(str(data['words_per_page']))
+
+    @classmethod
+    def pages_to_words(cls, pages, spacing):
+        data = cls.get_spacing_data(spacing)
+        return int(Decimal(str(pages)) * Decimal(str(data['words_per_page'])))
+
+    @classmethod
+    def calculate_price(cls, academic_level, words, spacing, deadline):
+        data = cls.get_spacing_data(spacing)
+        pages = cls.words_to_pages(words, spacing)
+        
+        base_price = pages * data['cost_per_page']
+        
+        level_mult = cls.get_level_multiplier(academic_level)
+        level_adjusted = base_price * level_mult
+        
+        urgency_mult = cls.get_urgency_multiplier(deadline)
+        total_price = (level_adjusted * urgency_mult).quantize(Decimal('0.01'))
+        
+        return {
+            'pages': pages.quantize(Decimal('0.01')),
+            'words_per_page': data['words_per_page'],
+            'cost_per_page': data['cost_per_page'],
+            'base_price': base_price.quantize(Decimal('0.01')),
+            'level_multiplier': level_mult,
+            'level_adjusted': level_adjusted.quantize(Decimal('0.01')),
+            'urgency_multiplier': urgency_mult,
+            'total_price': total_price
+        }
 
     def save(self, *args, **kwargs):
-        if not self.words and self.pages and self.paper_type != 'presentation':
-            self.words = self.pages * 275
         if not self.order_number:
             import random
             import string
@@ -188,6 +240,32 @@ class Order(models.Model):
             year = datetime.now().strftime('%y')
             random_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             self.order_number = f"ORD-{year}-{random_part}"
+        
+        if self.paper_type == 'presentation':
+            if self.slides and not self.words:
+                self.words = self.slides * 50
+        else:
+            if self.words and not self.pages:
+                self.pages = self.words_to_pages(self.words, self.spacing)
+            elif self.pages and not self.words:
+                self.words = self.pages_to_words(self.pages, self.spacing)
+            elif not self.words and not self.pages:
+                self.words = 275
+                self.pages = Decimal('1.00')
+        
+        if not self.base_price:
+            price_data = self.calculate_price(
+                self.academic_level,
+                self.words,
+                self.spacing,
+                self.deadline
+            )
+            self.base_price = price_data['base_price']
+            self.level_multiplier = price_data['level_multiplier']
+            self.level_adjusted = price_data['level_adjusted']
+            self.urgency_multiplier = price_data['urgency_multiplier']
+            self.total_price = price_data['total_price']
+        
         super().save(*args, **kwargs)
 
 

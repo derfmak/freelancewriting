@@ -1,85 +1,492 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}About Us - Academic Writing Platform{% endblock %}
+{% block title %}About Us - Professional Academic Writing Services{% endblock %}
+
+{% block extra_css %}
+<style>
+.about-hero {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    padding: 4rem 0 5rem;
+    margin: -1.5rem -2rem 2rem -2rem;
+    border-radius: 0 0 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.about-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+');
+    background-size: 60px 60px;
+    opacity: 0.3;
+}
+
+@media (max-width: 640px) {
+    .about-hero {
+        padding: 3rem 0 4rem;
+        margin: -1rem -1rem 1.5rem -1rem;
+        border-radius: 0 0 1.5rem 1.5rem;
+    }
+}
+
+.about-hero h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: white;
+    position: relative;
+    z-index: 1;
+}
+
+.about-hero p {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 640px) {
+    .about-hero h1 {
+        font-size: 2rem;
+    }
+    .about-hero p {
+        font-size: 1rem;
+    }
+}
+
+.stats-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    border-color: #059669;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #059669;
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-image {
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    background: #f1f5f9;
+}
+
+.image-wrapper {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.4s ease;
+}
+
+.image-wrapper:hover {
+    transform: scale(1.01);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+}
+
+.content-section {
+    padding: 3rem 0;
+}
+
+.content-section:nth-child(even) {
+    background: #f8fafc;
+}
+
+.content-section h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.content-section h2 span {
+    color: #059669;
+}
+
+.content-section p {
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+}
+
+.content-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .content-grid {
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+    }
+}
+
+.value-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    text-align: center;
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
+}
+
+.value-card:nth-child(1) { animation-delay: 0.1s; }
+.value-card:nth-child(2) { animation-delay: 0.2s; }
+.value-card:nth-child(3) { animation-delay: 0.3s; }
+
+.value-card:hover {
+    border-color: #059669;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.value-icon {
+    width: 4rem;
+    height: 4rem;
+    background: #ecfdf5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: #059669;
+    font-size: 1.5rem;
+}
+
+.value-card h3 {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.value-card p {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.cta-section {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    padding: 4rem 2rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    color: white;
+    margin-top: 2rem;
+}
+
+.cta-section h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.cta-section p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+}
+
+.cta-btn {
+    display: inline-block;
+    background: white;
+    color: #059669;
+    padding: 0.75rem 2.5rem;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    background: #f8fafc;
+}
+
+.quality-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.4rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 py-8">
-    
-    <section class="text-center mb-16">
-        <h1 class="text-5xl font-bold text-gray-900 mb-4">About <span class="text-green-600">Us</span></h1>
-        <div class="w-20 h-1 bg-green-600 mx-auto mb-6"></div>
-        <p class="text-xl text-gray-600 max-w-2xl mx-auto">Your trusted partner in academic excellence since 2020</p>
-    </section>
+<div class="about-page">
 
-    <section class="grid md:grid-cols-2 gap-12 items-center mb-16">
-        <div>
-            <h2 class="text-3xl font-bold mb-4 text-gray-800">Our <span class="text-green-600">Story</span></h2>
-            <p class="text-gray-600 mb-4 leading-relaxed">
-                Founded by a team of academic professionals, we recognized the need for reliable, 
-                high-quality academic writing assistance. Our platform was built to connect students 
-                with expert writers who understand the demands of modern education.
-            </p>
-            <p class="text-gray-600 leading-relaxed">
-                Today, we've helped thousands of students across the globe achieve their academic goals, 
-                maintaining a 98% satisfaction rate and building lasting relationships with our clients.
-            </p>
-        </div>
-        <div class="bg-gray-100 w-full h-80 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300">
-            <span class="text-lg">Image Placeholder - About Story</span>
+    <section class="about-hero">
+        <div class="container text-center">
+            <span class="quality-badge">
+                <i class="fas fa-award"></i> Trusted Academic Partner
+            </span>
+            <h1>About <span style="color: #fbbf24;">AcademicWrite</span></h1>
+            <p>Professional academic writing services for students worldwide</p>
         </div>
     </section>
 
-    <section class="grid md:grid-cols-2 gap-8 mb-16">
-        <div class="bg-white border border-gray-200 p-8 hover:border-green-600 transition duration-300">
-            <h3 class="text-2xl font-bold mb-4 text-gray-800">Our <span class="text-green-600">Mission</span></h3>
-            <p class="text-gray-600 leading-relaxed">
-                To provide accessible, high-quality academic support that helps students excel in their 
-                studies while maintaining the highest standards of academic integrity.
-            </p>
+    <div class="container">
+        <div class="stats-grid" id="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="orders-count">0</div>
+                <div class="stat-label">Orders Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="clients-count">0</div>
+                <div class="stat-label">Happy Clients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="writers-count">0</div>
+                <div class="stat-label">Expert Writers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="satisfaction-rate">0%</div>
+                <div class="stat-label">Satisfaction Rate</div>
+            </div>
         </div>
-        <div class="bg-white border border-gray-200 p-8 hover:border-green-600 transition duration-300">
-            <h3 class="text-2xl font-bold mb-4 text-gray-800">Our <span class="text-green-600">Vision</span></h3>
-            <p class="text-gray-600 leading-relaxed">
-                To become the world's most trusted platform for academic writing assistance, 
-                known for quality, reliability, and student success.
-            </p>
-        </div>
-    </section>
+    </div>
 
-    <section class="grid md:grid-cols-3 gap-8 mb-16">
-        <div class="bg-green-50 p-8 text-center border border-green-100">
-            <div class="text-4xl font-bold text-green-600 mb-2">5000+</div>
-            <p class="text-gray-600">Orders Completed</p>
+    <div class="content-section">
+        <div class="container">
+            <div class="content-grid">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop&crop=center" 
+                         alt="Students studying and writing" 
+                         class="section-image"
+                         loading="lazy">
+                </div>
+                <div>
+                    <h2>Your Partner in <span>Academic Success</span></h2>
+                    <p>
+                        We understand the challenges students face in today's demanding academic environment. 
+                        Our platform connects you with qualified writers who deliver high-quality, original content 
+                        tailored to your specific requirements.
+                    </p>
+                    <p>
+                        Whether you need help with essays, research papers, dissertations, or any other academic 
+                        assignment, we're here to support you every step of the way.
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="bg-green-50 p-8 text-center border border-green-100">
-            <div class="text-4xl font-bold text-green-600 mb-2">98%</div>
-            <p class="text-gray-600">Satisfaction Rate</p>
-        </div>
-        <div class="bg-green-50 p-8 text-center border border-green-100">
-            <div class="text-4xl font-bold text-green-600 mb-2">24/7</div>
-            <p class="text-gray-600">Support Available</p>
-        </div>
-    </section>
+    </div>
 
-    <section class="grid md:grid-cols-2 gap-12 items-center mb-16">
-        <div class="bg-gray-100 w-full h-80 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 order-2 md:order-1">
-            <span class="text-lg">Image Placeholder - Team</span>
+    <div class="content-section">
+        <div class="container">
+            <div class="content-grid">
+                <div class="order-2 md:order-1">
+                    <h2>Quality <span>You Can Trust</span></h2>
+                    <p>
+                        Every paper is written from scratch by subject matter experts who hold advanced degrees 
+                        in their respective fields. We ensure each piece meets the highest academic standards 
+                        and follows your specific formatting requirements.
+                    </p>
+                    <p>
+                        Our commitment to quality includes rigorous plagiarism checks, thorough proofreading, 
+                        and unlimited revisions to ensure your complete satisfaction.
+                    </p>
+                </div>
+                <div class="image-wrapper order-1 md:order-2">
+                    <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=600&fit=crop&crop=center" 
+                         alt="Academic writing and research" 
+                         class="section-image"
+                         loading="lazy">
+                </div>
+            </div>
         </div>
-        <div class="order-1 md:order-2">
-            <h2 class="text-3xl font-bold mb-4 text-gray-800">Our <span class="text-green-600">Team</span></h2>
-            <p class="text-gray-600 mb-4 leading-relaxed">
-                We have a dedicated team of professional writers with advanced degrees from top universities worldwide.
-            </p>
-            <p class="text-gray-600 leading-relaxed">
-                Each writer undergoes a rigorous selection process and specializes in specific subject areas to ensure the highest quality work.
-            </p>
-        </div>
-    </section>
+    </div>
 
-    <section class="bg-green-600 text-white p-12 text-center">
-        <h2 class="text-3xl font-bold mb-4">Ready to Experience Excellence?</h2>
-        <p class="text-lg mb-6 opacity-90">Join thousands of satisfied students who have already discovered our service.</p>
-        <a href="/register/" class="inline-block bg-white text-green-600 px-8 py-3 font-bold hover:bg-gray-100 transition duration-300">Get Started Today</a>
-    </section>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="font-size: 2rem; font-weight: 700; color: #1e293b;">Our <span style="color: #059669;">Values</span></h2>
+            <p style="color: #64748b; max-width: 600px; margin: 0.5rem auto 0;">The principles that guide everything we do</p>
+        </div>
+        
+        <div style="display: grid; gap: 1.5rem; grid-template-columns: 1fr;">
+            <div class="value-card">
+                <div class="value-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h3>Excellence</h3>
+                <p>We deliver nothing less than exceptional quality in every piece of work we produce.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Integrity</h3>
+                <p>We maintain the highest standards of academic integrity and originality in all our work.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Student First</h3>
+                <p>Your success is our priority. We're committed to helping you achieve your academic goals.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="cta-section">
+            <h2>Ready to Get Started?</h2>
+            <p>Join thousands of students who trust us with their academic success</p>
+            <a href="/register/" class="cta-btn">
+                <i class="fas fa-rocket"></i> Get Started Today
+            </a>
+        </div>
+    </div>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetchAboutStats();
+});
+
+function fetchAboutStats() {
+    const statsData = getCachedStats();
+    
+    if (statsData) {
+        updateStats(statsData);
+    }
+    
+    fetch('/api/about/stats/')
+        .then(response => response.json())
+        .then(data => {
+            cacheStats(data);
+            updateStats(data);
+        })
+        .catch(error => {
+            console.log('Using cached stats');
+        });
+}
+
+function getCachedStats() {
+    try {
+        const cached = localStorage.getItem('about_stats');
+        if (cached) {
+            const data = JSON.parse(cached);
+            const timestamp = data.timestamp || 0;
+            if (Date.now() - timestamp < 300000) {
+                return data.stats;
+            }
+        }
+    } catch (e) {
+        return null;
+    }
+    return null;
+}
+
+function cacheStats(stats) {
+    try {
+        localStorage.setItem('about_stats', JSON.stringify({
+            stats: stats,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+    }
+}
+
+function updateStats(data) {
+    animateNumber('orders-count', data.orders || 0);
+    animateNumber('clients-count', data.clients || 0);
+    animateNumber('writers-count', data.writers || 0);
+    
+    const rateEl = document.getElementById('satisfaction-rate');
+    if (rateEl) {
+        const rate = data.satisfaction_rate || 98;
+        animateNumber('satisfaction-rate', rate, '%');
+    }
+}
+
+function animateNumber(elementId, target, suffix = '') {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const duration = 1000;
+    const startTime = performance.now();
+    const startValue = 0;
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(startValue + (target - startValue) * eased);
+        
+        element.textContent = current + suffix;
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = target + suffix;
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+</script>
 {% endblock %}

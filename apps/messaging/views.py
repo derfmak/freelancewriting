@@ -1,289 +1,297 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from django.db import models
-from django.db.models import Q, Count
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.core.cache import cache
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from .models import Conversation, Message, MessageStatus, TypingStatus
 from .serializers import (
-    ConversationSerializer, MessageSerializer, MessageCreateSerializer,
-    MessageEditSerializer, MessageRecallSerializer, TypingStatusSerializer
+    ConversationSerializer,
+    MessageCreateSerializer,
+    MessageEditSerializer,
+    MessageSerializer,
 )
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_or_create_conversation(request, order_id):
-    try:
-        order = Order.objects.get(id=order_id, student=request.user)
-        
-        admin = User.objects.filter(role='admin').first()
-        
-        if not admin:
-            return Response({'error': 'No admin available'}, status=status.HTTP_404_NOT_FOUND)
-        
-        conversation, created = Conversation.objects.get_or_create(
-            order=order,
-            defaults={
-                'student': request.user,
-                'admin': admin
-            }
+
+MESSAGES_PAGE_SIZE = 20
+UNREAD_CACHE_TTL = 30
+LIST_CACHE_TTL = 30
+
+
+def broadcast(conversation_id, event_type, payload):
+    channel_layer = get_channel_layer()
+    if channel_layer is None:
+        return
+    async_to_sync(channel_layer.group_send)(
+        f'chat_{conversation_id}',
+        {'type': event_type, 'payload': payload},
+    )
+
+
+def invalidate_user_caches(*user_ids):
+    for user_id in user_ids:
+        cache.delete(f'messaging_unread_{user_id}')
+        cache.delete(f'messaging_list_{user_id}')
+
+
+class ConversationAccessMixin:
+    def get_conversation(self, order_id):
+        conversation = get_object_or_404(
+            Conversation.objects.select_related('order', 'student', 'admin'),
+            order_id=order_id,
         )
-        
-        serializer = ConversationSerializer(conversation, context={'request': request})
-        
-        return Response({
-            'conversation': serializer.data,
-            'created': created
-        })
-        
-    except Order.DoesNotExist:
-        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_conversations(request):
-    user = request.user
-    
-    if user.role == 'admin':
-        conversations = Conversation.objects.filter(admin=user)
-    else:
-        conversations = Conversation.objects.filter(student=user)
-    
-    conversations = conversations.select_related('order').prefetch_related(
-        'messages'
-    ).order_by('-last_message_at')
-    
-    serializer = ConversationSerializer(conversations, many=True, context={'request': request})
-    return Response(serializer.data)
+        if self.request.user not in (conversation.student, conversation.admin):
+            return None
+        return conversation
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_conversation(request, order_id):
-    conversation = get_object_or_404(Conversation, order_id=order_id)
-    
-    if request.user.role != 'admin' and conversation.student != request.user:
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    messages = conversation.messages.all().order_by('created_at')
-    
-    unread_messages = messages.filter(
-        ~Q(sender=request.user),
-        is_read=False
-    )
-    for message in unread_messages:
-        message.mark_as_read()
-    
-    if request.user == conversation.student:
-        conversation.student_last_seen = timezone.now()
-    elif request.user == conversation.admin:
-        conversation.admin_last_seen = timezone.now()
-    conversation.save(update_fields=['student_last_seen', 'admin_last_seen'])
-    
-    message_serializer = MessageSerializer(messages, many=True)
-    conversation_serializer = ConversationSerializer(conversation, context={'request': request})
-    
-    return Response({
-        'conversation': conversation_serializer.data,
-        'messages': message_serializer.data
-    })
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def send_message(request, order_id):
-    conversation = get_object_or_404(Conversation, order_id=order_id)
-    
-    if request.user.role != 'admin' and conversation.student != request.user:
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    serializer = MessageCreateSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    message = Message.objects.create(
-        conversation=conversation,
-        sender=request.user,
-        content=serializer.validated_data['content'],
-        message_type=serializer.validated_data.get('message_type', 'text'),
-        file_url=serializer.validated_data.get('file_url', ''),
-        file_name=serializer.validated_data.get('file_name', ''),
-        file_size=serializer.validated_data.get('file_size')
-    )
-    
-    conversation.last_message_at = message.created_at
-    conversation.save(update_fields=['last_message_at'])
-    
-    recipient = conversation.admin if request.user == conversation.student else conversation.student
-    
-    MessageStatus.objects.create(
-        message=message,
-        user=recipient,
-        is_delivered=True,
-        delivered_at=timezone.now()
-    )
-    
-    return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+class MessageAccessMixin:
+    def get_owned_message(self, message_id):
+        return get_object_or_404(
+            Message.objects.select_related('conversation'),
+            id=message_id, sender=self.request.user,
+        )
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def mark_read(request, order_id):
-    conversation = get_object_or_404(Conversation, order_id=order_id)
-    
-    if request.user.role != 'admin' and conversation.student != request.user:
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    message_ids = request.data.get('message_ids', [])
-    
-    messages = Message.objects.filter(
-        Q(id__in=message_ids) if message_ids else Q(conversation=conversation),
-        ~Q(sender=request.user),
-        is_read=False
-    )
-    
-    for message in messages:
-        message.mark_as_read()
-        
+
+class ConversationListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cache_key = f'messaging_list_{request.user.id}'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        if request.user.role == 'admin':
+            conversations = Conversation.objects.filter(admin=request.user)
+        else:
+            conversations = Conversation.objects.filter(student=request.user)
+
+        conversations = conversations.select_related(
+            'order', 'student', 'admin',
+        ).prefetch_related('messages').order_by('-last_message_at')
+
+        data = ConversationSerializer(
+            conversations, many=True, context={'request': request},
+        ).data
+        cache.set(cache_key, data, LIST_CACHE_TTL)
+        return Response(data)
+
+
+class UnreadCountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cache_key = f'messaging_unread_{request.user.id}'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response({'unread_count': cached})
+
+        if request.user.role == 'admin':
+            conversations = Conversation.objects.filter(admin=request.user)
+        else:
+            conversations = Conversation.objects.filter(student=request.user)
+
+        total = sum(conversation.get_unread_count(request.user) for conversation in conversations)
+        cache.set(cache_key, total, UNREAD_CACHE_TTL)
+        return Response({'unread_count': total})
+
+
+class ConversationDetailView(ConversationAccessMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        conversation = self.get_conversation(order_id)
+        if conversation is None:
+            return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+        page = max(int(request.query_params.get('page', 1)), 1)
+        start = (page - 1) * MESSAGES_PAGE_SIZE
+        end = start + MESSAGES_PAGE_SIZE
+
+        total_messages = conversation.messages.count()
+        messages = list(
+            conversation.messages.select_related('sender').order_by('-created_at')[start:end],
+        )
+        messages.reverse()
+
+        updated = conversation.messages.filter(~Q(sender=request.user), is_read=False).update(
+            is_read=True, read_at=timezone.now(),
+        )
         MessageStatus.objects.filter(
-            message=message,
-            user=request.user
-        ).update(
-            is_read=True,
-            read_at=timezone.now()
+            message__conversation=conversation, user=request.user, is_read=False,
+        ).update(is_read=True, read_at=timezone.now())
+
+        conversation.mark_seen(request.user)
+        invalidate_user_caches(request.user.id)
+
+        if updated:
+            broadcast(conversation.id, 'message.read', {
+                'reader': str(request.user.id),
+                'read_at': timezone.now().isoformat(),
+            })
+
+        return Response({
+            'conversation': ConversationSerializer(conversation, context={'request': request}).data,
+            'messages': MessageSerializer(messages, many=True).data,
+            'page': page,
+            'has_more': total_messages > end,
+        })
+
+
+class SendMessageView(ConversationAccessMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        conversation = self.get_conversation(order_id)
+        if conversation is None:
+            return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = MessageCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        message = Message.objects.create(
+            conversation=conversation,
+            sender=request.user,
+            content=serializer.validated_data.get('content', ''),
+            message_type=serializer.validated_data.get('message_type', Message.TEXT),
+            file_url=serializer.validated_data.get('file_url', ''),
+            file_name=serializer.validated_data.get('file_name', ''),
+            file_size=serializer.validated_data.get('file_size'),
+            is_delivered=True,
+            delivered_at=timezone.now(),
         )
-    
-    if request.user == conversation.student:
-        conversation.student_last_seen = timezone.now()
-    elif request.user == conversation.admin:
-        conversation.admin_last_seen = timezone.now()
-    conversation.save(update_fields=['student_last_seen', 'admin_last_seen'])
-    
-    return Response({'message': 'messages marked as read'})
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def mark_delivered(request, order_id):
-    conversation = get_object_or_404(Conversation, order_id=order_id)
-    
-    if request.user.role != 'admin' and conversation.student != request.user:
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    message_ids = request.data.get('message_ids', [])
-    
-    messages = Message.objects.filter(
-        Q(id__in=message_ids) if message_ids else Q(conversation=conversation),
-        ~Q(sender=request.user)
-    )
-    
-    for message in messages:
-        MessageStatus.objects.get_or_create(
-            message=message,
-            user=request.user,
-            defaults={
-                'is_delivered': True,
-                'delivered_at': timezone.now()
-            }
+        conversation.last_message_at = message.created_at
+        conversation.save(update_fields=['last_message_at'])
+
+        recipient = conversation.admin if request.user == conversation.student else conversation.student
+        MessageStatus.objects.create(
+            message=message, user=recipient, is_delivered=True, delivered_at=timezone.now(),
         )
-    
-    return Response({'message': 'messages marked as delivered'})
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def edit_message(request, message_id):
-    message = get_object_or_404(Message, id=message_id, sender=request.user)
-    
-    if message.created_at < timezone.now() - timezone.timedelta(minutes=5):
-        return Response({'error': 'messages can only be edited within 5 minutes'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    if message.is_recalled:
-        return Response({'error': 'cannot edit recalled message'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    serializer = MessageEditSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    message.edit(serializer.validated_data['content'])
-    
-    return Response(MessageSerializer(message).data)
+        invalidate_user_caches(request.user.id, recipient.id)
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def recall_message(request, message_id):
-    message = get_object_or_404(Message, id=message_id, sender=request.user)
-    
-    if message.created_at < timezone.now() - timezone.timedelta(minutes=1):
-        return Response({'error': 'messages can only be recalled within 1 minute'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    if message.is_recalled:
-        return Response({'error': 'message already recalled'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    message.recall()
-    
-    return Response(MessageSerializer(message).data)
+        output = MessageSerializer(message).data
+        broadcast(conversation.id, 'message.sent', output)
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_message(request, message_id):
-    message = get_object_or_404(Message, id=message_id, sender=request.user)
-    
-    if message.created_at < timezone.now() - timezone.timedelta(minutes=5):
-        return Response({'error': 'messages can only be deleted within 5 minutes'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    message.delete()
-    
-    return Response({'message': 'message deleted'})
+        return Response(output, status=status.HTTP_201_CREATED)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def unread_count(request):
-    user = request.user
-    
-    if user.role == 'admin':
-        conversations = Conversation.objects.filter(admin=user)
-    else:
-        conversations = Conversation.objects.filter(student=user)
-    
-    total_unread = 0
-    for conv in conversations:
-        total_unread += conv.get_unread_count(user)
-    
-    return Response({'unread_count': total_unread})
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def typing_status(request, order_id):
-    conversation = get_object_or_404(Conversation, order_id=order_id)
-    
-    if request.user.role != 'admin' and conversation.student != request.user:
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    is_typing = request.data.get('is_typing', False)
-    
-    typing_status, created = TypingStatus.objects.update_or_create(
-        conversation=conversation,
-        user=request.user,
-        defaults={'is_typing': is_typing}
-    )
-    
-    if not is_typing:
-        typing_status.delete()
-    
-    return Response({'is_typing': is_typing})
+class MarkReadView(ConversationAccessMixin, APIView):
+    permission_classes = [IsAuthenticated]
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_typing_status(request, order_id):
-    conversation = get_object_or_404(Conversation, order_id=order_id)
-    
-    if request.user.role != 'admin' and conversation.student != request.user:
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    other_user = conversation.admin if request.user == conversation.student else conversation.student
-    
-    typing_status = TypingStatus.objects.filter(
-        conversation=conversation,
-        user=other_user,
-        is_typing=True
-    ).first()
-    
-    return Response({
-        'is_typing': typing_status.is_typing if typing_status else False
-    })
+    def post(self, request, order_id):
+        conversation = self.get_conversation(order_id)
+        if conversation is None:
+            return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+        message_ids = request.data.get('message_ids', [])
+        now = timezone.now()
+
+        messages = Message.objects.filter(
+            Q(id__in=message_ids) if message_ids else Q(conversation=conversation),
+            ~Q(sender=request.user),
+            is_read=False,
+        )
+        updated = messages.update(is_read=True, read_at=now)
+        MessageStatus.objects.filter(
+            message__in=messages, user=request.user,
+        ).update(is_read=True, read_at=now)
+
+        conversation.mark_seen(request.user)
+        invalidate_user_caches(request.user.id)
+
+        if updated:
+            broadcast(conversation.id, 'message.read', {
+                'reader': str(request.user.id),
+                'read_at': now.isoformat(),
+            })
+
+        return Response({'marked_read': updated})
+
+
+class TypingStatusView(ConversationAccessMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        conversation = self.get_conversation(order_id)
+        if conversation is None:
+            return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+        is_typing = bool(request.data.get('is_typing', False))
+        TypingStatus.objects.update_or_create(
+            conversation=conversation, user=request.user,
+            defaults={'is_typing': is_typing},
+        )
+
+        broadcast(conversation.id, 'typing.start' if is_typing else 'typing.stop', {
+            'user': str(request.user.id),
+        })
+        return Response({'is_typing': is_typing})
+
+    def get(self, request, order_id):
+        conversation = self.get_conversation(order_id)
+        if conversation is None:
+            return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+        other_user = conversation.admin if request.user == conversation.student else conversation.student
+        typing = TypingStatus.objects.filter(
+            conversation=conversation, user=other_user, is_typing=True,
+        ).first()
+
+        return Response({'is_typing': bool(typing)})
+
+
+class MessageEditView(MessageAccessMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, message_id):
+        message = self.get_owned_message(message_id)
+
+        if not message.can_edit(request.user):
+            return Response({'error': 'message cannot be edited'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = MessageEditSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        message.edit(serializer.validated_data['content'])
+        output = MessageSerializer(message).data
+        broadcast(message.conversation_id, 'message.edited', output)
+        return Response(output)
+
+
+class MessageRecallView(MessageAccessMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, message_id):
+        message = self.get_owned_message(message_id)
+
+        if not message.can_recall(request.user):
+            return Response({'error': 'message cannot be recalled'}, status=status.HTTP_400_BAD_REQUEST)
+
+        message.recall()
+        output = MessageSerializer(message).data
+        broadcast(message.conversation_id, 'message.recalled', output)
+        return Response(output)
+
+
+class MessageDeleteView(MessageAccessMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, message_id):
+        message = self.get_owned_message(message_id)
+
+        if not message.can_delete(request.user):
+            return Response({'error': 'message cannot be deleted'}, status=status.HTTP_400_BAD_REQUEST)
+
+        conversation_id = message.conversation_id
+        deleted_id = str(message.id)
+        message.delete()
+
+        broadcast(conversation_id, 'message.deleted', {'message_id': deleted_id})
+        return Response({'message': 'message deleted'})

@@ -1,0 +1,1070 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if blog_post %}
+        {{ blog_post.title }} - AcademicWrite
+    {% else %}
+        Blog - AcademicWrite
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.blog-hero {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    padding: 3rem 0 3.5rem;
+    margin: 0 -2rem 2rem -2rem;
+    color: white;
+    border-radius: 0 0 1.5rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+    .blog-hero {
+        padding: 2rem 0 2.5rem;
+        margin: 0 -1rem 1.5rem -1rem;
+    }
+}
+
+.blog-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+    .blog-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 1024px) {
+    .blog-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+
+.blog-post-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.blog-post-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.blog-post-card .post-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #f3f4f6;
+}
+
+.blog-post-card .post-content {
+    padding: 1.25rem;
+}
+
+.blog-post-card .post-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.5rem;
+    line-height: 1.4;
+}
+
+.blog-post-card .post-title a {
+    color: #1e293b;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.blog-post-card .post-title a:hover {
+    color: #059669;
+}
+
+.blog-post-card .post-excerpt {
+    color: #64748b;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.blog-post-card .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.skeleton-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-card .skeleton-image {
+    width: 100%;
+    height: 200px;
+    background: #f1f5f9;
+}
+
+.skeleton-card .skeleton-content {
+    padding: 1.25rem;
+}
+
+.skeleton-card .skeleton-title {
+    height: 1.2rem;
+    background: #f1f5f9;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+    width: 80%;
+}
+
+.skeleton-card .skeleton-excerpt {
+    height: 0.8rem;
+    background: #f1f5f9;
+    border-radius: 0.25rem;
+    margin-bottom: 0.4rem;
+    width: 100%;
+}
+
+.skeleton-card .skeleton-excerpt:last-child {
+    width: 60%;
+}
+
+.skeleton-card .skeleton-meta {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.skeleton-card .skeleton-meta span {
+    height: 0.7rem;
+    background: #f1f5f9;
+    border-radius: 0.25rem;
+    width: 60px;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.sidebar-widget {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.sidebar-widget .widget-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #ecfdf5;
+}
+
+.sidebar-widget .widget-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.sidebar-widget .widget-item:last-child {
+    border-bottom: none;
+}
+
+.sidebar-widget .widget-item .item-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #1e293b;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: block;
+}
+
+.sidebar-widget .widget-item .item-title:hover {
+    color: #059669;
+}
+
+.sidebar-widget .widget-item .item-date {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 0.2rem;
+}
+
+.search-container {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.search-box {
+    display: flex;
+    gap: 0.5rem;
+    position: relative;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 0.5rem;
+    padding: 0.15rem;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border: none;
+    border-radius: 0.4rem;
+    font-size: 0.9rem;
+    outline: none;
+    background: transparent;
+    color: white;
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.search-box input:focus {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.search-box button {
+    background: #fbbf24;
+    color: #059669;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.search-box button:hover {
+    background: #f59e0b;
+    transform: scale(1.02);
+}
+
+.search-suggestions {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    max-height: 350px;
+    overflow-y: auto;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.search-suggestions .suggestion-item {
+    display: block;
+    padding: 0.7rem 1rem;
+    color: #1e293b;
+    text-decoration: none;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s ease;
+}
+
+.search-suggestions .suggestion-item:hover {
+    background: #f8fafc;
+}
+
+.search-suggestions .suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.search-suggestions .suggestion-item .title {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.search-suggestions .suggestion-item .excerpt {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+
+.search-suggestions .no-results {
+    padding: 0.8rem 1rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.search-suggestions .loading-indicator {
+    padding: 0.8rem 1rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.search-suggestions .loading-indicator i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.search-results-header {
+    margin: 1.5rem 0 1.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.search-results-header .results-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.search-results-header .results-info .query {
+    color: #059669;
+    font-weight: 600;
+}
+
+.search-results-header .results-info .count {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.search-results-header .clear-search {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.search-results-header .clear-search:hover {
+    color: #dc2626;
+}
+
+.blog-detail-hero {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    padding: 3rem 0;
+    margin: 0 -2rem 2rem -2rem;
+    color: white;
+}
+
+.blog-detail-hero .hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.blog-detail-hero h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0.75rem 0 0.5rem;
+    line-height: 1.2;
+}
+
+.blog-detail-hero .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+}
+
+.blog-detail-hero .post-meta i {
+    margin-right: 0.3rem;
+}
+
+@media (max-width: 640px) {
+    .blog-detail-hero {
+        padding: 2rem 0;
+        margin: 0 -1rem 1.5rem -1rem;
+    }
+    
+    .blog-detail-hero h1 {
+        font-size: 1.6rem;
+    }
+}
+
+.blog-detail-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.blog-detail-content .featured-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.blog-detail-content .post-body {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #334155;
+}
+
+.blog-detail-content .post-body h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 1.5rem 0 0.75rem;
+}
+
+.blog-detail-content .post-body h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 1.25rem 0 0.5rem;
+}
+
+.blog-detail-content .post-body p {
+    margin-bottom: 1rem;
+}
+
+.blog-detail-content .post-body ul,
+.blog-detail-content .post-body ol {
+    margin: 0.75rem 0 1rem 1.5rem;
+}
+
+.blog-detail-content .post-body li {
+    margin-bottom: 0.25rem;
+}
+
+.blog-detail-content .post-body blockquote {
+    border-left: 4px solid #059669;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #475569;
+    font-style: italic;
+}
+
+.share-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.share-section .share-label {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.85rem;
+    margin-right: 0.75rem;
+}
+
+.share-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.share-btn-facebook {
+    background: #1877f2;
+    color: white;
+}
+
+.share-btn-twitter {
+    background: #000000;
+    color: white;
+}
+
+.share-btn-linkedin {
+    background: #0a66c2;
+    color: white;
+}
+
+.share-btn-email {
+    background: #6c757d;
+    color: white;
+}
+
+.share-btn-copy {
+    background: #e5e7eb;
+    color: #1e293b;
+}
+
+.author-section {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin: 1.5rem 0;
+    border: 1px solid #e5e7eb;
+}
+
+.author-section .author-name {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.author-section .author-bio {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.related-posts {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.related-posts h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.related-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+    .related-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.pagination a, .pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #1e293b;
+}
+
+.pagination .page-link:hover {
+    background: #f1f5f9;
+    border-color: #059669;
+}
+
+.pagination .page-current {
+    background: #059669;
+    color: white;
+    border: 1px solid #059669;
+}
+
+.pagination .page-disabled {
+    color: #94a3b8;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    cursor: not-allowed;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: white;
+}
+
+.toast-message {
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 640px) {
+    .blog-detail-hero .post-meta {
+        font-size: 0.75rem;
+        gap: 0.5rem;
+    }
+    
+    .share-btn {
+        padding: 0.3rem 0.7rem;
+        font-size: 0.75rem;
+    }
+    
+    .search-box input {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.7rem;
+    }
+    
+    .search-box button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+    
+    .search-results-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-page">
+    {% if blog_post %}
+        <div class="blog-detail-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <a href="/blog/" class="back-link">
+                        <i class="fas fa-arrow-left"></i> Back to Blog
+                    </a>
+                    <h1>{{ blog_post.title }}</h1>
+                    <div class="post-meta">
+                        <span><i class="far fa-calendar-alt"></i> {{ blog_post.published_at|date:"F j, Y" }}</span>
+                        <span><i class="far fa-clock"></i> {{ blog_post.get_reading_time }}</span>
+                        <span><i class="far fa-eye"></i> {{ blog_post.views }} views</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="blog-detail-content">
+                {% if blog_post.featured_image %}
+                    <img src="{{ blog_post.featured_image.url }}" alt="{{ blog_post.title }}" class="featured-image">
+                {% endif %}
+                
+                <div class="post-body">
+                    {{ blog_post.content|safe }}
+                </div>
+
+                <div class="share-section">
+                    <span class="share-label"><i class="fas fa-share-alt"></i> Share this post:</span>
+                    <div class="share-buttons">
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" rel="noopener" class="share-btn share-btn-facebook">
+                            <i class="fab fa-facebook-f"></i> Facebook
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?text={{ blog_post.title|urlencode }}&url={{ request.build_absolute_uri }}" target="_blank" rel="noopener" class="share-btn share-btn-twitter">
+                            <i class="fab fa-twitter"></i> Twitter
+                        </a>
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri }}" target="_blank" rel="noopener" class="share-btn share-btn-linkedin">
+                            <i class="fab fa-linkedin-in"></i> LinkedIn
+                        </a>
+                        <a href="mailto:?subject={{ blog_post.title|urlencode }}&body={{ request.build_absolute_uri }}" class="share-btn share-btn-email">
+                            <i class="fas fa-envelope"></i> Email
+                        </a>
+                        <button onclick="copyLink()" class="share-btn share-btn-copy">
+                            <i class="fas fa-link"></i> Copy Link
+                        </button>
+                    </div>
+                </div>
+
+                <div class="author-section">
+                    <p class="author-name">
+                        <i class="fas fa-user-edit text-green-600"></i> 
+                        {{ blog_post.created_by.get_full_name|default:blog_post.created_by.email }}
+                    </p>
+                    <p class="author-bio">Published on {{ blog_post.published_at|date:"F j, Y" }}</p>
+                </div>
+
+                {% if related_posts %}
+                    <div class="related-posts">
+                        <h3>You might also like</h3>
+                        <div class="related-grid">
+                            {% for post in related_posts %}
+                                <div class="blog-post-card">
+                                    {% if post.featured_image %}
+                                        <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="post-image" style="height: 160px;">
+                                    {% endif %}
+                                    <div class="post-content">
+                                        <h4 class="post-title" style="font-size: 0.95rem;">
+                                            <a href="/blog/{{ post.slug }}/">{{ post.title }}</a>
+                                        </h4>
+                                        <div class="post-meta" style="font-size: 0.7rem;">
+                                            <span>{{ post.published_at|date:"M d, Y" }}</span>
+                                            <span>{{ post.get_reading_time }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    {% else %}
+        <div class="blog-hero">
+            <div class="container">
+                <h1 class="text-3xl md:text-4xl font-bold text-center">Our Blog</h1>
+                <p class="text-center text-white opacity-80 mt-2 max-w-2xl mx-auto">
+                    Expert insights and academic guidance from our professional team
+                </p>
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" id="blog-search-input" name="search" placeholder="Search articles..." autocomplete="off" value="{{ search_query }}">
+                        <button type="button" id="blog-search-btn"><i class="fas fa-search"></i> Search</button>
+                        <div class="search-suggestions" id="search-suggestions"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="blog-layout">
+                <div class="blog-posts">
+                    {% if search_query %}
+                        <div class="search-results-header">
+                            <div class="results-info">
+                                <span><i class="fas fa-search"></i> Results for:</span>
+                                <span class="query">"{{ search_query }}"</span>
+                                <span class="count">({{ page_obj.paginator.count }} results)</span>
+                            </div>
+                            <a href="/blog/" class="clear-search">
+                                <i class="fas fa-times"></i> Clear search
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <div id="blog-posts-container">
+                        {% if posts %}
+                            <div class="blog-grid" id="blog-grid">
+                                {% for post in posts %}
+                                    <div class="blog-post-card" data-post-id="{{ post.id }}">
+                                        {% if post.featured_image %}
+                                            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="post-image">
+                                        {% endif %}
+                                        <div class="post-content">
+                                            <h3 class="post-title">
+                                                <a href="/blog/{{ post.slug }}/">{{ post.title }}</a>
+                                            </h3>
+                                            <p class="post-excerpt">{{ post.excerpt }}</p>
+                                            <div class="post-meta">
+                                                <span><i class="far fa-calendar-alt"></i> {{ post.published_at|date:"M d, Y" }}</span>
+                                                <span><i class="far fa-clock"></i> {{ post.get_reading_time }}</span>
+                                                <span><i class="far fa-eye"></i> {{ post.views }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if page_obj and page_obj.paginator.num_pages > 1 %}
+                                <div class="pagination" id="pagination">
+                                    {% if page_obj.has_previous %}
+                                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-link">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="page-disabled"><i class="fas fa-chevron-left"></i></span>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <span class="page-current">{{ num }}</span>
+                                        {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+                                            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-link">{{ num }}</a>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-link">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="page-disabled"><i class="fas fa-chevron-right"></i></span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-12" id="no-posts-message">
+                                <i class="fas fa-blog text-4xl text-gray-300 mb-4"></i>
+                                {% if search_query %}
+                                    <h3 class="text-xl font-semibold text-gray-700">No results found for "{{ search_query }}"</h3>
+                                    <p class="text-gray-500 mt-2">Try adjusting your search terms or browse our recent posts below.</p>
+                                {% else %}
+                                    <h3 class="text-xl font-semibold text-gray-700">No posts found</h3>
+                                    <p class="text-gray-500 mt-2">Check back later for new articles.</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="blog-sidebar">
+                    <div class="sidebar-widget">
+                        <h4 class="widget-title"><i class="fas fa-clock text-green-600"></i> Recent Posts</h4>
+                        {% if recent_posts %}
+                            {% for post in recent_posts %}
+                                <div class="widget-item">
+                                    <a href="/blog/{{ post.slug }}/" class="item-title">{{ post.title }}</a>
+                                    <div class="item-date">{{ post.published_at|date:"M d, Y" }}</div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-gray-500 text-sm">No recent posts</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyLink() {
+    const url = window.location.href;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function() {
+            showToast('Link copied to clipboard');
+        }).catch(function() {
+            fallbackCopy(url);
+        });
+    } else {
+        fallbackCopy(url);
+    }
+}
+
+function fallbackCopy(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+        document.execCommand('copy');
+        showToast('Link copied to clipboard');
+    } catch (err) {
+        showToast('Failed to copy link');
+    }
+    document.body.removeChild(textArea);
+}
+
+function showToast(message) {
+    const existing = document.querySelector('.toast-message');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-message fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(function() {
+        toast.remove();
+    }, 3000);
+}
+
+function showSkeletonLoader() {
+    const container = document.getElementById('blog-posts-container');
+    const skeletonHTML = `
+        <div class="blog-grid" id="blog-grid">
+            ${Array(6).fill(0).map(() => `
+                <div class="skeleton-card">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-excerpt"></div>
+                        <div class="skeleton-excerpt"></div>
+                        <div class="skeleton-meta">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    container.innerHTML = skeletonHTML;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('blog-search-input');
+    const suggestionsContainer = document.getElementById('search-suggestions');
+    const searchBtn = document.getElementById('blog-search-btn');
+    const postsContainer = document.getElementById('blog-posts-container');
+    let debounceTimer;
+    let currentSearchQuery = '';
+
+    function updateSearchResults(query) {
+        if (!query || query.length < 2) {
+            if (query.length === 0) {
+                window.location.href = '/blog/';
+            }
+            return;
+        }
+
+        showSkeletonLoader();
+
+        const url = '/blog/?search=' + encodeURIComponent(query);
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(function(response) {
+                return response.text();
+            })
+            .then(function(html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newPosts = doc.querySelector('#blog-posts-container');
+                if (newPosts) {
+                    postsContainer.innerHTML = newPosts.innerHTML;
+                }
+                window.history.pushState({}, '', url);
+            })
+            .catch(function() {
+                window.location.href = url;
+            });
+    }
+
+    if (searchInput && suggestionsContainer) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+            currentSearchQuery = query;
+            
+            if (query.length < 2) {
+                suggestionsContainer.style.display = 'none';
+                if (query.length === 0) {
+                    window.location.href = '/blog/';
+                }
+                return;
+            }
+            
+            suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner"></i> Searching...</div>';
+            suggestionsContainer.style.display = 'block';
+            
+            debounceTimer = setTimeout(function() {
+                fetch('/api/blog/search/?q=' + encodeURIComponent(query))
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.suggestions && data.suggestions.length > 0) {
+                            let html = '';
+                            data.suggestions.forEach(function(post) {
+                                html += '<a href="/blog/' + post.slug + '/" class="suggestion-item">';
+                                html += '<div class="title">' + post.title + '</div>';
+                                html += '<div class="excerpt">' + post.excerpt + '</div>';
+                                html += '</a>';
+                            });
+                            suggestionsContainer.innerHTML = html;
+                            suggestionsContainer.style.display = 'block';
+                        } else {
+                            suggestionsContainer.innerHTML = '<div class="no-results">No results found</div>';
+                            suggestionsContainer.style.display = 'block';
+                        }
+                        
+                        updateSearchResults(query);
+                    })
+                    .catch(function() {
+                        suggestionsContainer.style.display = 'none';
+                    });
+            }, 300);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!suggestionsContainer.contains(e.target) && e.target !== searchInput) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+
+        if (searchBtn) {
+            searchBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                if (query.length >= 2) {
+                    updateSearchResults(query);
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = this.value.trim();
+                const firstLink = suggestionsContainer.querySelector('.suggestion-item');
+                if (firstLink) {
+                    window.location.href = firstLink.href;
+                } else if (query.length >= 2) {
+                    updateSearchResults(query);
+                    suggestionsContainer.style.display = 'none';
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

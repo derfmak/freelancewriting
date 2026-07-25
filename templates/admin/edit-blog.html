@@ -1,0 +1,176 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Edit Blog Post - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.edit-blog {
+    padding: 1.5rem 0;
+}
+
+.edit-blog h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.edit-blog .subtitle {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.35rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    padding: 0.6rem 0.75rem;
+    outline: none;
+    transition: all 0.2s;
+    background: white;
+    font-size: 0.9rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #1e40af;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 300px;
+    font-family: 'Courier New', monospace;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 1rem;
+}
+
+.submit-btn {
+    background: #1e40af;
+    color: white;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.submit-btn:hover {
+    background: #1e3a8a;
+}
+
+.cancel-btn {
+    background: #e5e7eb;
+    color: #1e293b;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.cancel-btn:hover {
+    background: #d1d5db;
+}
+
+.delete-btn {
+    background: #ef4444;
+    color: white;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    text-decoration: none;
+    margin-left: auto;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
+
+.char-count {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: right;
+    margin-top: 0.2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-blog">
+
+    <h1>Edit Blog Post</h1>
+    <p class="subtitle">Update your blog post</p>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" value="{{ blog_post.title }}" required>
+        </div>
+        <div class="form-group">
+            <label for="slug">Slug (URL)</label>
+            <input type="text" id="slug" name="slug" value="{{ blog_post.slug }}">
+        </div>
+        <div class="form-group">
+            <label for="excerpt">Excerpt</label>
+            <textarea id="excerpt" name="excerpt" rows="3">{{ blog_post.excerpt }}</textarea>
+            <div class="char-count"><span id="excerpt-count">{{ blog_post.excerpt|length }}</span>/300</div>
+        </div>
+        <div class="form-group">
+            <label for="content">Content</label>
+            <textarea id="content" name="content" rows="15" required>{{ blog_post.content }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="published_at">Publish Date</label>
+            <input type="datetime-local" id="published_at" name="published_at" value="{{ blog_post.published_at|date:'Y-m-d\TH:i' }}">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="submit-btn"><i class="fas fa-save"></i> Update Post</button>
+            <a href="/admin/blog/" class="cancel-btn">Cancel</a>
+            <a href="#" class="delete-btn" onclick="if(confirm('Delete this post?')){document.getElementById('delete-form').submit();}">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+        </div>
+    </form>
+
+    <form id="delete-form" method="POST" action="/admin/blog/{{ blog_post.id }}/delete/" style="display:none;">
+        {% csrf_token %}
+    </form>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const excerpt = document.getElementById('excerpt');
+    const count = document.getElementById('excerpt-count');
+    
+    excerpt.addEventListener('input', function() {
+        count.textContent = this.value.length;
+    });
+});
+</script>
+{% endblock %}

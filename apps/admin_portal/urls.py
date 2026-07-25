@@ -48,11 +48,9 @@ urlpatterns = [
     path('content/create/', views.create_content, name='create-content'),
     path('content/<uuid:content_id>/delete/', views.delete_content, name='delete-content'),
     
-    path('announcements/', views.list_announcements, name='list-announcements'),
-    path('announcements/create/', views.create_announcement, name='create-announcement'),
-    path('announcements/<uuid:announcement_id>/', views.update_announcement, name='update-announcement'),
-    path('announcements/<uuid:announcement_id>/delete/', views.delete_announcement, name='delete-announcement'),
-    path('announcements/active/', views.active_announcements, name='active-announcements'),
+    path('samples/', views.admin_samples, name='admin-samples'),
+    path('samples/<uuid:sample_id>/toggle/', views.admin_toggle_sample, name='admin-toggle-sample'),
+    path('samples/<uuid:sample_id>/delete/', views.admin_delete_sample, name='admin-delete-sample'),
     
     path('logs/', views.list_logs, name='list-logs'),
     path('logs/export/', views.export_logs, name='export-logs'),

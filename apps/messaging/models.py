@@ -1,67 +1,80 @@
 import uuid
+
 from django.db import models
 from django.utils import timezone
+
 from apps.accounts.models import User
 from apps.orders.models import Order
 
+
 class Conversation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='conversation', db_index=True)
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='conversation')
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_conversations')
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_conversations')
-    last_message_at = models.DateTimeField(default=timezone.now, db_index=True)
+    last_message_at = models.DateTimeField(default=timezone.now)
     student_last_seen = models.DateTimeField(null=True, blank=True)
     admin_last_seen = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        db_table = 'conversations'
+        ordering = ['-last_message_at']
         indexes = [
             models.Index(fields=['order', 'last_message_at']),
             models.Index(fields=['student', 'last_message_at']),
             models.Index(fields=['admin', 'last_message_at']),
         ]
-        db_table = 'conversations'
 
     def __str__(self):
-        return f"Conversation for Order {self.order.order_number}"
+        return f'Conversation for Order {self.order.order_number}'
+
+    def other_participant(self, user):
+        return self.admin if user == self.student else self.student
+
+    def is_participant(self, user):
+        return user == self.student or user == self.admin
 
     def get_unread_count(self, user):
-        if user == self.student:
-            last_seen = self.student_last_seen
-        elif user == self.admin:
-            last_seen = self.admin_last_seen
-        else:
+        if not self.is_participant(user):
             return 0
-        
-        if not last_seen:
-            return self.messages.exclude(sender=user).count()
-        
-        return self.messages.filter(
-            created_at__gt=last_seen
-        ).exclude(sender=user).count()
+        last_seen = self.student_last_seen if user == self.student else self.admin_last_seen
+        qs = self.messages.exclude(sender=user).filter(is_recalled=False)
+        if last_seen:
+            qs = qs.filter(created_at__gt=last_seen)
+        return qs.count()
 
     def mark_seen(self, user):
+        now = timezone.now()
         if user == self.student:
-            self.student_last_seen = timezone.now()
+            self.student_last_seen = now
+            self.save(update_fields=['student_last_seen'])
         elif user == self.admin:
-            self.admin_last_seen = timezone.now()
-        self.save(update_fields=['student_last_seen', 'admin_last_seen'])
+            self.admin_last_seen = now
+            self.save(update_fields=['admin_last_seen'])
+
 
 class Message(models.Model):
+    TEXT = 'text'
+    FILE = 'file'
+    SYSTEM = 'system'
+    EDITED = 'edited'
+    RECALLED = 'recalled'
+
     MESSAGE_TYPES = [
-        ('text', 'text'),
-        ('file', 'file'),
-        ('system', 'system'),
-        ('edited', 'edited'),
-        ('recalled', 'recalled'),
+        (TEXT, 'text'),
+        (FILE, 'file'),
+        (SYSTEM, 'system'),
+        (EDITED, 'edited'),
+        (RECALLED, 'recalled'),
     ]
-    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages', db_index=True)
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     content = models.TextField()
-    message_type = models.CharField(max_length=10, choices=MESSAGE_TYPES, default='text')
+    message_type = models.CharField(max_length=10, choices=MESSAGE_TYPES, default=TEXT)
     file_url = models.URLField(blank=True)
     file_name = models.CharField(max_length=255, blank=True)
     file_size = models.IntegerField(null=True, blank=True)
@@ -69,49 +82,66 @@ class Message(models.Model):
     edited_at = models.DateTimeField(null=True, blank=True)
     is_recalled = models.BooleanField(default=False)
     recalled_at = models.DateTimeField(null=True, blank=True)
-    is_read = models.BooleanField(default=False, db_index=True)
+    is_read = models.BooleanField(default=False)
     read_at = models.DateTimeField(null=True, blank=True)
     is_delivered = models.BooleanField(default=False)
     delivered_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        db_table = 'messages'
+        ordering = ['created_at']
         indexes = [
             models.Index(fields=['conversation', 'created_at']),
             models.Index(fields=['conversation', 'is_read']),
             models.Index(fields=['sender', 'created_at']),
             models.Index(fields=['is_recalled']),
         ]
-        ordering = ['created_at']
-        db_table = 'messages'
 
     def __str__(self):
-        return f"Message {self.id} in {self.conversation}"
+        return f'Message {self.id} in {self.conversation_id}'
+
+    def can_edit(self, user):
+        if self.sender_id != user.id or self.is_recalled:
+            return False
+        return timezone.now() - self.created_at <= timezone.timedelta(minutes=5)
+
+    def can_recall(self, user):
+        if self.sender_id != user.id or self.is_recalled:
+            return False
+        return timezone.now() - self.created_at <= timezone.timedelta(minutes=1)
+
+    def can_delete(self, user):
+        if self.sender_id != user.id:
+            return False
+        return timezone.now() - self.created_at <= timezone.timedelta(minutes=5)
 
     def mark_as_read(self):
-        self.is_read = True
-        self.read_at = timezone.now()
-        self.save(update_fields=['is_read', 'read_at'])
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=['is_read', 'read_at'])
 
     def mark_as_delivered(self):
-        self.is_delivered = True
-        self.delivered_at = timezone.now()
-        self.save(update_fields=['is_delivered', 'delivered_at'])
+        if not self.is_delivered:
+            self.is_delivered = True
+            self.delivered_at = timezone.now()
+            self.save(update_fields=['is_delivered', 'delivered_at'])
 
     def edit(self, new_content):
         self.content = new_content
         self.is_edited = True
         self.edited_at = timezone.now()
-        self.message_type = 'edited'
-        self.save(update_fields=['content', 'is_edited', 'edited_at', 'message_type'])
+        self.save(update_fields=['content', 'is_edited', 'edited_at'])
 
     def recall(self):
         self.is_recalled = True
         self.recalled_at = timezone.now()
         self.content = 'This message was recalled'
-        self.message_type = 'recalled'
+        self.message_type = self.RECALLED
         self.save(update_fields=['is_recalled', 'recalled_at', 'content', 'message_type'])
+
 
 class MessageStatus(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -123,15 +153,15 @@ class MessageStatus(models.Model):
     delivered_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        db_table = 'message_statuses'
         unique_together = ['message', 'user']
         indexes = [
             models.Index(fields=['user', 'is_read']),
             models.Index(fields=['user', 'is_delivered']),
         ]
-        db_table = 'message_statuses'
 
     def __str__(self):
-        return f"Status for {self.message} - User {self.user.email}"
+        return f'Status for {self.message_id} - {self.user.email}'
 
     def mark_read(self):
         self.is_read = True
@@ -143,6 +173,7 @@ class MessageStatus(models.Model):
         self.delivered_at = timezone.now()
         self.save(update_fields=['is_delivered', 'delivered_at'])
 
+
 class TypingStatus(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='typing_statuses')
@@ -151,11 +182,11 @@ class TypingStatus(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        db_table = 'typing_statuses'
         unique_together = ['conversation', 'user']
         indexes = [
             models.Index(fields=['conversation', 'updated_at']),
         ]
-        db_table = 'typing_statuses'
 
     def __str__(self):
-        return f"{self.user.email} typing in {self.conversation}"
+        return f'{self.user.email} typing in {self.conversation_id}'

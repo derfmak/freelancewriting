@@ -1,16 +1,15 @@
+{% extends "client_base.html" %}
 
-{% extends "student_base.html" %}
-
-{% block title %}Student Dashboard - Academic Writing Platform{% endblock %}
+{% block title %}Client Dashboard - AcademicWrite{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Student <span class="text-green-600">Dashboard</span></h1>
+            <h1 class="text-3xl font-bold text-gray-900">Client <span class="text-green-600">Dashboard</span></h1>
             <p class="text-gray-600 mt-1">Welcome back to your dashboard</p>
         </div>
-        <a href="/student/orders/new/" class="bg-green-600 text-white px-6 py-3 font-medium hover:bg-green-700 transition-colors">
+        <a href="/client/orders/new/" class="bg-green-600 text-white px-6 py-3 font-medium hover:bg-green-700 transition-colors">
             New Order
         </a>
     </div>
@@ -40,7 +39,7 @@
             <div id="active-orders-list" class="space-y-4">
                 <div class="text-center text-gray-500 py-8">Loading...</div>
             </div>
-            <a href="/student/orders/?status=active" class="text-green-600 text-sm hover:text-green-700 mt-4 inline-block">View All Orders →</a>
+            <a href="/client/orders/?status=active" class="text-green-600 text-sm hover:text-green-700 mt-4 inline-block">View All Orders →</a>
         </div>
 
         <div class="bg-white border border-gray-200 p-6">
@@ -48,7 +47,7 @@
             <div id="recent-messages" class="space-y-4">
                 <div class="text-center text-gray-500 py-8">Loading...</div>
             </div>
-            <a href="/student/messages/" class="text-green-600 text-sm hover:text-green-700 mt-4 inline-block">View All Messages →</a>
+            <a href="/client/messages/" class="text-green-600 text-sm hover:text-green-700 mt-4 inline-block">View All Messages →</a>
         </div>
     </div>
 
@@ -73,7 +72,7 @@
                 </tbody>
             </table>
         </div>
-        <a href="/student/orders/" class="text-green-600 text-sm hover:text-green-700 mt-4 inline-block">View All Orders →</a>
+        <a href="/client/orders/" class="text-green-600 text-sm hover:text-green-700 mt-4 inline-block">View All Orders →</a>
     </div>
 </div>
 
@@ -85,20 +84,37 @@ document.addEventListener('DOMContentLoaded', function() {
     loadRecentOrders();
 });
 
+function getApiBase() {
+    return window.location.origin;
+}
+
 async function loadDashboardStats() {
     try {
-        const wallet = await api.get('/wallet/');
-        document.getElementById('wallet-balance').textContent = `$${parseFloat(wallet.balance).toFixed(2)}`;
+        const walletResponse = await fetch('/api/v1/client/wallet/', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
+        if (walletResponse.ok) {
+            const wallet = await walletResponse.json();
+            document.getElementById('wallet-balance').textContent = `$${parseFloat(wallet.balance).toFixed(2)}`;
+        }
         
-        const orders = await api.get('/orders/');
-        const totalOrders = orders.length;
-        const activeOrders = orders.filter(o => ['pending', 'ongoing', 'awaiting_review'].includes(o.status)).length;
-        const completedOrders = orders.filter(o => o.status === 'completed').length;
-        
-        document.getElementById('total-orders').textContent = totalOrders;
-        document.getElementById('active-orders').textContent = activeOrders;
-        document.getElementById('completed-orders').textContent = completedOrders;
-        
+        const ordersResponse = await fetch('/api/v1/client/orders/', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
+        if (ordersResponse.ok) {
+            const orders = await ordersResponse.json();
+            const totalOrders = orders.length;
+            const activeOrders = orders.filter(o => ['request', 'in_progress'].includes(o.status)).length;
+            const completedOrders = orders.filter(o => o.status === 'completed').length;
+            
+            document.getElementById('total-orders').textContent = totalOrders;
+            document.getElementById('active-orders').textContent = activeOrders;
+            document.getElementById('completed-orders').textContent = completedOrders;
+        }
     } catch (error) {
         console.error('Failed to load stats');
     }
@@ -106,8 +122,19 @@ async function loadDashboardStats() {
 
 async function loadActiveOrders() {
     try {
-        const orders = await api.get('/orders/?status=active');
+        const response = await fetch('/api/v1/client/orders/?status=request,in_progress', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
         const container = document.getElementById('active-orders-list');
+        
+        if (!response.ok) {
+            container.innerHTML = '<div class="text-center text-red-500 py-4">Failed to load orders</div>';
+            return;
+        }
+        
+        const orders = await response.json();
         
         if (!orders || orders.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-4">No active orders</div>';
@@ -117,14 +144,14 @@ async function loadActiveOrders() {
         container.innerHTML = orders.slice(0, 3).map(order => `
             <div class="border border-gray-200 p-4">
                 <div class="flex justify-between items-start mb-2">
-                    <a href="/student/orders/${order.id}/" class="font-medium text-green-600 hover:text-green-700">
+                    <a href="/client/orders/${order.id}/" class="font-medium text-green-600 hover:text-green-700">
                         ${order.order_number || 'Order'}
                     </a>
                     <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700">${order.status.replace('_', ' ')}</span>
                 </div>
-                <p class="text-sm text-gray-600 mb-3">${order.topic.substring(0, 50)}${order.topic.length > 50 ? '...' : ''}</p>
+                <p class="text-sm text-gray-600 mb-3">${order.topic ? order.topic.substring(0, 50) : ''}${order.topic && order.topic.length > 50 ? '...' : ''}</p>
                 <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">${new Date(order.deadline).toLocaleDateString()}</span>
+                    <span class="text-gray-500">${order.deadline ? new Date(order.deadline).toLocaleDateString() : 'N/A'}</span>
                     <div class="w-24 h-1 bg-gray-200">
                         <div class="h-1 bg-green-600" style="width: ${order.progress_percentage || 0}%"></div>
                     </div>
@@ -139,8 +166,19 @@ async function loadActiveOrders() {
 
 async function loadRecentMessages() {
     try {
-        const conversations = await api.get('/messages/conversations/');
+        const response = await fetch('/api/v1/messaging/conversations/', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
         const container = document.getElementById('recent-messages');
+        
+        if (!response.ok) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-4">No messages</div>';
+            return;
+        }
+        
+        const conversations = await response.json();
         
         if (!conversations || conversations.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-4">No messages</div>';
@@ -150,9 +188,9 @@ async function loadRecentMessages() {
         container.innerHTML = conversations.slice(0, 3).map(conv => {
             const lastMessage = conv.last_message || {};
             return `
-                <a href="/student/messages/order/${conv.order.id}/" class="block border border-gray-200 p-3 hover:bg-gray-50">
+                <a href="/client/messages/order/${conv.order?.id || conv.id}/" class="block border border-gray-200 p-3 hover:bg-gray-50">
                     <div class="flex justify-between items-start mb-1">
-                        <span class="font-medium text-gray-800">Order #${conv.order.order_number}</span>
+                        <span class="font-medium text-gray-800">Order #${conv.order?.order_number || conv.id}</span>
                         <span class="text-xs text-gray-500">${formatTime(lastMessage.created_at || conv.last_message_at)}</span>
                     </div>
                     <p class="text-sm text-gray-600 truncate">${lastMessage.content || 'No messages yet'}</p>
@@ -170,8 +208,19 @@ async function loadRecentMessages() {
 
 async function loadRecentOrders() {
     try {
-        const orders = await api.get('/orders/');
+        const response = await fetch('/api/v1/client/orders/', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
         const tbody = document.getElementById('recent-orders');
+        
+        if (!response.ok) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-4">Failed to load orders</td></tr>';
+            return;
+        }
+        
+        const orders = await response.json();
         
         if (!orders || orders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No orders found</td></tr>';
@@ -181,11 +230,11 @@ async function loadRecentOrders() {
         tbody.innerHTML = orders.slice(0, 5).map(order => `
             <tr class="border-b border-gray-100">
                 <td class="py-3 font-medium">${order.order_number || 'N/A'}</td>
-                <td class="py-3">${order.topic.substring(0, 30)}${order.topic.length > 30 ? '...' : ''}</td>
+                <td class="py-3">${order.topic ? order.topic.substring(0, 30) : ''}${order.topic && order.topic.length > 30 ? '...' : ''}</td>
                 <td class="py-3"><span class="text-xs px-2 py-1 bg-gray-100 text-gray-700">${order.status.replace('_', ' ')}</span></td>
-                <td class="py-3">${new Date(order.deadline).toLocaleDateString()}</td>
-                <td class="py-3">$${parseFloat(order.total_price).toFixed(2)}</td>
-                <td class="py-3"><a href="/student/orders/${order.id}/" class="text-green-600 hover:text-green-700">View</a></td>
+                <td class="py-3">${order.deadline ? new Date(order.deadline).toLocaleDateString() : 'N/A'}</td>
+                <td class="py-3">$${parseFloat(order.total_price || 0).toFixed(2)}</td>
+                <td class="py-3"><a href="/client/orders/${order.id}/" class="text-green-600 hover:text-green-700">View</a></td>
             </tr>
         `).join('');
         

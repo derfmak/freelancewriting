@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.postgres.indexes import GinIndex
 from apps.accounts.models import User
 from apps.orders.models import Order
 
@@ -22,8 +23,9 @@ class AdminActionLog(models.Model):
         ('content_edit', 'Edit Content'),
         ('settings_change', 'Change Setting'),
         ('wallet_adjust', 'Adjust Wallet'),
-        ('announcement_create', 'Create Announcement'),
-        ('announcement_update', 'Update Announcement'),
+        ('blog_create', 'Create Blog Post'),
+        ('blog_update', 'Update Blog Post'),
+        ('blog_delete', 'Delete Blog Post'),
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -306,101 +308,42 @@ class PlatformStats(models.Model):
         self.save()
 
 
-class Announcement(models.Model):
-    PRIORITY_CHOICES = [
-        ('low', 'Low'),
-        ('medium', 'Medium'),
-        ('high', 'High'),
-        ('urgent', 'Urgent'),
-    ]
-    
-    TARGET_CHOICES = [
-        ('all', 'All Users'),
-        ('clients', 'Clients Only'),
-        ('admin', 'Admin Only'),
-    ]
-    
+class Blog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
+    excerpt = models.TextField(max_length=300)
     content = models.TextField()
-    priority = models.CharField(
-        max_length=10, 
-        choices=PRIORITY_CHOICES, 
-        default='medium',
-        db_index=True
-    )
-    target_audience = models.CharField(
-        max_length=10,
-        choices=TARGET_CHOICES,
-        default='all'
-    )
-    is_active = models.BooleanField(default=True, db_index=True)
-    starts_at = models.DateTimeField(default=timezone.now, db_index=True)
-    expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
-    created_by = models.ForeignKey(
-        User, 
-        on_delete=models.SET_NULL, 
-        null=True
-    )
-    viewed_count = models.IntegerField(default=0)
+    published_at = models.DateTimeField(default=timezone.now, db_index=True)
+    views = models.PositiveIntegerField(default=0)
+    shares = models.PositiveIntegerField(default=0)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         indexes = [
-            models.Index(fields=['is_active', 'priority']),
-            models.Index(fields=['starts_at', 'expires_at']),
-            models.Index(fields=['target_audience']),
+            models.Index(fields=['slug']),
+            models.Index(fields=['published_at']),
+            GinIndex(fields=['title', 'content', 'excerpt']),
         ]
-        db_table = 'announcements'
-        ordering = ['-starts_at']
+        db_table = 'blog_posts'
+        ordering = ['-published_at']
 
     def __str__(self):
         return self.title
 
-    def is_current(self):
-        now = timezone.now()
-        return (
-            self.is_active and 
-            self.starts_at <= now and 
-            (self.expires_at is None or self.expires_at > now)
-        )
-
-    @classmethod
-    def get_active_announcements(cls, user=None):
-        from django.core.cache import cache
-        cache_key = 'active_announcements'
-        announcements = cache.get(cache_key)
-        
-        if announcements is not None:
-            return announcements
-        
-        now = timezone.now()
-        queryset = cls.objects.filter(
-            is_active=True,
-            starts_at__lte=now
-        ).filter(
-            models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=now)
-        ).order_by('-priority', '-starts_at')
-        
-        if user:
-            if user.role == 'admin':
-                queryset = queryset.filter(
-                    models.Q(target_audience='all') | models.Q(target_audience='admin')
-                )
-            else:
-                queryset = queryset.filter(
-                    models.Q(target_audience='all') | models.Q(target_audience='clients')
-                )
-        
-        announcements = list(queryset[:10])
-        cache.set(cache_key, announcements, 300)
-        return announcements
+    def get_reading_time(self):
+        words_per_minute = 200
+        word_count = len(self.content.split())
+        minutes = max(1, round(word_count / words_per_minute))
+        return f"{minutes} min read"
 
     def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
         super().save(*args, **kwargs)
-        from django.core.cache import cache
-        cache.delete('active_announcements')
 
 
 class AdminNote(models.Model):
@@ -442,3 +385,25 @@ class AdminNote(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.admin.email}"
+    
+    
+class Sample(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    file = models.FileField(upload_to='samples/')
+    file_name = models.CharField(max_length=255)
+    file_size = models.IntegerField()
+    file_type = models.CharField(max_length=100)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    downloads = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'samples'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title

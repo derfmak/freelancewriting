@@ -4,7 +4,7 @@ from django.db.models import Sum, Count, Q
 from apps.accounts.models import User
 from apps.orders.models import Order
 from apps.payments.models import Transaction, Wallet
-from .models import AdminActionLog, SystemSetting, SiteContent, Announcement, AdminNote, PlatformStats
+from .models import AdminActionLog, SystemSetting, SiteContent, Blog, AdminNote, PlatformStats
 
 
 class UserAdminSerializer(serializers.ModelSerializer):
@@ -167,22 +167,21 @@ class SiteContentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'updated_at', 'created_at']
 
 
-class AnnouncementSerializer(serializers.ModelSerializer):
-    is_current = serializers.SerializerMethodField()
+class BlogSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source='created_by.full_name', default='System')
+    reading_time = serializers.SerializerMethodField()
     
     class Meta:
-        model = Announcement
+        model = Blog
         fields = [
-            'id', 'title', 'content', 'priority', 'target_audience',
-            'is_active', 'is_current', 'starts_at', 'expires_at',
-            'created_by', 'created_by_name', 'viewed_count',
-            'created_at', 'updated_at'
+            'id', 'title', 'slug', 'excerpt', 'content',
+            'published_at', 'views', 'created_by', 'created_by_name',
+            'reading_time', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_by', 'viewed_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'views', 'created_by', 'created_at', 'updated_at']
     
-    def get_is_current(self, obj):
-        return obj.is_current()
+    def get_reading_time(self, obj):
+        return obj.get_reading_time()
 
 
 class AdminActionLogSerializer(serializers.ModelSerializer):

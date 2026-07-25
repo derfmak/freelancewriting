@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from apps.accounts.models import User
 from apps.orders.models import Order
-from .models import Announcement, SystemSetting, SiteContent, AdminNote
+from .models import Blog, SystemSetting, SiteContent, AdminNote
 
 
 class UserAdminForm(forms.ModelForm):
@@ -148,68 +148,50 @@ class RefundActionForm(forms.Form):
         return amount
 
 
-class AnnouncementForm(forms.ModelForm):
-    target_audience = forms.MultipleChoiceField(
-        choices=[
-            ('all', 'All Users'),
-            ('clients', 'Clients Only'),
-            ('admin', 'Admin Only'),
-        ],
-        widget=forms.CheckboxSelectMultiple(attrs={
-            'class': 'space-y-2'
-        }),
-        required=False,
-        initial=['all']
-    )
-    
-    send_notification = forms.BooleanField(
-        required=False,
-        initial=False,
-        widget=forms.CheckboxInput(attrs={
-            'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
-        })
-    )
-
+class BlogForm(forms.ModelForm):
     class Meta:
-        model = Announcement
-        fields = ['title', 'content', 'priority', 'is_active', 'starts_at', 'expires_at']
+        model = Blog
+        fields = ['title', 'slug', 'excerpt', 'content', 'published_at']
         widgets = {
             'title': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition',
+                'placeholder': 'Enter blog post title...'
+            }),
+            'slug': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition',
+                'placeholder': 'url-friendly-slug'
+            }),
+            'excerpt': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Short summary of the post...',
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
             }),
             'content': forms.Textarea(attrs={
-                'rows': 6,
-                'placeholder': 'Announcement content...',
-                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
+                'rows': 15,
+                'placeholder': 'Write your blog post content here...',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-mono'
             }),
-            'priority': forms.Select(attrs={
-                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
-            }),
-            'is_active': forms.CheckboxInput(attrs={
-                'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'
-            }),
-            'starts_at': forms.DateTimeInput(attrs={
-                'type': 'datetime-local',
-                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
-            }),
-            'expires_at': forms.DateTimeInput(attrs={
+            'published_at': forms.DateTimeInput(attrs={
                 'type': 'datetime-local',
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
             }),
         }
 
-    def clean_starts_at(self):
-        starts_at = self.cleaned_data.get('starts_at')
-        if starts_at and starts_at < timezone.now():
-            raise forms.ValidationError('Start date must be in the future.')
-        return starts_at
+    def clean_slug(self):
+        slug = self.cleaned_data.get('slug')
+        if slug:
+            slug = slug.lower().strip()
+            if ' ' in slug:
+                raise forms.ValidationError('Slug cannot contain spaces.')
+        return slug
 
-    def clean_expires_at(self):
-        expires_at = self.cleaned_data.get('expires_at')
-        starts_at = self.cleaned_data.get('starts_at')
-        if expires_at and starts_at and expires_at <= starts_at:
-            raise forms.ValidationError('Expiry date must be after start date.')
-        return expires_at
+    def clean_title(self):
+        title = self.cleaned_data.get('title')
+        if title:
+            title = title.strip()
+            if len(title) < 3:
+                raise forms.ValidationError('Title must be at least 3 characters.')
+        return title
 
 
 class SystemSettingForm(forms.ModelForm):

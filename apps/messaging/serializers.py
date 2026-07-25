@@ -1,94 +1,99 @@
 from rest_framework import serializers
-from django.db import models
-from .models import Conversation, Message, MessageStatus, TypingStatus
-from apps.orders.serializers import OrderListSerializer
+
+from apps.accounts.models import User
+
+from .models import Conversation, Message
+
+
+class MessageSenderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'role']
+
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender_name = serializers.CharField(source='sender.full_name', read_only=True)
-    sender_role = serializers.CharField(source='sender.role', read_only=True)
-    sender_email = serializers.EmailField(source='sender.email', read_only=True)
-    is_edited = serializers.BooleanField(read_only=True)
-    is_recalled = serializers.BooleanField(read_only=True)
-    
+    sender = MessageSenderSerializer(read_only=True)
+
     class Meta:
         model = Message
         fields = [
-            'id', 'conversation', 'sender', 'sender_name', 'sender_role', 'sender_email',
-            'content', 'message_type', 'file_url', 'file_name', 'file_size',
-            'is_edited', 'edited_at', 'is_recalled', 'recalled_at',
-            'is_read', 'read_at', 'is_delivered', 'delivered_at',
-            'created_at', 'updated_at'
+            'id', 'conversation', 'sender', 'content', 'message_type',
+            'file_url', 'file_name', 'file_size', 'is_edited', 'edited_at',
+            'is_recalled', 'recalled_at', 'is_read', 'read_at',
+            'is_delivered', 'delivered_at', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = fields
+
 
 class MessageCreateSerializer(serializers.Serializer):
-    content = serializers.CharField(required=True)
-    message_type = serializers.ChoiceField(choices=['text', 'file', 'system'], default='text')
-    file_url = serializers.URLField(required=False, allow_blank=True)
-    file_name = serializers.CharField(required=False, allow_blank=True)
-    file_size = serializers.IntegerField(required=False, allow_null=True)
+    content = serializers.CharField(required=False, allow_blank=True, default='')
+    message_type = serializers.ChoiceField(choices=Message.MESSAGE_TYPES, default=Message.TEXT)
+    file_url = serializers.URLField(required=False, allow_blank=True, default='')
+    file_name = serializers.CharField(required=False, allow_blank=True, default='')
+    file_size = serializers.IntegerField(required=False, allow_null=True, default=None)
+
+    def validate(self, data):
+        if data.get('message_type') == Message.TEXT and not data.get('content', '').strip():
+            raise serializers.ValidationError('content is required for text messages')
+        if data.get('message_type') == Message.FILE and not data.get('file_url'):
+            raise serializers.ValidationError('file_url is required for file messages')
+        return data
+
 
 class MessageEditSerializer(serializers.Serializer):
-    content = serializers.CharField(required=True)
+    content = serializers.CharField()
 
-class MessageRecallSerializer(serializers.Serializer):
-    message_id = serializers.UUIDField(required=True)
+    def validate_content(self, value):
+        if not value.strip():
+            raise serializers.ValidationError('content cannot be empty')
+        return value
+
+
+class ConversationLastMessageSerializer(serializers.ModelSerializer):
+    sender = MessageSenderSerializer(read_only=True)
+
+    class Meta:
+        model = Message
+        fields = ['id', 'content', 'message_type', 'sender', 'created_at']
+
 
 class ConversationSerializer(serializers.ModelSerializer):
-    order = OrderListSerializer(read_only=True)
-    last_message = serializers.SerializerMethodField()
-    unread_count = serializers.SerializerMethodField()
-    student_name = serializers.CharField(source='student.full_name', read_only=True)
+    student_name = serializers.SerializerMethodField()
     student_email = serializers.EmailField(source='student.email', read_only=True)
-    admin_name = serializers.CharField(source='admin.full_name', read_only=True)
-    
+    admin_name = serializers.SerializerMethodField()
+    order = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
+    last_message = serializers.SerializerMethodField()
+
     class Meta:
         model = Conversation
         fields = [
-            'id', 'order', 'student', 'student_name', 'student_email',
-            'admin', 'admin_name', 'last_message_at', 'created_at', 'updated_at',
-            'last_message', 'unread_count'
+            'id', 'order', 'student_name', 'student_email', 'admin_name',
+            'last_message_at', 'unread_count', 'last_message', 'created_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def get_last_message(self, obj):
-        last_message = obj.messages.order_by('-created_at').first()
-        if last_message:
-            return MessageSerializer(last_message).data
-        return None
-    
+
+    def get_student_name(self, obj):
+        return f'{obj.student.first_name} {obj.student.last_name}'.strip() or obj.student.email
+
+    def get_admin_name(self, obj):
+        return f'{obj.admin.first_name} {obj.admin.last_name}'.strip() or obj.admin.email
+
+    def get_order(self, obj):
+        return {
+            'id': str(obj.order.id),
+            'order_number': obj.order.order_number,
+            'topic': getattr(obj.order, 'topic', ''),
+            'status': getattr(obj.order, 'status', ''),
+        }
+
     def get_unread_count(self, obj):
-        user = self.context['request'].user
-        if user == obj.student:
-            last_seen = obj.student_last_seen
-        elif user == obj.admin:
-            last_seen = obj.admin_last_seen
-        else:
+        request = self.context.get('request')
+        if not request:
             return 0
-        
-        if not last_seen:
-            return obj.messages.exclude(sender=user).count()
-        
-        return obj.messages.filter(
-            created_at__gt=last_seen
-        ).exclude(sender=user).count()
+        return obj.get_unread_count(request.user)
 
-class MessageStatusSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.full_name', read_only=True)
-    
-    class Meta:
-        model = MessageStatus
-        fields = [
-            'id', 'message', 'user', 'user_name',
-            'is_read', 'read_at', 'is_delivered', 'delivered_at'
-        ]
-
-class TypingStatusSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.full_name', read_only=True)
-    
-    class Meta:
-        model = TypingStatus
-        fields = [
-            'id', 'conversation', 'user', 'user_name',
-            'is_typing', 'updated_at'
-        ]
+    def get_last_message(self, obj):
+        message = obj.messages.order_by('-created_at').first()
+        if not message:
+            return None
+        return ConversationLastMessageSerializer(message).data

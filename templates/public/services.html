@@ -1,44 +1,374 @@
 {% extends "base.html" %}
 
-{% block title %}Our Services - Academic Writing Platform{% endblock %}
+{% block title %}Academic Writing Services - Professional Help for Students{% endblock %}
+
+{% block extra_css %}
+<style>
+.services-hero {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    padding: 3.5rem 0 4.5rem;
+    margin: -1.5rem -2rem 2rem -2rem;
+    border-radius: 0 0 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.services-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+');
+    background-size: 60px 60px;
+    opacity: 0.3;
+}
+
+@media (max-width: 640px) {
+    .services-hero {
+        padding: 2.5rem 0 3.5rem;
+        margin: -1rem -1rem 1.5rem -1rem;
+        border-radius: 0 0 1.5rem 1.5rem;
+    }
+}
+
+.services-hero h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: white;
+    position: relative;
+    z-index: 1;
+}
+
+.services-hero p {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 640px) {
+    .services-hero h1 {
+        font-size: 2rem;
+    }
+    .services-hero p {
+        font-size: 1rem;
+    }
+}
+
+.feature-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.3rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.feature-badge i {
+    font-size: 0.7rem;
+}
+
+.services-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.service-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.service-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #059669;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.service-card:hover {
+    border-color: #059669;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.service-card:hover::before {
+    transform: scaleX(1);
+}
+
+.service-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    background: #ecfdf5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #059669;
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.service-card:hover .service-icon {
+    background: #059669;
+    color: white;
+    transform: scale(1.05);
+}
+
+.service-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.service-card p {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.service-tag {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+    margin-top: 0.5rem;
+    margin-right: 0.3rem;
+}
+
+.service-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    background: #f1f5f9;
+}
+
+.image-wrapper {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.image-wrapper img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.image-wrapper:hover img {
+    transform: scale(1.02);
+}
+
+.cta-section {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    padding: 3rem 2rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    color: white;
+    margin-top: 2rem;
+}
+
+.cta-section h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.cta-section p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+}
+
+.cta-btn {
+    display: inline-block;
+    background: white;
+    color: #059669;
+    padding: 0.75rem 2.5rem;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    background: #f8fafc;
+}
+
+.section-subtitle {
+    color: #64748b;
+    text-align: center;
+    max-width: 600px;
+    margin: 0.5rem auto 0;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 py-8">
-    <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">Our <span class="text-green-600">Services</span></h1>
-        <div class="w-20 h-1 bg-green-600 mx-auto mb-6"></div>
-        <p class="text-xl text-gray-600">Professional academic writing assistance</p>
+<div class="services-page">
+
+    <section class="services-hero">
+        <div class="container text-center">
+            <span class="feature-badge">
+                <i class="fas fa-star"></i> Premium Academic Services
+            </span>
+            <h1>Our <span style="color: #fbbf24;">Services</span></h1>
+            <p>Professional academic writing assistance for every student</p>
+        </div>
+    </section>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <p class="section-subtitle">Expert help across all academic levels and subjects</p>
+        </div>
+
+        <div class="image-wrapper mb-8">
+            <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1200&h=180&fit=crop&crop=center" 
+                 alt="Academic writing services" 
+                 loading="lazy">
+        </div>
+
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-pen-fancy"></i>
+                </div>
+                <h3>Essay Writing</h3>
+                <p>High-quality essays for all academic levels and subjects. Custom-written to meet your specific requirements.</p>
+                <div>
+                    <span class="service-tag">Custom</span>
+                    <span class="service-tag">Plagiarism-Free</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-flask"></i>
+                </div>
+                <h3>Research Papers</h3>
+                <p>Comprehensive research papers with in-depth analysis of complex topics across all disciplines.</p>
+                <div>
+                    <span class="service-tag">APA</span>
+                    <span class="service-tag">MLA</span>
+                    <span class="service-tag">Chicago</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3>Dissertations & Theses</h3>
+                <p>PhD and Master's dissertation assistance from subject matter experts with advanced degrees.</p>
+                <div>
+                    <span class="service-tag">Research</span>
+                    <span class="service-tag">Methodology</span>
+                    <span class="service-tag">Analysis</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <h3>Editing & Proofreading</h3>
+                <p>Professional editing and proofreading to ensure your work is polished and error-free.</p>
+                <div>
+                    <span class="service-tag">Grammar</span>
+                    <span class="service-tag">Style</span>
+                    <span class="service-tag">Clarity</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h3>Coursework & Assignments</h3>
+                <p>Help with all types of coursework, assignments, and academic projects across any subject.</p>
+                <div>
+                    <span class="service-tag">Homework</span>
+                    <span class="service-tag">Projects</span>
+                    <span class="service-tag">Reports</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h3>Admission Essays</h3>
+                <p>Personal statements, application essays, and statements of purpose for university admissions.</p>
+                <div>
+                    <span class="service-tag">Personal</span>
+                    <span class="service-tag">Scholarship</span>
+                    <span class="service-tag">Admissions</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3>Case Studies</h3>
+                <p>Detailed case study analysis for business, law, medicine, and social science courses.</p>
+                <div>
+                    <span class="service-tag">Analysis</span>
+                    <span class="service-tag">Solutions</span>
+                    <span class="service-tag">Recommendations</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h3>Literature Reviews</h3>
+                <p>Comprehensive literature reviews synthesizing research from multiple sources.</p>
+                <div>
+                    <span class="service-tag">Synthesis</span>
+                    <span class="service-tag">Critical Analysis</span>
+                    <span class="service-tag">Citations</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2>Need Help With Your Academic Work?</h2>
+            <p>Get professional assistance from qualified writers today</p>
+            <a href="/place-order/" class="cta-btn">
+                <i class="fas fa-paper-plane"></i> Place Your Order
+            </a>
+        </div>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white border border-gray-200 p-6 hover:border-green-600 transition">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">Essay Writing</h3>
-            <p class="text-gray-600 text-sm">High-quality essays for all academic levels and subjects.</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6 hover:border-green-600 transition">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">Research Papers</h3>
-            <p class="text-gray-600 text-sm">Comprehensive research and analysis for complex topics.</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6 hover:border-green-600 transition">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">Dissertations</h3>
-            <p class="text-gray-600 text-sm">PhD and Master's dissertation assistance from experts.</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6 hover:border-green-600 transition">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">Editing & Proofreading</h3>
-            <p class="text-gray-600 text-sm">Professional editing and proofreading services.</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6 hover:border-green-600 transition">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">Coursework</h3>
-            <p class="text-gray-600 text-sm">Help with assignments and coursework.</p>
-        </div>
-        <div class="bg-white border border-gray-200 p-6 hover:border-green-600 transition">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">Admission Essays</h3>
-            <p class="text-gray-600 text-sm">Personal statements and application essays.</p>
-        </div>
-    </div>
-
-    <div class="bg-gray-100 w-full h-48 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300">
-        <span class="text-lg">Image Placeholder - Services</span>
-    </div>
 </div>
 {% endblock %}

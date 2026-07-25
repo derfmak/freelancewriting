@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>{% block title %}Student Portal - Academic Write{% endblock %}</title>
+    <title>{% block title %}Client Portal - AcademicWrite{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -24,10 +24,16 @@
         .container {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 0 2rem;
+            padding: 0 1.5rem;
         }
 
-        .student-header {
+        @media (max-width: 640px) {
+            .container {
+                padding: 0 1rem;
+            }
+        }
+
+        .client-header {
             background: linear-gradient(135deg, #059669 0%, #10b981 100%);
             position: sticky;
             top: 0;
@@ -40,20 +46,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 4.5rem;
+            height: 4rem;
             width: 100%;
-            gap: 2rem;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .header-content {
+                height: 4.5rem;
+                gap: 2rem;
+            }
         }
 
         .logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 3rem;
-            height: 3rem;
+            width: 2.6rem;
+            height: 2.6rem;
             background: white;
             border-radius: 50%;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             font-weight: 700;
             letter-spacing: 0.05em;
             color: #059669;
@@ -66,54 +79,101 @@
             flex-shrink: 0;
         }
 
+        @media (min-width: 768px) {
+            .logo {
+                width: 3rem;
+                height: 3rem;
+                font-size: 0.8rem;
+            }
+        }
+
         .logo:hover {
             background: #fbbf24;
             color: #059669;
             transform: scale(1.05);
         }
 
-        .student-nav {
+        .client-nav {
             display: none;
             align-items: center;
             height: 100%;
             flex: 1;
             justify-content: center;
-            gap: 0.25rem;
+            gap: 0.15rem;
         }
 
-        .student-nav a {
-            color: rgba(255, 255, 255, 0.9);
+        @media (min-width: 1024px) {
+            .client-nav {
+                display: flex;
+            }
+        }
+
+        .client-nav a {
+            color: rgba(255, 255, 255, 0.85);
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.85rem;
-            padding: 0.5rem 1rem;
-            margin: 0 0.1rem;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.7rem;
             transition: all 0.3s ease;
             white-space: nowrap;
             border-radius: 4px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
-        .student-nav a:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.15);
+        @media (min-width: 1280px) {
+            .client-nav a {
+                font-size: 0.85rem;
+                padding: 0.5rem 1rem;
+            }
         }
 
-        .student-nav a.active {
+        .client-nav a:hover {
             color: white;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .client-nav a.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.18);
             border-bottom: 2px solid #fbbf24;
+        }
+
+        .client-nav a .nav-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.5rem;
+            font-weight: 600;
+            min-width: 1rem;
+            height: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid #059669;
         }
 
         .auth-section {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.5rem;
             flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .auth-section {
+                gap: 0.75rem;
+            }
         }
 
         .notification-bell {
             position: relative;
-            padding: 0.6rem;
+            padding: 0.4rem;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
@@ -123,6 +183,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .notification-bell {
+                padding: 0.5rem;
+            }
         }
 
         .notification-bell:hover {
@@ -132,14 +198,14 @@
 
         .notification-badge {
             position: absolute;
-            top: -6px;
-            right: -6px;
+            top: -5px;
+            right: -5px;
             background: #ef4444;
             color: white;
-            font-size: 0.65rem;
+            font-size: 0.55rem;
             font-weight: 600;
-            min-width: 1.3rem;
-            height: 1.3rem;
+            min-width: 1.1rem;
+            height: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -147,17 +213,27 @@
             border-radius: 50%;
         }
 
+        .user-menu {
+            position: relative;
+        }
+
         .user-profile {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            padding: 0.25rem 0.75rem;
+            gap: 0.5rem;
+            padding: 0.3rem 0.6rem;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-width: 100px;
+        }
+
+        @media (min-width: 768px) {
+            .user-profile {
+                padding: 0.4rem 0.8rem;
+                gap: 0.6rem;
+            }
         }
 
         .user-profile:hover {
@@ -165,18 +241,26 @@
         }
 
         .profile-image {
-            width: 2.5rem;
-            height: 2.5rem;
+            width: 2rem;
+            height: 2rem;
             border-radius: 50%;
             background: white;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #059669;
-            font-size: 1rem;
+            font-size: 0.8rem;
             font-weight: 600;
             border: 2px solid white;
             overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .profile-image {
+                width: 2.2rem;
+                height: 2.2rem;
+            }
         }
 
         .profile-image img {
@@ -187,39 +271,37 @@
         }
 
         .profile-info {
-            display: flex;
+            display: none;
             flex-direction: column;
-            align-items: center;
-            margin-top: 0.25rem;
-            width: 100%;
+            min-width: 0;
+        }
+
+        @media (min-width: 768px) {
+            .profile-info {
+                display: flex;
+            }
         }
 
         .profile-name {
             color: white;
-            font-weight: 600;
+            font-weight: 500;
             font-size: 0.8rem;
-            max-width: 100px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            text-align: center;
         }
 
         .profile-role {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.6);
             font-size: 0.65rem;
-        }
-
-        .user-menu {
-            position: relative;
         }
 
         .user-menu-dropdown {
             position: absolute;
             right: 0;
             top: 100%;
-            margin-top: 0.75rem;
-            width: 12rem;
+            margin-top: 0.5rem;
+            width: 11rem;
             background: white;
             border: 1px solid #e2e8f0;
             box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
@@ -231,6 +313,12 @@
             border-radius: 4px;
         }
 
+        @media (min-width: 768px) {
+            .user-menu-dropdown {
+                width: 12rem;
+            }
+        }
+
         .user-menu-dropdown.show {
             opacity: 1;
             visibility: visible;
@@ -238,12 +326,21 @@
         }
 
         .user-menu-item {
-            display: block;
-            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
             color: #1e293b;
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             transition: all 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .user-menu-item {
+                padding: 0.75rem 1rem;
+                font-size: 0.85rem;
+            }
         }
 
         .user-menu-item:hover {
@@ -254,19 +351,25 @@
         .user-menu-divider {
             height: 1px;
             background: #e2e8f0;
-            margin: 0.5rem 0;
+            margin: 0.3rem 0;
         }
 
         .mobile-menu-button {
             display: block;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 0.75rem;
+            padding: 0.35rem 0.6rem;
             color: white;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.85rem;
             border-radius: 4px;
+        }
+
+        @media (min-width: 1024px) {
+            .mobile-menu-button {
+                display: none;
+            }
         }
 
         .mobile-menu-button:hover {
@@ -276,12 +379,12 @@
 
         .mobile-menu {
             position: fixed;
-            top: 4.5rem;
+            top: 4rem;
             left: 0;
             right: 0;
             bottom: 0;
             background: white;
-            padding: 1.5rem;
+            padding: 1rem;
             transform: translateX(-100%);
             transition: transform 0.3s ease;
             z-index: 40;
@@ -289,24 +392,56 @@
             border-top: 2px solid #059669;
         }
 
+        @media (min-width: 768px) {
+            .mobile-menu {
+                top: 4.5rem;
+                padding: 1.5rem;
+            }
+        }
+
         .mobile-menu.open {
             transform: translateX(0);
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 39;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-overlay.show {
+            opacity: 1;
+            visibility: visible;
         }
 
         .mobile-nav {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.15rem;
         }
 
         .mobile-nav a {
             color: #1e293b;
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.95rem;
-            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            padding: 0.7rem 1rem;
             transition: all 0.3s ease;
             border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-nav a {
+                font-size: 0.95rem;
+                padding: 0.75rem 1rem;
+            }
         }
 
         .mobile-nav a:hover {
@@ -320,12 +455,26 @@
             border-left: 3px solid #059669;
         }
 
+        .mobile-nav a i {
+            width: 1.3rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .mobile-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 0.5rem 0.5rem;
+        }
+
         .mobile-logout {
-            margin-top: 2rem;
-            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.7rem 1rem;
+            margin-top: 0.5rem;
             background: #ef4444;
             color: white;
-            text-align: center;
             border-radius: 4px;
             font-weight: 500;
             cursor: pointer;
@@ -336,15 +485,40 @@
             background: #dc2626;
         }
 
+        .mobile-logout i {
+            width: 1.3rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
         .main-content {
-            min-height: calc(100vh - 4.5rem - 18rem);
-            padding: 2rem 0;
+            min-height: calc(100vh - 4rem - 16rem);
+            padding: 1rem 0;
             background: white;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                min-height: calc(100vh - 4.5rem - 18rem);
+                padding: 1.5rem 0;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .main-content {
+                padding: 2rem 0;
+            }
         }
 
         .footer {
             background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-            padding: 2rem 0 1rem;
+            padding: 1.5rem 0 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer {
+                padding: 2rem 0 1.5rem;
+            }
         }
 
         .footer-content {
@@ -355,103 +529,203 @@
         .footer-info {
             display: flex;
             justify-content: center;
-            gap: 2rem;
+            gap: 1rem 2rem;
             flex-wrap: wrap;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-info {
+                gap: 2rem;
+                margin-bottom: 1.5rem;
+            }
         }
 
         .footer-info-item {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (min-width: 768px) {
+            .footer-info-item {
+                font-size: 0.85rem;
+            }
         }
 
         .footer-info-item i {
             color: #fbbf24;
+            font-size: 0.85rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-info-item i {
+                font-size: 1rem;
+            }
         }
 
         .footer-copyright {
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            padding-top: 1.5rem;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 1rem;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
         }
 
-        @media (min-width: 1024px) {
-            .student-nav {
-                display: flex;
-            }
-            
-            .mobile-menu-button {
-                display: none;
-            }
-        }
-
-        @media (max-width: 1280px) {
-            .student-nav a {
-                padding: 0.5rem 0.7rem;
+        @media (min-width: 768px) {
+            .footer-copyright {
                 font-size: 0.8rem;
+                padding-top: 1.5rem;
             }
-            
-            .profile-name {
-                max-width: 80px;
-            }
-        }
-
-        .active-page {
-            color: white !important;
-            background: rgba(255, 255, 255, 0.2) !important;
-            border-bottom: 2px solid #fbbf24 !important;
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
-        .profile-image-upload {
-            position: relative;
-            cursor: pointer;
+        .toast-container {
+            position: fixed;
+            top: 5rem;
+            right: 1.5rem;
+            z-index: 1000;
+            max-width: 400px;
+            width: 100%;
         }
 
-        .profile-image-upload:hover::after {
-            content: 'Edit';
-            position: absolute;
-            bottom: -1.8rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #059669;
-            color: white;
-            padding: 0.25rem 0.75rem;
+        .toast {
+            background: white;
             border-radius: 4px;
-            font-size: 0.7rem;
-            white-space: nowrap;
-            z-index: 10;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast-content {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toast-content i {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .toast-content .message {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1e293b;
+            flex: 1;
+        }
+
+        .toast.success .toast-content i {
+            color: #059669;
+        }
+
+        .toast.error .toast-content i {
+            color: #dc2626;
+        }
+
+        .toast .progress-bar {
+            height: 3px;
+            width: 100%;
+            background: #e5e7eb;
+        }
+
+        .toast .progress-bar .progress-fill {
+            height: 100%;
+            width: 100%;
+            transition: width 5s linear;
+        }
+
+        .toast.success .progress-fill {
+            background: #059669;
+        }
+
+        .toast.error .progress-fill {
+            background: #dc2626;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .client-nav a span {
+                display: none;
+            }
+            .client-nav a i {
+                font-size: 1rem;
+            }
+            .client-nav a {
+                padding: 0.3rem 0.5rem;
+            }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .client-nav a span {
+                font-size: 0.7rem;
+            }
+            .client-nav a {
+                padding: 0.3rem 0.5rem;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div id="app">
-        {% if user.is_authenticated and user.role == 'student' %}
-        <header class="student-header">
+        {% if user.is_authenticated and user.role == 'client' %}
+        <header class="client-header">
             <div class="container">
                 <div class="header-content">
-                    <a href="/student/dashboard/" class="logo">AW</a>
+                    <a href="/client/dashboard/" class="logo">AW</a>
                     
-                    <div class="student-nav">
-                        <a href="/student/dashboard/" class="{% if request.path == '/student/dashboard/' %}active{% endif %}">DASHBOARD</a>
-                        <a href="/student/orders/" class="{% if request.path == '/student/orders/' %}active{% endif %}">MY ORDERS</a>
-                        <a href="/student/orders/new/" class="{% if request.path == '/student/orders/new/' %}active{% endif %}">NEW ORDER</a>
-                        <a href="/student/wallet/" class="{% if request.path == '/student/wallet/' %}active{% endif %}">WALLET</a>
-                        <a href="/student/messages/" class="relative {% if request.path == '/student/messages/' %}active{% endif %}">
-                            MESSAGES
-                            <span class="notification-badge hidden" id="unreadMessagesBadge">0</span>
+                    <nav class="client-nav">
+                        <a href="/client/dashboard/" class="{% if request.path == '/client/dashboard/' %}active{% endif %}">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
                         </a>
-                        <a href="/student/announcements/" class="relative {% if request.path == '/student/announcements/' %}active{% endif %}">
-                            ANNOUNCEMENTS
-                            <span class="notification-badge hidden" id="unreadAnnouncementsBadge">0</span>
+                        <a href="/client/orders/" class="{% if request.path == '/client/orders/' %}active{% endif %}">
+                            <i class="fas fa-file-alt"></i>
+                            <span>My Orders</span>
+                            <span class="nav-badge" id="ordersBadge" style="display:none;">0</span>
                         </a>
-                    </div>
+                        <a href="/client/orders/new/" class="{% if request.path == '/client/orders/new/' %}active{% endif %}">
+                            <i class="fas fa-plus"></i>
+                            <span>New Order</span>
+                        </a>
+                        <a href="/client/wallet/" class="{% if request.path == '/client/wallet/' %}active{% endif %}">
+                            <i class="fas fa-wallet"></i>
+                            <span>Wallet</span>
+                        </a>
+                        <a href="/client/messages/" class="{% if request.path == '/client/messages/' %}active{% endif %}">
+                            <i class="fas fa-envelope"></i>
+                            <span>Messages</span>
+                            <span class="nav-badge" id="messagesBadge" style="display:none;">0</span>
+                        </a>
+                    </nav>
 
                     <div class="auth-section">
                         <button class="notification-bell" id="notificationBell">
@@ -470,16 +744,16 @@
                                 </div>
                                 <div class="profile-info">
                                     <span class="profile-name">{{ user.full_name|default:user.email|truncatechars:15 }}</span>
-                                    <span class="profile-role">Student</span>
+                                    <span class="profile-role">Client</span>
                                 </div>
+                                <i class="fas fa-chevron-down fa-xs text-white opacity-60"></i>
                             </div>
                             
                             <div class="user-menu-dropdown" id="userMenuDropdown">
-                                <a href="/student/profile/" class="user-menu-item">View Profile</a>
-                                <a href="#" class="user-menu-item" id="editProfileBtn">Edit Profile Picture</a>
-                                <a href="/student/settings/" class="user-menu-item">Settings</a>
+                                <a href="/client/profile/" class="user-menu-item"><i class="fas fa-user"></i> Profile</a>
+                                <a href="/client/settings/" class="user-menu-item"><i class="fas fa-cog"></i> Settings</a>
                                 <div class="user-menu-divider"></div>
-                                <a href="#" class="user-menu-item" id="logoutBtn">Logout</a>
+                                <a href="#" class="user-menu-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
                             </div>
                         </div>
 
@@ -491,54 +765,31 @@
             </div>
         </header>
 
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+
         <div class="mobile-menu" id="mobileMenu">
-            <div class="mobile-nav">
-                <a href="/student/dashboard/">DASHBOARD</a>
-                <a href="/student/orders/">MY ORDERS</a>
-                <a href="/student/orders/new/">NEW ORDER</a>
-                <a href="/student/wallet/">WALLET</a>
-                <a href="/student/messages/">MESSAGES</a>
-                <a href="/student/announcements/">ANNOUNCEMENTS</a>
-                <a href="/student/profile/">PROFILE</a>
-                <a href="/student/settings/">SETTINGS</a>
+            <nav class="mobile-nav">
+                <a href="/client/dashboard/"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="/client/orders/"><i class="fas fa-file-alt"></i> My Orders</a>
+                <a href="/client/orders/new/"><i class="fas fa-plus"></i> New Order</a>
+                <a href="/client/wallet/"><i class="fas fa-wallet"></i> Wallet</a>
+                <a href="/client/messages/"><i class="fas fa-envelope"></i> Messages</a>
+                <div class="mobile-divider"></div>
+                <a href="/client/profile/"><i class="fas fa-user"></i> Profile</a>
+                <a href="/client/settings/"><i class="fas fa-cog"></i> Settings</a>
+                <div class="mobile-divider"></div>
                 <div class="mobile-logout" id="mobileLogoutBtn">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </div>
-            </div>
-        </div>
-
-        <div id="profileImageModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white max-w-md w-full mx-4 p-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Update Profile Picture</h3>
-                <p class="text-sm text-gray-600 mb-4">Accepted formats: JPG, PNG, GIF. Max size: 2MB</p>
-                
-                <div class="space-y-4">
-                    <div class="flex items-center justify-center">
-                        <div class="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-green-600" id="imagePreview">
-                            <span class="text-gray-400">Preview</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Choose Image</label>
-                        <input type="file" id="profileImageInput" accept="image/jpeg,image/png,image/gif,image/jpg" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none">
-                        <p class="text-xs text-gray-500 mt-1">JPEG, PNG, GIF up to 2MB</p>
-                    </div>
-
-                    <div class="flex space-x-3 pt-4">
-                        <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-3" id="cancelImageUpload">Cancel</button>
-                        <button class="flex-1 bg-green-600 text-white hover:bg-green-700 transition-colors px-4 py-3" id="saveImageUpload">Upload Picture</button>
-                    </div>
-                </div>
-            </div>
+            </nav>
         </div>
 
         <main class="main-content">
             <div class="container">
                 {% if messages %}
-                    <div class="mb-6">
+                    <div class="mb-4 sm:mb-6">
                         {% for message in messages %}
-                            <div class="p-3 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 text-green-700 border-l-4 border-green-500{% else %}bg-blue-50 text-blue-700 border-l-4 border-blue-500{% endif %}">
+                            <div class="p-2.5 sm:p-3 text-xs sm:text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 text-green-700 border-l-4 border-green-500{% else %}bg-blue-50 text-blue-700 border-l-4 border-blue-500{% endif %}">
                                 {{ message }}
                             </div>
                         {% endfor %}
@@ -567,14 +818,14 @@
                         </div>
                     </div>
                     <div class="footer-copyright">
-                        &copy; 2024 Academic Write. All rights reserved.
+                        &copy; 2026 AcademicWrite. All rights reserved.
                     </div>
                 </div>
             </div>
         </footer>
 
         <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay">
-            <div class="bg-white max-w-md w-full mx-4 p-6" id="modalContent"></div>
+            <div class="bg-white max-w-md w-full mx-4 p-4 sm:p-6" id="modalContent"></div>
         </div>
 
         <div class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" id="loadingOverlay">
@@ -584,13 +835,13 @@
         </div>
         {% else %}
         <div class="min-h-screen flex items-center justify-center bg-gray-50">
-            <div class="max-w-md w-full bg-white border border-gray-200 p-8 text-center">
-                <div class="w-20 h-20 bg-red-100 text-red-600 flex items-center justify-center text-4xl mx-auto mb-4">
+            <div class="max-w-md w-full bg-white border border-gray-200 p-6 sm:p-8 text-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 text-red-600 flex items-center justify-center text-3xl sm:text-4xl mx-auto mb-4">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-                <p class="text-gray-600 mb-6">You must be logged in as a student to access this page.</p>
-                <a href="/login/" class="inline-block bg-green-600 text-white px-6 py-3 font-medium hover:bg-green-700 transition-colors">Go to Login</a>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+                <p class="text-sm sm:text-base text-gray-600 mb-6">You must be logged in as a client to access this page.</p>
+                <a href="/login/" class="inline-block bg-green-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 font-medium hover:bg-green-700 transition-colors">Go to Login</a>
             </div>
         </div>
         {% endif %}
@@ -601,32 +852,69 @@
     <script src="/static/js/utils/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            {% if user.is_authenticated and user.role == 'student' %}
+            {% if user.is_authenticated and user.role == 'client' %}
             const mobileMenuButton = document.getElementById('mobileMenuButton');
             const mobileMenu = document.getElementById('mobileMenu');
+            const mobileOverlay = document.getElementById('mobileOverlay');
             
+            function closeMobileMenu() {
+                mobileMenu.classList.remove('open');
+                mobileOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+                const icon = mobileMenuButton.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            }
+
+            function openMobileMenu() {
+                mobileMenu.classList.add('open');
+                mobileOverlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                const icon = mobileMenuButton.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                }
+            }
+
             if (mobileMenuButton && mobileMenu) {
                 mobileMenuButton.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    mobileMenu.classList.toggle('open');
-                    const icon = this.querySelector('i');
-                    if (icon) {
-                        icon.classList.toggle('fa-bars');
-                        icon.classList.toggle('fa-times');
+                    if (mobileMenu.classList.contains('open')) {
+                        closeMobileMenu();
+                    } else {
+                        openMobileMenu();
                     }
                 });
                 
+                if (mobileOverlay) {
+                    mobileOverlay.addEventListener('click', function() {
+                        closeMobileMenu();
+                    });
+                }
+                
                 document.addEventListener('click', function(e) {
-                    if (!mobileMenu.contains(e.target) && !mobileMenuButton.contains(e.target)) {
-                        mobileMenu.classList.remove('open');
-                        const icon = mobileMenuButton.querySelector('i');
-                        if (icon) {
-                            icon.classList.remove('fa-times');
-                            icon.classList.add('fa-bars');
-                        }
+                    if (mobileMenu.classList.contains('open') && 
+                        !mobileMenu.contains(e.target) && 
+                        !mobileMenuButton.contains(e.target)) {
+                        closeMobileMenu();
+                    }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+                        closeMobileMenu();
                     }
                 });
             }
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024 && mobileMenu.classList.contains('open')) {
+                    closeMobileMenu();
+                }
+            });
 
             const userProfileButton = document.getElementById('userProfileButton');
             const userMenuDropdown = document.getElementById('userMenuDropdown');
@@ -637,19 +925,17 @@
                     userMenuDropdown.classList.toggle('show');
                 });
                 
-                document.addEventListener('click', function() {
-                    userMenuDropdown.classList.remove('show');
-                });
-                
-                userMenuDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
+                document.addEventListener('click', function(e) {
+                    if (!userMenuDropdown.contains(e.target) && !userProfileButton.contains(e.target)) {
+                        userMenuDropdown.classList.remove('show');
+                    }
                 });
             }
 
             const notificationBell = document.getElementById('notificationBell');
             if (notificationBell) {
                 notificationBell.addEventListener('click', function() {
-                    window.location.href = '/notifications/';
+                    window.location.href = '/client/notifications/';
                 });
             }
 
@@ -684,88 +970,34 @@
                 });
             }
 
-            const editProfileBtn = document.getElementById('editProfileBtn');
-            const profileModal = document.getElementById('profileImageModal');
-            const cancelUpload = document.getElementById('cancelImageUpload');
-            const saveUpload = document.getElementById('saveImageUpload');
-            const imageInput = document.getElementById('profileImageInput');
-            const imagePreview = document.getElementById('imagePreview');
-            const profileDisplay = document.getElementById('profileImageDisplay');
-
-            if (editProfileBtn) {
-                editProfileBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    userMenuDropdown.classList.remove('show');
-                    profileModal.classList.remove('hidden');
-                });
-            }
-
-            if (cancelUpload) {
-                cancelUpload.addEventListener('click', function() {
-                    profileModal.classList.add('hidden');
-                    imageInput.value = '';
-                    imagePreview.innerHTML = '<span class="text-gray-400">Preview</span>';
-                });
-            }
-
-            if (imageInput) {
-                imageInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        if (file.size > 2 * 1024 * 1024) {
-                            alert('File too large. Max size is 2MB');
-                            this.value = '';
-                            return;
-                        }
-                        
-                        if (!file.type.match('image.*')) {
-                            alert('Please select an image file');
-                            this.value = '';
-                            return;
-                        }
-                        
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            imagePreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover" alt="Preview">`;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
-
-            if (saveUpload) {
-                saveUpload.addEventListener('click', async function() {
-                    const file = imageInput.files[0];
-                    if (!file) {
-                        alert('Please select an image');
-                        return;
-                    }
-
-                    try {
-                        if (window.Loading) window.Loading.show();
-                        
-                        const formData = new FormData();
-                        formData.append('profile_image', file);
-                        
-                        const response = await api.upload('/student/profile/image/', formData);
-                        
-                        if (response.image_url) {
-                            profileDisplay.innerHTML = `<img src="${response.image_url}" alt="Profile">`;
-                        }
-                        
-                        profileModal.classList.add('hidden');
-                        imageInput.value = '';
-                        imagePreview.innerHTML = '<span class="text-gray-400">Preview</span>';
-                        
-                    } catch (error) {
-                        alert('Failed to upload image');
-                    } finally {
-                        if (window.Loading) window.Loading.hide();
-                    }
-                });
-            }
+            loadCounts();
+            setInterval(loadCounts, 30000);
             {% endif %}
         });
+
+        async function loadCounts() {
+            try {
+                const response = await api.get('/client/counts/');
+                
+                const ordersBadge = document.getElementById('ordersBadge');
+                if (response.active_orders > 0) {
+                    ordersBadge.textContent = response.active_orders > 9 ? '9+' : response.active_orders;
+                    ordersBadge.style.display = 'flex';
+                } else {
+                    ordersBadge.style.display = 'none';
+                }
+                
+                const messagesBadge = document.getElementById('messagesBadge');
+                if (response.unread_messages > 0) {
+                    messagesBadge.textContent = response.unread_messages > 9 ? '9+' : response.unread_messages;
+                    messagesBadge.style.display = 'flex';
+                } else {
+                    messagesBadge.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Failed to load counts');
+            }
+        }
 
         window.Modal = {
             show: function(content) {
@@ -776,11 +1008,13 @@
                 }
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
             },
             hide: function() {
                 const modal = document.getElementById('modalOverlay');
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
+                document.body.style.overflow = '';
             }
         };
 
@@ -796,6 +1030,12 @@
                 loading.classList.remove('flex');
             }
         };
+
+        document.getElementById('modalOverlay')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.Modal.hide();
+            }
+        });
     </script>
     
     {% block extra_js %}{% endblock %}

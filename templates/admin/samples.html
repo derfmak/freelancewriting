@@ -1,0 +1,637 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Samples - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.samples-admin {
+    padding: 1.5rem 0;
+}
+
+.samples-admin .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.samples-admin h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.samples-admin .subtitle {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.upload-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 1.5rem 2rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.upload-section h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.upload-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+    .upload-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.35rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    padding: 0.6rem 0.75rem;
+    outline: none;
+    transition: all 0.2s;
+    background: white;
+    font-size: 0.9rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #1e40af;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.upload-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.submit-btn {
+    background: #1e40af;
+    color: white;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.submit-btn:hover {
+    background: #1e3a8a;
+}
+
+.samples-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    background: white;
+}
+
+.samples-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.samples-table th {
+    background: #f8fafc;
+    text-align: left;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #64748b;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.samples-table td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+.samples-table tr:hover {
+    background: #f8fafc;
+}
+
+.samples-table .file-icon {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+}
+
+.samples-table .file-icon.pdf {
+    color: #dc2626;
+}
+
+.samples-table .file-icon.doc {
+    color: #2563eb;
+}
+
+.samples-table .file-icon.docx {
+    color: #2563eb;
+}
+
+.samples-table .file-icon.other {
+    color: #6b7280;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 2px;
+}
+
+.status-badge.active {
+    background: #dcfce7;
+    color: #059669;
+}
+
+.status-badge.inactive {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.action-btn {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.action-btn.view {
+    background: #e5e7eb;
+    color: #1e293b;
+}
+
+.action-btn.view:hover {
+    background: #d1d5db;
+}
+
+.action-btn.toggle {
+    background: #f59e0b;
+    color: white;
+}
+
+.action-btn.toggle:hover {
+    background: #d97706;
+}
+
+.action-btn.toggle.active {
+    background: #059669;
+}
+
+.action-btn.toggle.active:hover {
+    background: #047857;
+}
+
+.action-btn.delete {
+    background: #ef4444;
+    color: white;
+}
+
+.action-btn.delete:hover {
+    background: #dc2626;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: #64748b;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    color: #d1d5db;
+    margin-bottom: 0.75rem;
+}
+
+.empty-state h3 {
+    color: #1e293b;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+}
+
+.upload-hint {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+.notification-container {
+    position: fixed;
+    top: 5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    max-width: 400px;
+    width: 100%;
+}
+
+.notification {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+}
+
+.notification-content {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.notification-content i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.notification-content .message {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1e293b;
+    flex: 1;
+}
+
+.notification.success .notification-content i {
+    color: #059669;
+}
+
+.notification.success .progress-bar {
+    background: #059669;
+}
+
+.notification.error .notification-content i {
+    color: #dc2626;
+}
+
+.notification.error .progress-bar {
+    background: #dc2626;
+}
+
+.progress-bar {
+    height: 3px;
+    width: 100%;
+    background: #e5e7eb;
+}
+
+.progress-bar .progress-fill {
+    height: 100%;
+    width: 100%;
+    transition: width 5s linear;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="samples-admin container">
+
+    <div class="page-header">
+        <div>
+            <h1>Manage Samples</h1>
+            <p class="subtitle">Upload and manage academic writing samples</p>
+        </div>
+        <span style="font-size:0.85rem; color:#64748b;">
+            <i class="fas fa-file-alt"></i> {{ samples|length }} samples
+        </span>
+    </div>
+
+    <div class="upload-section">
+        <h2><i class="fas fa-upload"></i> Upload New Sample</h2>
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+            {% csrf_token %}
+            <div class="upload-grid">
+                <div class="form-group">
+                    <label for="title">Title <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="title" name="title" placeholder="e.g., Sample Essay on Climate Change" required>
+                </div>
+                <div class="form-group">
+                    <label for="is_active">Status</label>
+                    <select id="is_active" name="is_active">
+                        <option value="true">Active (visible to public)</option>
+                        <option value="false">Inactive (hidden from public)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:0.5rem;">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="2" placeholder="Brief description of the sample..."></textarea>
+            </div>
+            <div class="form-group" style="margin-top:0.5rem;">
+                <label for="file">File <span style="color:#ef4444;">*</span></label>
+                <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.txt" required>
+                <p class="upload-hint">Accepted formats: PDF, DOC, DOCX, TXT</p>
+            </div>
+            <div class="upload-actions">
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Sample
+                </button>
+                <span style="font-size:0.75rem; color:#94a3b8;">
+                    <i class="fas fa-info-circle"></i> Uploaded samples appear on the public samples page
+                </span>
+            </div>
+        </form>
+    </div>
+
+    <div class="section-title">Existing Samples</div>
+
+    {% if samples %}
+        <div class="samples-table-wrapper">
+            <table class="samples-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>File</th>
+                        <th>Size</th>
+                        <th>Downloads</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sample in samples %}
+                        <tr>
+                            <td>
+                                <strong>{{ sample.title }}</strong>
+                                {% if sample.description %}
+                                    <br><span style="font-size:0.75rem; color:#94a3b8;">{{ sample.description|truncatechars:40 }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if sample.file_type == 'application/pdf' %}
+                                    <i class="fas fa-file-pdf file-icon pdf"></i>
+                                {% elif sample.file_type == 'application/msword' %}
+                                    <i class="fas fa-file-word file-icon doc"></i>
+                                {% elif sample.file_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' %}
+                                    <i class="fas fa-file-word file-icon docx"></i>
+                                {% else %}
+                                    <i class="fas fa-file-alt file-icon other"></i>
+                                {% endif %}
+                                {{ sample.file_name|truncatechars:20 }}
+                            </td>
+                            <td>{{ sample.file_size|filesizeformat }}</td>
+                            <td>{{ sample.downloads }}</td>
+                            <td>
+                                <span class="status-badge {% if sample.is_active %}active{% else %}inactive{% endif %}">
+                                    {% if sample.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ sample.created_at|date:"M d, Y" }}</td>
+                            <td class="actions-cell">
+                                <a href="{{ sample.file.url }}" target="_blank" class="action-btn view" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="#" class="action-btn toggle {% if sample.is_active %}active{% endif %}" data-action="toggle" data-id="{{ sample.id }}" title="{% if sample.is_active %}Hide{% else %}Show{% endif %}">
+                                    <i class="fas fa-{% if sample.is_active %}eye{% else %}eye-slash{% endif %}"></i>
+                                </a>
+                                <a href="#" class="action-btn delete" data-action="delete" data-id="{{ sample.id }}" data-title="{{ sample.title }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-file-alt"></i>
+            <h3>No samples uploaded</h3>
+            <p>Upload your first sample using the form above.</p>
+        </div>
+    {% endif %}
+
+</div>
+
+<div class="notification-container" id="notificationContainer"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('notificationContainer');
+
+    function getCsrfToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas ${icon}"></i>
+                <span class="message">${message}</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        `;
+        
+        container.appendChild(notification);
+        
+        const progressFill = notification.querySelector('#progressFill');
+        setTimeout(() => {
+            if (progressFill) {
+                progressFill.style.width = '0%';
+            }
+        }, 50);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 5000);
+    }
+
+    document.querySelectorAll('[data-action="toggle"]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            const url = `/admin/samples/${id}/toggle/`;
+            
+            const csrfToken = getCsrfToken();
+            if (!csrfToken) {
+                showNotification('CSRF token not found. Please refresh the page.', 'error');
+                return;
+            }
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 600);
+                } else {
+                    showNotification(data.message || 'Failed to toggle sample', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', 'error');
+            });
+        });
+    });
+
+    document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            const title = this.dataset.title;
+            
+            if (!confirm(`Delete sample "${title}"? This action cannot be undone.`)) {
+                return;
+            }
+            
+            const url = `/admin/samples/${id}/delete/`;
+            
+            const csrfToken = getCsrfToken();
+            if (!csrfToken) {
+                showNotification('CSRF token not found. Please refresh the page.', 'error');
+                return;
+            }
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 600);
+                } else {
+                    showNotification(data.message || 'Failed to delete sample', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', 'error');
+            });
+        });
+    });
+
+    const form = document.getElementById('upload-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('file');
+            if (fileInput && !fileInput.files.length) {
+                e.preventDefault();
+                showNotification('Please select a file to upload', 'error');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

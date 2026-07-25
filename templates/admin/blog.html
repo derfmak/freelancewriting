@@ -1,0 +1,1191 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Blog Posts - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.blog-admin {
+    padding: 1.5rem 0;
+}
+
+.blog-admin .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.blog-admin h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.blog-admin .subtitle {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #1e40af;
+    color: white;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.create-btn:hover {
+    background: #1e3a8a;
+}
+
+.search-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+}
+
+.search-box {
+    display: flex;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.search-box input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    padding: 0.6rem 0.75rem;
+    outline: none;
+    transition: all 0.2s;
+    background: white;
+    font-size: 0.9rem;
+    border-radius: 4px;
+}
+
+.search-box input:focus {
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.search-box button {
+    background: #1e40af;
+    color: white;
+    padding: 0.6rem 1rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.search-box button:hover {
+    background: #1e3a8a;
+}
+
+.search-suggestions {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.search-suggestions .suggestion-item {
+    display: block;
+    padding: 0.6rem 0.8rem;
+    color: #1e293b;
+    text-decoration: none;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s ease;
+}
+
+.search-suggestions .suggestion-item:hover {
+    background: #f8fafc;
+}
+
+.search-suggestions .suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.search-suggestions .suggestion-item .title {
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.search-suggestions .suggestion-item .excerpt {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+
+.search-suggestions .no-results {
+    padding: 0.6rem 0.8rem;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.search-suggestions .loading-indicator {
+    padding: 0.6rem 0.8rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.search-suggestions .loading-indicator i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.search-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.search-results-header .results-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.search-results-header .results-info .query {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.search-results-header .results-info .count {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.search-results-header .clear-search {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.search-results-header .clear-search:hover {
+    color: #dc2626;
+}
+
+.posts-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 4px;
+}
+
+.posts-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.posts-table th {
+    background: #f8fafc;
+    text-align: left;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #64748b;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.posts-table td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+.posts-table tr:hover {
+    background: #f8fafc;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 2px;
+}
+
+.status-badge.published {
+    background: #dcfce7;
+    color: #059669;
+}
+
+.status-badge.draft {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.action-btn {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 3px;
+}
+
+.action-btn.view {
+    background: #3b82f6;
+    color: white;
+}
+
+.action-btn.view:hover {
+    background: #2563eb;
+}
+
+.action-btn.edit {
+    background: #1e40af;
+    color: white;
+}
+
+.action-btn.edit:hover {
+    background: #1e3a8a;
+}
+
+.action-btn.toggle {
+    background: #f59e0b;
+    color: white;
+}
+
+.action-btn.toggle:hover {
+    background: #d97706;
+}
+
+.action-btn.toggle.active {
+    background: #059669;
+}
+
+.action-btn.toggle.active:hover {
+    background: #047857;
+}
+
+.action-btn.delete {
+    background: #ef4444;
+    color: white;
+}
+
+.action-btn.delete:hover {
+    background: #dc2626;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: #64748b;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    color: #d1d5db;
+    margin-bottom: 0.75rem;
+}
+
+.empty-state h3 {
+    color: #1e293b;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.empty-state p {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.toast-container {
+    position: fixed;
+    top: 5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    max-width: 400px;
+    width: 100%;
+}
+
+.toast {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+}
+
+.toast-content {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.toast-content i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.toast-content .message {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1e293b;
+    flex: 1;
+}
+
+.toast.success .toast-content i {
+    color: #059669;
+}
+
+.toast.success .progress-bar {
+    background: #059669;
+}
+
+.toast.error .toast-content i {
+    color: #dc2626;
+}
+
+.toast.error .progress-bar {
+    background: #dc2626;
+}
+
+.toast .progress-bar {
+    height: 3px;
+    width: 100%;
+    background: #e5e7eb;
+}
+
+.toast .progress-bar .progress-fill {
+    height: 100%;
+    width: 100%;
+    transition: width 5s linear;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.skeleton-row {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-row td {
+    padding: 0.6rem 1rem;
+}
+
+.skeleton-row .skeleton-text {
+    height: 0.9rem;
+    background: #f1f5f9;
+    border-radius: 3px;
+    margin: 0.2rem 0;
+}
+
+.skeleton-row .skeleton-text.title {
+    width: 70%;
+    height: 1.1rem;
+}
+
+.skeleton-row .skeleton-text.excerpt {
+    width: 90%;
+}
+
+.skeleton-row .skeleton-text.short {
+    width: 40%;
+}
+
+.skeleton-row .skeleton-text.xshort {
+    width: 25%;
+}
+
+.skeleton-row .skeleton-badge {
+    width: 60px;
+    height: 1.2rem;
+    background: #f1f5f9;
+    border-radius: 2px;
+}
+
+.skeleton-row .skeleton-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.skeleton-row .skeleton-actions span {
+    width: 2rem;
+    height: 1.6rem;
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+}
+
+.modal-close:hover {
+    color: #1e293b;
+    background: #f1f5f9;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-body .post-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.modal-body .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-body .post-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.modal-body .post-excerpt {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 4px;
+    border-left: 3px solid #1e40af;
+}
+
+.modal-body .post-content {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #334155;
+}
+
+.modal-body .post-content h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 1.5rem 0 0.75rem;
+}
+
+.modal-body .post-content h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 1.25rem 0 0.5rem;
+}
+
+.modal-body .post-content p {
+    margin-bottom: 0.75rem;
+}
+
+.modal-body .post-content ul,
+.modal-body .post-content ol {
+    margin: 0.5rem 0 0.75rem 1.5rem;
+}
+
+.modal-body .post-content li {
+    margin-bottom: 0.25rem;
+}
+
+.modal-body .post-content blockquote {
+    border-left: 4px solid #1e40af;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #475569;
+    font-style: italic;
+}
+
+.modal-body .post-status {
+    display: inline-block;
+    padding: 0.2rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+}
+
+.modal-body .post-status.published {
+    background: #dcfce7;
+    color: #059669;
+}
+
+.modal-body .post-status.draft {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+@media (max-width: 640px) {
+    .search-container {
+        max-width: 100%;
+    }
+    
+    .search-results-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .blog-admin .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .modal-content {
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    
+    .modal-header {
+        padding: 1rem 1.25rem;
+    }
+    
+    .modal-body {
+        padding: 1.25rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-admin">
+
+    <div class="page-header">
+        <div>
+            <h1>Manage Blog Posts</h1>
+            <p class="subtitle">Create, edit, and manage blog posts</p>
+        </div>
+        <a href="/admin/blog/create/" class="create-btn">
+            <i class="fas fa-plus"></i> New Post
+        </a>
+    </div>
+
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" id="admin-blog-search" placeholder="Search posts..." value="{{ search_query }}">
+            <button type="button" id="admin-search-btn"><i class="fas fa-search"></i></button>
+            <div class="search-suggestions" id="admin-search-suggestions"></div>
+        </div>
+    </div>
+
+    {% if search_query %}
+        <div class="search-results-header">
+            <div class="results-info">
+                <span><i class="fas fa-search"></i> Results for:</span>
+                <span class="query">"{{ search_query }}"</span>
+                <span class="count">({{ posts|length }} results)</span>
+            </div>
+            <a href="/admin/blog/" class="clear-search">
+                <i class="fas fa-times"></i> Clear search
+            </a>
+        </div>
+    {% endif %}
+
+    <div id="admin-blog-container">
+        {% if posts %}
+            <div class="posts-table-wrapper">
+                <table class="posts-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Views</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-blog-tbody">
+                        {% for post in posts %}
+                            <tr id="post-row-{{ post.id }}">
+                                <td>
+                                    <strong>{{ post.title }}</strong>
+                                    <br><span style="font-size:0.75rem; color:#94a3b8;">{{ post.excerpt|truncatechars:60 }}</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge {% if post.published_at <= now %}published{% else %}draft{% endif %}" id="status-{{ post.id }}">
+                                        {% if post.published_at <= now %}Published{% else %}Draft{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ post.views }}</td>
+                                <td>{{ post.published_at|date:"M d, Y" }}</td>
+                                <td class="actions-cell">
+                                    <button class="action-btn view" data-action="view" data-id="{{ post.id }}" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="/admin/blog/{{ post.id }}/edit/" class="action-btn edit" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="action-btn toggle {% if post.published_at <= now %}active{% endif %}" data-action="toggle" data-id="{{ post.id }}" title="{% if post.published_at <= now %}Deactivate{% else %}Activate{% endif %}">
+                                        <i class="fas fa-{% if post.published_at <= now %}eye{% else %}eye-slash{% endif %}"></i>
+                                    </button>
+                                    <button class="action-btn delete" data-action="delete" data-id="{{ post.id }}" data-title="{{ post.title }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-blog"></i>
+                <h3>No blog posts</h3>
+                <p>Create your first blog post using the "New Post" button above.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- View Post Modal -->
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Blog Post</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <div id="modal-content-inner">
+                    <div class="post-status" id="modal-status"></div>
+                    <div class="post-title" id="modal-post-title"></div>
+                    <div class="post-meta" id="modal-post-meta"></div>
+                    <div class="post-excerpt" id="modal-post-excerpt"></div>
+                    <div class="post-content" id="modal-post-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showToast(message, type) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas ${icon}"></i>
+            <span class="message">${message}</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    const progressFill = toast.querySelector('#progressFill');
+    setTimeout(() => {
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+    }, 50);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 5000);
+}
+
+function getCsrfToken() {
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='));
+    return cookieValue ? cookieValue.split('=')[1] : null;
+}
+
+function showAdminSkeletonLoader() {
+    const container = document.getElementById('admin-blog-container');
+    const skeletonHTML = `
+        <div class="posts-table-wrapper">
+            <table class="posts-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Views</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${Array(5).fill(0).map(() => `
+                        <tr class="skeleton-row">
+                            <td>
+                                <div class="skeleton-text title"></div>
+                                <div class="skeleton-text excerpt"></div>
+                            </td>
+                            <td><div class="skeleton-badge"></div></td>
+                            <td><div class="skeleton-text xshort"></div></td>
+                            <td><div class="skeleton-text short"></div></td>
+                            <td>
+                                <div class="skeleton-actions">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    container.innerHTML = skeletonHTML;
+}
+
+function updateAdminSearchResults(query) {
+    if (!query || query.length < 2) {
+        if (query.length === 0) {
+            window.location.href = '/admin/blog/';
+        }
+        return;
+    }
+
+    showAdminSkeletonLoader();
+
+    const url = '/admin/blog/?search=' + encodeURIComponent(query);
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(function(response) {
+            return response.text();
+        })
+        .then(function(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newContainer = doc.querySelector('#admin-blog-container');
+            if (newContainer) {
+                document.getElementById('admin-blog-container').innerHTML = newContainer.innerHTML;
+                attachEventListeners();
+            }
+            window.history.pushState({}, '', url);
+        })
+        .catch(function() {
+            window.location.href = url;
+        });
+}
+
+function viewBlogPost(postId) {
+    const modal = document.getElementById('viewModal');
+    const titleEl = document.getElementById('modal-post-title');
+    const metaEl = document.getElementById('modal-post-meta');
+    const excerptEl = document.getElementById('modal-post-excerpt');
+    const contentEl = document.getElementById('modal-post-content');
+    const statusEl = document.getElementById('modal-status');
+    const modalTitle = document.getElementById('modal-title');
+    
+    fetch(`/api/admin/blog/${postId}/detail/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const post = data.post;
+                modalTitle.textContent = post.title;
+                titleEl.textContent = post.title;
+                
+                const statusClass = post.is_published ? 'published' : 'draft';
+                const statusText = post.is_published ? 'Published' : 'Draft';
+                statusEl.className = `post-status ${statusClass}`;
+                statusEl.textContent = statusText;
+                
+                metaEl.innerHTML = `
+                    <span><i class="far fa-calendar-alt"></i> ${post.published_at}</span>
+                    <span><i class="far fa-clock"></i> ${post.reading_time}</span>
+                    <span><i class="far fa-eye"></i> ${post.views} views</span>
+                    <span><i class="fas fa-user-edit"></i> ${post.author}</span>
+                `;
+                
+                excerptEl.textContent = post.excerpt;
+                contentEl.innerHTML = post.content;
+                
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            } else {
+                showToast('Failed to load post', 'error');
+            }
+        })
+        .catch(() => {
+            showToast('Failed to load post', 'error');
+        });
+}
+
+function attachEventListeners() {
+    // View buttons
+    document.querySelectorAll('[data-action="view"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            viewBlogPost(id);
+        });
+    });
+
+    // Toggle buttons
+    document.querySelectorAll('[data-action="toggle"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const url = `/admin/blog/${id}/toggle/`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    const statusBadge = document.getElementById(`status-${id}`);
+                    const row = document.getElementById(`post-row-${id}`);
+                    
+                    if (data.is_active) {
+                        statusBadge.textContent = 'Published';
+                        statusBadge.className = 'status-badge published';
+                        this.className = 'action-btn toggle active';
+                        this.innerHTML = '<i class="fas fa-eye"></i>';
+                        this.title = 'Deactivate';
+                    } else {
+                        statusBadge.textContent = 'Draft';
+                        statusBadge.className = 'status-badge draft';
+                        this.className = 'action-btn toggle';
+                        this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                        this.title = 'Activate';
+                    }
+                } else {
+                    showToast(data.message || 'Failed to toggle post', 'error');
+                }
+            })
+            .catch(function() {
+                showToast('An error occurred. Please try again.', 'error');
+            });
+        });
+    });
+
+    // Delete buttons
+    document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const title = this.dataset.title;
+            
+            if (!confirm(`Delete blog post "${title}"? This action cannot be undone.`)) {
+                return;
+            }
+            
+            const url = `/admin/blog/${id}/delete-ajax/`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    const row = document.getElementById(`post-row-${id}`);
+                    if (row) {
+                        row.style.transition = 'all 0.3s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(-20px)';
+                        setTimeout(() => {
+                            row.remove();
+                            const remainingRows = document.querySelectorAll('#admin-blog-tbody tr').length;
+                            if (remainingRows === 0) {
+                                document.querySelector('.posts-table-wrapper').outerHTML = `
+                                    <div class="empty-state">
+                                        <i class="fas fa-blog"></i>
+                                        <h3>No blog posts</h3>
+                                        <p>Create your first blog post using the "New Post" button above.</p>
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                    }
+                } else {
+                    showToast(data.message || 'Failed to delete post', 'error');
+                }
+            })
+            .catch(function() {
+                showToast('An error occurred. Please try again.', 'error');
+            });
+        });
+    });
+}
+
+// Modal controls
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('viewModal');
+    const closeBtn = document.getElementById('modal-close');
+    
+    closeBtn.addEventListener('click', function() {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    });
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    });
+
+    const searchInput = document.getElementById('admin-blog-search');
+    const suggestionsContainer = document.getElementById('admin-search-suggestions');
+    const searchBtn = document.getElementById('admin-search-btn');
+    let debounceTimer;
+
+    attachEventListeners();
+
+    if (searchInput && suggestionsContainer) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                suggestionsContainer.style.display = 'none';
+                if (query.length === 0) {
+                    window.location.href = '/admin/blog/';
+                }
+                return;
+            }
+            
+            suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner"></i> Searching...</div>';
+            suggestionsContainer.style.display = 'block';
+            
+            debounceTimer = setTimeout(function() {
+                fetch('/api/admin/blog/search/?q=' + encodeURIComponent(query))
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.suggestions && data.suggestions.length > 0) {
+                            let html = '';
+                            data.suggestions.forEach(function(post) {
+                                html += '<a href="/admin/blog/' + post.id + '/edit/" class="suggestion-item">';
+                                html += '<div class="title">' + post.title + '</div>';
+                                html += '<div class="excerpt">' + post.excerpt + '</div>';
+                                html += '</a>';
+                            });
+                            suggestionsContainer.innerHTML = html;
+                            suggestionsContainer.style.display = 'block';
+                        } else {
+                            suggestionsContainer.innerHTML = '<div class="no-results">No results found</div>';
+                            suggestionsContainer.style.display = 'block';
+                        }
+                        
+                        updateAdminSearchResults(query);
+                    })
+                    .catch(function() {
+                        suggestionsContainer.style.display = 'none';
+                    });
+            }, 300);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!suggestionsContainer.contains(e.target) && e.target !== searchInput) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+
+        if (searchBtn) {
+            searchBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                if (query.length >= 2) {
+                    updateAdminSearchResults(query);
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = this.value.trim();
+                const firstLink = suggestionsContainer.querySelector('.suggestion-item');
+                if (firstLink) {
+                    window.location.href = firstLink.href;
+                } else if (query.length >= 2) {
+                    updateAdminSearchResults(query);
+                    suggestionsContainer.style.display = 'none';
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
