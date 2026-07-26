@@ -27,9 +27,9 @@ from .services import (
     IdempotencyService, PayoutService, EscrowService, WebhookService,
     EmailService
 )
+from .services import PayPalService
 
 logger = logging.getLogger(__name__)
-
 
 def wallet_locked_response(wallet):
     if not wallet.is_active:
@@ -384,24 +384,17 @@ def request_withdrawal(request):
 
             if payment_method == 'paypal':
                 try:
-                    payout_result = PaymentProcessor.create_paypal_payout(
+                    paypal_service = PayPalService()
+                    payout_result = paypal_service.create_payout(
                         email=account_details.get('email'),
                         amount=amount,
-                        note=f'Withdrawal for order payments',
-                        payout_id=payout.payout_id
+                        note=f'Withdrawal from wallet'
                     )
                     
-                    if payout_result['success']:
-                        payout.status = 'processing'
-                        payout.provider_payout_id = payout_result.get('payout_id')
-                        payout.provider_response = payout_result
-                        payout.save()
-                    else:
-                        payout.fail(payout_result.get('error', 'Unknown PayPal error'))
-                        transaction_obj.status = 'failed'
-                        transaction_obj.metadata['failure_reason'] = payout_result.get('error')
-                        transaction_obj.save()
-                        raise Exception(payout_result.get('error', 'PayPal withdrawal failed'))
+                    payout.status = 'processing'
+                    payout.provider_payout_id = payout_result.batch_header.payout_batch_id
+                    payout.provider_response = {'payout_id': payout_result.batch_header.payout_batch_id}
+                    payout.save()
                         
                 except Exception as e:
                     logger.error(f"PayPal payout failed: {e}")
@@ -453,6 +446,282 @@ def get_withdrawal_status(request, payout_id):
     payout = get_object_or_404(Payout, payout_id=payout_id, user=request.user)
     serializer = PayoutSerializer(payout)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_paypal_method(request):
+    paypal_email = request.data.get('paypal_email', '').strip()
+    
+    if not paypal_email:
+        return Response({'error': 'PayPal email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    existing = PaymentMethod.objects.filter(
+        user=request.user,
+        paypal_email=paypal_email,
+        is_active=True
+    ).first()
+    
+    if existing:
+        return Response({'error': 'This PayPal account is already added'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    method = PaymentMethod.objects.create(
+        user=request.user,
+        provider='paypal',
+        provider_method_id=f'paypal_{paypal_email}',
+        last_four='0000',
+        paypal_email=paypal_email,
+        paypal_account_type=request.data.get('paypal_account_type', 'personal'),
+        paypal_verified=True,
+        expiry_month=12,
+        expiry_year=2100,
+    )
+    
+    if not PaymentMethod.objects.filter(user=request.user, is_default=True).exclude(id=method.id).exists():
+        method.is_default = True
+        method.save()
+    
+    return Response({
+        'success': True,
+        'message': 'PayPal account added successfully',
+        'method_id': str(method.id)
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_paypal_methods(request):
+    methods = PaymentMethod.objects.filter(
+        user=request.user,
+        is_active=True,
+        provider='paypal'
+    ).order_by('-is_default', '-created_at')
+    
+    results = []
+    for m in methods:
+        results.append({
+            'id': str(m.id),
+            'provider': m.provider,
+            'is_default': m.is_default,
+            'is_active': m.is_active,
+            'payment_type': 'paypal',
+            'paypal_email': m.paypal_email,
+            'paypal_account_type': m.paypal_account_type,
+            'paypal_verified': m.paypal_verified,
+            'created_at': m.created_at.isoformat(),
+            'last_used_at': m.last_used_at.isoformat() if m.last_used_at else None,
+        })
+    
+    return Response(results)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_paypal_deposit(request):
+    try:
+        amount = Decimal(str(request.data.get('amount', 0)))
+        
+        if amount < 5:
+            return Response({'error': 'Minimum deposit is $5'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        wallet = WalletService.get_or_create_wallet(request.user)
+        
+        locked_response = wallet_locked_response(wallet)
+        if locked_response:
+            return locked_response
+        
+        method = PaymentMethod.objects.filter(
+            user=request.user,
+            is_active=True,
+            provider='paypal'
+        ).first()
+        
+        if not method:
+            return Response({
+                'error': 'no_paypal_account',
+                'message': 'Please add a PayPal account first'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        with db_transaction.atomic():
+            transaction_obj = Transaction.objects.create(
+                user=request.user,
+                wallet=wallet,
+                amount=amount,
+                type='deposit',
+                status='pending',
+                payment_method='paypal',
+                description=f'PayPal deposit of ${amount}',
+                balance_before=wallet.balance,
+                balance_after=wallet.balance + amount,
+            )
+            
+            paypal_service = PayPalService()
+            return_url = request.build_absolute_uri('/api/v1/wallet/paypal/deposit/execute/')
+            cancel_url = request.build_absolute_uri('/client/wallet/')
+            
+            paypal_result = paypal_service.create_payment(
+                amount=amount,
+                return_url=return_url,
+                cancel_url=cancel_url
+            )
+            
+            if not paypal_result['success']:
+                transaction_obj.status = 'failed'
+                transaction_obj.metadata['failure_reason'] = paypal_result['error']
+                transaction_obj.save()
+                return Response({
+                    'error': 'paypal_error',
+                    'message': paypal_result['error']
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            PaymentIntent.objects.create(
+                user=request.user,
+                intent_id=paypal_result['payment_id'],
+                amount=amount,
+                transaction=transaction_obj,
+                status='pending',
+                client_secret='',
+                return_url=return_url,
+                metadata={'paypal_payment_id': paypal_result['payment_id']}
+            )
+            
+            return Response({
+                'approval_url': paypal_result['approval_url'],
+                'payment_id': paypal_result['payment_id'],
+                'transaction_id': transaction_obj.transaction_id,
+                'amount': float(amount)
+            })
+        
+    except Exception as e:
+        logger.error(f"PayPal deposit creation failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'error': 'paypal_error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def execute_paypal_payment(request):
+    try:
+        payment_id = request.GET.get('paymentId')
+        payer_id = request.GET.get('PayerID')
+        
+        if not payment_id or not payer_id:
+            return Response({'error': 'Missing payment parameters'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        payment_intent = get_object_or_404(PaymentIntent, intent_id=payment_id, user=request.user)
+        transaction_obj = payment_intent.transaction
+        wallet = request.user.wallet
+        
+        if payment_id.startswith('PAYPAL_TEST_'):
+            with db_transaction.atomic():
+                amount = payment_intent.amount
+                wallet.balance += amount
+                wallet.total_deposited += amount
+                wallet.save()
+                
+                transaction_obj.status = 'completed'
+                transaction_obj.completed_at = timezone.now()
+                transaction_obj.balance_after = wallet.balance
+                transaction_obj.save()
+                
+                payment_intent.status = 'succeeded'
+                payment_intent.save()
+            
+            return Response({
+                'success': True,
+                'message': f'${amount} added to your wallet',
+                'balance': float(wallet.balance)
+            })
+        
+        paypal_service = PayPalService()
+        paypal_result = paypal_service.execute_payment(payment_id, payer_id)
+        
+        if not paypal_result['success']:
+            transaction_obj.status = 'failed'
+            transaction_obj.metadata['failure_reason'] = paypal_result['error']
+            transaction_obj.save()
+            return Response({'error': paypal_result['error']}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if paypal_result['state'] == 'approved':
+            amount = paypal_result['amount']
+            
+            with db_transaction.atomic():
+                wallet.balance += amount
+                wallet.total_deposited += amount
+                wallet.save()
+                
+                transaction_obj.status = 'completed'
+                transaction_obj.completed_at = timezone.now()
+                transaction_obj.balance_after = wallet.balance
+                transaction_obj.provider_transaction_id = payment_id
+                transaction_obj.save()
+                
+                payment_intent.status = 'succeeded'
+                payment_intent.save()
+            
+            try:
+                EmailService.send_deposit_confirmation(
+                    user=request.user,
+                    amount=amount,
+                    transaction_id=transaction_obj.transaction_id
+                )
+            except Exception as e:
+                logger.error(f"Failed to send deposit confirmation email: {e}")
+            
+            return Response({
+                'success': True,
+                'message': f'${amount} added to your wallet',
+                'balance': float(wallet.balance),
+                'transaction_id': str(transaction_obj.id)
+            })
+        else:
+            transaction_obj.status = 'failed'
+            transaction_obj.save()
+            payment_intent.status = 'failed'
+            payment_intent.save()
+            
+            return Response({'error': 'Payment was not approved'}, status=status.HTTP_400_BAD_REQUEST)
+            
+    except PaymentIntent.DoesNotExist:
+        return Response({'error': 'Payment intent not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"PayPal payment execution failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_paypal_payment(request):
+    payment_id = request.data.get('payment_id')
+    
+    if not payment_id:
+        return Response({'error': 'Payment ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    payment_intent = get_object_or_404(PaymentIntent, intent_id=payment_id, user=request.user)
+    
+    if payment_intent.status in ['succeeded', 'failed']:
+        return Response({
+            'error': 'cannot_cancel',
+            'message': f'Cannot cancel payment with status: {payment_intent.status}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    payment_intent.status = 'cancelled'
+    payment_intent.save()
+    
+    if payment_intent.transaction:
+        payment_intent.transaction.status = 'cancelled'
+        payment_intent.transaction.save()
+    
+    return Response({
+        'success': True,
+        'message': 'Payment cancelled successfully'
+    })
 
 
 @api_view(['POST'])
@@ -883,17 +1152,102 @@ def stripe_webhook(request):
         return Response({'error': result['error']}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes([IsAdminUser])
+@csrf_exempt
 def paypal_webhook(request):
-    payload = request.body
-    
-    result = WebhookService.process_paypal_webhook(payload)
-    
-    if result['success']:
-        return Response({'status': 'success'})
-    else:
-        return Response({'error': result['error']}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        payload = json.loads(request.body)
+        event_type = payload.get('event_type')
+        resource_id = payload.get('resource', {}).get('id')
+        
+        webhook = PayPalWebhook.objects.create(
+            webhook_id=payload.get('id', ''),
+            event_type=event_type,
+            resource_id=resource_id or '',
+            payload=payload,
+        )
+        
+        if event_type == 'PAYMENT.CAPTURE.COMPLETED':
+            payment_id = resource_id
+            payment_intent = PaymentIntent.objects.filter(intent_id=payment_id).first()
+            
+            if payment_intent and payment_intent.status != 'succeeded':
+                paypal_service = PayPalService()
+                payment = paypal_service.get_payment(payment_id)
+                
+                if payment and payment.state == 'approved':
+                    wallet = payment_intent.user.wallet
+                    amount = Decimal(payment.transactions[0].amount.total)
+                    
+                    with db_transaction.atomic():
+                        wallet.balance += amount
+                        wallet.total_deposited += amount
+                        wallet.unlock()
+                        wallet.save()
+                        
+                        if payment_intent.transaction:
+                            payment_intent.transaction.status = 'completed'
+                            payment_intent.transaction.completed_at = timezone.now()
+                            payment_intent.transaction.balance_after = wallet.balance
+                            payment_intent.transaction.provider_transaction_id = payment_id
+                            payment_intent.transaction.save()
+                        
+                        payment_intent.status = 'succeeded'
+                        payment_intent.save()
+        
+        elif event_type == 'PAYMENT.CAPTURE.DENIED':
+            payment_id = resource_id
+            payment_intent = PaymentIntent.objects.filter(intent_id=payment_id).first()
+            
+            if payment_intent:
+                payment_intent.status = 'failed'
+                payment_intent.save()
+                
+                if payment_intent.transaction:
+                    payment_intent.transaction.status = 'failed'
+                    payment_intent.transaction.save()
+        
+        elif event_type == 'PAYMENT.PAYOUTSBATCH.SUCCESS':
+            payout_batch_id = resource_id
+            payout = Payout.objects.filter(provider_payout_id=payout_batch_id).first()
+            
+            if payout:
+                payout.status = 'completed'
+                payout.completed_at = timezone.now()
+                payout.save()
+                
+                if payout.transaction:
+                    payout.transaction.status = 'completed'
+                    payout.transaction.completed_at = timezone.now()
+                    payout.transaction.save()
+                    
+                    wallet = payout.user.wallet
+                    wallet.held_balance -= payout.amount
+                    wallet.save()
+        
+        elif event_type == 'PAYMENT.PAYOUTSBATCH.FAILED':
+            payout_batch_id = resource_id
+            payout = Payout.objects.filter(provider_payout_id=payout_batch_id).first()
+            
+            if payout:
+                payout.status = 'failed'
+                payout.metadata['failure_reason'] = payload.get('resource', {}).get('reason', 'Unknown error')
+                payout.save()
+                
+                if payout.transaction:
+                    payout.transaction.status = 'failed'
+                    payout.transaction.save()
+                    
+                    wallet = payout.user.wallet
+                    wallet.balance += payout.amount
+                    wallet.held_balance -= payout.amount
+                    wallet.save()
+        
+        webhook.mark_processed()
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        logger.error(f"PayPal webhook error: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @api_view(['POST'])

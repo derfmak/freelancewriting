@@ -26,7 +26,7 @@
     }
     
     .conversation-item.active:hover {
-        background-color: #ecfdf5;
+        background-color: #d1fae5;
     }
     
     .conversation-item .unread-badge {
@@ -407,35 +407,27 @@
         margin-left: 4px;
     }
     
-    .recall-btn {
-        background: transparent;
-        border: 1px solid #e5e7eb;
-        color: #6b7280;
-        padding: 8px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: none;
-        align-items: center;
-        gap: 4px;
-        flex-shrink: 0;
-    }
-    
-    .recall-btn.visible {
-        display: inline-flex;
-    }
-    
-    .recall-btn:hover {
-        background: #f3f4f6;
-        color: #dc2626;
-    }
-    
-    .input-wrapper {
+    .conversation-header {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        flex: 1;
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .conversation-header .student-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #1f2937;
+    }
+    
+    .conversation-header .student-email {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .conversation-header .order-detail {
+        font-size: 0.7rem;
+        color: #059669;
+        font-weight: 500;
     }
     
     @media (max-width: 768px) {
@@ -482,21 +474,26 @@
         </div>
 
         <div class="flex-1 flex flex-col" id="chatContainer">
-            <div class="p-3 border-b border-gray-200 bg-white flex justify-between items-center" id="chatHeader">
-                <div class="flex items-center gap-3">
-                    <div class="student-avatar hidden" id="studentAvatar">S</div>
-                    <div>
-                        <h3 class="font-semibold text-gray-800" id="currentStudent">Select a conversation</h3>
-                        <div class="flex items-center gap-2 mt-0.5">
-                            <span id="orderInfo" class="text-xs text-gray-500"></span>
-                            <span id="onlineStatus" class="text-xs text-gray-400"></span>
+            <div class="p-3 border-b border-gray-200 bg-white" id="chatHeader">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-3">
+                        <div class="student-avatar hidden" id="studentAvatar">S</div>
+                        <div class="conversation-header">
+                            <div>
+                                <span class="student-name" id="currentStudent">Select a conversation</span>
+                                <span class="student-email" id="studentEmail"></span>
+                            </div>
+                            <div>
+                                <span class="order-detail" id="orderInfo"></span>
+                                <span id="onlineStatus" class="text-xs text-gray-400 ml-2"></span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <a href="#" class="text-green-600 hover:text-green-700 text-sm font-medium hidden" id="viewOrderLink">
-                        <i class="fas fa-external-link-alt mr-1"></i>View Order
-                    </a>
+                    <div>
+                        <a href="#" class="text-green-600 hover:text-green-700 text-sm font-medium hidden" id="viewOrderLink">
+                            <i class="fas fa-external-link-alt mr-1"></i>View Order
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -515,9 +512,6 @@
 
             <div class="message-input-container">
                 <div class="flex gap-2">
-                    <button class="recall-btn" id="recallBtn">
-                        <i class="fas fa-undo-alt"></i> Recall
-                    </button>
                     <div class="input-wrapper">
                         <input type="text"
                                class="message-input"
@@ -557,16 +551,25 @@ var isTyping = false;
 var currentUser = null;
 var selectedMessageId = null;
 var isInitialLoad = true;
+var pendingOutgoing = [];
 
 function getAuthToken() {
     return localStorage.getItem('access_token');
 }
 
 function getApiHeaders() {
-    return {
-        'Authorization': 'Bearer ' + getAuthToken(),
+    var token = getAuthToken();
+    var csrfToken = document.querySelector('[name=csrf-token]')?.content || '';
+    var headers = {
         'Content-Type': 'application/json'
     };
+    if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+    }
+    if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+    }
+    return headers;
 }
 
 function apiRequest(endpoint, options) {
@@ -587,8 +590,35 @@ function apiRequest(endpoint, options) {
     });
 }
 
-function apiPost(endpoint, data) {
-    return apiRequest(endpoint, { method: 'POST', body: data });
+function extractId(value) {
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'object') {
+        if (value.id !== undefined) return value.id;
+        if (value.pk !== undefined) return value.pk;
+        if (value.uuid !== undefined) return value.uuid;
+        return null;
+    }
+    return value;
+}
+
+function isMessageSent(msg) {
+    if (!currentUser || !msg) return false;
+
+    if (msg.is_mine !== undefined) return !!msg.is_mine;
+    if (msg.sender_role !== undefined) return msg.sender_role === 'admin';
+
+    var senderId = extractId(msg.sender);
+    if (senderId === null && msg.sender_id !== undefined) {
+        senderId = msg.sender_id;
+    }
+    if (senderId === null || senderId === undefined) return false;
+
+    var myId = currentUser.id;
+    if (myId === undefined || myId === null) myId = currentUser.pk;
+    if (myId === undefined || myId === null) myId = currentUser.uuid;
+    if (myId === undefined || myId === null) return false;
+
+    return String(senderId) === String(myId);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -630,8 +660,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    setInterval(function() {
+        var now = Date.now();
+        pendingOutgoing = pendingOutgoing.filter(function(entry) {
+            return (now - entry.sentAt) < 30000;
+        });
+    }, 10000);
+
     document.getElementById('sendBtn').addEventListener('click', sendMessage);
-    document.getElementById('recallBtn').addEventListener('click', recallLastMessage);
     document.getElementById('cancelEdit').addEventListener('click', function() {
         document.getElementById('editMessageModal').classList.add('hidden');
     });
@@ -736,11 +772,15 @@ function displayConversations(list) {
         return;
     }
 
+    list.sort(function(a, b) {
+        return new Date(b.last_message_at) - new Date(a.last_message_at);
+    });
+
     var currentConvId = currentConversation ? currentConversation.id : null;
 
     container.innerHTML = list.map(function(conv) {
         var unreadCount = conv.unread_count || 0;
-        var studentName = conv.student ? conv.student.full_name : 'Student';
+        var studentName = conv.client_name || 'Student';
         var studentInitial = studentName ? studentName.charAt(0).toUpperCase() : 'S';
         var isActive = currentConvId === conv.id;
         var lastMessage = conv.last_message || null;
@@ -755,6 +795,7 @@ function displayConversations(list) {
                         '<div>' +
                             '<p class="font-medium text-gray-800 text-sm">' + escapeHtml(studentName) + '</p>' +
                             '<p class="text-xs text-gray-500">Order #' + escapeHtml(conv.order ? conv.order.order_number : 'N/A') + '</p>' +
+                            '<p class="text-xs text-gray-400">' + escapeHtml(conv.client_email || '') + '</p>' +
                         '</div>' +
                         (lastMessageTime ? '<span class="last-message-time">' + formatRelativeTime(lastMessageTime) + '</span>' : '') +
                     '</div>' +
@@ -788,14 +829,24 @@ function filterConversations(search) {
     var term = search.toLowerCase();
     var filtered = conversations.filter(function(conv) {
         var orderNumber = conv.order ? conv.order.order_number : '';
-        var studentName = conv.student ? conv.student.full_name : '';
-        var studentEmail = conv.student ? conv.student.email : '';
+        var studentName = conv.client_name || '';
+        var studentEmail = conv.client_email || '';
         return orderNumber.toLowerCase().includes(term) ||
             studentName.toLowerCase().includes(term) ||
             studentEmail.toLowerCase().includes(term);
     });
 
     displayConversations(filtered);
+}
+
+function setActiveConversationItem(conversationId) {
+    document.querySelectorAll('.conversation-item').forEach(function(item) {
+        if (item.dataset.conversationId === String(conversationId)) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
 }
 
 function updateUnreadCount() {
@@ -839,14 +890,14 @@ async function selectConversation(conversation) {
 
     currentConversation = conversation;
 
-    var studentName = conversation.student ? conversation.student.full_name : 'Student';
-    var studentEmail = conversation.student ? conversation.student.email : '';
+    var studentName = conversation.client_name || 'Student';
+    var studentEmail = conversation.client_email || '';
 
     document.getElementById('studentAvatar').classList.remove('hidden');
     document.getElementById('studentAvatar').textContent = studentName.charAt(0).toUpperCase();
 
-    document.getElementById('currentStudent').innerHTML = 
-        escapeHtml(studentName) + ' <span class="text-sm font-normal text-gray-500 ml-2">' + escapeHtml(studentEmail) + '</span>';
+    document.getElementById('currentStudent').textContent = studentName;
+    document.getElementById('studentEmail').textContent = studentEmail;
 
     var orderInfo = '';
     if (conversation.order) {
@@ -869,19 +920,33 @@ async function selectConversation(conversation) {
     document.getElementById('sendBtn').disabled = false;
     document.getElementById('messageInput').focus();
 
+    setActiveConversationItem(conversation.id);
+
     if (conversation.unread_count > 0) {
         updateConversationUnread(conversation.id, 0);
     }
 
-    await loadMessages(conversation.id);
-    connectWebSocket(conversation.id);
+    var orderId = conversation.order ? conversation.order.id : null;
+    if (!orderId) {
+        document.getElementById('messagesContainer').innerHTML = 
+            '<div class="flex items-center justify-center h-full text-red-500">' +
+                '<div class="text-center">' +
+                    '<p>No order associated with this conversation</p>' +
+                '</div>' +
+            '</div>';
+        return;
+    }
+
+    await loadMessages(orderId);
+    connectWebSocket(orderId);
 }
 
-async function loadMessages(conversationId) {
+async function loadMessages(orderId) {
     var container = document.getElementById('messagesContainer');
     try {
-        var data = await apiRequest('/order/' + conversationId + '/');
-        displayMessages(data.messages || []);
+        var data = await apiRequest('/order/' + orderId + '/');
+        var messages = data.messages || [];
+        displayMessages(messages);
     } catch (error) {
         console.error('Load messages error:', error);
         container.innerHTML = 
@@ -894,8 +959,8 @@ async function loadMessages(conversationId) {
     }
 }
 
-function getStatusTicks(message) {
-    if (message.sender !== currentUser?.id) return '';
+function getStatusTicks(message, isSent) {
+    if (!isSent) return '';
 
     if (message.is_read) {
         return '<span class="message-status"><span class="tick tick-read tick-double">✓✓</span></span>';
@@ -906,14 +971,16 @@ function getStatusTicks(message) {
     }
 }
 
-function messageBubbleHtml(msg) {
-    var isSent = msg.sender === currentUser?.id;
+function messageBubbleHtml(msg, forceSent) {
+    var isSent = forceSent === true ? true : isMessageSent(msg);
     var sentClass = isSent ? 'sent' : 'received';
-    var ticks = getStatusTicks(msg);
+    var ticks = getStatusTicks(msg, isSent);
+    var senderName = msg.sender_name || (msg.sender?.full_name) || 'Unknown';
 
     return '<div class="message-item ' + sentClass + '" data-message-id="' + msg.id + '">' +
         '<div class="message-wrapper ' + sentClass + '">' +
             '<div class="message-bubble ' + sentClass + '">' +
+                (isSent ? '' : '<div class="text-xs text-gray-500 font-medium mb-1">' + escapeHtml(senderName) + '</div>') +
                 '<div class="message-content">' + escapeHtml(msg.content) + '</div>' +
                 '<div class="message-meta">' +
                     (msg.is_edited ? '<span class="edited-indicator">edited</span>' : '') +
@@ -949,10 +1016,14 @@ function displayMessages(messages) {
         return;
     }
 
+    var sortedMessages = messages.slice().sort(function(a, b) {
+        return new Date(a.created_at) - new Date(b.created_at);
+    });
+
     var html = '';
     var lastDate = '';
 
-    messages.forEach(function(msg) {
+    sortedMessages.forEach(function(msg) {
         var msgDate = new Date(msg.created_at);
         var dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
@@ -970,20 +1041,30 @@ function displayMessages(messages) {
     container.innerHTML = html;
     container.scrollTop = container.scrollHeight;
     bindMessageActions();
+}
 
-    var lastOwn = [...messages].reverse().find(function(m) {
-        return m.sender === currentUser?.id;
-    });
-    if (lastOwn) {
-        var elapsed = Date.now() - new Date(lastOwn.created_at).getTime();
-        if (elapsed < 60000) {
-            document.getElementById('recallBtn').classList.add('visible');
-        } else {
-            document.getElementById('recallBtn').classList.remove('visible');
-        }
-    } else {
-        document.getElementById('recallBtn').classList.remove('visible');
+function appendMessageToContainer(html, createdAt) {
+    var container = document.getElementById('messagesContainer');
+
+    var msgDate = new Date(createdAt);
+    var dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    var lastDivider = container.querySelector('.message-date-divider:last-child');
+    if (!lastDivider || lastDivider.querySelector('span').textContent !== dateStr) {
+        var divider = document.createElement('div');
+        divider.className = 'message-date-divider';
+        divider.innerHTML = '<span>' + dateStr + '</span>';
+        container.appendChild(divider);
     }
+
+    var placeholder = container.querySelector('.flex.items-center.justify-center.h-full');
+    if (placeholder) {
+        container.innerHTML = '';
+    }
+
+    container.insertAdjacentHTML('beforeend', html);
+    container.scrollTop = container.scrollHeight;
+    bindMessageActions();
 }
 
 function bindMessageActions() {
@@ -1002,14 +1083,14 @@ function bindMessageActions() {
     });
 }
 
-function connectWebSocket(conversationId) {
+function connectWebSocket(orderId) {
     if (ws) {
         ws.close();
     }
 
     var token = getAuthToken();
     var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    var wsUrl = protocol + '//' + window.location.host + '/ws/orders/' + conversationId + '/chat/?token=' + token;
+    var wsUrl = protocol + '//' + window.location.host + '/ws/orders/' + orderId + '/chat/?token=' + token;
 
     ws = new WebSocket(wsUrl);
 
@@ -1023,7 +1104,15 @@ function connectWebSocket(conversationId) {
             var data = JSON.parse(e.data);
 
             if (data.type === 'message' || data.type === 'message.sent') {
-                handleIncomingMessage(data.message || data);
+                var incoming = data.message || data;
+                var pendingIdx = findPendingMatch(incoming);
+                if (pendingIdx !== -1) {
+                    var pendingEntry = pendingOutgoing[pendingIdx];
+                    pendingOutgoing.splice(pendingIdx, 1);
+                    reconcileOutgoingMessage(pendingEntry, incoming);
+                } else {
+                    handleIncomingMessage(incoming);
+                }
             } else if (data.type === 'typing') {
                 handleTypingIndicator(data.is_typing);
             } else if (data.type === 'read') {
@@ -1050,38 +1139,51 @@ function connectWebSocket(conversationId) {
     };
 }
 
+function findPendingMatch(message) {
+    if (message.temp_id) {
+        for (var i = 0; i < pendingOutgoing.length; i++) {
+            if (pendingOutgoing[i].tempId === message.temp_id) return i;
+        }
+    }
+    var now = Date.now();
+    for (var j = 0; j < pendingOutgoing.length; j++) {
+        var entry = pendingOutgoing[j];
+        if (entry.content === message.content && (now - entry.sentAt) < 8000) {
+            return j;
+        }
+    }
+    return -1;
+}
+
+function reconcileOutgoingMessage(pendingEntry, message) {
+    var finalMessage = {
+        id: message.id || pendingEntry.tempId,
+        content: message.content,
+        created_at: message.created_at || new Date().toISOString(),
+        is_delivered: message.is_delivered || false,
+        is_read: message.is_read || false,
+        is_edited: message.is_edited || false
+    };
+
+    var wrapper = document.querySelector('[data-message-id="' + pendingEntry.tempId + '"]');
+    if (wrapper) {
+        wrapper.outerHTML = messageBubbleHtml(finalMessage, true);
+        bindMessageActions();
+    } else {
+        appendMessageToContainer(messageBubbleHtml(finalMessage, true), finalMessage.created_at);
+    }
+
+    updateConversationPreview(finalMessage);
+}
+
 function handleIncomingMessage(message) {
-    var container = document.getElementById('messagesContainer');
-    var isSent = message.sender === currentUser?.id;
+    appendMessageToContainer(messageBubbleHtml(message, false), message.created_at);
 
-    var msgDate = new Date(message.created_at);
-    var dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-
-    var lastDivider = container.querySelector('.message-date-divider:last-child');
-    if (!lastDivider || lastDivider.querySelector('span').textContent !== dateStr) {
-        var divider = document.createElement('div');
-        divider.className = 'message-date-divider';
-        divider.innerHTML = '<span>' + dateStr + '</span>';
-        container.appendChild(divider);
-    }
-
-    var placeholder = container.querySelector('.flex.items-center.justify-center.h-full');
-    if (placeholder) {
-        container.innerHTML = '';
-    }
-
-    container.insertAdjacentHTML('beforeend', messageBubbleHtml(message));
-    container.scrollTop = container.scrollHeight;
-    bindMessageActions();
-
-    if (!isSent && currentConversation) {
+    if (currentConversation) {
         var conv = conversations.find(function(c) { return c.id === currentConversation.id; });
         if (conv) {
             var newCount = (conv.unread_count || 0) + 1;
             updateConversationUnread(conv.id, newCount);
-            updateNavbarBadge(conversations.reduce(function(sum, c) {
-                return sum + (c.unread_count || 0);
-            }, 0));
         }
     }
 
@@ -1139,7 +1241,7 @@ function handleReadReceipt(messageId) {
 function handleEditedMessage(message) {
     var wrapper = document.querySelector('[data-message-id="' + message.id + '"]');
     if (wrapper) {
-        wrapper.outerHTML = messageBubbleHtml(message);
+        wrapper.outerHTML = messageBubbleHtml(message, true);
         bindMessageActions();
     }
 }
@@ -1170,25 +1272,24 @@ function sendMessage() {
         }));
     }
 
+    var tempId = 'tmp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    var localMessage = {
+        id: tempId,
+        content: content,
+        created_at: new Date().toISOString(),
+        is_delivered: false,
+        is_read: false,
+        is_edited: false
+    };
+
+    pendingOutgoing.push({ tempId: tempId, content: content, sentAt: Date.now() });
+    appendMessageToContainer(messageBubbleHtml(localMessage, true), localMessage.created_at);
+
     ws.send(JSON.stringify({
         type: 'message',
-        content: content
+        content: content,
+        temp_id: tempId
     }));
-
-    document.getElementById('recallBtn').classList.add('visible');
-    setTimeout(function() {
-        document.getElementById('recallBtn').classList.remove('visible');
-    }, 60000);
-}
-
-function recallLastMessage() {
-    if (!ws) return;
-
-    ws.send(JSON.stringify({
-        type: 'recall'
-    }));
-
-    document.getElementById('recallBtn').classList.remove('visible');
 }
 
 function showEditModal(messageId, content) {

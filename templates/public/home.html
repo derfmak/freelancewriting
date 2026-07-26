@@ -159,6 +159,7 @@
         display: inline-block;
         transition: all 0.3s ease;
         text-decoration: none;
+        border-radius: 0.375rem;
     }
 
     .btn-white:hover {
@@ -181,6 +182,7 @@
     .image-wrapper {
         overflow: hidden;
         height: 200px;
+        border-radius: 0.5rem;
     }
 
     .image-wrapper img {
@@ -192,15 +194,6 @@
 
     .image-wrapper:hover img {
         transform: scale(1.03);
-    }
-
-    .full-bleed-image {
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-        margin-right: calc(-50vw + 50%);
-        height: 300px;
-        object-fit: cover;
-        display: block;
     }
 
     .full-bleed-image-wrapper {
@@ -248,10 +241,6 @@
             justify-content: center;
         }
 
-        .full-bleed-image {
-            height: 200px;
-        }
-
         .full-bleed-image-wrapper {
             height: 200px;
         }
@@ -286,15 +275,15 @@
             <div class="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-green-200">
                 <div>
                     <span class="stat-number" id="orders-count">0</span>
-                    <span class="stat-label">Papers Written</span>
+                    <span class="stat-label">Orders Completed</span>
                 </div>
                 <div>
-                    <span class="stat-number" id="satisfaction-count">0%</span>
-                    <span class="stat-label">Satisfaction</span>
+                    <span class="stat-number" id="completion-rate">0%</span>
+                    <span class="stat-label">Completion Rate</span>
                 </div>
                 <div>
-                    <span class="stat-number" id="rating-count">0</span>
-                    <span class="stat-label">/5 Rating</span>
+                    <span class="stat-number" id="avg-rating">0.0</span>
+                    <span class="stat-label">Average Rating</span>
                 </div>
             </div>
         </div>
@@ -402,7 +391,7 @@
             <a href="/place-order/" class="btn-white">
                 <i class="fas fa-paper-plane mr-2"></i> Place Your Order
             </a>
-            <a href="/contact/" class="bg-white/20 text-white px-6 py-2.5 font-semibold hover:bg-white/30 transition border border-white/20">
+            <a href="/contact/" class="bg-white/20 text-white px-6 py-2.5 font-semibold hover:bg-white/30 transition border border-white/20 rounded">
                 <i class="fas fa-envelope mr-2"></i> Contact Us
             </a>
         </div>
@@ -416,24 +405,30 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function fetchHomeStats() {
-    const statsData = getCachedStats();
+    var statsData = getCachedStats();
     
     if (statsData) {
         updateStats(statsData);
     }
     
     fetch('/api/about/stats/')
-        .then(response => response.json())
-        .then(data => {
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(function(data) {
             cacheStats(data);
             updateStats(data);
         })
-        .catch(function() {
+        .catch(function(error) {
+            console.warn('Failed to fetch stats:', error);
             if (!statsData) {
                 updateStats({
-                    orders: 1250,
-                    satisfaction_rate: 98,
-                    rating: 4.9
+                    orders: 0,
+                    completion_rate: 0,
+                    rating: 0
                 });
             }
         });
@@ -441,10 +436,10 @@ function fetchHomeStats() {
 
 function getCachedStats() {
     try {
-        const cached = localStorage.getItem('home_stats');
+        var cached = localStorage.getItem('home_stats');
         if (cached) {
-            const data = JSON.parse(cached);
-            const timestamp = data.timestamp || 0;
+            var data = JSON.parse(cached);
+            var timestamp = data.timestamp || 0;
             if (Date.now() - timestamp < 300000) {
                 return data.stats;
             }
@@ -465,47 +460,19 @@ function cacheStats(stats) {
 }
 
 function updateStats(data) {
-    animateNumber('orders-count', data.orders || 0);
-    animateNumber('satisfaction-count', data.satisfaction_rate || 98, '%');
-    animateNumber('rating-count', data.rating || 4.9, '');
-}
-
-function animateNumber(elementId, target, suffix) {
-    const element = document.getElementById(elementId);
-    if (!element) return;
+    var ordersEl = document.getElementById('orders-count');
+    var rateEl = document.getElementById('completion-rate');
+    var ratingEl = document.getElementById('avg-rating');
     
-    const duration = 1000;
-    const startTime = performance.now();
-    const startValue = 0;
-    
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const current = Math.round(startValue + (target - startValue) * eased);
-        
-        if (suffix === '%') {
-            element.textContent = current + '%';
-        } else if (suffix === '') {
-            element.textContent = current.toFixed(1);
-        } else {
-            element.textContent = current + suffix;
-        }
-        
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        } else {
-            if (suffix === '%') {
-                element.textContent = target + '%';
-            } else if (suffix === '') {
-                element.textContent = target.toFixed(1);
-            } else {
-                element.textContent = target + suffix;
-            }
-        }
+    if (ordersEl) {
+        ordersEl.textContent = data.orders || data.completed_orders || 0;
     }
-    
-    requestAnimationFrame(update);
+    if (rateEl) {
+        rateEl.textContent = (data.completion_rate || 0) + '%';
+    }
+    if (ratingEl) {
+        ratingEl.textContent = (data.rating || 0).toFixed(1);
+    }
 }
 </script>
 {% endblock %}

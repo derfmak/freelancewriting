@@ -22,8 +22,8 @@ class MessageSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'conversation', 'sender', 'content', 'message_type',
             'file_url', 'file_name', 'file_size', 'is_edited', 'edited_at',
-            'is_recalled', 'recalled_at', 'is_read', 'read_at',
-            'is_delivered', 'delivered_at', 'created_at', 'updated_at',
+            'is_read', 'read_at', 'is_delivered', 'delivered_at',
+            'created_at', 'updated_at',
         ]
         read_only_fields = fields
 

@@ -198,7 +198,6 @@ class AddPaymentMethodForm(forms.Form):
 
     @staticmethod
     def luhn_check(card_number):
-        """Luhn algorithm for card validation"""
         sum_val = 0
         num_digits = len(card_number)
         parity = num_digits % 2
@@ -214,7 +213,6 @@ class AddPaymentMethodForm(forms.Form):
         return sum_val % 10 == 0
 
     def detect_card_brand(self, card_number):
-        """Detect card brand from number"""
         patterns = {
             'visa': r'^4[0-9]{12}(?:[0-9]{3})?$',
             'mastercard': r'^5[1-5][0-9]{14}$|^2(?:2[2-9][0-9]{2}|[3-6][0-9]{3}|7[0-1][0-9]{2}|720)[0-9]{12}$',
@@ -246,6 +244,91 @@ class PayPalPaymentForm(forms.Form):
             'step': '0.01'
         })
     )
+
+    def clean_paypal_email(self):
+        email = self.cleaned_data['paypal_email']
+        if not email:
+            raise forms.ValidationError('PayPal email is required')
+        return email
+
+
+class AddPayPalMethodForm(forms.Form):
+    paypal_email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-input w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors',
+            'placeholder': 'your@paypal.com'
+        })
+    )
+    paypal_account_type = forms.ChoiceField(
+        choices=[('personal', 'Personal'), ('business', 'Business')],
+        widget=forms.Select(attrs={
+            'class': 'form-input w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors'
+        })
+    )
+    set_default = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'})
+    )
+
+    def clean_paypal_email(self):
+        email = self.cleaned_data['paypal_email']
+        if not email:
+            raise forms.ValidationError('PayPal email is required')
+        return email
+
+
+class PayPalDepositForm(forms.Form):
+    amount = forms.DecimalField(
+        min_value=5,
+        max_value=10000,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-input w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors',
+            'placeholder': 'Enter amount',
+            'step': '5',
+            'min': '5'
+        })
+    )
+    paypal_email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-input w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors',
+            'placeholder': 'your@paypal.com'
+        })
+    )
+
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if amount < 5:
+            raise forms.ValidationError('Minimum deposit is $5.00')
+        if amount > 10000:
+            raise forms.ValidationError('Maximum deposit is $10,000.00')
+        return amount
+
+
+class PayPalWithdrawForm(forms.Form):
+    amount = forms.DecimalField(
+        min_value=10,
+        max_value=5000,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-input w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors',
+            'placeholder': 'Enter amount',
+            'step': '10',
+            'min': '10'
+        })
+    )
+    paypal_email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-input w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors',
+            'placeholder': 'your@paypal.com'
+        })
+    )
+
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if amount < 10:
+            raise forms.ValidationError('Minimum withdrawal is $10.00')
+        if amount > 5000:
+            raise forms.ValidationError('Maximum withdrawal is $5,000.00')
+        return amount
 
     def clean_paypal_email(self):
         email = self.cleaned_data['paypal_email']

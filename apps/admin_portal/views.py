@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Count, Sum, Avg, Q
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
@@ -66,12 +66,32 @@ def admin_order_detail(request, order_id):
     except:
         pass
     
+    for msg in messages:
+        if not msg.content or msg.content.strip() == '':
+            msg.content = "Message content unavailable"
+    
+    delivered_files = []
+    for attachment in order.attachments.filter(delivered_at__isnull=False):
+        time_elapsed = timezone.now() - attachment.delivered_at
+        can_pull_back = time_elapsed <= timedelta(minutes=30)
+        time_remaining = max(0, int((timedelta(minutes=30) - time_elapsed).total_seconds() / 60))
+        delivered_files.append({
+            'id': str(attachment.id),
+            'filename': attachment.filename,
+            'file_size': attachment.file_size,
+            'file_url': attachment.file.url,
+            'delivered_at': attachment.delivered_at,
+            'can_pull_back': can_pull_back,
+            'time_remaining': f'{time_remaining}m left' if can_pull_back else 'Expired'
+        })
+    
     context = {
         'order': order,
         'messages': messages,
         'conversation': conversation,
         'client_online': client_online,
         'now': timezone.now(),
+        'delivered_files': delivered_files,
     }
     return render(request, 'admin/order-detail.html', context)
 
@@ -533,7 +553,7 @@ def admin_accept_order(request, order_id):
     
     log_admin_action(
         admin=request.user,
-        action_type='order_approve',
+        action_type='order_accept',
         request=request,
         target_order=order
     )
@@ -548,7 +568,10 @@ def admin_reject_order(request, order_id):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id, status='request')
-    reason = request.data.get('reason', 'No reason provided')
+    reason = request.data.get('reason', '').strip()
+    
+    if not reason:
+        return Response({'error': 'Reason is required'}, status=status.HTTP_400_BAD_REQUEST)
     
     order.status = 'declined'
     order.declined_at = timezone.now()
@@ -601,106 +624,110 @@ def admin_reject_order(request, order_id):
 def admin_deliver_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     order = get_object_or_404(Order, id=order_id, status='in_progress')
-    
-    file = request.FILES.get('file')
-    if not file:
-        return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    attachment = Attachment.objects.create(
-        file=file,
-        filename=file.name,
-        file_size=file.size,
-        mime_type=file.content_type,
-        uploaded_by=request.user
-    )
-    
-    order.status = 'awaiting_approval'
-    order.delivered_at = timezone.now()
-    order.delivered_file = attachment
-    order.auto_approve_at = timezone.now() + timedelta(hours=Order.REVISION_WINDOW_HOURS)
-    order.save()
-    
-    order.attachments.add(attachment)
-    
-    OrderHistory.objects.create(
-        order=order,
-        user=request.user,
-        action='deliver',
-        from_status='in_progress',
-        to_status='awaiting_approval'
-    )
-    
-    OrderTimeline.objects.create(
-        order=order,
-        status='awaiting_approval',
-        title='Order Delivered',
-        description='The order has been delivered and is awaiting client approval',
-        icon='fa-file-check',
-        color='purple'
-    )
-    
+
+    files = request.FILES.getlist('files')
+    if not files:
+        return Response({'error': 'No files provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    delivered_files = []
+    with transaction.atomic():
+        for file in files:
+            attachment = Attachment.objects.create(
+                file=file,
+                filename=file.name,
+                file_size=file.size,
+                mime_type=file.content_type,
+                uploaded_by=request.user,
+                delivered_at=timezone.now()
+            )
+            order.attachments.add(attachment)
+            delivered_files.append({
+                'id': str(attachment.id),
+                'filename': attachment.filename,
+                'file_size': attachment.file_size,
+                'delivered_at': attachment.delivered_at.isoformat()
+            })
+
+        order.status = 'awaiting_approval'
+        order.delivered_at = timezone.now()
+        order.auto_approve_at = timezone.now() + timedelta(hours=Order.REVISION_WINDOW_HOURS)
+        order.save()
+
+        OrderHistory.objects.create(
+            order=order,
+            user=request.user,
+            action='deliver',
+            from_status='in_progress',
+            to_status='awaiting_approval'
+        )
+
+        OrderTimeline.objects.create(
+            order=order,
+            status='awaiting_approval',
+            title='Files Delivered',
+            description=f'{len(files)} file(s) delivered and awaiting client approval',
+            icon='fa-file-check',
+            color='purple'
+        )
+
     log_admin_action(
         admin=request.user,
         action_type='order_deliver',
         request=request,
         target_order=order
     )
-    
-    return Response({'success': True, 'message': 'Order delivered successfully'})
+
+    return Response({
+        'success': True,
+        'message': f'{len(files)} file(s) delivered successfully',
+        'files': delivered_files
+    })
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def admin_approve_order(request, order_id):
+def admin_pullback_file(request, order_id, file_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    order = get_object_or_404(Order, id=order_id, status='awaiting_approval')
-    
-    order.status = 'completed'
-    order.completed_at = timezone.now()
-    order.escrow_released_at = timezone.now()
-    order.save()
-    
-    if order.writer:
-        try:
-            WalletService.credit(
-                wallet=order.writer.wallet,
-                amount=order.total_price,
-                transaction_type='payout',
-                description=f'Payment for order {order.order_number}',
-                order=order
-            )
-        except:
-            pass
-    
-    OrderHistory.objects.create(
-        order=order,
-        user=request.user,
-        action='complete',
-        from_status='awaiting_approval',
-        to_status='completed'
-    )
-    
-    OrderTimeline.objects.create(
-        order=order,
-        status='completed',
-        title='Order Completed',
-        description='The order has been completed and approved',
-        icon='fa-check-circle',
-        color='green'
-    )
-    
+
+    order = get_object_or_404(Order, id=order_id)
+    attachment = get_object_or_404(Attachment, id=file_id)
+
+    if attachment not in order.attachments.all():
+        return Response({'error': 'File not found in this order'}, status=status.HTTP_404_NOT_FOUND)
+
+    delivered_at = getattr(attachment, 'delivered_at', None)
+    if not delivered_at:
+        return Response({'error': 'File was not delivered'}, status=status.HTTP_400_BAD_REQUEST)
+
+    time_elapsed = timezone.now() - delivered_at
+    if time_elapsed > timedelta(minutes=10):
+        return Response({'error': 'Pull-back window expired (10 minutes)'}, status=status.HTTP_400_BAD_REQUEST)
+
+    order.attachments.remove(attachment)
+    attachment.delete()
+
+    remaining_files = order.attachments.filter(delivered_at__isnull=False).count()
+    if remaining_files == 0:
+        order.status = 'in_progress'
+        order.auto_approve_at = None
+        order.save()
+
     log_admin_action(
         admin=request.user,
-        action_type='order_complete',
+        action_type='file_pullback',
         request=request,
-        target_order=order
+        target_order=order,
+        details={'file_id': str(file_id), 'filename': attachment.filename}
     )
-    
-    return Response({'success': True, 'message': 'Order approved successfully'})
+
+    return Response({
+        'success': True,
+        'message': 'File pulled back successfully',
+        'remaining_files': remaining_files
+    })
 
 
 @api_view(['POST'])
@@ -750,53 +777,6 @@ def admin_cancel_order(request, order_id):
     )
     
     return Response({'success': True, 'message': 'Order cancelled successfully'})
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def admin_request_revision(request, order_id):
-    if not is_admin(request.user):
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    order = get_object_or_404(Order, id=order_id, status='awaiting_approval')
-    reason = request.data.get('reason', '').strip()
-    
-    if not reason:
-        return Response({'error': 'Revision reason is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    order.status = 'in_progress'
-    order.revision_count += 1
-    order.last_revision_requested_at = timezone.now()
-    order.auto_approve_at = None
-    order.save()
-    
-    OrderHistory.objects.create(
-        order=order,
-        user=request.user,
-        action='revise',
-        from_status='awaiting_approval',
-        to_status='in_progress',
-        data={'reason': reason}
-    )
-    
-    OrderTimeline.objects.create(
-        order=order,
-        status='in_progress',
-        title='Revision Requested',
-        description=f'Revision requested: {reason}',
-        icon='fa-edit',
-        color='orange'
-    )
-    
-    log_admin_action(
-        admin=request.user,
-        action_type='order_revision',
-        request=request,
-        target_order=order,
-        details={'reason': reason}
-    )
-    
-    return Response({'success': True, 'message': 'Revision requested successfully'})
 
 
 @api_view(['GET'])
@@ -901,7 +881,7 @@ def send_message(request, order_id):
     conversation, created = Conversation.objects.get_or_create(
         order=order,
         defaults={
-            'student': order.client,
+            'client': order.client,
             'admin': request.user
         }
     )
@@ -951,7 +931,9 @@ def get_messages(request, order_id):
                 'sender': str(msg.sender_id),
                 'sender_name': msg.sender.full_name or msg.sender.email,
                 'created_at': msg.created_at.isoformat(),
-                'is_admin': msg.sender_id == request.user.id
+                'is_admin': msg.sender_id == request.user.id,
+                'is_read': msg.is_read,
+                'is_delivered': msg.is_delivered,
             } for msg in messages]
         })
     except Conversation.DoesNotExist:
@@ -1005,8 +987,8 @@ def transaction_detail(request, transaction_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    transaction = get_object_or_404(Transaction, id=transaction_id)
-    serializer = TransactionAdminSerializer(transaction)
+    transaction_obj = get_object_or_404(Transaction, id=transaction_id)
+    serializer = TransactionAdminSerializer(transaction_obj)
     return Response(serializer.data)
 
 

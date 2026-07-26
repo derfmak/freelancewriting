@@ -47,6 +47,15 @@ class TransactionQuerySet(models.QuerySet):
     def adjustments(self):
         return self.filter(type='adjustment')
     
+    def paypal(self):
+        return self.filter(payment_method='paypal')
+    
+    def stripe(self):
+        return self.filter(payment_method='stripe')
+    
+    def wallet(self):
+        return self.filter(payment_method='wallet')
+    
     def for_user(self, user):
         return self.filter(user=user)
     
@@ -156,6 +165,15 @@ class TransactionManager(models.Manager):
     def payouts(self):
         return self.get_queryset().payouts()
     
+    def paypal(self):
+        return self.get_queryset().paypal()
+    
+    def stripe(self):
+        return self.get_queryset().stripe()
+    
+    def wallet(self):
+        return self.get_queryset().wallet()
+    
     def for_user(self, user):
         return self.get_queryset().for_user(user)
     
@@ -187,7 +205,6 @@ class TransactionManager(models.Manager):
         return self.create(**kwargs)
     
     def create_hold(self, wallet, amount, order=None, description=None):
-        """Create a hold transaction"""
         return self.create(
             user=wallet.user,
             wallet=wallet,
@@ -204,7 +221,6 @@ class TransactionManager(models.Manager):
         )
     
     def create_settlement(self, wallet, amount, order=None, description=None):
-        """Create a settlement transaction (release to writer)"""
         return self.create(
             user=wallet.user,
             wallet=wallet,
@@ -221,7 +237,6 @@ class TransactionManager(models.Manager):
         )
     
     def create_refund(self, wallet, amount, order=None, description=None):
-        """Create a refund transaction"""
         return self.create(
             user=wallet.user,
             wallet=wallet,
@@ -236,6 +251,27 @@ class TransactionManager(models.Manager):
             held_before=wallet.held_balance + amount,
             held_after=wallet.held_balance
         )
+    
+    def create_paypal_deposit(self, wallet, amount, payment_id, transaction_id=None):
+        return self.create(
+            user=wallet.user,
+            wallet=wallet,
+            amount=amount,
+            type='deposit',
+            status='pending',
+            payment_method='paypal',
+            description=f'PayPal deposit of ${amount}',
+            provider_transaction_id=payment_id,
+            balance_before=wallet.balance,
+            balance_after=wallet.balance + amount,
+        )
+    
+    def complete_paypal_deposit(self, transaction_obj):
+        transaction_obj.status = 'completed'
+        transaction_obj.completed_at = timezone.now()
+        transaction_obj.balance_after = transaction_obj.wallet.balance
+        transaction_obj.save()
+        return transaction_obj
 
 
 class PaymentMethodQuerySet(models.QuerySet):
@@ -304,6 +340,19 @@ class PaymentMethodManager(models.Manager):
         if not method:
             method = self.create(user=user, is_default=True, **defaults)
         return method
+    
+    def get_paypal_method(self, user, paypal_email):
+        return self.get_queryset().for_user(user).filter(
+            paypal_email=paypal_email,
+            provider='paypal',
+            is_active=True
+        ).first()
+    
+    def get_default_paypal(self, user):
+        return self.get_queryset().for_user(user).filter(
+            provider='paypal',
+            is_active=True
+        ).default().first()
 
 
 class WalletQuerySet(models.QuerySet):
@@ -605,6 +654,16 @@ class PayoutManager(models.Manager):
             status='pending',
             **kwargs
         )
+    
+    def create_paypal_payout(self, user, amount, paypal_email, **kwargs):
+        return self.create(
+            user=user,
+            amount=amount,
+            payment_method='paypal',
+            account_details={'email': paypal_email},
+            status='pending',
+            **kwargs
+        )
 
 
 class PayPalWebhookQuerySet(models.QuerySet):
@@ -653,3 +712,6 @@ class PayPalWebhookManager(models.Manager):
             payload=payload,
             processed=False
         )
+    
+    def get_unprocessed(self):
+        return self.get_queryset().pending().order_by('created_at')

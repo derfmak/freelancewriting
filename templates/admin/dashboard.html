@@ -2,165 +2,459 @@
 
 {% block title %}Admin Dashboard - AcademicWrite{% endblock %}
 
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1.25rem 1.5rem;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+    
+    .stat-card .stat-icon {
+        position: absolute;
+        right: 1rem;
+        bottom: 1rem;
+        font-size: 3rem;
+        opacity: 0.06;
+        color: #1e293b;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-top: 0.25rem;
+        font-feature-settings: "tnum";
+    }
+    
+    .stat-card .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-card .stat-sub {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        margin-top: 0.25rem;
+    }
+    
+    .stat-card .stat-change {
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .stat-card .stat-change.positive {
+        color: #059669;
+    }
+    
+    .stat-card .stat-change.negative {
+        color: #dc2626;
+    }
+    
+    .stat-card .stat-progress {
+        margin-top: 0.75rem;
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+    
+    .stat-card .stat-progress .fill {
+        height: 100%;
+        border-radius: 9999px;
+        transition: width 0.8s ease;
+    }
+    
+    .stat-card .stat-progress .fill.green { background: #059669; }
+    .stat-card .stat-progress .fill.blue { background: #3b82f6; }
+    .stat-card .stat-progress .fill.purple { background: #8b5cf6; }
+    .stat-card .stat-progress .fill.orange { background: #f59e0b; }
+    .stat-card .stat-progress .fill.red { background: #ef4444; }
+    .stat-card .stat-progress .fill.teal { background: #14b8a6; }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .section-header h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    
+    .section-header a {
+        font-size: 0.8rem;
+        color: #059669;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+    
+    .section-header a:hover {
+        color: #047857;
+    }
+    
+    .priority-item {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .priority-item:hover {
+        transform: translateX(4px);
+    }
+    
+    .priority-item.high {
+        border-color: #ef4444;
+        background: #fef2f2;
+    }
+    
+    .priority-item.medium {
+        border-color: #f59e0b;
+        background: #fffbeb;
+    }
+    
+    .priority-item.low {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .priority-item .order-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .priority-item .order-number {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .priority-item .order-deadline {
+        font-size: 0.7rem;
+        color: #6b7280;
+    }
+    
+    .priority-item .order-client {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.15rem;
+    }
+    
+    .priority-item .order-actions {
+        margin-top: 0.5rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .priority-item .order-actions a {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #059669;
+        transition: color 0.2s ease;
+    }
+    
+    .priority-item .order-actions a:hover {
+        color: #047857;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-item .avatar {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 9999px;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6b7280;
+        flex-shrink: 0;
+    }
+    
+    .activity-item .avatar.green { background: #d1fae5; color: #059669; }
+    .activity-item .avatar.blue { background: #dbeafe; color: #3b82f6; }
+    .activity-item .avatar.purple { background: #ede9fe; color: #7c3aed; }
+    .activity-item .avatar.orange { background: #fef3c7; color: #d97706; }
+    .activity-item .avatar.red { background: #fee2e2; color: #dc2626; }
+    
+    .activity-item .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .activity-item .activity-message {
+        font-size: 0.85rem;
+        color: #1e293b;
+        line-height: 1.4;
+    }
+    
+    .activity-item .activity-message .highlight {
+        font-weight: 600;
+        color: #059669;
+    }
+    
+    .activity-item .activity-time {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        margin-top: 0.15rem;
+    }
+    
+    .action-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.6rem 0.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6b7280;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+    
+    .action-btn:hover {
+        border-color: #059669;
+        background: #f0fdf4;
+        color: #059669;
+        transform: translateY(-1px);
+    }
+    
+    .action-btn i {
+        font-size: 0.85rem;
+    }
+    
+    .status-badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .status-badge.request { background: #fef3c7; color: #d97706; }
+    .status-badge.in_progress { background: #dbeafe; color: #2563eb; }
+    .status-badge.awaiting_approval { background: #ede9fe; color: #7c3aed; }
+    .status-badge.completed { background: #d1fae5; color: #059669; }
+    .status-badge.cancelled { background: #fee2e2; color: #dc2626; }
+    .status-badge.declined { background: #fee2e2; color: #dc2626; }
+    .status-badge.refund_pending { background: #fef3c7; color: #d97706; }
+    
+    @media (max-width: 640px) {
+        .stat-card .stat-value {
+            font-size: 1.25rem;
+        }
+        .action-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .stat-card {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p class="text-sm text-gray-500 mt-1">Welcome back, {{ user.full_name }}</p>
+            <p class="text-sm text-gray-500 mt-1">Welcome back, {{ user.full_name|default:user.email }}</p>
         </div>
-        <div class="text-xs text-gray-400 mt-2 sm:mt-0">
-            Last updated: <span id="updateTime">--:--:--</span>
+        <div class="flex items-center gap-3 mt-2 sm:mt-0">
+            <span class="text-xs text-gray-400" id="updateTime">Last updated: --:--:--</span>
+            <button onclick="loadAllData()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-sync-alt"></i>
+            </button>
         </div>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Review</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1" id="pendingOrders">0</p>
-            <p class="text-xs text-gray-400 mt-1">Orders waiting for you</p>
+        <div class="stat-card">
+            <span class="stat-icon"><i class="fas fa-clock text-amber-500"></i></span>
+            <p class="stat-label">Pending Review</p>
+            <p class="stat-value" id="pendingOrders">0</p>
+            <div class="stat-progress">
+                <div class="fill orange" id="pendingProgress" style="width:0%"></div>
+            </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1" id="inProgressOrders">0</p>
-            <p class="text-xs text-gray-400 mt-1">Orders you are writing</p>
+        <div class="stat-card">
+            <span class="stat-icon"><i class="fas fa-spinner text-blue-500"></i></span>
+            <p class="stat-label">In Progress</p>
+            <p class="stat-value" id="inProgressOrders">0</p>
+            <div class="stat-progress">
+                <div class="fill blue" id="inProgressProgress" style="width:0%"></div>
+            </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Awaiting Approval</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1" id="awaitingApproval">0</p>
-            <p class="text-xs text-gray-400 mt-1">Waiting for client to confirm</p>
+        <div class="stat-card">
+            <span class="stat-icon"><i class="fas fa-hourglass-half text-purple-500"></i></span>
+            <p class="stat-label">Awaiting Approval</p>
+            <p class="stat-value" id="awaitingApproval">0</p>
+            <div class="stat-progress">
+                <div class="fill purple" id="awaitingProgress" style="width:0%"></div>
+            </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">This Month</p>
-            <p class="text-2xl font-bold text-green-600 mt-1" id="totalEarnings">$0</p>
-            <p class="text-xs text-gray-400 mt-1">Total earnings</p>
+        <div class="stat-card">
+            <span class="stat-icon"><i class="fas fa-check-circle text-green-500"></i></span>
+            <p class="stat-label">Completed</p>
+            <p class="stat-value" id="completedOrders">0</p>
+            <div class="stat-progress">
+                <div class="fill green" id="completedProgress" style="width:0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+        <div class="stat-card">
+            <span class="stat-icon"><i class="fas fa-dollar-sign text-teal-500"></i></span>
+            <p class="stat-label">Total Revenue</p>
+            <p class="stat-value" id="totalRevenue">$0</p>
+            <span class="stat-sub" id="revenueCount">0 transactions</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-icon"><i class="fas fa-trend-up text-green-500"></i></span>
+            <p class="stat-label">This Week</p>
+            <p class="stat-value" id="weekEarnings">$0</p>
+            <span class="stat-change" id="weekChange">0%</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-icon"><i class="fas fa-undo-alt text-red-500"></i></span>
+            <p class="stat-label">Refunds</p>
+            <p class="stat-value" id="refundsTotal">$0</p>
+            <span class="stat-sub" id="refundsCount">0 refunds</span>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Priority Queue</h3>
-            <div id="priorityQueue" class="space-y-2 min-h-[120px]">
-                <div class="text-center text-gray-400 text-sm py-4">No urgent orders</div>
+        <div class="bg-white rounded-lg border border-gray-200 p-5 lg:col-span-1">
+            <div class="section-header">
+                <h3>Priority Queue</h3>
+            </div>
+            <div id="priorityQueue" class="space-y-2 min-h-[130px]">
+                <div class="text-center text-gray-400 text-sm py-6">No urgent orders</div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Pending Actions</h3>
-            <div class="space-y-2">
-                <a href="/api/v1/admin/orders/pending/" class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-100 rounded hover:bg-yellow-100 transition-colors">
-                    <span class="text-sm text-gray-700">Review Orders</span>
-                    <span class="text-sm font-medium text-yellow-700" id="pendingReview">0</span>
-                </a>
-                <a href="/api/v1/admin/orders/revisions/" class="flex items-center justify-between p-3 bg-purple-50 border border-purple-100 rounded hover:bg-purple-100 transition-colors">
-                    <span class="text-sm text-gray-700">Revisions</span>
-                    <span class="text-sm font-medium text-purple-700" id="revisionCount">0</span>
-                </a>
-                <a href="/api/v1/admin/orders/overdue/" class="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded hover:bg-red-100 transition-colors">
-                    <span class="text-sm text-gray-700">Overdue</span>
-                    <span class="text-sm font-medium text-red-700" id="overdueCount">0</span>
-                </a>
+        <div class="bg-white rounded-lg border border-gray-200 p-5 lg:col-span-2">
+            <div class="section-header">
+                <h3>Order Status Distribution</h3>
             </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h3>
-            <div class="grid grid-cols-2 gap-2">
-                <a href="/api/v1/admin/orders/pending/" class="border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors py-2 text-xs rounded text-center text-gray-600 hover:text-green-600">Review Orders</a>
-                <a href="/api/v1/admin/orders/active/" class="border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors py-2 text-xs rounded text-center text-gray-600 hover:text-green-600">Active Orders</a>
-                <a href="/api/v1/admin/users/" class="border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors py-2 text-xs rounded text-center text-gray-600 hover:text-green-600">Clients</a>
-                <a href="/api/v1/admin/finances/" class="border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors py-2 text-xs rounded text-center text-gray-600 hover:text-green-600">Finances</a>
+            <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-medium text-gray-500 w-28">Request</span>
+                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-500 rounded-full transition-all duration-500" id="requestBar" style="width:0%"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700 w-12 text-right" id="requestCount">0</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-medium text-gray-500 w-28">In Progress</span>
+                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-500 rounded-full transition-all duration-500" id="inProgressBar" style="width:0%"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700 w-12 text-right" id="inProgressBarCount">0</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-medium text-gray-500 w-28">Awaiting Approval</span>
+                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-purple-500 rounded-full transition-all duration-500" id="awaitingBar" style="width:0%"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700 w-12 text-right" id="awaitingBarCount">0</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-medium text-gray-500 w-28">Completed</span>
+                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500 rounded-full transition-all duration-500" id="completedBar" style="width:0%"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700 w-12 text-right" id="completedBarCount">0</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-medium text-gray-500 w-28">Cancelled</span>
+                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-red-500 rounded-full transition-all duration-500" id="cancelledBar" style="width:0%"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700 w-12 text-right" id="cancelledBarCount">0</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-semibold text-gray-700">Recent Orders</h3>
-                <a href="/api/v1/admin/orders/" class="text-xs text-green-600 hover:text-green-700">View all</a>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-5 lg:col-span-2">
+            <div class="section-header">
+                <h3>Recent Activity</h3>
+                <a href="/admin/logs/">View all</a>
             </div>
-            <div id="recentOrders" class="space-y-2 min-h-[120px]">
-                <div class="text-center text-gray-400 text-sm py-4">No recent orders</div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-semibold text-gray-700">Recent Clients</h3>
-                <a href="/api/v1/admin/users/" class="text-xs text-green-600 hover:text-green-700">View all</a>
-            </div>
-            <div id="recentClients" class="space-y-2 min-h-[120px]">
-                <div class="text-center text-gray-400 text-sm py-4">No recent clients</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-lg border border-gray-200 p-5">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-gray-700">Activity Log</h3>
-            <a href="/api/v1/admin/logs/" class="text-xs text-green-600 hover:text-green-700">View all</a>
-        </div>
-        <div id="recentActivity" class="space-y-2 min-h-[120px]">
-            <div class="text-center text-gray-400 text-sm py-4">No recent activity</div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Weekly Earnings</h3>
-            <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">This week</span>
-                    <span class="font-medium text-gray-900" id="weekEarnings">$0</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Last week</span>
-                    <span class="font-medium text-gray-900" id="lastWeekEarnings">$0</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Change</span>
-                    <span class="font-medium text-gray-900" id="weekChange">0%</span>
-                </div>
+            <div id="recentActivity" class="space-y-1 min-h-[140px]">
+                <div class="text-center text-gray-400 text-sm py-6">Loading activity...</div>
             </div>
         </div>
 
         <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Order Statistics</h3>
-            <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Completion rate</span>
-                    <span class="font-medium text-gray-900" id="completionRate">0%</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Average rating</span>
-                    <span class="font-medium text-gray-900" id="avgRating">0.0</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Total orders</span>
-                    <span class="font-medium text-gray-900" id="totalOrders">0</span>
-                </div>
+            <div class="section-header">
+                <h3>Quick Actions</h3>
             </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Client Overview</h3>
-            <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Total clients</span>
-                    <span class="font-medium text-gray-900" id="totalClients">0</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Active clients</span>
-                    <span class="font-medium text-gray-900" id="activeClients">0</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">New this month</span>
-                    <span class="font-medium text-gray-900" id="newClients">0</span>
-                </div>
+            <div class="action-grid">
+                <a href="/admin/orders/" class="action-btn">
+                    <i class="fas fa-file-alt"></i> All Orders
+                </a>
+                <a href="/admin/users/" class="action-btn">
+                    <i class="fas fa-users"></i> Clients
+                </a>
+                <a href="/admin/finances/" class="action-btn">
+                    <i class="fas fa-dollar-sign"></i> Finances
+                </a>
+                <a href="/admin/messages/" class="action-btn">
+                    <i class="fas fa-envelope"></i> Messages
+                </a>
             </div>
         </div>
     </div>
@@ -181,96 +475,138 @@ function getCsrfToken() {
     return cookie ? cookie.split('=')[1] : '';
 }
 
-function formatCurrency(amount) {
-    var num = parseFloat(amount) || 0;
-    if (num >= 1000) {
-        return '$' + (num / 1000).toFixed(1) + 'k';
-    }
-    return '$' + num.toFixed(0);
-}
-
-function formatPercent(value) {
+function formatCurrency(value) {
     var num = parseFloat(value) || 0;
-    return num.toFixed(1) + '%';
+    return '$' + num.toFixed(2);
 }
 
 function formatNumber(value) {
     return parseInt(value) || 0;
 }
 
-function getStatusClass(status) {
-    var classes = {
-        'request': 'bg-yellow-100 text-yellow-700',
-        'in_progress': 'bg-blue-100 text-blue-700',
-        'awaiting_approval': 'bg-purple-100 text-purple-700',
-        'completed': 'bg-green-100 text-green-700',
-        'delivered': 'bg-green-100 text-green-700',
-        'cancelled': 'bg-red-100 text-red-700',
-        'revision': 'bg-orange-100 text-orange-700'
-    };
-    return classes[status] || 'bg-gray-100 text-gray-600';
-}
-
 async function loadAllData() {
     try {
-        var statsResponse = await fetch(API_BASE + '/dashboard/', {
+        var ordersResponse = await fetch(API_BASE + '/orders/?page_size=1000', {
             headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
             credentials: 'include'
         });
         
-        if (!statsResponse.ok) {
-            document.getElementById('updateTime').textContent = 'Failed to load';
+        if (!ordersResponse.ok) {
+            document.getElementById('updateTime').textContent = 'Last updated: Failed to load';
             return;
         }
         
-        var stats = await statsResponse.json();
-        
-        var pending = formatNumber(stats.pending_orders);
-        var inProgress = formatNumber(stats.in_progress_orders);
-        var awaiting = formatNumber(stats.awaiting_approval);
-        var earnings = parseFloat(stats.earnings) || 0;
-        var revisions = formatNumber(stats.revisions);
-        var overdue = formatNumber(stats.overdue_orders);
-        var weekEarnings = parseFloat(stats.week_earnings) || 0;
-        var lastWeekEarnings = parseFloat(stats.last_week_earnings) || 0;
-        var weekChange = parseFloat(stats.week_change) || 0;
-        var completionRate = parseFloat(stats.completion_rate) || 0;
-        var avgRating = parseFloat(stats.average_rating) || 0;
-        var totalOrders = formatNumber(stats.total_orders);
-        var totalClients = formatNumber(stats.total_clients);
-        var activeClients = formatNumber(stats.active_clients);
-        var newClients = formatNumber(stats.new_clients);
+        var ordersData = await ordersResponse.json();
+        var allOrders = ordersData.results || [];
+        var total = ordersData.total || 0;
 
-        document.getElementById('pendingOrders').textContent = pending;
-        document.getElementById('inProgressOrders').textContent = inProgress;
-        document.getElementById('awaitingApproval').textContent = awaiting;
-        document.getElementById('totalEarnings').textContent = formatCurrency(earnings);
-        document.getElementById('pendingReview').textContent = pending;
-        document.getElementById('revisionCount').textContent = revisions;
-        document.getElementById('overdueCount').textContent = overdue;
+        var totalRevenue = 0;
+        var refundsTotal = 0;
+        var refundCount = 0;
+        var completedOrders = 0;
+        var pendingOrders = 0;
+        var inProgressOrders = 0;
+        var awaitingOrders = 0;
+        var cancelledOrders = 0;
+        var declinedOrders = 0;
+        var weekEarnings = 0;
+        var lastWeekEarnings = 0;
+
+        var now = new Date();
+        var weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+        
+        var lastWeekStart = new Date(weekStart);
+        lastWeekStart.setDate(weekStart.getDate() - 7);
+
+        allOrders.forEach(function(o) {
+            var price = parseFloat(o.total_price) || 0;
+            var createdAt = new Date(o.created_at);
+            
+            if (o.status === 'completed') {
+                totalRevenue += price;
+                completedOrders++;
+                if (createdAt >= weekStart) {
+                    weekEarnings += price;
+                } else if (createdAt >= lastWeekStart && createdAt < weekStart) {
+                    lastWeekEarnings += price;
+                }
+            } else if (o.status === 'awaiting_approval') {
+                awaitingOrders++;
+            } else if (o.status === 'in_progress') {
+                inProgressOrders++;
+            } else if (o.status === 'request') {
+                pendingOrders++;
+            } else if (o.status === 'cancelled' || o.status === 'declined') {
+                if (o.status === 'cancelled') cancelledOrders++;
+                else declinedOrders++;
+                refundsTotal += price;
+                refundCount++;
+            } else if (o.status === 'refund_pending') {
+                refundsTotal += price;
+                refundCount++;
+            }
+        });
+
+        var weekChange = 0;
+        if (lastWeekEarnings > 0) {
+            weekChange = ((weekEarnings - lastWeekEarnings) / lastWeekEarnings) * 100;
+        }
+
+        document.getElementById('pendingOrders').textContent = pendingOrders;
+        document.getElementById('inProgressOrders').textContent = inProgressOrders;
+        document.getElementById('awaitingApproval').textContent = awaitingOrders;
+        document.getElementById('completedOrders').textContent = completedOrders;
+
+        var totalActive = pendingOrders + inProgressOrders + awaitingOrders + completedOrders + cancelledOrders;
+        var pendingPercent = totalActive > 0 ? (pendingOrders / totalActive) * 100 : 0;
+        var inProgressPercent = totalActive > 0 ? (inProgressOrders / totalActive) * 100 : 0;
+        var awaitingPercent = totalActive > 0 ? (awaitingOrders / totalActive) * 100 : 0;
+        var completedPercent = totalActive > 0 ? (completedOrders / totalActive) * 100 : 0;
+
+        document.getElementById('pendingProgress').style.width = pendingPercent + '%';
+        document.getElementById('inProgressProgress').style.width = inProgressPercent + '%';
+        document.getElementById('awaitingProgress').style.width = awaitingPercent + '%';
+        document.getElementById('completedProgress').style.width = completedPercent + '%';
+
+        document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+        document.getElementById('revenueCount').textContent = total + ' transactions';
 
         document.getElementById('weekEarnings').textContent = formatCurrency(weekEarnings);
-        document.getElementById('lastWeekEarnings').textContent = formatCurrency(lastWeekEarnings);
-        document.getElementById('weekChange').textContent = (weekChange >= 0 ? '+' : '') + weekChange.toFixed(1) + '%';
-        document.getElementById('weekChange').className = 'font-medium ' + (weekChange >= 0 ? 'text-green-600' : 'text-red-600');
+        var changeText = (weekChange >= 0 ? '+' : '') + weekChange.toFixed(1) + '%';
+        var changeEl = document.getElementById('weekChange');
+        changeEl.textContent = 'vs last week ' + changeText;
+        changeEl.className = 'stat-change ' + (weekChange >= 0 ? 'positive' : 'negative');
 
-        document.getElementById('completionRate').textContent = formatPercent(completionRate);
-        document.getElementById('avgRating').textContent = avgRating.toFixed(1);
-        document.getElementById('totalOrders').textContent = totalOrders;
+        document.getElementById('refundsTotal').textContent = formatCurrency(refundsTotal);
+        document.getElementById('refundsCount').textContent = refundCount + ' refunds';
 
-        document.getElementById('totalClients').textContent = totalClients;
-        document.getElementById('activeClients').textContent = activeClients;
-        document.getElementById('newClients').textContent = newClients;
+        var maxBar = Math.max(pendingOrders, inProgressOrders, awaitingOrders, completedOrders, cancelledOrders);
+        var barMax = maxBar > 0 ? maxBar : 1;
+        
+        document.getElementById('requestBar').style.width = (pendingOrders / barMax) * 100 + '%';
+        document.getElementById('requestCount').textContent = pendingOrders;
+        
+        document.getElementById('inProgressBar').style.width = (inProgressOrders / barMax) * 100 + '%';
+        document.getElementById('inProgressBarCount').textContent = inProgressOrders;
+        
+        document.getElementById('awaitingBar').style.width = (awaitingOrders / barMax) * 100 + '%';
+        document.getElementById('awaitingBarCount').textContent = awaitingOrders;
+        
+        document.getElementById('completedBar').style.width = (completedOrders / barMax) * 100 + '%';
+        document.getElementById('completedBarCount').textContent = completedOrders;
+        
+        document.getElementById('cancelledBar').style.width = ((cancelledOrders + declinedOrders) / barMax) * 100 + '%';
+        document.getElementById('cancelledBarCount').textContent = cancelledOrders + declinedOrders;
 
-        document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
+        document.getElementById('updateTime').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
     } catch (error) {
         console.error('Dashboard load error:', error);
-        document.getElementById('updateTime').textContent = 'Error loading';
+        document.getElementById('updateTime').textContent = 'Last updated: Error';
     }
 
     loadPriorityQueue();
-    loadRecentOrders();
-    loadRecentClients();
     loadRecentActivity();
 }
 
@@ -282,155 +618,96 @@ async function loadPriorityQueue() {
             credentials: 'include'
         });
         if (!response.ok) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">Unable to load</div>';
             return;
         }
         var items = await response.json();
 
         if (!items || items.length === 0) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">No urgent orders</div>';
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">No urgent orders</div>';
             return;
         }
 
         container.innerHTML = items.slice(0, 4).map(function(item) {
-            var borderColor = item.urgency === 'high' ? 'border-red-500 bg-red-50' :
-                              item.urgency === 'medium' ? 'border-yellow-500 bg-yellow-50' :
-                              'border-blue-500 bg-blue-50';
             return `
-                <div class="border-l-4 ${borderColor} px-3 py-2 rounded-r">
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium text-gray-800">#${item.order_number}</span>
-                        <span class="text-xs text-gray-500">${item.deadline}</span>
+                <div class="priority-item ${item.urgency}">
+                    <div class="order-info">
+                        <span class="order-number">#${item.order_number}</span>
+                        <span class="order-deadline">${item.deadline}</span>
                     </div>
-                    <p class="text-xs text-gray-600 mt-1">${item.client_name}</p>
-                    <div class="flex gap-3 mt-1.5">
-                        <a href="${API_BASE}/orders/${item.id}/" class="text-xs text-green-600 hover:text-green-700">View</a>
-                        <a href="${API_BASE}/orders/${item.id}/workspace/" class="text-xs text-green-600 hover:text-green-700">Work</a>
+                    <div class="order-client">${item.client_name}</div>
+                    <div class="order-actions">
+                        <a href="/admin/orders/${item.id}/">View</a>
+                        <a href="/admin/orders/${item.id}/workspace/">Workspace</a>
                     </div>
                 </div>
             `;
         }).join('');
     } catch (error) {
-        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
-    }
-}
-
-async function loadRecentOrders() {
-    var container = document.getElementById('recentOrders');
-    try {
-        var response = await fetch(API_BASE + '/orders/?page=1&page_size=5', {
-            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
-            credentials: 'include'
-        });
-        if (!response.ok) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
-            return;
-        }
-        var data = await response.json();
-        var orders = data.results || [];
-
-        if (orders.length === 0) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">No recent orders</div>';
-            return;
-        }
-
-        container.innerHTML = orders.map(function(order) {
-            return `
-                <div class="border border-gray-100 rounded p-3 hover:bg-gray-50 transition-colors">
-                    <div class="flex justify-between items-start">
-                        <a href="${API_BASE}/orders/${order.id}/" class="text-sm font-medium text-green-600 hover:text-green-700">
-                            #${order.order_number || order.id.slice(0, 8)}
-                        </a>
-                        <span class="text-xs px-2 py-0.5 rounded ${getStatusClass(order.status)}">${order.status.replace(/_/g, ' ')}</span>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1">${order.student_name || order.student_email || 'N/A'}</p>
-                    <div class="flex justify-between items-center mt-1.5">
-                        <span class="text-xs font-medium text-gray-700">${formatCurrency(order.total_price || 0)}</span>
-                        <span class="text-xs text-gray-400">Due ${new Date(order.deadline).toLocaleDateString()}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } catch (error) {
-        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
-    }
-}
-
-async function loadRecentClients() {
-    var container = document.getElementById('recentClients');
-    try {
-        var response = await fetch(API_BASE + '/users/?page=1&page_size=5', {
-            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
-            credentials: 'include'
-        });
-        if (!response.ok) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
-            return;
-        }
-        var data = await response.json();
-        var users = data.results || [];
-
-        if (users.length === 0) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">No recent clients</div>';
-            return;
-        }
-
-        container.innerHTML = users.map(function(user) {
-            return `
-                <div class="border border-gray-100 rounded p-3 hover:bg-gray-50 transition-colors">
-                    <div class="flex justify-between items-start">
-                        <a href="${API_BASE}/users/${user.id}/" class="text-sm font-medium text-green-600 hover:text-green-700">
-                            ${user.full_name || user.email}
-                        </a>
-                        <span class="text-xs px-2 py-0.5 rounded ${user.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
-                            ${user.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1">${user.email}</p>
-                    <p class="text-xs text-gray-400 mt-1">Joined ${new Date(user.created_at).toLocaleDateString()}</p>
-                </div>
-            `;
-        }).join('');
-    } catch (error) {
-        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">Unable to load</div>';
     }
 }
 
 async function loadRecentActivity() {
     var container = document.getElementById('recentActivity');
     try {
-        var response = await fetch(API_BASE + '/logs/?page=1&page_size=8', {
+        var response = await fetch(API_BASE + '/logs/?page=1&page_size=6', {
             headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
             credentials: 'include'
         });
         if (!response.ok) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">Unable to load</div>';
             return;
         }
         var data = await response.json();
         var logs = data.results || [];
 
         if (logs.length === 0) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">No recent activity</div>';
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">No recent activity</div>';
             return;
         }
 
+        var avatarColors = ['green', 'blue', 'purple', 'orange', 'red'];
+        var colorIndex = 0;
+
         container.innerHTML = logs.map(function(log) {
-            var message = log.message || log.action_type?.replace(/_/g, ' ') || '';
+            var adminName = log.admin?.full_name || log.admin?.email || 'Admin';
+            var initials = adminName.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
+            var color = avatarColors[colorIndex % avatarColors.length];
+            colorIndex++;
+            
+            var action = log.action_type || 'action';
+            var details = log.details || {};
+            var message = '';
+            
+            if (action === 'order_accept') {
+                message = 'Accepted order <span class="highlight">#' + (details.order_number || '') + '</span>';
+            } else if (action === 'order_reject') {
+                message = 'Rejected order <span class="highlight">#' + (details.order_number || '') + '</span>';
+            } else if (action === 'order_deliver') {
+                message = 'Delivered order <span class="highlight">#' + (details.order_number || '') + '</span>';
+            } else if (action === 'user_suspend') {
+                message = 'Suspended user <span class="highlight">' + (details.email || '') + '</span>';
+            } else if (action === 'user_reactivate') {
+                message = 'Reactivated user <span class="highlight">' + (details.email || '') + '</span>';
+            } else if (action === 'settings_change') {
+                message = 'Changed system setting: <span class="highlight">' + (details.key || '') + '</span>';
+            } else {
+                message = action.replace(/_/g, ' ');
+            }
+            
             return `
-                <div class="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0">
-                    <div class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 text-xs flex-shrink-0">
-                        •
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-700 truncate">${message}</p>
-                        <p class="text-xs text-gray-400">${new Date(log.created_at).toLocaleString()}</p>
+                <div class="activity-item">
+                    <div class="avatar ${color}">${initials}</div>
+                    <div class="activity-content">
+                        <div class="activity-message">${message}</div>
+                        <div class="activity-time">${log.created_at ? new Date(log.created_at).toLocaleString() : ''}</div>
                     </div>
                 </div>
             `;
         }).join('');
     } catch (error) {
-        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Unable to load</div>';
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">Unable to load</div>';
     }
 }
 </script>

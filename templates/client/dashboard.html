@@ -156,13 +156,14 @@ async function loadDashboardStats() {
         }
 
         const [walletRes, ordersRes] = await Promise.all([
-            fetch('/api/v1/client/wallet/', { headers: getApiHeaders() }),
+            fetch('/api/v1/wallet/stats/', { headers: getApiHeaders() }),
             fetch('/api/v1/client/orders/', { headers: getApiHeaders() })
         ]);
 
         if (walletRes.ok) {
             const wallet = await walletRes.json();
-            document.getElementById('wallet-balance').textContent = formatCurrency(wallet.balance || 0);
+            const balance = wallet.available_balance !== undefined ? wallet.available_balance : (wallet.balance !== undefined ? wallet.balance : (wallet.total_balance || 0));
+            document.getElementById('wallet-balance').textContent = formatCurrency(balance);
         } else {
             console.warn('Wallet API returned:', walletRes.status);
         }
@@ -199,20 +200,20 @@ async function loadActiveOrders() {
         const response = await fetch('/api/v1/client/orders/?status=request,in_progress,awaiting_approval', {
             headers: getApiHeaders()
         });
-        
+
         if (!response.ok) {
             container.innerHTML = '<div class="text-center text-red-500 py-4 text-sm">Unable to load orders</div>';
             return;
         }
-        
+
         const data = await response.json();
         const orders = data.results || data;
-        
+
         if (!orders || orders.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-4 text-sm">No active orders</div>';
             return;
         }
-        
+
         container.innerHTML = orders.slice(0, 3).map(order => `
             <div class="border border-gray-200 p-3 sm:p-4">
                 <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
@@ -248,20 +249,20 @@ async function loadRecentMessages() {
         const response = await fetch('/api/v1/messaging/conversations/', {
             headers: getApiHeaders()
         });
-        
+
         if (!response.ok) {
             container.innerHTML = '<div class="text-center text-gray-500 py-4 text-sm">No messages available</div>';
             return;
         }
-        
+
         const conversations = await response.json();
         const results = conversations.results || conversations;
-        
+
         if (!results || results.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-4 text-sm">No messages</div>';
             return;
         }
-        
+
         container.innerHTML = results.slice(0, 3).map(conv => {
             const lastMessage = conv.last_message || {};
             const order = conv.order || {};
@@ -272,8 +273,8 @@ async function loadRecentMessages() {
                         <span class="text-xs text-gray-500">${formatTimeAgo(lastMessage.created_at || conv.last_message_at)}</span>
                     </div>
                     <p class="text-sm text-gray-600 truncate">${lastMessage.content || 'No messages yet'}</p>
-                    ${conv.unread_count > 0 ? 
-                        `<span class="inline-block mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">${conv.unread_count} new</span>` : 
+                    ${conv.unread_count > 0 ?
+                        `<span class="inline-block mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">${conv.unread_count} new</span>` :
                         ''}
                 </a>
             `;
@@ -296,20 +297,20 @@ async function loadRecentOrders() {
         const response = await fetch('/api/v1/client/orders/?limit=5', {
             headers: getApiHeaders()
         });
-        
+
         if (!response.ok) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-4">Unable to load orders</td></tr>';
             return;
         }
-        
+
         const data = await response.json();
         const orders = data.results || data;
-        
+
         if (!orders || orders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">No orders found</td></tr>';
             return;
         }
-        
+
         tbody.innerHTML = orders.slice(0, 5).map(order => `
             <tr class="border-b border-gray-100">
                 <td class="py-2 sm:py-3 font-medium">${order.order_number || 'N/A'}</td>

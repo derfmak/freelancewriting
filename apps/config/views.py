@@ -46,29 +46,37 @@ def about_stats(request):
     stats = cache.get(cache_key)
     
     if stats is None:
-        total_orders = Order.objects.filter(status='completed').count()
+        total_orders = Order.objects.count()
+        completed_orders = Order.objects.filter(status='completed').count()
         total_clients = User.objects.filter(role='client', is_active=True).count()
         total_writers = User.objects.filter(role='writer', is_active=True).count()
         
         ratings = Order.objects.filter(rating__isnull=False).aggregate(Avg('rating'))
-        avg_rating = ratings['rating__avg'] or 4.9
-        satisfaction = min(99, int((avg_rating / 5) * 100))
+        avg_rating = ratings['rating__avg'] or 0
+        
+        completion_rate = 0
+        if total_orders > 0:
+            completion_rate = (completed_orders / total_orders) * 100
+        
+        satisfaction = 0
+        if avg_rating > 0:
+            satisfaction = min(99, int((avg_rating / 5) * 100))
         
         stats = {
-            'orders': total_orders,
+            'orders': completed_orders,
+            'completion_rate': round(completion_rate, 1),
+            'rating': round(avg_rating, 1),
             'clients': total_clients,
             'writers': total_writers,
+            'total_orders': total_orders,
             'satisfaction_rate': satisfaction
         }
         
         cache.set(cache_key, stats, 300)
     
     return Response(stats)
-
-
 def about(request):
     return render(request, 'public/about.html')
-
 
 def how_it_works(request):
     return render(request, 'public/how-it-works.html')
@@ -102,8 +110,14 @@ def faq(request):
     return render(request, 'public/faq.html')
 
 
+from django.contrib.auth.decorators import login_required
+
 def place_order(request):
-    return render(request, 'public/place-order.html')
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if request.user.role != 'client':
+        return redirect('login')
+    return redirect('client-new-order')
 
 
 def samples(request):
@@ -525,6 +539,15 @@ def admin_orders(request):
 
 
 @login_required
+def admin_order_workspace(request, order_id):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    order = get_object_or_404(Order, id=order_id)
+    context = {'order': order, 'order_id': order_id}
+    return render(request, 'admin/order-workspace.html', context)
+
+
+@login_required
 def admin_users(request):
     if request.user.role != 'admin':
         return render(request, 'access_denied.html')
@@ -544,6 +567,208 @@ def admin_refunds(request):
         return render(request, 'access_denied.html')
     return render(request, 'admin/refunds.html')
 
+
+@login_required
+def admin_messages(request):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    return render(request, 'admin/messages.html')
+
+from apps.payments.services import WalletService
+from apps.orders.models import OrderHistory, OrderTimeline
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def client_cancel_order(request, order_id):
+    try:
+        order = get_object_or_404(Order, id=order_id, client=request.user)
+        
+        if order.status in ['completed', 'cancelled', 'declined']:
+            return Response({'error': 'This order cannot be cancelled'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        reason = request.data.get('reason', 'User requested cancellation')
+        
+        order.status = 'cancelled'
+        order.cancelled_at = timezone.now()
+        order.cancelled_by = request.user
+        order.cancellation_feedback = reason
+        order.save()
+        
+        try:
+            WalletService.credit(
+                wallet=order.client.wallet,
+                amount=order.total_price,
+                transaction_type='refund',
+                description=f'Refund for cancelled order {order.order_number}',
+                order=order
+            )
+        except:
+            pass
+        
+        OrderHistory.objects.create(
+            order=order,
+            user=request.user,
+            action='cancel',
+            from_status=order.status,
+            to_status='cancelled',
+            data={'reason': reason}
+        )
+        
+        return Response({'success': True, 'message': 'Order cancelled successfully'})
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def client_approve_order(request, order_id):
+    try:
+        order = get_object_or_404(Order, id=order_id, client=request.user)
+        
+        if order.status != 'awaiting_approval':
+            return Response(
+                {'error': 'Only orders awaiting approval can be approved'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        order.status = 'completed'
+        order.completed_at = timezone.now()
+        order.escrow_released_at = timezone.now()
+        order.save()
+        
+        if order.writer:
+            try:
+                WalletService.credit(
+                    wallet=order.writer.wallet,
+                    amount=order.total_price,
+                    transaction_type='payout',
+                    description=f'Payment for order {order.order_number}',
+                    order=order
+                )
+            except Exception as e:
+                pass
+        
+        OrderHistory.objects.create(
+            order=order,
+            user=request.user,
+            action='complete',
+            from_status='awaiting_approval',
+            to_status='completed'
+        )
+        
+        OrderTimeline.objects.create(
+            order=order,
+            status='completed',
+            title='Order Approved',
+            description='The client has approved the delivered work',
+            icon='fa-check-circle',
+            color='green'
+        )
+        
+        return Response(
+            {'success': True, 'message': 'Order approved successfully'},
+            status=status.HTTP_200_OK
+        )
+    except Order.DoesNotExist:
+        return Response(
+            {'error': 'Order not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def client_request_revision(request, order_id):
+    try:
+        order = get_object_or_404(Order, id=order_id, client=request.user)
+        
+        if order.status != 'awaiting_approval':
+            return Response(
+                {'error': 'Only delivered orders can be revised'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        notes = request.data.get('notes', '').strip()
+        if not notes:
+            return Response(
+                {'error': 'Please provide revision notes'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        order.status = 'in_progress'
+        order.revision_count += 1
+        order.last_revision_requested_at = timezone.now()
+        order.auto_approve_at = None
+        order.save()
+        
+        OrderHistory.objects.create(
+            order=order,
+            user=request.user,
+            action='revise',
+            from_status='awaiting_approval',
+            to_status='in_progress',
+            data={'notes': notes}
+        )
+        
+        OrderTimeline.objects.create(
+            order=order,
+            status='in_progress',
+            title='Revision Requested',
+            description=f'Client requested revision: {notes[:100]}',
+            icon='fa-edit',
+            color='orange'
+        )
+        
+        return Response(
+            {'success': True, 'message': 'Revision requested successfully'},
+            status=status.HTTP_200_OK
+        )
+    except Order.DoesNotExist:
+        return Response(
+            {'error': 'Order not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def client_rate_order(request, order_id):
+    try:
+        order = get_object_or_404(Order, id=order_id, client=request.user)
+        
+        if order.status != 'completed':
+            return Response({'error': 'Only completed orders can be rated'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if order.rating:
+            return Response({'error': 'Order already rated'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        rating = request.data.get('rating')
+        if not rating or not (1 <= int(rating) <= 5):
+            return Response({'error': 'Rating must be between 1 and 5'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        feedback = request.data.get('feedback', '').strip()
+        
+        order.rating = int(rating)
+        order.feedback = feedback
+        order.save()
+        
+        return Response({'success': True, 'message': 'Rating submitted successfully'})
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @login_required
 def admin_blog(request):
@@ -945,13 +1170,6 @@ def admin_logs(request):
     if request.user.role != 'admin':
         return render(request, 'access_denied.html')
     return render(request, 'admin/logs.html')
-
-
-@login_required
-def admin_messages(request):
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    return render(request, 'admin/messages.html')
 
 
 @api_view(['GET'])

@@ -66,7 +66,7 @@
 
 @media (min-width: 768px) {
     .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
@@ -84,7 +84,6 @@
 .stat-card:nth-child(1) { animation-delay: 0.1s; }
 .stat-card:nth-child(2) { animation-delay: 0.2s; }
 .stat-card:nth-child(3) { animation-delay: 0.3s; }
-.stat-card:nth-child(4) { animation-delay: 0.4s; }
 
 .stat-card:hover {
     transform: translateY(-4px);
@@ -294,11 +293,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="clients-count">0</div>
-                <div class="stat-label">Happy Clients</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="writers-count">0</div>
-                <div class="stat-label">Expert Writers</div>
+                <div class="stat-label">Clients</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="satisfaction-rate">0%</div>
@@ -408,29 +403,41 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function fetchAboutStats() {
-    const statsData = getCachedStats();
+    var statsData = getCachedStats();
     
     if (statsData) {
         updateStats(statsData);
     }
     
     fetch('/api/about/stats/')
-        .then(response => response.json())
-        .then(data => {
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(function(data) {
             cacheStats(data);
             updateStats(data);
         })
-        .catch(error => {
-            console.log('Using cached stats');
+        .catch(function(error) {
+            console.warn('Failed to fetch stats:', error);
+            if (!statsData) {
+                updateStats({
+                    orders: 0,
+                    clients: 0,
+                    satisfaction_rate: 0
+                });
+            }
         });
 }
 
 function getCachedStats() {
     try {
-        const cached = localStorage.getItem('about_stats');
+        var cached = localStorage.getItem('about_stats');
         if (cached) {
-            const data = JSON.parse(cached);
-            const timestamp = data.timestamp || 0;
+            var data = JSON.parse(cached);
+            var timestamp = data.timestamp || 0;
             if (Date.now() - timestamp < 300000) {
                 return data.stats;
             }
@@ -452,41 +459,19 @@ function cacheStats(stats) {
 }
 
 function updateStats(data) {
-    animateNumber('orders-count', data.orders || 0);
-    animateNumber('clients-count', data.clients || 0);
-    animateNumber('writers-count', data.writers || 0);
+    var ordersEl = document.getElementById('orders-count');
+    var clientsEl = document.getElementById('clients-count');
+    var rateEl = document.getElementById('satisfaction-rate');
     
-    const rateEl = document.getElementById('satisfaction-rate');
+    if (ordersEl) {
+        ordersEl.textContent = data.orders || data.completed_orders || 0;
+    }
+    if (clientsEl) {
+        clientsEl.textContent = data.clients || 0;
+    }
     if (rateEl) {
-        const rate = data.satisfaction_rate || 98;
-        animateNumber('satisfaction-rate', rate, '%');
+        rateEl.textContent = (data.satisfaction_rate || 0) + '%';
     }
-}
-
-function animateNumber(elementId, target, suffix = '') {
-    const element = document.getElementById(elementId);
-    if (!element) return;
-    
-    const duration = 1000;
-    const startTime = performance.now();
-    const startValue = 0;
-    
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const current = Math.round(startValue + (target - startValue) * eased);
-        
-        element.textContent = current + suffix;
-        
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        } else {
-            element.textContent = target + suffix;
-        }
-    }
-    
-    requestAnimationFrame(update);
 }
 </script>
 {% endblock %}

@@ -2,14 +2,336 @@
 
 {% block title %}New Order - AcademicWrite{% endblock %}
 
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-section h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #ecfdf5;
+    }
+
+    .price-breakdown {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+    }
+
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        font-size: 0.9rem;
+    }
+
+    .price-row .label {
+        color: #64748b;
+    }
+
+    .price-row .value {
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    .price-total {
+        border-top: 2px solid #e5e7eb;
+        padding-top: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .price-total .label {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1rem;
+    }
+
+    .price-total .value {
+        font-weight: 700;
+        color: #059669;
+        font-size: 1.3rem;
+    }
+
+    .drop-zone {
+        border: 2px dashed #d1d5db;
+        border-radius: 0.75rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .drop-zone:hover {
+        border-color: #059669;
+        background: #f0fdf4;
+    }
+
+    .drop-zone.dragover {
+        border-color: #059669;
+        background: #ecfdf5;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-item .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .file-item .file-info .name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    .file-item .file-info .size {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .file-item .status-badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 9999px;
+        font-weight: 500;
+    }
+
+    .file-item .status-badge.scanning {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .file-item .status-badge.verified {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .file-item .remove-btn {
+        color: #ef4444;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem;
+        transition: color 0.2s ease;
+    }
+
+    .file-item .remove-btn:hover {
+        color: #dc2626;
+    }
+
+    .add-link-btn {
+        color: #059669;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s ease;
+        background: none;
+        border: none;
+        font-size: 0.85rem;
+    }
+
+    .add-link-btn:hover {
+        color: #047857;
+    }
+
+    .link-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .link-item input {
+        flex: 1;
+    }
+
+    .link-item .remove-link {
+        color: #ef4444;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+
+    .link-item .remove-link:hover {
+        color: #dc2626;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label .required {
+        color: #ef4444;
+    }
+
+    .form-control {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+        background: white;
+        font-size: 0.9rem;
+    }
+
+    .form-control:focus {
+        border-color: #059669;
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+
+    .form-control.error {
+        border-color: #ef4444;
+    }
+
+    .form-control.error:focus {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .form-hint {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .form-error {
+        font-size: 0.75rem;
+        color: #ef4444;
+        margin-top: 0.25rem;
+        display: none;
+    }
+
+    .form-error.show {
+        display: block;
+    }
+
+    .input-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .input-group .form-control {
+        flex: 1;
+    }
+
+    .payment-panel {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .payment-panel.info {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+    }
+
+    .payment-panel.warning {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+
+    .payment-panel.success {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        margin-top: 0.75rem;
+    }
+
+    .payment-method-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.85rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .payment-method-option:hover {
+        border-color: #a7f3d0;
+        background: #f8fafc;
+    }
+
+    .payment-method-option.selected {
+        border-color: #059669;
+        background: #ecfdf5;
+    }
+
+    .payment-method-option.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .payment-method-option input[type="radio"] {
+        margin-top: 0.2rem;
+        accent-color: #059669;
+    }
+
+    .payment-method-option .method-title {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.9rem;
+    }
+
+    .payment-method-option .method-desc {
+        font-size: 0.78rem;
+        color: #6b7280;
+        margin-top: 0.15rem;
+    }
+
+    @media (max-width: 640px) {
+        .form-section {
+            padding: 1rem;
+        }
+        .price-total .value {
+            font-size: 1.1rem;
+        }
+        .grid-cols-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mx-auto px-4 py-6 sm:py-8">
     <div class="max-w-4xl mx-auto">
-        <div class="bg-white border border-gray-200 p-4 sm:p-6 md:p-8">
+        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 md:p-8">
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Place New Order</h1>
-            <p class="text-gray-600 text-sm sm:text-base mb-6 sm:mb-8">Fill in the details below to place your order</p>
+            <p class="text-gray-600 text-sm sm:text-base mb-6">Fill in the details below to get a price estimate and place your order</p>
 
-            <div id="priceError" class="hidden bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+            <div id="priceError" class="hidden bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded">
                 <div class="flex">
                     <div class="flex-shrink-0">
                         <i class="fas fa-exclamation-circle text-red-400"></i>
@@ -20,151 +342,143 @@
                 </div>
             </div>
 
-            <div id="verificationBanner" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-yellow-700" id="verificationMessage"></p>
-                    </div>
-                </div>
-            </div>
-
-            <form id="orderForm" enctype="multipart/form-data" class="space-y-6">
-                <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Level <span class="text-red-500">*</span></label>
-                        <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="academicLevel" required>
-                            <option value="">Select level</option>
-                            <option value="high_school">High School</option>
-                            <option value="undergraduate">Undergraduate</option>
-                            <option value="masters">Master's</option>
-                            <option value="phd">PhD</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Paper Type <span class="text-red-500">*</span></label>
-                        <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="paperType" required>
-                            <option value="">Select type</option>
-                            <option value="essay">Essay</option>
-                            <option value="research_paper">Research Paper</option>
-                            <option value="dissertation">Dissertation</option>
-                            <option value="thesis">Thesis</option>
-                            <option value="case_study">Case Study</option>
-                            <option value="literature_review">Literature Review</option>
-                            <option value="article_review">Article Review</option>
-                            <option value="book_report">Book Report</option>
-                            <option value="speech">Speech</option>
-                            <option value="presentation">Presentation</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject <span class="text-red-500">*</span></label>
-                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="subject" required placeholder="e.g., Psychology, History, Mathematics">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Topic <span class="text-red-500">*</span></label>
-                    <input type="text" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="topic" required placeholder="Your paper topic">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Instructions <span class="text-red-500">*</span></label>
-                    <textarea class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="instructions" rows="6" required placeholder="Detailed instructions for your order..."></textarea>
-                </div>
-
-                <div id="slidesSection" class="hidden">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Number of Slides <span class="text-red-500">*</span></label>
-                        <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="slides" min="1" value="5" placeholder="Number of slides">
-                        <p class="text-xs text-gray-500 mt-1">$8.00 per slide, fixed price regardless of academic level</p>
-                    </div>
-                </div>
-
-                <div id="paperFields">
-                    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+            <form id="orderForm" enctype="multipart/form-data" novalidate>
+                <div class="form-section">
+                    <h3>Paper Details</h3>
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Pages</label>
-                            <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="pages" value="1" min="0.5" step="0.5">
-                            <p class="text-xs text-gray-500 mt-1">Minimum 0.5 pages</p>
+                            <label class="form-label" for="academicLevel">Academic Level <span class="required">*</span></label>
+                            <select class="form-control" id="academicLevel" required>
+                                <option value="">Select level</option>
+                                <option value="high_school">High School</option>
+                                <option value="undergraduate" selected>Undergraduate</option>
+                                <option value="masters">Master's</option>
+                                <option value="phd">PhD</option>
+                            </select>
                         </div>
-
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Words</label>
-                            <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="words" value="275" min="1">
-                            <p class="text-xs text-gray-500 mt-1">Minimum 1 word</p>
+                            <label class="form-label" for="paperType">Paper Type <span class="required">*</span></label>
+                            <select class="form-control" id="paperType" required>
+                                <option value="">Select type</option>
+                                <option value="essay">Essay</option>
+                                <option value="research_paper" selected>Research Paper</option>
+                                <option value="dissertation">Dissertation</option>
+                                <option value="thesis">Thesis</option>
+                                <option value="case_study">Case Study</option>
+                                <option value="literature_review">Literature Review</option>
+                                <option value="article_review">Article Review</option>
+                                <option value="book_report">Book Report</option>
+                                <option value="speech">Speech</option>
+                                <option value="presentation">Presentation</option>
+                            </select>
                         </div>
-
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Spacing</label>
-                            <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="spacing">
-                                <option value="single">Single (550 words/page)</option>
-                                <option value="one_point_five">1.5 (367 words/page)</option>
-                                <option value="double" selected>Double (275 words/page)</option>
+                            <label class="form-label" for="subject">Subject <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="subject" required placeholder="e.g., Psychology, History">
+                        </div>
+                        <div>
+                            <label class="form-label" for="format">Citation Style <span class="required">*</span></label>
+                            <select class="form-control" id="format" required>
+                                <option value="apa">APA (7th Edition)</option>
+                                <option value="mla">MLA (9th Edition)</option>
+                                <option value="chicago">Chicago</option>
+                                <option value="harvard">Harvard</option>
+                                <option value="turabian">Turabian</option>
+                                <option value="vancouver">Vancouver</option>
+                                <option value="oscola">OSCOLA</option>
+                                <option value="ieee">IEEE</option>
                             </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Sources</label>
-                        <input type="number" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="sources" value="5" min="0">
+                    <div class="mt-4">
+                        <label class="form-label" for="topic">Topic <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="topic" required placeholder="Your paper topic">
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Deadline <span class="text-red-500">*</span></label>
-                        <input type="datetime-local" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="deadline" required>
-                        <p class="text-xs text-gray-500 mt-1">Minimum 12 hours from now</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Citation Style <span class="text-red-500">*</span></label>
-                        <select class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="format" required>
-                            <option value="apa">APA (7th Edition)</option>
-                            <option value="mla">MLA (9th Edition)</option>
-                            <option value="chicago">Chicago</option>
-                            <option value="harvard">Harvard</option>
-                            <option value="turabian">Turabian</option>
-                            <option value="vancouver">Vancouver</option>
-                            <option value="oscola">OSCOLA</option>
-                            <option value="ieee">IEEE</option>
-                        </select>
+                    <div class="mt-4">
+                        <label class="form-label" for="instructions">Instructions <span class="required">*</span></label>
+                        <textarea class="form-control" id="instructions" rows="6" required placeholder="Detailed instructions for your order..."></textarea>
                     </div>
                 </div>
 
-                <div class="border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Reference Links</h3>
+                <div class="form-section">
+                    <h3>Order Specifications</h3>
+
+                    <div id="slidesSection" class="hidden">
+                        <div class="mb-4">
+                            <label class="form-label" for="slides">Number of Slides <span class="required">*</span></label>
+                            <input type="number" class="form-control" id="slides" min="1" value="5" placeholder="Number of slides">
+                            <p class="form-hint">$8.00 per slide, fixed price regardless of academic level</p>
+                        </div>
+                    </div>
+
+                    <div id="paperFields">
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="form-label" for="pages">Pages</label>
+                                <input type="number" class="form-control" id="pages" value="1" min="0.5" step="0.5">
+                                <p class="form-hint">Minimum 0.5 pages</p>
+                            </div>
+                            <div>
+                                <label class="form-label" for="words">Words</label>
+                                <input type="number" class="form-control" id="words" value="275" min="1">
+                                <p class="form-hint">Minimum 1 word</p>
+                            </div>
+                            <div>
+                                <label class="form-label" for="spacing">Line Spacing</label>
+                                <select class="form-control" id="spacing">
+                                    <option value="single">Single (550 words/page)</option>
+                                    <option value="one_point_five">1.5 Line (367 words/page)</option>
+                                    <option value="double" selected>Double (275 words/page)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">Enter either pages or words — the other will auto-calculate based on spacing.</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Timeline & Requirements</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label" for="deadline">Deadline <span class="required">*</span></label>
+                            <input type="datetime-local" class="form-control" id="deadline" required>
+                            <p class="form-hint">Minimum 12 hours from now</p>
+                        </div>
+                        <div>
+                            <label class="form-label" for="sources">Number of Sources</label>
+                            <input type="number" class="form-control" id="sources" value="5" min="0" max="100">
+                            <p class="form-hint">Does not affect price</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Reference Links</h3>
                     <div id="linksContainer">
-                        <div class="flex items-center space-x-2 mb-2">
-                            <input type="url" class="flex-1 border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" placeholder="https://example.com/source">
-                            <button type="button" class="text-red-600 hover:text-red-700 remove-link" disabled style="opacity:0.5">
+                        <div class="link-item">
+                            <input type="url" class="form-control" placeholder="https://example.com/source">
+                            <button type="button" class="remove-link" disabled style="opacity:0.3">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
-                    <button type="button" id="addLinkBtn" class="text-green-600 hover:text-green-700 text-sm font-medium mt-2">
+                    <button type="button" class="add-link-btn mt-2">
                         <i class="fas fa-plus mr-1"></i>Add another link
                     </button>
                 </div>
 
-                <div class="border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Attachments</h3>
+                <div class="form-section">
+                    <h3>Attachments</h3>
                     <p class="text-sm text-gray-600 mb-3">Upload images, PDFs or documents. Max 10MB per file.</p>
-                    
-                    <div id="filesContainer" class="space-y-3">
-                        <div class="border-2 border-dashed border-gray-300 p-6 text-center hover:border-green-500 transition-colors" id="dropZone">
-                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
-                            <p class="text-gray-600 mb-2">Drag and drop files here or click to browse</p>
-                            <input type="file" id="fileInput" multiple class="hidden" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt">
-                            <button type="button" id="browseFilesBtn" class="bg-green-600 text-white px-4 py-2 text-sm hover:bg-green-700 transition-colors">
-                                Browse Files
-                            </button>
-                        </div>
+
+                    <div class="drop-zone" id="dropZone">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600 mb-2">Drag and drop files here or click to browse</p>
+                        <p class="text-xs text-gray-400">Supported: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT</p>
+                        <input type="file" id="fileInput" multiple class="hidden" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                        <button type="button" id="browseFilesBtn" class="mt-3 bg-green-600 text-white px-4 py-2 text-sm hover:bg-green-700 transition-colors rounded">
+                            Browse Files
+                        </button>
                     </div>
 
                     <div id="fileList" class="mt-4 space-y-2"></div>
@@ -175,65 +489,89 @@
                     </div>
                 </div>
 
-                <div class="border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Additional Services</h3>
-                    <div class="grid sm:grid-cols-2 gap-3 sm:gap-4">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="plagiarismReport">
-                            <span class="text-sm text-gray-700">Plagiarism Report (+$10.00)</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="abstract">
-                            <span class="text-sm text-gray-700">Abstract/Summary (+$15.00)</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="proofreading">
-                            <span class="text-sm text-gray-700">Proofreading (+$8.00)</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" class="w-4 h-4 border border-gray-300 text-green-600 focus:ring-green-600" id="onePageSummary">
-                            <span class="text-sm text-gray-700">One-Page Summary (+$12.00)</span>
-                        </label>
+                <div class="form-section">
+                    <h3>Price Estimate</h3>
+                    <div class="price-breakdown">
+                        <div class="price-row">
+                            <span class="label">Pages</span>
+                            <span class="value" id="displayPages">0</span>
+                        </div>
+                        <div class="price-row">
+                            <span class="label">Words per Page</span>
+                            <span class="value" id="displayWordsPerPage">275</span>
+                        </div>
+                        <div class="price-row">
+                            <span class="label">Cost per Page</span>
+                            <span class="value" id="displayCostPerPage">$10.00</span>
+                        </div>
+                        <div class="price-row">
+                            <span class="label">Base Price</span>
+                            <span class="value" id="displayBasePrice">$0.00</span>
+                        </div>
+                        <div class="price-total">
+                            <div class="price-row">
+                                <span class="label">Estimated Total</span>
+                                <span class="value" id="totalPrice">$0.00</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 text-center mt-3">Final price confirmed at order placement</p>
                     </div>
                 </div>
 
-                <div class="bg-gray-50 border border-gray-200 p-4 sm:p-6">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 pb-4 border-b border-gray-200">
-                        <div>
-                            <p class="text-xs text-gray-500">Base Price</p>
-                            <p class="text-sm font-semibold text-gray-700" id="displayBasePrice">$0.00</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500">Level Multiplier</p>
-                            <p class="text-sm font-semibold text-gray-700" id="displayLevelMultiplier">1.00x</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500">Level Adjusted</p>
-                            <p class="text-sm font-semibold text-gray-700" id="displayLevelAdjusted">$0.00</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500">Urgency Multiplier</p>
-                            <p class="text-sm font-semibold text-gray-700" id="displayUrgencyMultiplier">1.00x</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500">Pages</p>
-                            <p class="text-sm font-semibold text-gray-700" id="displayPages">0</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500">Words</p>
-                            <p class="text-sm font-semibold text-gray-700" id="displayWords">0</p>
-                        </div>
+                <div class="form-section" id="paymentSection">
+                    <h3>Payment Method</h3>
+
+                    <div class="space-y-2">
+                        <label class="payment-method-option" id="walletOption">
+                            <input type="radio" name="paymentMethod" value="wallet" id="walletRadio">
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="method-title">Pay from Wallet</span>
+                                    <span class="text-sm font-semibold text-gray-700" id="walletBalanceDisplay">$0.00</span>
+                                </div>
+                                <p class="method-desc" id="walletOptionDesc">Charged immediately from your wallet balance.</p>
+                            </div>
+                        </label>
+
+                        <label class="payment-method-option" id="paypalOption">
+                            <input type="radio" name="paymentMethod" value="paypal" id="paypalRadio">
+                            <div class="flex-1">
+                                <span class="method-title">Pay with PayPal</span>
+                                <p class="method-desc">Fund your wallet with the order total via PayPal, then your order is placed automatically.</p>
+                            </div>
+                        </label>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <span class="text-base sm:text-lg font-medium text-gray-700">Total Price:</span>
-                        <span class="text-2xl sm:text-3xl font-bold text-green-600" id="totalPrice">$0.00</span>
+                    <div id="paypalPanel" class="hidden mt-3">
+                        <div class="payment-panel warning" id="paypalAmountPanel">
+                            <i class="fas fa-info-circle"></i>
+                            <span>You'll be sent to PayPal to fund <strong id="paypalAmount">$0.00</strong>.</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 mt-2">
+                            <button type="button" id="paypalTopUpBtn" class="bg-blue-600 text-white px-4 py-2 text-sm rounded hover:bg-blue-700 transition-colors" onclick="startPaypalTopUp()">
+                                <i class="fab fa-paypal mr-1"></i>Continue with PayPal
+                            </button>
+                            <button type="button" id="refreshBalanceBtn" class="border border-gray-300 text-gray-700 px-4 py-2 text-sm rounded hover:bg-gray-50 transition-colors" onclick="refreshWalletBalance()">
+                                Refresh Balance
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">This uses a simplified PayPal fallback flow, not the live PayPal sandbox. Once your balance reflects the funds, your order is placed automatically.</p>
+                    </div>
+
+                    <div id="walletSufficientPanel" class="payment-panel success hidden">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Your wallet balance covers this order. It will be charged when you place the order.</span>
+                    </div>
+
+                    <div id="walletInsufficientPanel" class="payment-panel warning hidden mt-2">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Your wallet balance doesn't cover this order. Choose PayPal instead, or top up your wallet first.</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
-                    <a href="/client/orders/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-3 text-center">Cancel</a>
-                    <button type="submit" class="bg-green-600 text-white hover:bg-green-700 transition-colors px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed" id="submitBtn">Place Order</button>
+                    <a href="/client/orders/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-3 text-center rounded">Cancel</a>
+                    <button type="submit" class="bg-green-600 text-white hover:bg-green-700 transition-colors px-6 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed" id="submitBtn" disabled>Place Order</button>
                 </div>
             </form>
         </div>
@@ -245,16 +583,42 @@ let filesToUpload = [];
 let verifiedFiles = [];
 let priceData = null;
 let priceUpdateTimeout = null;
+let walletBalance = 0;
+let topUpPollTimer = null;
+let selectedPaymentMethod = 'wallet';
+let pendingAutoSubmit = false;
 
 document.addEventListener('DOMContentLoaded', function() {
     setDefaultDeadline();
-    
-    document.getElementById('paperType').addEventListener('change', function() {
+    setupEventListeners();
+    setupPaymentMethodToggle();
+    loadWalletBalance();
+    calculatePrice();
+});
+
+function setupPaymentMethodToggle() {
+    document.getElementById('walletRadio').addEventListener('change', function() {
+        if (this.checked) {
+            selectedPaymentMethod = 'wallet';
+            updatePaymentSection();
+        }
+    });
+    document.getElementById('paypalRadio').addEventListener('change', function() {
+        if (this.checked) {
+            selectedPaymentMethod = 'paypal';
+            updatePaymentSection();
+        }
+    });
+}
+
+function setupEventListeners() {
+    const paperType = document.getElementById('paperType');
+    paperType.addEventListener('change', function() {
         togglePaperTypeFields(this.value);
         clearTimeout(priceUpdateTimeout);
         priceUpdateTimeout = setTimeout(calculatePrice, 300);
     });
-    
+
     const priceInputs = ['academicLevel', 'pages', 'words', 'spacing', 'deadline', 'slides'];
     priceInputs.forEach(id => {
         const element = document.getElementById(id);
@@ -269,50 +633,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     priceUpdateTimeout = setTimeout(calculatePrice, 300);
                 });
             }
-            if (element.type === 'datetime-local') {
-                element.addEventListener('change', function() {
-                    clearTimeout(priceUpdateTimeout);
-                    priceUpdateTimeout = setTimeout(calculatePrice, 300);
-                });
-            }
         }
     });
-    
+
     document.getElementById('pages').addEventListener('input', function() {
-        const pages = parseFloat(this.value) || 0;
-        const spacing = document.getElementById('spacing').value;
-        if (pages > 0) {
-            const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
-            const words = Math.round(pages * (wordsPerPage[spacing] || 275));
-            document.getElementById('words').value = words;
-        }
+        syncPagesToWords(this.value);
         clearTimeout(priceUpdateTimeout);
         priceUpdateTimeout = setTimeout(calculatePrice, 300);
     });
-    
+
     document.getElementById('words').addEventListener('input', function() {
-        const words = parseInt(this.value) || 0;
-        const spacing = document.getElementById('spacing').value;
-        if (words > 0) {
-            const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
-            const pages = words / (wordsPerPage[spacing] || 275);
-            document.getElementById('pages').value = pages.toFixed(1);
-        }
+        syncWordsToPages(this.value);
         clearTimeout(priceUpdateTimeout);
         priceUpdateTimeout = setTimeout(calculatePrice, 300);
     });
-    
+
     document.getElementById('spacing').addEventListener('change', function() {
         const words = parseInt(document.getElementById('words').value) || 0;
         const pages = parseFloat(document.getElementById('pages').value) || 0;
         if (words > 0) {
-            const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
-            const newPages = words / (wordsPerPage[this.value] || 275);
-            document.getElementById('pages').value = newPages.toFixed(1);
+            syncWordsToPages(words);
         } else if (pages > 0) {
-            const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
-            const newWords = Math.round(pages * (wordsPerPage[this.value] || 275));
-            document.getElementById('words').value = newWords;
+            syncPagesToWords(pages);
         }
         clearTimeout(priceUpdateTimeout);
         priceUpdateTimeout = setTimeout(calculatePrice, 300);
@@ -324,59 +666,47 @@ document.addEventListener('DOMContentLoaded', function() {
         priceUpdateTimeout = setTimeout(calculatePrice, 300);
     });
 
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const browseBtn = document.getElementById('browseFilesBtn');
+    setupFileUpload();
+    setupLinks();
+    setupFormSubmit();
+}
 
-    dropZone.addEventListener('click', () => fileInput.click());
-    
-    browseBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        fileInput.click();
-    });
+function syncPagesToWords(pagesValue) {
+    const pages = parseFloat(pagesValue) || 0;
+    const spacing = document.getElementById('spacing').value;
+    const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
+    if (pages > 0) {
+        const words = Math.round(pages * (wordsPerPage[spacing] || 275));
+        document.getElementById('words').value = words;
+    }
+}
 
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('border-green-500', 'bg-green-50');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('border-green-500', 'bg-green-50');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('border-green-500', 'bg-green-50');
-        handleFiles(e.dataTransfer.files);
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        handleFiles(e.target.files);
-    });
-
-    document.getElementById('addLinkBtn').addEventListener('click', addLinkField);
-    document.getElementById('orderForm').addEventListener('submit', submitOrder);
-    
-    togglePaperTypeFields(document.getElementById('paperType').value);
-    calculatePrice();
-});
+function syncWordsToPages(wordsValue) {
+    const words = parseInt(wordsValue) || 0;
+    const spacing = document.getElementById('spacing').value;
+    const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
+    if (words > 0) {
+        const pages = words / (wordsPerPage[spacing] || 275);
+        document.getElementById('pages').value = pages.toFixed(1);
+    }
+}
 
 function togglePaperTypeFields(paperType) {
     const slidesSection = document.getElementById('slidesSection');
     const paperFields = document.getElementById('paperFields');
-    
+
     if (paperType === 'presentation') {
         slidesSection.classList.remove('hidden');
         paperFields.classList.add('hidden');
+        document.getElementById('slides').required = true;
         document.getElementById('pages').required = false;
         document.getElementById('words').required = false;
-        document.getElementById('slides').required = true;
     } else {
         slidesSection.classList.add('hidden');
         paperFields.classList.remove('hidden');
+        document.getElementById('slides').required = false;
         document.getElementById('pages').required = true;
         document.getElementById('words').required = true;
-        document.getElementById('slides').required = false;
     }
 }
 
@@ -384,19 +714,17 @@ function validateDeadline(input) {
     const selectedDate = new Date(input.value);
     const now = new Date();
     const minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
-    
+
     if (selectedDate < now) {
         input.setCustomValidity('Deadline cannot be in the past');
         input.reportValidity();
         return false;
     }
-    
     if (selectedDate < minDate) {
         input.setCustomValidity('Deadline must be at least 12 hours from now');
         input.reportValidity();
         return false;
     }
-    
     input.setCustomValidity('');
     return true;
 }
@@ -404,12 +732,16 @@ function validateDeadline(input) {
 function setDefaultDeadline() {
     const now = new Date();
     const minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
-    const year = minDate.getFullYear();
-    const month = String(minDate.getMonth() + 1).padStart(2, '0');
-    const day = String(minDate.getDate()).padStart(2, '0');
-    const hours = String(minDate.getHours()).padStart(2, '0');
-    const minutes = String(minDate.getMinutes()).padStart(2, '0');
-    document.getElementById('deadline').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    document.getElementById('deadline').value = formatDateTimeLocal(minDate);
+}
+
+function formatDateTimeLocal(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 async function calculatePrice() {
@@ -422,11 +754,11 @@ async function calculatePrice() {
     const slides = parseInt(document.getElementById('slides').value) || 0;
     const errorEl = document.getElementById('priceError');
     const errorMsg = document.getElementById('priceErrorMessage');
-    
+
     if (!academicLevel || !deadline) {
         return;
     }
-    
+
     if (paperType === 'presentation') {
         if (!slides || slides < 1) {
             errorMsg.textContent = 'Please enter the number of slides for your presentation.';
@@ -440,7 +772,7 @@ async function calculatePrice() {
             return;
         }
     }
-    
+
     try {
         const token = localStorage.getItem('access_token');
         if (!token) {
@@ -448,24 +780,21 @@ async function calculatePrice() {
             errorEl.classList.remove('hidden');
             return;
         }
-        
+
         const requestData = {
             academic_level: academicLevel,
             spacing: spacing,
             deadline: deadline,
             paper_type: paperType
         };
-        
+
         if (paperType === 'presentation') {
             requestData.slides = slides;
         } else {
-            if (words > 0) {
-                requestData.words = words;
-            } else if (pages > 0) {
-                requestData.pages = pages;
-            }
+            if (words > 0) requestData.words = words;
+            if (pages > 0) requestData.pages = pages;
         }
-        
+
         const response = await fetch('/api/v1/orders/price-quote/', {
             method: 'POST',
             headers: {
@@ -474,7 +803,7 @@ async function calculatePrice() {
             },
             body: JSON.stringify(requestData)
         });
-        
+
         if (!response.ok) {
             let errorMessage = 'Failed to calculate price';
             try {
@@ -485,98 +814,289 @@ async function calculatePrice() {
             }
             throw new Error(errorMessage);
         }
-        
+
         priceData = await response.json();
         updatePriceDisplay(priceData);
         errorEl.classList.add('hidden');
-        
+
     } catch (error) {
         console.error('Price calculation error:', error);
         errorMsg.textContent = error.message || 'Unable to calculate price. Please check your inputs.';
         errorEl.classList.remove('hidden');
-        
-        document.getElementById('displayBasePrice').textContent = '$0.00';
-        document.getElementById('displayLevelMultiplier').textContent = '1.00x';
-        document.getElementById('displayLevelAdjusted').textContent = '$0.00';
-        document.getElementById('displayUrgencyMultiplier').textContent = '1.00x';
-        document.getElementById('displayPages').textContent = '0';
-        document.getElementById('displayWords').textContent = '0';
-        document.getElementById('totalPrice').textContent = '$0.00';
+        resetPriceDisplay();
     }
 }
 
 function updatePriceDisplay(data) {
-    document.getElementById('displayBasePrice').textContent = '$' + data.base_price.toFixed(2);
-    document.getElementById('displayLevelMultiplier').textContent = data.level_multiplier.toFixed(2) + 'x';
-    document.getElementById('displayLevelAdjusted').textContent = '$' + data.level_adjusted.toFixed(2);
-    document.getElementById('displayUrgencyMultiplier').textContent = data.urgency_multiplier.toFixed(2) + 'x';
     document.getElementById('displayPages').textContent = data.pages.toFixed(1);
-    document.getElementById('displayWords').textContent = data.words;
+    document.getElementById('displayWordsPerPage').textContent = data.words_per_page || 275;
+    document.getElementById('displayCostPerPage').textContent = '$' + (data.cost_per_page || 10).toFixed(2);
+    document.getElementById('displayBasePrice').textContent = '$' + data.base_price.toFixed(2);
     document.getElementById('totalPrice').textContent = '$' + data.total_price.toFixed(2);
+    updatePaymentSection();
 }
 
-async function handleFiles(files) {
-    const verificationBanner = document.getElementById('verificationBanner');
-    const verificationMessage = document.getElementById('verificationMessage');
-    
+function resetPriceDisplay() {
+    document.getElementById('displayPages').textContent = '0';
+    document.getElementById('displayWordsPerPage').textContent = '275';
+    document.getElementById('displayCostPerPage').textContent = '$10.00';
+    document.getElementById('displayBasePrice').textContent = '$0.00';
+    document.getElementById('totalPrice').textContent = '$0.00';
+    priceData = null;
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('walletSufficientPanel').classList.add('hidden');
+    document.getElementById('walletInsufficientPanel').classList.add('hidden');
+    document.getElementById('paypalPanel').classList.add('hidden');
+    stopBalancePolling();
+}
+
+async function loadWalletBalance() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch('/api/v1/wallet/stats/', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            walletBalance = data.available_balance !== undefined ? data.available_balance : (data.balance !== undefined ? data.balance : 0);
+        } else {
+            console.warn('Wallet stats endpoint returned ' + response.status + '. Confirm this matches your urls.py mapping for get_wallet_stats.');
+            walletBalance = 0;
+        }
+    } catch (error) {
+        console.error('Failed to load wallet balance:', error);
+        walletBalance = 0;
+    } finally {
+        updatePaymentSection();
+        if (pendingAutoSubmit && priceData && walletBalance >= priceData.total_price) {
+            pendingAutoSubmit = false;
+            stopBalancePolling();
+            document.getElementById('orderForm').requestSubmit();
+        }
+    }
+}
+
+function updatePaymentSection() {
+    const walletOption = document.getElementById('walletOption');
+    const paypalOption = document.getElementById('paypalOption');
+    const walletRadio = document.getElementById('walletRadio');
+    const paypalRadio = document.getElementById('paypalRadio');
+    const walletPanel = document.getElementById('walletSufficientPanel');
+    const insufficientPanel = document.getElementById('walletInsufficientPanel');
+    const paypalPanel = document.getElementById('paypalPanel');
+    const submitBtn = document.getElementById('submitBtn');
+    const balanceDisplay = document.getElementById('walletBalanceDisplay');
+    const paypalAmount = document.getElementById('paypalAmount');
+
+    balanceDisplay.textContent = '$' + walletBalance.toFixed(2);
+
+    if (!priceData) {
+        submitBtn.disabled = true;
+        walletPanel.classList.add('hidden');
+        insufficientPanel.classList.add('hidden');
+        paypalPanel.classList.add('hidden');
+        stopBalancePolling();
+        return;
+    }
+
+    const total = priceData.total_price;
+    const walletCovers = walletBalance >= total;
+
+    walletOption.classList.toggle('disabled', !walletCovers);
+    walletRadio.disabled = !walletCovers;
+
+    if (!walletCovers && selectedPaymentMethod === 'wallet') {
+        selectedPaymentMethod = 'paypal';
+    }
+
+    walletRadio.checked = selectedPaymentMethod === 'wallet';
+    paypalRadio.checked = selectedPaymentMethod === 'paypal';
+    walletOption.classList.toggle('selected', selectedPaymentMethod === 'wallet');
+    paypalOption.classList.toggle('selected', selectedPaymentMethod === 'paypal');
+
+    if (selectedPaymentMethod === 'wallet') {
+        paypalPanel.classList.add('hidden');
+        stopBalancePolling();
+        if (walletCovers) {
+            walletPanel.classList.remove('hidden');
+            insufficientPanel.classList.add('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Place Order';
+        } else {
+            walletPanel.classList.add('hidden');
+            insufficientPanel.classList.remove('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Place Order';
+        }
+        return;
+    }
+
+    walletPanel.classList.add('hidden');
+    insufficientPanel.classList.add('hidden');
+    paypalPanel.classList.remove('hidden');
+
+    paypalAmount.textContent = '$' + total.toFixed(2);
+
+    if (walletBalance >= total) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Place Order';
+    } else {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Complete PayPal Payment First';
+    }
+}
+
+function startBalancePolling() {
+    if (topUpPollTimer) return;
+    topUpPollTimer = setInterval(loadWalletBalance, 5000);
+}
+
+function stopBalancePolling() {
+    if (topUpPollTimer) {
+        clearInterval(topUpPollTimer);
+        topUpPollTimer = null;
+    }
+}
+
+async function startPaypalTopUp() {
+    if (!priceData) return;
+
+    const amountToFund = priceData.total_price;
+    if (amountToFund <= 0) return;
+
+    const button = document.getElementById('paypalTopUpBtn');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Redirecting to PayPal...';
+
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch('/api/v1/wallet/paypal/deposit/', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ amount: amountToFund.toFixed(2) })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(function() { return {}; });
+            throw new Error(errorData.message || errorData.error || 'Failed to start PayPal top-up');
+        }
+
+        const data = await response.json();
+
+        if (data.approval_url) {
+            window.open(data.approval_url, '_blank');
+        } else {
+            console.warn('No approval_url returned by PayPal deposit endpoint. Using simplified fallback: polling wallet balance until it updates.');
+        }
+
+        pendingAutoSubmit = true;
+        startBalancePolling();
+    } catch (error) {
+        console.error('PayPal top-up error:', error);
+        alert(error.message || 'Failed to start PayPal top-up. Please try again.');
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+async function refreshWalletBalance() {
+    const button = document.getElementById('refreshBalanceBtn');
+    button.disabled = true;
+    button.textContent = 'Checking...';
+    await loadWalletBalance();
+    button.disabled = false;
+    button.textContent = 'Refresh Balance';
+}
+
+function setupFileUpload() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseFilesBtn');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    browseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+}
+
+function handleFiles(files) {
     for (let file of files) {
         if (file.size > 10 * 1024 * 1024) {
             alert('File "' + file.name + '" exceeds 10MB limit');
             continue;
         }
 
-        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf',
                             'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                             'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                             'text/plain'];
-        
+
         if (!allowedTypes.includes(file.type)) {
             alert('File type "' + file.type + '" not supported');
             continue;
         }
 
         filesToUpload.push(file);
-        addFileToList(file, 'pending');
-        
-        verificationBanner.classList.remove('hidden');
-        verificationMessage.textContent = 'Verifying "' + file.name + '"...';
-        
+        addFileToList(file);
+
         setTimeout(() => {
             verifiedFiles.push(file);
-            updateFileStatus(file.name, 'verified');
-            
-            if (filesToUpload.length === verifiedFiles.length) {
-                verificationBanner.classList.add('hidden');
-            }
-        }, 1500);
+            updateFileStatus(file.name);
+            document.getElementById('fileInput').value = '';
+        }, 1000);
     }
 }
 
-function addFileToList(file, status) {
+function addFileToList(file) {
     const fileList = document.getElementById('fileList');
     const fileItem = document.createElement('div');
-    fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200';
+    fileItem.className = 'file-item';
     fileItem.dataset.filename = file.name;
-    
+
     fileItem.innerHTML = `
-        <div class="flex items-center space-x-3">
+        <div class="file-info">
             <i class="fas fa-file text-gray-400"></i>
             <div>
-                <p class="text-sm font-medium text-gray-700">${file.name}</p>
-                <p class="text-xs text-gray-500">${(file.size / 1024).toFixed(2)} KB</p>
+                <span class="name">${file.name}</span>
+                <span class="size">${(file.size / 1024).toFixed(2)} KB</span>
             </div>
+            <span class="status-badge scanning" id="status-${file.name}">
+                <i class="fas fa-spinner fa-spin mr-1"></i> Scanning
+            </span>
         </div>
-        <div class="flex items-center space-x-3">
-            <span class="text-sm" id="status-${file.name}"><i class="fas fa-spinner fa-spin text-yellow-500"></i> Scanning</span>
-            <button type="button" class="text-red-600 hover:text-red-700 remove-file" data-filename="${file.name}">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
+        <button type="button" class="remove-btn" data-filename="${file.name}">
+            <i class="fas fa-times"></i>
+        </button>
     `;
-    
+
     fileList.appendChild(fileItem);
-    
-    fileItem.querySelector('.remove-file').addEventListener('click', function() {
+
+    fileItem.querySelector('.remove-btn').addEventListener('click', function() {
         const filename = this.dataset.filename;
         filesToUpload = filesToUpload.filter(f => f.name !== filename);
         verifiedFiles = verifiedFiles.filter(f => f.name !== filename);
@@ -584,40 +1104,121 @@ function addFileToList(file, status) {
     });
 }
 
-function updateFileStatus(filename, status) {
+function updateFileStatus(filename) {
     const statusSpan = document.getElementById('status-' + filename);
     if (statusSpan) {
-        statusSpan.innerHTML = '<i class="fas fa-check-circle text-green-500"></i> Verified';
+        statusSpan.className = 'status-badge verified';
+        statusSpan.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Verified';
     }
 }
 
-function addLinkField() {
-    const container = document.getElementById('linksContainer');
-    const newField = document.createElement('div');
-    newField.className = 'flex items-center space-x-2 mb-2';
-    newField.innerHTML = `
-        <input type="url" class="flex-1 border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" placeholder="https://example.com/source">
-        <button type="button" class="text-red-600 hover:text-red-700 remove-link">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    container.appendChild(newField);
-    
-    newField.querySelector('.remove-link').addEventListener('click', function() {
-        newField.remove();
+function normalizeUrl(value) {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (!/^https?:\/\//i.test(trimmed)) {
+        return 'https://' + trimmed;
+    }
+    return trimmed;
+}
+
+function isValidUrl(value) {
+    try {
+        const url = new URL(value);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (e) {
+        return false;
+    }
+}
+
+function setupLinks() {
+    document.getElementById('linksContainer').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-link')) {
+            const linkItem = e.target.closest('.link-item');
+            if (linkItem && linkItem.querySelectorAll('input').length > 1) {
+                linkItem.remove();
+            }
+        }
     });
+
+    document.querySelector('.add-link-btn').addEventListener('click', function() {
+        const container = document.getElementById('linksContainer');
+        const newField = document.createElement('div');
+        newField.className = 'link-item';
+        newField.innerHTML = `
+            <input type="url" class="form-control" placeholder="https://example.com/source">
+            <button type="button" class="remove-link">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(newField);
+    });
+}
+
+function setupFormSubmit() {
+    document.getElementById('orderForm').addEventListener('submit', submitOrder);
+}
+
+function formatOrderError(error) {
+    if (!error) return 'Failed to create order. Please try again.';
+
+    if (typeof error === 'string') return error;
+
+    if (error.wallet) return 'Wallet Error: ' + stringifyValue(error.wallet);
+    if (error.payment) return 'Payment Error: ' + stringifyValue(error.payment);
+    if (error.paypal) return 'PayPal Error: ' + stringifyValue(error.paypal);
+
+    if (error.non_field_errors) {
+        return Array.isArray(error.non_field_errors) ? stringifyValue(error.non_field_errors[0]) : stringifyValue(error.non_field_errors);
+    }
+
+    if (error.detail) return stringifyValue(error.detail);
+    if (error.error) return stringifyValue(error.error);
+    if (error.message) return stringifyValue(error.message);
+
+    if (typeof error === 'object') {
+        const messages = Object.keys(error).map(function(key) {
+            return key + ': ' + stringifyValue(error[key]);
+        });
+        if (messages.length > 0) {
+            return messages.join('\n');
+        }
+    }
+
+    return 'Failed to create order. Please try again.';
+}
+
+function stringifyValue(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (Array.isArray(value)) {
+        return value.map(stringifyValue).join(', ');
+    }
+    if (typeof value === 'object') {
+        const keys = Object.keys(value);
+        const isIndexed = keys.length > 0 && keys.every(function(key) { return /^\d+$/.test(key); });
+        if (isIndexed) {
+            return keys.map(function(key) {
+                return 'item ' + (parseInt(key, 10) + 1) + ': ' + stringifyValue(value[key]);
+            }).join('; ');
+        }
+        try {
+            return JSON.stringify(value);
+        } catch (e) {
+            return String(value);
+        }
+    }
+    return String(value);
 }
 
 async function submitOrder(e) {
     e.preventDefault();
-    
+
     const deadlineInput = document.getElementById('deadline');
     if (!validateDeadline(deadlineInput)) {
         return;
     }
-    
+
     const paperType = document.getElementById('paperType').value;
-    
     if (paperType === 'presentation') {
         const slides = parseInt(document.getElementById('slides').value) || 0;
         if (slides < 1) {
@@ -625,17 +1226,42 @@ async function submitOrder(e) {
             return;
         }
     }
-    
-    const linkInputs = document.querySelectorAll('#linksContainer input[type="url"]');
-    const links = Array.from(linkInputs)
-        .map(input => input.value.trim())
-        .filter(url => url !== '');
-    
+
     if (filesToUpload.length > 0 && filesToUpload.length > verifiedFiles.length) {
-        alert('Please wait for files to be verified');
+        alert('Please wait for all files to be verified');
         return;
     }
-    
+
+    if (priceData && walletBalance < priceData.total_price) {
+        alert('Your wallet balance does not yet cover this order. Complete the PayPal payment first, or choose a different payment method.');
+        return;
+    }
+
+    const linkInputs = document.querySelectorAll('#linksContainer input[type="url"]');
+    const links = [];
+    let hasInvalidLink = false;
+
+    linkInputs.forEach(function(input) {
+        input.classList.remove('error');
+        const raw = input.value.trim();
+        if (!raw) return;
+
+        const normalized = normalizeUrl(raw);
+        if (!isValidUrl(normalized)) {
+            input.classList.add('error');
+            hasInvalidLink = true;
+            return;
+        }
+
+        input.value = normalized;
+        links.push(normalized);
+    });
+
+    if (hasInvalidLink) {
+        alert('One or more reference links are not valid URLs. Please check the highlighted fields.');
+        return;
+    }
+
     const formData = new FormData();
     formData.append('academic_level', document.getElementById('academicLevel').value);
     formData.append('paper_type', paperType);
@@ -649,20 +1275,21 @@ async function submitOrder(e) {
     formData.append('sources_count', document.getElementById('sources').value);
     formData.append('deadline', document.getElementById('deadline').value);
     formData.append('format', document.getElementById('format').value);
-    formData.append('links', JSON.stringify(links));
-    formData.append('plagiarism_report', document.getElementById('plagiarismReport').checked);
-    formData.append('abstract', document.getElementById('abstract').checked);
-    formData.append('proofreading', document.getElementById('proofreading').checked);
-    formData.append('one_page_summary', document.getElementById('onePageSummary').checked);
-    
+    links.forEach(function(link) {
+        formData.append('links', link);
+    });
+
+    formData.append('payment_method', selectedPaymentMethod);
+
     verifiedFiles.forEach(file => {
         formData.append('attachments', file);
     });
-    
+
     try {
         if (window.Loading) window.Loading.show();
         document.getElementById('submitBtn').disabled = true;
-        
+        document.getElementById('submitBtn').textContent = 'Processing...';
+
         const response = await fetch('/api/v1/orders/create/', {
             method: 'POST',
             headers: {
@@ -670,47 +1297,25 @@ async function submitOrder(e) {
             },
             body: formData
         });
-        
+
         if (!response.ok) {
-            const errorData = await response.json();
+            let errorData = null;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { error: response.statusText || 'Failed to create order' };
+            }
             throw errorData;
         }
-        
+
         const data = await response.json();
-        
-        if (data && data.id) {
-            window.location.href = '/client/orders/' + data.id + '/';
-        }
-        
+        window.location.href = '/client/orders/' + data.id + '/';
+
     } catch (error) {
         console.error('Order creation error:', error);
-        
-        let errorMessage = 'Failed to create order. Please try again.';
-        
-        if (error.wallet) {
-            errorMessage = 'Wallet Error: ' + error.wallet;
-        } else if (error.payment) {
-            errorMessage = 'Payment Error: ' + error.payment;
-        } else if (error.non_field_errors) {
-            errorMessage = error.non_field_errors[0];
-        } else if (error.error) {
-            errorMessage = error.error;
-        } else if (typeof error === 'object') {
-            const messages = [];
-            for (const key in error) {
-                if (Array.isArray(error[key])) {
-                    messages.push(key + ': ' + error[key].join(', '));
-                } else if (typeof error[key] === 'string') {
-                    messages.push(key + ': ' + error[key]);
-                }
-            }
-            if (messages.length > 0) {
-                errorMessage = messages.join('\n');
-            }
-        }
-        
-        alert(errorMessage);
+        alert(formatOrderError(error));
         document.getElementById('submitBtn').disabled = false;
+        updatePaymentSection();
     } finally {
         if (window.Loading) window.Loading.hide();
     }

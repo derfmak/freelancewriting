@@ -4,8 +4,8 @@ from . import views
 app_name = 'payments'
 
 urlpatterns = [
-    path('wallet/', views.get_wallet, name='wallet'),
-    path('wallet/stats/', views.get_wallet_stats, name='wallet-stats'),
+    path('', views.get_wallet, name='wallet'),
+    path('stats/', views.get_wallet_stats, name='wallet-stats'),
     
     path('transactions/', views.get_transactions, name='transactions'),
     path('transactions/<uuid:transaction_id>/', views.get_transaction_detail, name='transaction-detail'),
@@ -42,4 +42,10 @@ urlpatterns = [
     path('fraud/review/<uuid:fraud_id>/', views.review_fraud, name='review-fraud'),
     
     path('stats/', views.get_payment_stats, name='payment-stats'),
+    
+    path('paypal/methods/', views.get_paypal_methods, name='paypal-methods'),
+    path('paypal/methods/add/', views.add_paypal_method, name='add-paypal-method'),
+    path('paypal/deposit/', views.create_paypal_deposit, name='paypal-deposit'),
+    path('paypal/deposit/execute/', views.execute_paypal_payment, name='paypal-execute'),
+    path('paypal/deposit/cancel/', views.cancel_paypal_payment, name='paypal-cancel'),
 ]

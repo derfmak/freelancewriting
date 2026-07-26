@@ -30,6 +30,7 @@ class Attachment(models.Model):
     is_corrupt = models.BooleanField(default=False)
     corruption_error = models.TextField(blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes = [
@@ -37,6 +38,7 @@ class Attachment(models.Model):
             models.Index(fields=['scan_status']),
             models.Index(fields=['is_corrupt']),
             models.Index(fields=['file_hash']),
+            models.Index(fields=['delivered_at']),
         ]
         db_table = 'attachments'
 

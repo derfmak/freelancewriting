@@ -220,9 +220,11 @@ function getAuthToken() {
 }
 
 function getApiHeaders() {
+    const csrfToken = document.querySelector('[name=csrf-token]')?.content || '';
     return {
         'Authorization': 'Bearer ' + getAuthToken(),
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
     };
 }
 
@@ -249,6 +251,24 @@ function closeModal() {
     modal.classList.remove('flex');
 }
 
+function showConfirmModal(title, message, confirmText, confirmClass, onConfirm) {
+    const modal = document.getElementById('modal-container');
+    const content = document.getElementById('modal-content');
+    content.innerHTML = `
+        <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">${title}</h3>
+            <p class="text-gray-600 mb-6">${message}</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 action-btn action-btn-secondary">Cancel</button>
+                <button id="confirm-action" class="flex-1 action-btn ${confirmClass}">${confirmText}</button>
+            </div>
+        </div>
+    `;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.getElementById('confirm-action').addEventListener('click', onConfirm);
+}
+
 function showCancelModal() {
     const modal = document.getElementById('modal-container');
     const content = document.getElementById('modal-content');
@@ -272,15 +292,18 @@ function showCancelModal() {
             </div>
             <div class="flex gap-3">
                 <button onclick="closeModal()" class="flex-1 action-btn action-btn-secondary">Cancel</button>
-                <button onclick="confirmCancel()" class="flex-1 action-btn action-btn-danger">Confirm Cancellation</button>
+                <button id="confirm-cancel" class="flex-1 action-btn action-btn-danger">Confirm Cancellation</button>
             </div>
         </div>
     `;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    
     document.getElementById('cancel-reason').addEventListener('change', function() {
         document.getElementById('other-reason-group').classList.toggle('hidden', this.value !== 'other');
     });
+    
+    document.getElementById('confirm-cancel').addEventListener('click', confirmCancel);
 }
 
 async function confirmCancel() {
@@ -293,12 +316,15 @@ async function confirmCancel() {
             headers: getApiHeaders(),
             body: JSON.stringify({ reason: cancelReason })
         });
-        if (!response.ok) throw new Error('Failed to cancel');
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to cancel');
+        }
         closeModal();
         showToast('Order cancelled successfully', 'success');
         setTimeout(() => window.location.href = '/client/orders/', 1500);
     } catch (error) {
-        showToast('Failed to cancel order', 'error');
+        showToast(error.message || 'Failed to cancel order', 'error');
     }
 }
 
@@ -314,12 +340,14 @@ function showRevisionModal() {
             </div>
             <div class="flex gap-3">
                 <button onclick="closeModal()" class="flex-1 action-btn action-btn-secondary">Cancel</button>
-                <button onclick="confirmRevision()" class="flex-1 action-btn action-btn-primary">Submit Request</button>
+                <button id="confirm-revision" class="flex-1 action-btn action-btn-primary">Submit Request</button>
             </div>
         </div>
     `;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    
+    document.getElementById('confirm-revision').addEventListener('click', confirmRevision);
 }
 
 async function confirmRevision() {
@@ -334,13 +362,26 @@ async function confirmRevision() {
             headers: getApiHeaders(),
             body: JSON.stringify({ notes: notes })
         });
-        if (!response.ok) throw new Error('Failed to request revision');
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to request revision');
+        }
         closeModal();
         showToast('Revision requested successfully', 'success');
         setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
-        showToast('Failed to request revision', 'error');
+        showToast(error.message || 'Failed to request revision', 'error');
     }
+}
+
+function showApproveConfirmModal() {
+    showConfirmModal(
+        'Confirm Approval',
+        'Are you sure you want to approve this paper? This will mark the order as completed and release payment to the writer.',
+        'Approve',
+        'action-btn-primary',
+        approveOrder
+    );
 }
 
 async function approveOrder() {
@@ -349,10 +390,18 @@ async function approveOrder() {
             method: 'POST',
             headers: getApiHeaders()
         });
-        if (!response.ok) throw new Error('Failed to approve');
-        showRatingModal();
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to approve');
+        }
+        closeModal();
+        showToast('Order approved successfully!', 'success');
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
     } catch (error) {
-        showToast('Failed to approve order', 'error');
+        closeModal();
+        showToast(error.message || 'Failed to approve order', 'error');
     }
 }
 
@@ -389,8 +438,8 @@ function showRatingModal() {
     `;
 
     const stars = content.querySelectorAll('.rating-star');
-    const labelText = content.getElementById('rating-label-text');
-    const submitBtn = content.getElementById('submit-rating');
+    const labelText = document.getElementById('rating-label-text');
+    const submitBtn = document.getElementById('submit-rating');
 
     stars.forEach(star => {
         star.addEventListener('click', function() {
@@ -426,13 +475,13 @@ function showRatingModal() {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 
-    content.querySelector('#submit-rating').addEventListener('click', async function() {
-        const selectedRatingCount = content.querySelectorAll('.rating-star.selected').length;
+    document.getElementById('submit-rating').addEventListener('click', async function() {
+        const selectedRatingCount = document.querySelectorAll('#rating-stars .rating-star.selected').length;
         if (selectedRatingCount === 0) {
             showToast('Please select a rating', 'error');
             return;
         }
-        const feedback = content.querySelector('#rating-feedback').value.trim();
+        const feedback = document.getElementById('rating-feedback').value.trim();
         try {
             const response = await fetch(`/api/v1/client/orders/${orderId}/rate/`, {
                 method: 'POST',
@@ -442,12 +491,15 @@ function showRatingModal() {
                     feedback: feedback
                 })
             });
-            if (!response.ok) throw new Error('Failed to submit rating');
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to submit rating');
+            }
             closeModal();
             showToast('Thank you for your feedback!', 'success');
             setTimeout(() => window.location.href = '/client/orders/', 1500);
         } catch (error) {
-            showToast('Failed to submit rating', 'error');
+            showToast(error.message || 'Failed to submit rating', 'error');
         }
     });
 }
@@ -581,7 +633,7 @@ function displayOrder(order) {
                     <div class="detail-card">
                         <h2 class="text-lg font-bold text-gray-900 mb-4">Delivery Actions</h2>
                         <div class="flex flex-col sm:flex-row gap-3">
-                            <button onclick="approveOrder()" class="action-btn action-btn-primary">Approve Paper</button>
+                            <button onclick="showApproveConfirmModal()" class="action-btn action-btn-primary">Approve Paper</button>
                             <button onclick="showRevisionModal()" class="action-btn action-btn-secondary">Request Revision</button>
                         </div>
                         ${order.auto_approve_at ? `<p class="text-sm text-gray-500 text-center mt-4">Auto-approval in ${formatTimeRemaining(order.auto_approve_at)}</p>` : ''}
@@ -749,11 +801,14 @@ async function submitRating() {
                 feedback: feedback
             })
         });
-        if (!response.ok) throw new Error('Failed to submit rating');
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to submit rating');
+        }
         showToast('Thank you for your feedback!', 'success');
         setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
-        showToast('Failed to submit rating', 'error');
+        showToast(error.message || 'Failed to submit rating', 'error');
     }
 }
 

@@ -9,28 +9,45 @@
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         padding: 20px;
-        transition: box-shadow 0.2s ease;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
     }
     .metric-card:hover {
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transform: translateY(-2px);
+    }
+    .metric-card .icon-bg {
+        position: absolute;
+        right: -10px;
+        bottom: -10px;
+        font-size: 3.5rem;
+        opacity: 0.08;
+        color: #1e293b;
     }
     .metric-label {
         font-size: 0.7rem;
-        font-weight: 500;
+        font-weight: 600;
         color: #6b7280;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
         margin-bottom: 4px;
+        position: relative;
+        z-index: 1;
     }
     .metric-value {
         font-size: 1.5rem;
         font-weight: 700;
         color: #1e293b;
+        position: relative;
+        z-index: 1;
     }
     .metric-sub {
         font-size: 0.75rem;
         color: #6b7280;
         margin-top: 4px;
+        position: relative;
+        z-index: 1;
     }
     .metric-sub.positive { color: #059669; }
     .metric-sub.negative { color: #dc2626; }
@@ -40,6 +57,10 @@
         border-radius: 6px;
         font-size: 0.875rem;
         background: white;
+        cursor: pointer;
+    }
+    .page-size-select:hover {
+        border-color: #059669;
     }
     .status-badge {
         padding: 2px 10px;
@@ -54,6 +75,37 @@
     .status-badge.cancelled { background: #f3f4f6; color: #4b5563; }
     .status-badge.held { background: #e0e7ff; color: #3730a3; }
     .table-scroll { max-height: 400px; overflow-y: auto; }
+    .order-status-badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .order-status-badge.request { background: #fef3c7; color: #d97706; }
+    .order-status-badge.in_progress { background: #dbeafe; color: #2563eb; }
+    .order-status-badge.awaiting_approval { background: #ede9fe; color: #7c3aed; }
+    .order-status-badge.completed { background: #d1fae5; color: #059669; }
+    .order-status-badge.cancelled { background: #fee2e2; color: #dc2626; }
+    .order-status-badge.declined { background: #fee2e2; color: #dc2626; }
+    .order-status-badge.refund_pending { background: #fef3c7; color: #d97706; }
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    @media (max-width: 640px) {
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .metric-card {
+            padding: 14px;
+        }
+        .metric-value {
+            font-size: 1.2rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -62,33 +114,49 @@
     <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Finances</h1>
-            <p class="text-sm text-gray-500 mt-1">Transactions and refund management</p>
+            <p class="text-sm text-gray-500 mt-1">Revenue overview, transactions and refund management</p>
         </div>
         <div>
             <span class="text-xs text-gray-400" id="lastUpdated">Updating...</span>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="stat-grid mb-6">
         <div class="metric-card">
+            <span class="icon-bg"><i class="fas fa-dollar-sign"></i></span>
             <p class="metric-label">Total Revenue</p>
             <p class="metric-value" id="total-revenue">$0.00</p>
-            <p class="metric-sub" id="revenue-count">0 transactions</p>
+            <p class="metric-sub" id="revenue-count">0 completed orders</p>
         </div>
         <div class="metric-card">
-            <p class="metric-label">Total Deposits</p>
-            <p class="metric-value" id="total-deposits">$0.00</p>
-            <p class="metric-sub" id="deposits-count">0 deposits</p>
+            <span class="icon-bg"><i class="fas fa-clock"></i></span>
+            <p class="metric-label">Awaiting Approval</p>
+            <p class="metric-value" id="awaiting-approval">$0.00</p>
+            <p class="metric-sub" id="awaiting-count">0 orders</p>
         </div>
         <div class="metric-card">
+            <span class="icon-bg"><i class="fas fa-spinner"></i></span>
+            <p class="metric-label">In Progress</p>
+            <p class="metric-value" id="in-progress">$0.00</p>
+            <p class="metric-sub" id="in-progress-count">0 orders</p>
+        </div>
+        <div class="metric-card">
+            <span class="icon-bg"><i class="fas fa-undo-alt"></i></span>
             <p class="metric-label">Total Refunds</p>
             <p class="metric-value" id="total-refunds">$0.00</p>
             <p class="metric-sub" id="refunds-count">0 refunds</p>
         </div>
         <div class="metric-card">
-            <p class="metric-label">Average Transaction</p>
-            <p class="metric-value" id="avg-transaction">$0.00</p>
-            <p class="metric-sub" id="avg-count">0 transactions</p>
+            <span class="icon-bg"><i class="fas fa-file-alt"></i></span>
+            <p class="metric-label">Total Orders</p>
+            <p class="metric-value" id="total-orders">0</p>
+            <p class="metric-sub" id="orders-status-breakdown">Request: 0 | Completed: 0</p>
+        </div>
+        <div class="metric-card">
+            <span class="icon-bg"><i class="fas fa-chart-line"></i></span>
+            <p class="metric-label">Avg Order Value</p>
+            <p class="metric-value" id="avg-order">$0.00</p>
+            <p class="metric-sub" id="avg-count">Based on completed orders</p>
         </div>
     </div>
 
@@ -155,9 +223,12 @@
     </div>
 
     <div class="bg-white border border-gray-200 rounded-lg p-5">
-        <h4 class="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100">Refund Requests</h4>
+        <div class="flex flex-wrap justify-between items-center gap-3 mb-3 pb-2 border-b border-gray-100">
+            <h4 class="font-semibold text-gray-800">Refund Requests</h4>
+            <span class="text-xs text-gray-400" id="refund-count">0 requests</span>
+        </div>
         <div id="refund-list" class="space-y-2">
-            <p class="text-sm text-gray-400">Loading...</p>
+            <p class="text-sm text-gray-400 text-center py-4">Loading...</p>
         </div>
     </div>
 </div>
@@ -170,8 +241,6 @@ var txnPageSize = 200;
 var txnTotalPages = 1;
 var txnTotal = 0;
 var autoRefreshTimer = null;
-var retryCount = 0;
-var maxRetries = 3;
 
 function getCsrfToken() {
     var token = document.querySelector('[name=csrf-token]')?.content;
@@ -222,30 +291,86 @@ function formatCurrency(value) {
     return '$' + parseFloat(value || 0).toFixed(2);
 }
 
-function showError(containerId, message) {
-    var container = document.getElementById(containerId);
-    if (container) {
-        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">' + message + '</div>';
-    }
-}
-
-function showRetry(containerId, retryFn) {
-    var container = document.getElementById(containerId);
-    if (container) {
-        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">Unable to load. <button onclick="' + retryFn + '()" class="text-green-600 hover:text-green-700 font-medium">Try again</button></div>';
-    }
-}
-
 async function loadAllData() {
-    retryCount = 0;
     try {
         await Promise.all([
+            loadStats(),
             loadTransactions(),
             loadRefunds()
         ]);
         document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
     } catch (error) {
         console.error('Failed to load financial data:', error);
+    }
+}
+
+async function loadStats() {
+    try {
+        var ordersResponse = await fetch(API_BASE + '/orders/?page_size=1000', {
+            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
+            credentials: 'include'
+        });
+        
+        if (!ordersResponse.ok) return;
+        var ordersData = await ordersResponse.json();
+        var allOrders = ordersData.results || [];
+        var total = ordersData.total || 0;
+
+        var totalRevenue = 0;
+        var awaitingRevenue = 0;
+        var inProgressRevenue = 0;
+        var refundsTotal = 0;
+        var refundCount = 0;
+        var completedOrders = 0;
+        var pendingOrders = 0;
+        var inProgressOrders = 0;
+        var awaitingOrders = 0;
+        var cancelledOrders = 0;
+        var declinedOrders = 0;
+
+        allOrders.forEach(function(o) {
+            var price = parseFloat(o.total_price) || 0;
+            
+            if (o.status === 'completed') {
+                totalRevenue += price;
+                completedOrders++;
+            } else if (o.status === 'awaiting_approval') {
+                awaitingRevenue += price;
+                awaitingOrders++;
+            } else if (o.status === 'in_progress') {
+                inProgressRevenue += price;
+                inProgressOrders++;
+            } else if (o.status === 'request') {
+                pendingOrders++;
+            } else if (o.status === 'cancelled') {
+                cancelledOrders++;
+                refundsTotal += price;
+                refundCount++;
+            } else if (o.status === 'declined') {
+                declinedOrders++;
+                refundsTotal += price;
+                refundCount++;
+            } else if (o.status === 'refund_pending') {
+                refundsTotal += price;
+                refundCount++;
+            }
+        });
+
+        document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
+        document.getElementById('revenue-count').textContent = completedOrders + ' completed orders';
+        document.getElementById('awaiting-approval').textContent = formatCurrency(awaitingRevenue);
+        document.getElementById('awaiting-count').textContent = awaitingOrders + ' orders';
+        document.getElementById('in-progress').textContent = formatCurrency(inProgressRevenue);
+        document.getElementById('in-progress-count').textContent = inProgressOrders + ' orders';
+        document.getElementById('total-refunds').textContent = formatCurrency(refundsTotal);
+        document.getElementById('refunds-count').textContent = refundCount + ' refunds';
+        document.getElementById('total-orders').textContent = total;
+        document.getElementById('orders-status-breakdown').textContent = 'Request: ' + pendingOrders + ' | Completed: ' + completedOrders + ' | Cancelled: ' + cancelledOrders;
+        document.getElementById('avg-order').textContent = completedOrders > 0 ? formatCurrency(totalRevenue / completedOrders) : '$0.00';
+        document.getElementById('avg-count').textContent = 'Based on ' + completedOrders + ' completed orders';
+
+    } catch (error) {
+        console.error('Stats error:', error);
     }
 }
 
@@ -267,45 +392,22 @@ async function loadTransactions() {
             credentials: 'include'
         });
         
-        if (response.status === 500) {
-            container.innerHTML = '<tr><td colspan="8" class="px-3 py-6 text-center text-gray-400">Server error. Please try again later.</td></tr>';
-            return;
-        }
-        
         if (!response.ok) {
             container.innerHTML = '<tr><td colspan="8" class="px-3 py-6 text-center text-gray-400">No transactions found</td></tr>';
             return;
         }
         
         var data = await response.json();
-
         txnTotal = data.total || 0;
         txnTotalPages = Math.ceil(txnTotal / txnPageSize) || 1;
 
         displayTransactions(data.results || []);
         updateTransactionPagination();
-        updateStats(data);
 
     } catch (error) {
         console.error('Transactions error:', error);
         container.innerHTML = '<tr><td colspan="8" class="px-3 py-6 text-center text-gray-400">Unable to load transactions</td></tr>';
     }
-}
-
-function updateStats(data) {
-    var totalAmount = data.total_amount || 0;
-    var deposits = data.deposits_total || 0;
-    var refunds = data.refunds_total || 0;
-    var count = data.total || 0;
-
-    document.getElementById('total-revenue').textContent = formatCurrency(totalAmount);
-    document.getElementById('revenue-count').textContent = count + ' transactions';
-    document.getElementById('total-deposits').textContent = formatCurrency(deposits);
-    document.getElementById('deposits-count').textContent = (data.deposit_count || 0) + ' deposits';
-    document.getElementById('total-refunds').textContent = formatCurrency(refunds);
-    document.getElementById('refunds-count').textContent = (data.refund_count || 0) + ' refunds';
-    document.getElementById('avg-transaction').textContent = count > 0 ? formatCurrency(totalAmount / count) : '$0.00';
-    document.getElementById('avg-count').textContent = count > 0 ? count + ' transactions' : '0 transactions';
 }
 
 function displayTransactions(transactions) {
@@ -319,15 +421,16 @@ function displayTransactions(transactions) {
         var typeClass = { deposit: 'bg-green-100 text-green-700', hold: 'bg-yellow-100 text-yellow-700', release: 'bg-blue-100 text-blue-700', settle: 'bg-blue-100 text-blue-700', refund: 'bg-orange-100 text-orange-700', withdrawal: 'bg-purple-100 text-purple-700', adjustment: 'bg-gray-100 text-gray-700' }[t.type] || 'bg-gray-100 text-gray-700';
         var statusClass = { completed: 'bg-green-100 text-green-700', pending: 'bg-yellow-100 text-yellow-700', processing: 'bg-blue-100 text-blue-700', failed: 'bg-red-100 text-red-700', cancelled: 'bg-gray-100 text-gray-700' }[t.status] || 'bg-gray-100 text-gray-700';
         var userName = t.user_name || t.user_email || t.user || 'N/A';
-        var orderLink = t.order_id ? '<a href="' + API_BASE + '/orders/' + t.order_id + '/" class="text-green-600 hover:text-green-700">#' + (t.order_number || 'N/A') + '</a>' : 'N/A';
+        var orderLink = t.order_id ? '<a href="/admin/orders/' + t.order_id + '/" class="text-green-600 hover:text-green-700">#' + (t.order_number || 'N/A') + '</a>' : 'N/A';
+        var amount = parseFloat(t.amount) || 0;
         
         return '<tr class="hover:bg-gray-50">' +
-            '<td class="px-3 py-2 text-xs font-mono text-gray-500">' + (t.transaction_id || t.id || 'N/A') + '</td>' +
+            '<td class="px-3 py-2 text-xs font-mono text-gray-500">' + (t.transaction_id || t.id || 'N/A').substring(0, 8) + '</td>' +
             '<td class="px-3 py-2 text-xs text-gray-400">' + new Date(t.created_at).toLocaleString() + '</td>' +
-            '<td class="px-3 py-2 text-sm text-gray-700">' + userName + '</td>' +
-            '<td class="px-3 py-2 text-sm text-gray-600">' + (t.description || '') + '</td>' +
+            '<td class="px-3 py-2 text-sm text-gray-700 max-w-[100px] truncate" title="' + userName + '">' + userName + '</td>' +
+            '<td class="px-3 py-2 text-sm text-gray-600 max-w-[120px] truncate" title="' + (t.description || '') + '">' + (t.description || '') + '</td>' +
             '<td class="px-3 py-2"><span class="px-2 py-0.5 text-xs rounded-full ' + typeClass + '">' + t.type + '</span></td>' +
-            '<td class="px-3 py-2 text-sm font-medium ' + (parseFloat(t.amount) >= 0 ? 'text-green-600' : 'text-red-600') + '">' + (parseFloat(t.amount) >= 0 ? '+' : '') + formatCurrency(t.amount) + '</td>' +
+            '<td class="px-3 py-2 text-sm font-medium ' + (amount >= 0 ? 'text-green-600' : 'text-red-600') + '">' + (amount >= 0 ? '+' : '') + formatCurrency(amount) + '</td>' +
             '<td class="px-3 py-2"><span class="px-2 py-0.5 text-xs rounded-full ' + statusClass + '">' + t.status + '</span></td>' +
             '<td class="px-3 py-2 text-xs text-gray-500">' + orderLink + '</td>' +
             '</tr>';
@@ -352,18 +455,15 @@ async function loadRefunds() {
             credentials: 'include'
         });
         
-        if (response.status === 500) {
-            container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Server error. Please try again later.</p>';
-            return;
-        }
-        
         if (!response.ok) {
             container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">No refund requests</p>';
             return;
         }
         
         var data = await response.json();
-        displayRefunds(data.results || data || []);
+        var refunds = data.results || data || [];
+        document.getElementById('refund-count').textContent = refunds.length + ' requests';
+        displayRefunds(refunds);
     } catch (error) {
         console.error('Refunds error:', error);
         container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Unable to load refunds</p>';
@@ -376,11 +476,29 @@ function displayRefunds(refunds) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">No refund requests</p>';
         return;
     }
-    container.innerHTML = refunds.slice(0, 10).map(function(r) {
+    container.innerHTML = refunds.slice(0, 15).map(function(r) {
         var refundId = r.id || '';
         var orderNumber = r.order_number || 'N/A';
         var amount = r.total_price || r.amount || 0;
-        return '<div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-50"><span class="text-gray-600">#' + orderNumber + '</span><span class="font-medium text-gray-800">' + formatCurrency(amount) + '</span><a href="' + API_BASE + '/refunds/' + refundId + '/" class="text-green-600 hover:text-green-700 text-xs">Review</a></div>';
+        var reason = r.refund_reason || 'No reason provided';
+        var date = r.created_at || r.updated_at || '';
+        var status = r.status || 'pending';
+        var statusClass = { pending: 'bg-yellow-100 text-yellow-700', approved: 'bg-green-100 text-green-700', denied: 'bg-red-100 text-red-700', processed: 'bg-blue-100 text-blue-700' }[status] || 'bg-gray-100 text-gray-700';
+        var clientName = r.client_name || r.client?.full_name || 'N/A';
+        
+        return '<div class="flex flex-wrap justify-between items-center text-sm py-2 border-b border-gray-50 hover:bg-gray-50 px-2 rounded">' +
+            '<div class="flex items-center gap-3 flex-wrap">' +
+                '<span class="font-medium text-gray-700">#' + orderNumber + '</span>' +
+                '<span class="text-gray-500">' + clientName + '</span>' +
+                '<span class="text-gray-400 text-xs">' + (date ? new Date(date).toLocaleDateString() : '') + '</span>' +
+                '<span class="text-xs text-gray-500 max-w-[200px] truncate" title="' + reason + '">' + reason.substring(0, 50) + (reason.length > 50 ? '...' : '') + '</span>' +
+            '</div>' +
+            '<div class="flex items-center gap-3 flex-wrap">' +
+                '<span class="font-medium text-gray-800">' + formatCurrency(amount) + '</span>' +
+                '<span class="px-2 py-0.5 text-xs rounded-full ' + statusClass + '">' + status + '</span>' +
+                '<a href="/admin/refunds/' + refundId + '/" class="text-green-600 hover:text-green-700 text-xs font-medium">Review</a>' +
+            '</div>' +
+            '</div>';
     }).join('');
 }
 </script>

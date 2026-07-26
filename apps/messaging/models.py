@@ -40,7 +40,7 @@ class Conversation(models.Model):
         if not self.is_participant(user):
             return 0
         last_seen = self.client_last_seen if user == self.client else self.admin_last_seen
-        qs = self.messages.exclude(sender=user).filter(is_recalled=False)
+        qs = self.messages.exclude(sender=user)
         if last_seen:
             qs = qs.filter(created_at__gt=last_seen)
         return qs.count()
@@ -60,14 +60,12 @@ class Message(models.Model):
     FILE = 'file'
     SYSTEM = 'system'
     EDITED = 'edited'
-    RECALLED = 'recalled'
 
     MESSAGE_TYPES = [
         (TEXT, 'text'),
         (FILE, 'file'),
         (SYSTEM, 'system'),
         (EDITED, 'edited'),
-        (RECALLED, 'recalled'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -80,8 +78,6 @@ class Message(models.Model):
     file_size = models.IntegerField(null=True, blank=True)
     is_edited = models.BooleanField(default=False)
     edited_at = models.DateTimeField(null=True, blank=True)
-    is_recalled = models.BooleanField(default=False)
-    recalled_at = models.DateTimeField(null=True, blank=True)
     is_read = models.BooleanField(default=False)
     read_at = models.DateTimeField(null=True, blank=True)
     is_delivered = models.BooleanField(default=False)
@@ -96,21 +92,15 @@ class Message(models.Model):
             models.Index(fields=['conversation', 'created_at']),
             models.Index(fields=['conversation', 'is_read']),
             models.Index(fields=['sender', 'created_at']),
-            models.Index(fields=['is_recalled']),
         ]
 
     def __str__(self):
-        return f'Message {self.id} in {self.conversation_id}'
+        return self.content[:50] + '...' if len(self.content) > 50 else self.content
 
     def can_edit(self, user):
-        if self.sender_id != user.id or self.is_recalled:
+        if self.sender_id != user.id:
             return False
         return timezone.now() - self.created_at <= timezone.timedelta(minutes=5)
-
-    def can_recall(self, user):
-        if self.sender_id != user.id or self.is_recalled:
-            return False
-        return timezone.now() - self.created_at <= timezone.timedelta(minutes=1)
 
     def can_delete(self, user):
         if self.sender_id != user.id:
@@ -134,13 +124,6 @@ class Message(models.Model):
         self.is_edited = True
         self.edited_at = timezone.now()
         self.save(update_fields=['content', 'is_edited', 'edited_at'])
-
-    def recall(self):
-        self.is_recalled = True
-        self.recalled_at = timezone.now()
-        self.content = 'This message was recalled'
-        self.message_type = self.RECALLED
-        self.save(update_fields=['is_recalled', 'recalled_at', 'content', 'message_type'])
 
 
 class MessageStatus(models.Model):

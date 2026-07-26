@@ -874,16 +874,6 @@
         {% if user.is_authenticated and user.role == 'admin' %}
         <main class="main-content">
             <div class="container">
-                {% if messages %}
-                    <div class="mb-4 sm:mb-6">
-                        {% for message in messages %}
-                            <div class="p-2.5 sm:p-3 text-xs sm:text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-
                 {% block content %}{% endblock %}
             </div>
         </main>

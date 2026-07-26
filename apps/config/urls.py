@@ -16,7 +16,7 @@ urlpatterns = [
     path('reset-password/<str:token>/', views.reset_password, name='reset-password'),
     
     path('about/', views.about, name='about'),
-    path('about/stats/', views.about_stats, name='about-stats'),
+    path('api/about/stats/', views.about_stats, name='about-stats'),
     path('services/', views.services, name='services'),
     path('samples/', views.samples, name='samples'),
     path('samples/<uuid:sample_id>/download/', views.download_sample, name='download-sample'),
@@ -54,6 +54,7 @@ urlpatterns = [
     
     path('admin/dashboard/', views.admin_dashboard, name='admin-dashboard'),
     path('admin/orders/', views.admin_orders, name='admin-orders'),
+    path('admin/orders/<uuid:order_id>/', admin_order_detail, name='admin-order-detail'),
     path('admin/users/', views.admin_users, name='admin-users'),
     path('admin/finances/', views.admin_finances, name='admin-finances'),
     path('admin/refunds/', views.admin_refunds, name='admin-refunds'),
@@ -77,8 +78,6 @@ urlpatterns = [
     path('admin/profile/', views.admin_profile, name='admin-profile'),
     path('admin/notifications/', views.admin_notifications, name='admin-notifications'),
     
-    path('admin/orders/<uuid:order_id>/', admin_order_detail, name='admin-order-detail'),
-    
     path('admin/', admin.site.urls),
     
     path('auth/', include(('apps.accounts.urls', 'accounts'), namespace='accounts-web')),
@@ -87,14 +86,16 @@ urlpatterns = [
     
     path('api/v1/admin/', include('apps.admin_portal.urls')),
     path('api/v1/messaging/', include('apps.messaging.urls')),
-    
     path('api/v1/orders/', include('apps.orders.urls')),
     path('api/v1/wallet/', include('apps.payments.urls')),
     
     path('api/v1/client/counts/', views.client_counts, name='client-counts'),
-    path('api/v1/client/wallet/', views.client_wallet_data, name='client-wallet-data'),
     path('api/v1/client/orders/', views.client_orders_data, name='client-orders-data'),
     path('api/v1/client/orders/<uuid:order_id>/', views.client_order_detail_data, name='client-order-detail-data'),
+    path('api/v1/client/orders/<uuid:order_id>/cancel/', views.client_cancel_order, name='client-cancel-order'),
+    path('api/v1/client/orders/<uuid:order_id>/approve/', views.client_approve_order, name='client-approve-order'),
+    path('api/v1/client/orders/<uuid:order_id>/revision/', views.client_request_revision, name='client-request-revision'),
+    path('api/v1/client/orders/<uuid:order_id>/rate/', views.client_rate_order, name='client-rate-order'),
     
     path('api/v1/admin/counts/', views.admin_counts, name='admin-counts'),
 ]

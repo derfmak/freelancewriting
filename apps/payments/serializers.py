@@ -153,6 +153,8 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
     is_expired = serializers.BooleanField(read_only=True)
     brand_display = serializers.CharField(source='get_card_brand_display', read_only=True)
     expiry_display = serializers.SerializerMethodField()
+    payment_type = serializers.SerializerMethodField()
+    is_paypal = serializers.SerializerMethodField()
 
     class Meta:
         model = PaymentMethod
@@ -163,35 +165,95 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
             'expiry_display', 'is_expired',
             'is_default', 'is_active', 'is_valid',
             'last_used_at', 'card_display',
+            'payment_type', 'is_paypal',
+            'paypal_email', 'paypal_account_type', 'paypal_verified',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def get_card_display(self, obj):
+        if obj.paypal_email:
+            return f"PayPal: {obj.paypal_email}"
         return obj.mask_card()
 
     def get_expiry_display(self, obj):
+        if obj.paypal_email:
+            return 'N/A'
         return f"{obj.expiry_month:02d}/{obj.expiry_year}"
+
+    def get_payment_type(self, obj):
+        if obj.paypal_email:
+            return 'paypal'
+        return 'card'
+
+    def get_is_paypal(self, obj):
+        return bool(obj.paypal_email)
 
 
 class AddPaymentMethodSerializer(serializers.Serializer):
-    provider_method_id = serializers.CharField()
-    last_four = serializers.CharField(min_length=4, max_length=4)
-    card_brand = serializers.ChoiceField(choices=PaymentMethod.CARD_BRANDS)
-    cardholder_name = serializers.CharField(max_length=255)
-    expiry_month = serializers.IntegerField(min_value=1, max_value=12)
-    expiry_year = serializers.IntegerField(min_value=2024, max_value=2100)
+    provider_method_id = serializers.CharField(required=False, allow_blank=True)
+    last_four = serializers.CharField(min_length=4, max_length=4, required=False, allow_blank=True)
+    card_brand = serializers.ChoiceField(choices=PaymentMethod.CARD_BRANDS, required=False, allow_blank=True)
+    cardholder_name = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    expiry_month = serializers.IntegerField(min_value=1, max_value=12, required=False)
+    expiry_year = serializers.IntegerField(min_value=2024, max_value=2100, required=False)
     set_default = serializers.BooleanField(default=False, required=False)
+    payment_type = serializers.ChoiceField(choices=['card', 'paypal'], default='card')
+    paypal_email = serializers.EmailField(required=False, allow_blank=True)
+    paypal_account_type = serializers.ChoiceField(choices=PaymentMethod.PAYPAL_ACCOUNT_TYPES, default='personal', required=False)
 
     def validate(self, data):
-        month = data.get('expiry_month')
-        year = data.get('expiry_year')
-        now = timezone.now()
+        payment_type = data.get('payment_type', 'card')
         
-        if year < now.year or (year == now.year and month < now.month):
-            raise serializers.ValidationError('Card has expired')
+        if payment_type == 'paypal':
+            if not data.get('paypal_email'):
+                raise serializers.ValidationError('PayPal email is required')
+        else:
+            required = ['last_four', 'card_brand', 'cardholder_name', 'expiry_month', 'expiry_year']
+            missing = [f for f in required if not data.get(f)]
+            if missing:
+                raise serializers.ValidationError(f'Missing card details: {", ".join(missing)}')
+            
+            month = data.get('expiry_month')
+            year = data.get('expiry_year')
+            now = timezone.now()
+            
+            if year < now.year or (year == now.year and month < now.month):
+                raise serializers.ValidationError('Card has expired')
         
         return data
+
+
+class AddPayPalMethodSerializer(serializers.Serializer):
+    paypal_email = serializers.EmailField(required=True)
+    paypal_account_type = serializers.ChoiceField(choices=PaymentMethod.PAYPAL_ACCOUNT_TYPES, default='personal')
+    set_default = serializers.BooleanField(default=False)
+
+
+class PayPalDepositSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=5, max_value=10000)
+    paypal_email = serializers.EmailField(required=False)
+    idempotency_key = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_amount(self, value):
+        if value < 5:
+            raise serializers.ValidationError('Minimum deposit amount is $5.00')
+        if value > 10000:
+            raise serializers.ValidationError('Maximum deposit amount is $10,000.00')
+        return value
+
+
+class PayPalWithdrawSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=10, max_value=5000)
+    paypal_email = serializers.EmailField(required=True)
+    idempotency_key = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_amount(self, value):
+        if value < 10:
+            raise serializers.ValidationError('Minimum withdrawal amount is $10.00')
+        if value > 5000:
+            raise serializers.ValidationError('Maximum withdrawal amount is $5,000.00')
+        return value
 
 
 class PayoutSerializer(serializers.ModelSerializer):
@@ -199,6 +261,7 @@ class PayoutSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     fee_display = serializers.SerializerMethodField()
     net_display = serializers.SerializerMethodField()
+    payment_method_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Payout
@@ -207,8 +270,8 @@ class PayoutSerializer(serializers.ModelSerializer):
             'fee_amount', 'fee_display', 'fee_percentage',
             'net_amount', 'net_display',
             'status', 'status_display',
-            'payment_method', 'account_details',
-            'metadata', 'provider_payout_id',
+            'payment_method', 'payment_method_display',
+            'account_details', 'metadata', 'provider_payout_id',
             'approved_at', 'approved_by',
             'rejection_reason',
             'created_at', 'updated_at', 'completed_at'
@@ -229,6 +292,12 @@ class PayoutSerializer(serializers.ModelSerializer):
         if obj.net_amount:
             return f"${obj.net_amount:.2f}"
         return None
+
+    def get_payment_method_display(self, obj):
+        if obj.payment_method == 'paypal':
+            email = obj.account_details.get('email', 'N/A')
+            return f"PayPal ({email})"
+        return obj.payment_method.title()
 
 
 class OrderPaymentSerializer(serializers.ModelSerializer):
@@ -295,6 +364,7 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     is_expired = serializers.BooleanField(read_only=True)
     next_action_display = serializers.SerializerMethodField()
+    payment_method_type = serializers.SerializerMethodField()
 
     class Meta:
         model = PaymentIntent
@@ -303,7 +373,8 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
             'currency', 'status', 'status_display',
             'client_secret', 'return_url',
             'metadata', 'next_action', 'next_action_display',
-            'is_expired', 'created_at', 'updated_at', 'expires_at'
+            'is_expired', 'payment_method_type',
+            'created_at', 'updated_at', 'expires_at'
         ]
         read_only_fields = [
             'id', 'intent_id', 'client_secret', 'created_at', 'updated_at', 'expires_at'
@@ -320,6 +391,11 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
             elif action_type == 'use_stripe_sdk':
                 return 'Use Stripe SDK'
         return None
+
+    def get_payment_method_type(self, obj):
+        if obj.metadata and obj.metadata.get('paypal_payment_id'):
+            return 'paypal'
+        return 'stripe'
 
 
 class FraudCheckSerializer(serializers.ModelSerializer):
@@ -379,6 +455,9 @@ class PaymentStatsSerializer(serializers.Serializer):
     pending_count = serializers.IntegerField()
     processing_count = serializers.IntegerField()
     failed_count = serializers.IntegerField()
+    paypal_deposits = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+    paypal_withdrawals = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+    stripe_deposits = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
 class WebhookSerializer(serializers.Serializer):
