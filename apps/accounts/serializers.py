@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
-import secrets
-import string
 from .models import User, PendingUser, LoginLog
+
 
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -121,6 +120,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return value
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'full_name', 'role', 'is_active',
+            'email_verified', 'phone_verified', 'institution',
+            'phone', 'last_login', 'date_joined', 'created_at'
+        ]
+        read_only_fields = ['id', 'email', 'last_login', 'date_joined', 'created_at']
+
+
 class LoginLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoginLog
@@ -141,5 +151,5 @@ class UserListSerializer(serializers.ModelSerializer):
 class PendingUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = PendingUser
-        fields = ['id', 'email', 'full_name', 'phone', 'institution', 'created_at', 'expires_at']
-        read_only_fields = ['id', 'created_at', 'expires_at']
+        fields = ['id', 'email', 'full_name', 'phone', 'institution', 'created_at', 'otp_expires']
+        read_only_fields = ['id', 'created_at', 'otp_expires']

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="view-transition" content="same-origin">
     <title>{% block title %}Client Portal - AcademicWrite{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -14,11 +15,21 @@
             box-sizing: border-box;
         }
 
+        html {
+            background: #f8fafc;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f8fafc;
             color: #1e293b;
             line-height: 1.6;
+        }
+
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 0.16s;
+            animation-timing-function: ease;
         }
 
         .container {
@@ -40,6 +51,7 @@
             z-index: 50;
             box-shadow: 0 4px 20px rgba(5, 150, 105, 0.25);
             width: 100%;
+            view-transition-name: client-header;
         }
 
         .header-content {
@@ -116,46 +128,78 @@
             padding: 0.4rem 0.7rem;
             transition: all 0.3s ease;
             white-space: nowrap;
-            border-radius: 4px;
+            border-radius: 6px;
             position: relative;
             display: flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.4rem;
         }
 
         @media (min-width: 1280px) {
             .client-nav a {
                 font-size: 0.85rem;
-                padding: 0.5rem 1rem;
+                padding: 0.5rem 1.2rem;
+                gap: 0.5rem;
             }
         }
 
         .client-nav a:hover {
             color: white;
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
         }
 
         .client-nav a.active {
             color: white;
-            background: rgba(255, 255, 255, 0.18);
-            border-bottom: 2px solid #fbbf24;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .client-nav a.active:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .client-nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: #fbbf24;
+            border-radius: 2px;
         }
 
         .client-nav a .nav-badge {
             position: absolute;
-            top: -4px;
-            right: -4px;
+            top: -6px;
+            right: -6px;
             background: #ef4444;
             color: white;
             font-size: 0.5rem;
             font-weight: 600;
-            min-width: 1rem;
-            height: 1rem;
+            min-width: 1.1rem;
+            height: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
             border: 2px solid #059669;
+            line-height: 1;
+            padding: 0 2px;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.5);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        .client-nav a .nav-badge.show {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         .auth-section {
@@ -179,7 +223,7 @@
             color: white;
             cursor: pointer;
             transition: all 0.3s ease;
-            border-radius: 4px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -192,8 +236,13 @@
         }
 
         .notification-bell:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .notification-bell:active {
+            transform: scale(0.95);
         }
 
         .notification-badge {
@@ -211,6 +260,19 @@
             justify-content: center;
             border: 2px solid #059669;
             border-radius: 50%;
+            line-height: 1;
+            padding: 0 2px;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.5);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        .notification-badge.show {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         .user-menu {
@@ -224,7 +286,7 @@
             padding: 0.3rem 0.6rem;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -237,7 +299,13 @@
         }
 
         .user-profile:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .user-profile:active {
+            transform: scale(0.97);
         }
 
         .profile-image {
@@ -307,10 +375,11 @@
             box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
             opacity: 0;
             visibility: hidden;
-            transform: translateY(-0.5rem);
-            transition: all 0.3s ease;
+            transform: translateY(-0.5rem) scale(0.98);
+            transition: all 0.25s ease;
             z-index: 100;
-            border-radius: 4px;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         @media (min-width: 768px) {
@@ -322,23 +391,24 @@
         .user-menu-dropdown.show {
             opacity: 1;
             visibility: visible;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
 
         .user-menu-item {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
             padding: 0.6rem 1rem;
             color: #1e293b;
             text-decoration: none;
             font-size: 0.8rem;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            cursor: pointer;
         }
 
         @media (min-width: 768px) {
             .user-menu-item {
-                padding: 0.75rem 1rem;
+                padding: 0.75rem 1.2rem;
                 font-size: 0.85rem;
             }
         }
@@ -346,12 +416,38 @@
         .user-menu-item:hover {
             background: #ecfdf5;
             color: #059669;
+            padding-left: 1.3rem;
+        }
+
+        .user-menu-item i {
+            width: 1.1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #6b7280;
+            transition: color 0.2s ease;
+        }
+
+        .user-menu-item:hover i {
+            color: #059669;
         }
 
         .user-menu-divider {
             height: 1px;
             background: #e2e8f0;
             margin: 0.3rem 0;
+        }
+
+        .user-menu-item.logout-item {
+            color: #dc2626;
+        }
+
+        .user-menu-item.logout-item:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .user-menu-item.logout-item:hover i {
+            color: #dc2626;
         }
 
         .mobile-menu-button {
@@ -363,7 +459,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.85rem;
-            border-radius: 4px;
+            border-radius: 8px;
         }
 
         @media (min-width: 1024px) {
@@ -373,8 +469,13 @@
         }
 
         .mobile-menu-button:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .mobile-menu-button:active {
+            transform: scale(0.95);
         }
 
         .mobile-menu {
@@ -386,7 +487,7 @@
             background: white;
             padding: 1rem;
             transform: translateX(-100%);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 40;
             overflow-y: auto;
             border-top: 2px solid #059669;
@@ -411,6 +512,7 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
         }
 
         .mobile-overlay.show {
@@ -430,23 +532,25 @@
             font-weight: 500;
             font-size: 0.9rem;
             padding: 0.7rem 1rem;
-            transition: all 0.3s ease;
-            border-radius: 4px;
+            transition: all 0.2s ease;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            position: relative;
         }
 
         @media (min-width: 768px) {
             .mobile-nav a {
                 font-size: 0.95rem;
-                padding: 0.75rem 1rem;
+                padding: 0.75rem 1.2rem;
             }
         }
 
         .mobile-nav a:hover {
             background: #ecfdf5;
             color: #059669;
+            padding-left: 1.5rem;
         }
 
         .mobile-nav a.active {
@@ -455,10 +559,47 @@
             border-left: 3px solid #059669;
         }
 
+        .mobile-nav a.active:hover {
+            background: #d1fae5;
+            padding-left: 1.5rem;
+        }
+
         .mobile-nav a i {
             width: 1.3rem;
             text-align: center;
             font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .mobile-nav a:hover i {
+            color: #059669;
+        }
+
+        .mobile-nav a .nav-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.9rem;
+            background: #ef4444;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 600;
+            min-width: 1.2rem;
+            height: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            line-height: 1;
+            padding: 0 3px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        .mobile-nav a .nav-badge.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.2s ease;
         }
 
         .mobile-divider {
@@ -475,7 +616,7 @@
             margin-top: 0.5rem;
             background: #ef4444;
             color: white;
-            border-radius: 4px;
+            border-radius: 8px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -483,6 +624,11 @@
 
         .mobile-logout:hover {
             background: #dc2626;
+            transform: translateX(4px);
+        }
+
+        .mobile-logout:active {
+            transform: scale(0.97);
         }
 
         .mobile-logout i {
@@ -534,6 +680,14 @@
             gap: 0.6rem;
             font-size: 0.85rem;
             color: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+        }
+
+        .footer-info-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         @media (max-width: 640px) {
@@ -577,11 +731,11 @@
 
         .toast {
             background: white;
-            border-radius: 4px;
+            border-radius: 8px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
             margin-bottom: 0.75rem;
             overflow: hidden;
-            animation: slideIn 0.3s ease;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .toast-content {
@@ -633,22 +787,22 @@
 
         @keyframes slideIn {
             from {
-                transform: translateX(100%);
+                transform: translateX(100%) scale(0.9);
                 opacity: 0;
             }
             to {
-                transform: translateX(0);
+                transform: translateX(0) scale(1);
                 opacity: 1;
             }
         }
 
         @keyframes slideOut {
             from {
-                transform: translateX(0);
+                transform: translateX(0) scale(1);
                 opacity: 1;
             }
             to {
-                transform: translateX(100%);
+                transform: translateX(100%) scale(0.9);
                 opacity: 0;
             }
         }
@@ -673,6 +827,21 @@
                 padding: 0.3rem 0.5rem;
             }
         }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -692,7 +861,7 @@
                         <a href="/client/orders/" class="{% if request.path == '/client/orders/' %}active{% endif %}">
                             <i class="fas fa-file-alt" aria-hidden="true"></i>
                             <span>My Orders</span>
-                            <span class="nav-badge" id="ordersBadge" style="display:none;">0</span>
+                            <span class="nav-badge" id="ordersBadge">0</span>
                         </a>
                         <a href="/client/orders/new/" class="{% if request.path == '/client/orders/new/' %}active{% endif %}">
                             <i class="fas fa-plus" aria-hidden="true"></i>
@@ -705,14 +874,14 @@
                         <a href="/client/messages/" class="{% if request.path == '/client/messages/' %}active{% endif %}">
                             <i class="fas fa-envelope" aria-hidden="true"></i>
                             <span>Messages</span>
-                            <span class="nav-badge" id="messagesBadge" style="display:none;">0</span>
+                            <span class="nav-badge" id="messagesBadge">0</span>
                         </a>
                     </nav>
 
                     <div class="auth-section">
                         <button class="notification-bell" id="notificationBell" aria-label="Notifications">
                             <i class="fas fa-bell" aria-hidden="true"></i>
-                            <span class="notification-badge hidden" id="notificationBadge">0</span>
+                            <span class="notification-badge" id="notificationBadge">0</span>
                         </button>
 
                         <div class="user-menu">
@@ -732,10 +901,16 @@
                             </div>
 
                             <div class="user-menu-dropdown" id="userMenuDropdown" role="menu">
-                                <a href="/client/profile/" class="user-menu-item" role="menuitem"><i class="fas fa-user" aria-hidden="true"></i> Profile</a>
-                                <a href="/client/settings/" class="user-menu-item" role="menuitem"><i class="fas fa-cog" aria-hidden="true"></i> Settings</a>
+                                <a href="/client/profile/" class="user-menu-item" role="menuitem">
+                                    <i class="fas fa-user" aria-hidden="true"></i> Profile
+                                </a>
+                                <a href="/client/settings/" class="user-menu-item" role="menuitem">
+                                    <i class="fas fa-cog" aria-hidden="true"></i> Settings
+                                </a>
                                 <div class="user-menu-divider" role="separator"></div>
-                                <a href="#" class="user-menu-item" id="logoutBtn" role="menuitem"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout</a>
+                                <a href="#" class="user-menu-item logout-item" id="logoutBtn" role="menuitem">
+                                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+                                </a>
                             </div>
                         </div>
 
@@ -751,11 +926,11 @@
 
         <div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Mobile navigation">
             <nav class="mobile-nav">
-                <a href="/client/dashboard/"><i class="fas fa-th-large" aria-hidden="true"></i> Dashboard</a>
-                <a href="/client/orders/"><i class="fas fa-file-alt" aria-hidden="true"></i> My Orders</a>
-                <a href="/client/orders/new/"><i class="fas fa-plus" aria-hidden="true"></i> New Order</a>
-                <a href="/client/wallet/"><i class="fas fa-wallet" aria-hidden="true"></i> Wallet</a>
-                <a href="/client/messages/"><i class="fas fa-envelope" aria-hidden="true"></i> Messages</a>
+                <a href="/client/dashboard/" class="{% if request.path == '/client/dashboard/' %}active{% endif %}"><i class="fas fa-th-large" aria-hidden="true"></i> Dashboard</a>
+                <a href="/client/orders/" class="{% if request.path == '/client/orders/' %}active{% endif %}"><i class="fas fa-file-alt" aria-hidden="true"></i> My Orders<span class="nav-badge" id="ordersBadgeMobile">0</span></a>
+                <a href="/client/orders/new/" class="{% if request.path == '/client/orders/new/' %}active{% endif %}"><i class="fas fa-plus" aria-hidden="true"></i> New Order</a>
+                <a href="/client/wallet/" class="{% if request.path == '/client/wallet/' %}active{% endif %}"><i class="fas fa-wallet" aria-hidden="true"></i> Wallet</a>
+                <a href="/client/messages/" class="{% if request.path == '/client/messages/' %}active{% endif %}"><i class="fas fa-envelope" aria-hidden="true"></i> Messages<span class="nav-badge" id="messagesBadgeMobile">0</span></a>
                 <div class="mobile-divider" role="separator"></div>
                 <a href="/client/profile/"><i class="fas fa-user" aria-hidden="true"></i> Profile</a>
                 <a href="/client/settings/"><i class="fas fa-cog" aria-hidden="true"></i> Settings</a>
@@ -769,7 +944,7 @@
         <main class="main-content" id="mainContent">
             <div class="container">
                 {% if messages %}
-                    <div class="mb-4 sm:mb-6">
+                    <div class="mb-4 sm:mb-6 fade-in">
                         {% for message in messages %}
                             <div class="p-2.5 sm:p-3 text-xs sm:text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 text-green-700 border-l-4 border-green-500{% else %}bg-blue-50 text-blue-700 border-l-4 border-blue-500{% endif %}">
                                 {{ message }}
@@ -829,8 +1004,87 @@
     <script src="/static/js/utils/api.js"></script>
     <script src="/static/js/utils/auth.js"></script>
     <script>
+        var CLIENT_COUNTS_KEY = 'clientNavCounts';
+
+        function readCachedCounts() {
+            try {
+                var raw = localStorage.getItem(CLIENT_COUNTS_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function writeCachedCounts(counts) {
+            try {
+                localStorage.setItem(CLIENT_COUNTS_KEY, JSON.stringify(counts));
+            } catch (e) {}
+        }
+
+        function updateBadge(elementId, count) {
+            var badge = document.getElementById(elementId);
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+        }
+
+        function applyCounts(counts) {
+            var normalized = {
+                active_orders: counts.active_orders || 0,
+                unread_messages: counts.unread_messages || 0,
+                notifications: counts.notifications || 0
+            };
+            updateBadge('ordersBadge', normalized.active_orders);
+            updateBadge('ordersBadgeMobile', normalized.active_orders);
+            updateBadge('messagesBadge', normalized.unread_messages);
+            updateBadge('messagesBadgeMobile', normalized.unread_messages);
+            updateBadge('notificationBadge', normalized.notifications);
+            writeCachedCounts(normalized);
+            return normalized;
+        }
+
+        window.ClientCounts = {
+            set: function(counts) {
+                var current = readCachedCounts() || { active_orders: 0, unread_messages: 0, notifications: 0 };
+                applyCounts({
+                    active_orders: counts.active_orders !== undefined ? counts.active_orders : current.active_orders,
+                    unread_messages: counts.unread_messages !== undefined ? counts.unread_messages : current.unread_messages,
+                    notifications: counts.notifications !== undefined ? counts.notifications : current.notifications
+                });
+            },
+            adjust: function(deltas) {
+                var current = readCachedCounts() || { active_orders: 0, unread_messages: 0, notifications: 0 };
+                applyCounts({
+                    active_orders: Math.max(0, current.active_orders + (deltas.active_orders || 0)),
+                    unread_messages: Math.max(0, current.unread_messages + (deltas.unread_messages || 0)),
+                    notifications: Math.max(0, current.notifications + (deltas.notifications || 0))
+                });
+            },
+            refresh: function() {
+                loadCounts();
+            }
+        };
+
+        async function loadCounts() {
+            try {
+                var response = await api.get('/client/counts/');
+                applyCounts(response);
+            } catch (error) {
+                console.error('Failed to load counts');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             {% if user.is_authenticated and user.role == 'client' %}
+            var cached = readCachedCounts();
+            if (cached) {
+                applyCounts(cached);
+            }
+
             const mobileMenuButton = document.getElementById('mobileMenuButton');
             const mobileMenu = document.getElementById('mobileMenu');
             const mobileOverlay = document.getElementById('mobileOverlay');
@@ -928,10 +1182,12 @@
                     const refreshToken = auth.getRefreshToken();
                     await api.post('/auth/logout/', { refresh: refreshToken });
                     auth.clearTokens();
+                    localStorage.removeItem(CLIENT_COUNTS_KEY);
                     window.location.href = '/';
                 } catch (error) {
                     console.error('Logout error:', error);
                     auth.clearTokens();
+                    localStorage.removeItem(CLIENT_COUNTS_KEY);
                     window.location.href = '/';
                 } finally {
                     if (window.Loading) window.Loading.hide();
@@ -958,36 +1214,13 @@
             {% endif %}
         });
 
-        async function loadCounts() {
-            try {
-                const response = await api.get('/client/counts/');
-
-                const ordersBadge = document.getElementById('ordersBadge');
-                if (response.active_orders > 0) {
-                    ordersBadge.textContent = response.active_orders > 9 ? '9+' : response.active_orders;
-                    ordersBadge.style.display = 'flex';
-                } else {
-                    ordersBadge.style.display = 'none';
-                }
-
-                const messagesBadge = document.getElementById('messagesBadge');
-                if (response.unread_messages > 0) {
-                    messagesBadge.textContent = response.unread_messages > 9 ? '9+' : response.unread_messages;
-                    messagesBadge.style.display = 'flex';
-                } else {
-                    messagesBadge.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Failed to load counts');
-            }
-        }
-
         window.Modal = {
             show: function(content) {
                 const modal = document.getElementById('modalOverlay');
                 const modalContent = document.getElementById('modalContent');
                 if (modalContent) {
                     modalContent.innerHTML = content;
+                    modalContent.classList.add('fade-in');
                 }
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');

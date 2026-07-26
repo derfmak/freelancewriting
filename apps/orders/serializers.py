@@ -27,8 +27,8 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='student.full_name', default='')
-    student_email = serializers.EmailField(source='student.email', default='')
+    client_name = serializers.CharField(source='client.full_name', default='')
+    client_email = serializers.EmailField(source='client.email', default='')
     writer_name = serializers.CharField(source='writer.full_name', default='N/A')
     writer_email = serializers.EmailField(source='writer.email', default='')
     attachments = AttachmentSerializer(many=True, read_only=True)
@@ -43,7 +43,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'order_number', 'student', 'student_name', 'student_email',
+            'id', 'order_number', 'client', 'client_name', 'client_email',
             'writer', 'writer_name', 'writer_email',
             'academic_level', 'paper_type', 'subject', 'topic', 'instructions',
             'pages', 'words', 'spacing', 'slides', 'sources_count',
@@ -66,7 +66,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'timeline'
         ]
         read_only_fields = [
-            'id', 'order_number', 'student', 'created_at', 'updated_at',
+            'id', 'order_number', 'client', 'created_at', 'updated_at',
             'last_activity_at', 'secure_links'
         ]
     
@@ -109,7 +109,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderListSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='student.full_name', default='')
+    client_name = serializers.CharField(source='client.full_name', default='')
     writer_name = serializers.CharField(source='writer.full_name', default='N/A')
     unread_messages = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
@@ -117,7 +117,7 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'order_number', 'student_name', 'writer_name',
+            'id', 'order_number', 'client_name', 'writer_name',
             'topic', 'subject', 'academic_level', 'paper_type',
             'status', 'progress_percentage', 'pages', 'words',
             'deadline', 'total_price', 'created_at', 'updated_at',
@@ -359,9 +359,9 @@ class UserAdminSerializer(serializers.ModelSerializer):
 
 
 class OrderAdminSerializer(serializers.ModelSerializer):
-    client = serializers.PrimaryKeyRelatedField(source='student', read_only=True)
-    client_name = serializers.CharField(source='student.full_name', default='N/A')
-    client_email = serializers.EmailField(source='student.email', default='N/A')
+    client = serializers.PrimaryKeyRelatedField(source='client', read_only=True)
+    client_name = serializers.CharField(source='client.full_name', default='N/A')
+    client_email = serializers.EmailField(source='client.email', default='N/A')
     title = serializers.CharField(source='topic')
     description = serializers.CharField(source='instructions')
     word_count = serializers.IntegerField(source='words')

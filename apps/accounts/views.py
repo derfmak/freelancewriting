@@ -10,11 +10,11 @@ from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
 import logging
-from .models import User, PendingUser, LoginLog, RateLimit
+from .models import User, PendingUser, LoginLog
 from .serializers import (
     RegisterSerializer, OTPVerificationSerializer, ResendOTPSerializer,
     LoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,
-    ChangePasswordSerializer, UserProfileSerializer
+    ChangePasswordSerializer, UserProfileSerializer, UserSerializer
 )
 from .utils import (
     generate_otp, generate_reset_token,
@@ -290,6 +290,7 @@ def login(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def logout(request):
     try:
         refresh_token = request.data.get('refresh')
@@ -370,6 +371,7 @@ def reset_password(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def change_password(request):
     serializer = ChangePasswordSerializer(data=request.data)
     if not serializer.is_valid():
@@ -392,6 +394,7 @@ def change_password(request):
 
 
 @api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
 def profile(request):
     user = request.user
 
@@ -408,6 +411,7 @@ def profile(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def request_deletion(request):
     user = request.user
 
@@ -421,6 +425,7 @@ def request_deletion(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def cancel_deletion(request):
     user = request.user
 

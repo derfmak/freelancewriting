@@ -1,14 +1,17 @@
 from rest_framework import serializers
-
 from apps.accounts.models import User
-
 from .models import Conversation, Message
 
 
 class MessageSenderSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role']
+        fields = ['id', 'first_name', 'last_name', 'full_name', 'email', 'role']
+    
+    def get_full_name(self, obj):
+        return f'{obj.first_name} {obj.last_name}'.strip() or obj.email
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -58,9 +61,10 @@ class ConversationLastMessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    student_name = serializers.SerializerMethodField()
-    student_email = serializers.EmailField(source='student.email', read_only=True)
+    client_name = serializers.SerializerMethodField()
+    client_email = serializers.EmailField(source='client.email', read_only=True)
     admin_name = serializers.SerializerMethodField()
+    admin_email = serializers.EmailField(source='admin.email', read_only=True)
     order = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
@@ -68,15 +72,18 @@ class ConversationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Conversation
         fields = [
-            'id', 'order', 'student_name', 'student_email', 'admin_name',
-            'last_message_at', 'unread_count', 'last_message', 'created_at',
+            'id', 'order', 'client_name', 'client_email', 'admin_name',
+            'admin_email', 'last_message_at', 'unread_count', 'last_message',
+            'created_at', 'updated_at'
         ]
 
-    def get_student_name(self, obj):
-        return f'{obj.student.first_name} {obj.student.last_name}'.strip() or obj.student.email
+    def get_client_name(self, obj):
+        return f'{obj.client.first_name} {obj.client.last_name}'.strip() or obj.client.email
 
     def get_admin_name(self, obj):
-        return f'{obj.admin.first_name} {obj.admin.last_name}'.strip() or obj.admin.email
+        if obj.admin:
+            return f'{obj.admin.first_name} {obj.admin.last_name}'.strip() or obj.admin.email
+        return 'Admin'
 
     def get_order(self, obj):
         return {

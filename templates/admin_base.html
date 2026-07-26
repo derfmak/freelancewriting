@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="view-transition" content="same-origin">
     <title>{% block title %}Admin Portal - AcademicWrite{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -14,11 +15,21 @@
             box-sizing: border-box;
         }
 
+        html {
+            background: #f8fafc;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f8fafc;
             color: #1e293b;
             line-height: 1.5;
+        }
+
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 0.16s;
+            animation-timing-function: ease;
         }
 
         .container {
@@ -154,6 +165,10 @@
             border-bottom: 2px solid #fbbf24;
         }
 
+        .admin-nav a.active:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         .admin-nav a .nav-badge {
             position: absolute;
             top: -4px;
@@ -169,6 +184,17 @@
             justify-content: center;
             border-radius: 50%;
             border: 2px solid #1e40af;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.5);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        .admin-nav a .nav-badge.show {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         @media (min-width: 1280px) {
@@ -330,6 +356,17 @@
             justify-content: center;
             border: 2px solid #1e40af;
             border-radius: 50%;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.5);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        .notification-badge.show {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         .mobile-menu-button {
@@ -423,6 +460,7 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            position: relative;
         }
 
         @media (min-width: 768px) {
@@ -443,10 +481,41 @@
             border-left: 3px solid #1e40af;
         }
 
+        .mobile-nav a.active:hover {
+            background: #bfdbfe;
+        }
+
         .mobile-nav a i {
             width: 1.3rem;
             text-align: center;
             font-size: 0.9rem;
+        }
+
+        .mobile-nav a .nav-badge {
+            position: absolute;
+            top: 0.4rem;
+            right: 0.8rem;
+            background: #ef4444;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 600;
+            min-width: 1.2rem;
+            height: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            line-height: 1;
+            padding: 0 3px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        .mobile-nav a .nav-badge.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.2s ease;
         }
 
         .mobile-divider {
@@ -706,7 +775,7 @@
             <div class="container">
                 <div class="header-content">
                     <a href="/admin/dashboard/" class="logo">AW</a>
-                    
+
                     <div class="admin-nav">
                         <a href="/admin/dashboard/" class="{% if request.path == '/admin/dashboard/' %}active{% endif %}">
                             <i class="fas fa-th-large"></i>
@@ -715,7 +784,7 @@
                         <a href="/admin/orders/" class="{% if request.path == '/admin/orders/' %}active{% endif %}">
                             <i class="fas fa-file-alt"></i>
                             <span>Orders</span>
-                            <span class="nav-badge" id="ordersBadge" style="display:none;">0</span>
+                            <span class="nav-badge" id="ordersBadge">0</span>
                         </a>
                         <a href="/admin/finances/" class="{% if request.path == '/admin/finances/' %}active{% endif %}">
                             <i class="fas fa-dollar-sign"></i>
@@ -724,7 +793,7 @@
                         <a href="/admin/messages/" class="{% if request.path == '/admin/messages/' %}active{% endif %}">
                             <i class="fas fa-envelope"></i>
                             <span>Messages</span>
-                            <span class="nav-badge" id="messagesBadge" style="display:none;">0</span>
+                            <span class="nav-badge" id="messagesBadge">0</span>
                         </a>
                         <a href="/admin/blog/" class="{% if request.path == '/admin/blog/' %}active{% endif %}">
                             <i class="fas fa-blog"></i>
@@ -739,16 +808,16 @@
                     <div class="auth-section">
                         <button class="notification-bell" id="notificationBell">
                             <i class="fas fa-bell"></i>
-                            <span class="notification-badge hidden" id="notificationBadge">0</span>
+                            <span class="notification-badge" id="notificationBadge">0</span>
                         </button>
-                        
+
                         <div class="user-menu">
                             <button class="user-menu-button" id="userMenuButton">
                                 <i class="fas fa-user-circle"></i>
                                 <span>{{ user.full_name|default:user.email|truncatechars:12 }}</span>
                                 <i class="fas fa-chevron-down fa-xs"></i>
                             </button>
-                            
+
                             <div class="user-menu-dropdown" id="userMenuDropdown">
                                 <a href="/admin/profile/" class="user-menu-item"><i class="fas fa-user"></i> Profile</a>
                                 <a href="/admin/settings/" class="user-menu-item"><i class="fas fa-cog"></i> Settings</a>
@@ -771,12 +840,12 @@
 
         <div class="mobile-menu" id="mobileMenu">
             <div class="mobile-nav">
-                <a href="/admin/dashboard/"><i class="fas fa-th-large"></i> Dashboard</a>
-                <a href="/admin/orders/"><i class="fas fa-file-alt"></i> Orders</a>
-                <a href="/admin/finances/"><i class="fas fa-dollar-sign"></i> Finances</a>
-                <a href="/admin/messages/"><i class="fas fa-envelope"></i> Messages</a>
-                <a href="/admin/blog/"><i class="fas fa-blog"></i> Blog</a>
-                <a href="/admin/settings/"><i class="fas fa-cog"></i> Settings</a>
+                <a href="/admin/dashboard/" class="{% if request.path == '/admin/dashboard/' %}active{% endif %}"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="/admin/orders/" class="{% if request.path == '/admin/orders/' %}active{% endif %}"><i class="fas fa-file-alt"></i> Orders<span class="nav-badge" id="ordersBadgeMobile">0</span></a>
+                <a href="/admin/finances/" class="{% if request.path == '/admin/finances/' %}active{% endif %}"><i class="fas fa-dollar-sign"></i> Finances</a>
+                <a href="/admin/messages/" class="{% if request.path == '/admin/messages/' %}active{% endif %}"><i class="fas fa-envelope"></i> Messages<span class="nav-badge" id="messagesBadgeMobile">0</span></a>
+                <a href="/admin/blog/" class="{% if request.path == '/admin/blog/' %}active{% endif %}"><i class="fas fa-blog"></i> Blog</a>
+                <a href="/admin/settings/" class="{% if request.path == '/admin/settings/' %}active{% endif %}"><i class="fas fa-cog"></i> Settings</a>
                 <div class="mobile-divider"></div>
                 <a href="/admin/users/"><i class="fas fa-users"></i> Clients</a>
                 <a href="/admin/refunds/"><i class="fas fa-undo-alt"></i> Refunds</a>
@@ -814,7 +883,7 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                
+
                 {% block content %}{% endblock %}
             </div>
         </main>
@@ -834,7 +903,7 @@
                             <a href="/admin/profile/">Profile</a>
                         </div>
                     </div>
-                    
+
                     <div class="footer-section">
                         <h4>Support</h4>
                         <div class="footer-links">
@@ -845,7 +914,7 @@
                             <a href="/refund-policy/">Refund</a>
                         </div>
                     </div>
-                    
+
                     <div class="footer-section">
                         <h4>Contact</h4>
                         <div class="footer-contact">
@@ -861,7 +930,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="footer-bottom">
                     <div class="copyright">
                         &copy; 2026 AcademicWrite. All rights reserved.
@@ -886,12 +955,91 @@
     <script src="/static/js/utils/api.js"></script>
     <script src="/static/js/utils/auth.js"></script>
     <script>
+        var ADMIN_COUNTS_KEY = 'adminNavCounts';
+
+        function readCachedAdminCounts() {
+            try {
+                var raw = localStorage.getItem(ADMIN_COUNTS_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function writeCachedAdminCounts(counts) {
+            try {
+                localStorage.setItem(ADMIN_COUNTS_KEY, JSON.stringify(counts));
+            } catch (e) {}
+        }
+
+        function updateAdminBadge(elementId, count) {
+            var badge = document.getElementById(elementId);
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+        }
+
+        function applyAdminCounts(counts) {
+            var normalized = {
+                pending_orders: counts.pending_orders || 0,
+                unread_messages: counts.unread_messages || 0,
+                notifications: counts.notifications || 0
+            };
+            updateAdminBadge('ordersBadge', normalized.pending_orders);
+            updateAdminBadge('ordersBadgeMobile', normalized.pending_orders);
+            updateAdminBadge('messagesBadge', normalized.unread_messages);
+            updateAdminBadge('messagesBadgeMobile', normalized.unread_messages);
+            updateAdminBadge('notificationBadge', normalized.notifications);
+            writeCachedAdminCounts(normalized);
+            return normalized;
+        }
+
+        window.AdminCounts = {
+            set: function(counts) {
+                var current = readCachedAdminCounts() || { pending_orders: 0, unread_messages: 0, notifications: 0 };
+                applyAdminCounts({
+                    pending_orders: counts.pending_orders !== undefined ? counts.pending_orders : current.pending_orders,
+                    unread_messages: counts.unread_messages !== undefined ? counts.unread_messages : current.unread_messages,
+                    notifications: counts.notifications !== undefined ? counts.notifications : current.notifications
+                });
+            },
+            adjust: function(deltas) {
+                var current = readCachedAdminCounts() || { pending_orders: 0, unread_messages: 0, notifications: 0 };
+                applyAdminCounts({
+                    pending_orders: Math.max(0, current.pending_orders + (deltas.pending_orders || 0)),
+                    unread_messages: Math.max(0, current.unread_messages + (deltas.unread_messages || 0)),
+                    notifications: Math.max(0, current.notifications + (deltas.notifications || 0))
+                });
+            },
+            refresh: function() {
+                loadCounts();
+            }
+        };
+
+        async function loadCounts() {
+            try {
+                var response = await api.get('/admin/counts/');
+                applyAdminCounts(response);
+            } catch (error) {
+                console.error('Failed to load counts');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             {% if user.is_authenticated and user.role == 'admin' %}
+            var cachedAdminCounts = readCachedAdminCounts();
+            if (cachedAdminCounts) {
+                applyAdminCounts(cachedAdminCounts);
+            }
+
             const mobileMenuButton = document.getElementById('mobileMenuButton');
             const mobileMenu = document.getElementById('mobileMenu');
             const mobileOverlay = document.getElementById('mobileOverlay');
-            
+
             function closeMobileMenu() {
                 mobileMenu.classList.remove('open');
                 mobileOverlay.classList.remove('show');
@@ -923,16 +1071,16 @@
                         openMobileMenu();
                     }
                 });
-                
+
                 if (mobileOverlay) {
                     mobileOverlay.addEventListener('click', function() {
                         closeMobileMenu();
                     });
                 }
-                
+
                 document.addEventListener('click', function(e) {
-                    if (mobileMenu.classList.contains('open') && 
-                        !mobileMenu.contains(e.target) && 
+                    if (mobileMenu.classList.contains('open') &&
+                        !mobileMenu.contains(e.target) &&
                         !mobileMenuButton.contains(e.target)) {
                         closeMobileMenu();
                     }
@@ -953,13 +1101,13 @@
 
             const userMenuButton = document.getElementById('userMenuButton');
             const userMenuDropdown = document.getElementById('userMenuDropdown');
-            
+
             if (userMenuButton && userMenuDropdown) {
                 userMenuButton.addEventListener('click', function(e) {
                     e.stopPropagation();
                     userMenuDropdown.classList.toggle('show');
                 });
-                
+
                 document.addEventListener('click', function(e) {
                     if (!userMenuDropdown.contains(e.target) && !userMenuButton.contains(e.target)) {
                         userMenuDropdown.classList.remove('show');
@@ -980,10 +1128,12 @@
                     const refreshToken = auth.getRefreshToken();
                     await api.post('/auth/logout/', { refresh: refreshToken });
                     auth.clearTokens();
+                    localStorage.removeItem(ADMIN_COUNTS_KEY);
                     window.location.href = '/';
                 } catch (error) {
                     console.error('Logout error:', error);
                     auth.clearTokens();
+                    localStorage.removeItem(ADMIN_COUNTS_KEY);
                     window.location.href = '/';
                 } finally {
                     if (window.Loading) window.Loading.hide();
@@ -1009,30 +1159,6 @@
             setInterval(loadCounts, 30000);
             {% endif %}
         });
-
-        async function loadCounts() {
-            try {
-                const response = await api.get('/admin/counts/');
-                
-                const ordersBadge = document.getElementById('ordersBadge');
-                if (response.pending_orders > 0) {
-                    ordersBadge.textContent = response.pending_orders > 9 ? '9+' : response.pending_orders;
-                    ordersBadge.style.display = 'flex';
-                } else {
-                    ordersBadge.style.display = 'none';
-                }
-                
-                const messagesBadge = document.getElementById('messagesBadge');
-                if (response.unread_messages > 0) {
-                    messagesBadge.textContent = response.unread_messages > 9 ? '9+' : response.unread_messages;
-                    messagesBadge.style.display = 'flex';
-                } else {
-                    messagesBadge.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Failed to load counts');
-            }
-        }
 
         window.Modal = {
             show: function(content) {
@@ -1072,7 +1198,7 @@
             }
         });
     </script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

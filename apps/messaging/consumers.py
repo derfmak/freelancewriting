@@ -3,6 +3,7 @@ import json
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.utils import timezone
+from rest_framework.utils.encoders import JSONEncoder
 
 from .models import Conversation, Message, MessageStatus, TypingStatus
 from .serializers import MessageSerializer
@@ -45,8 +46,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.handle_typing(data)
         elif event_type == 'edit':
             await self.handle_edit(data)
-        elif event_type == 'recall':
-            await self.handle_recall(data)
         elif event_type == 'delete':
             await self.handle_delete(data)
 
@@ -56,7 +55,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         message = await self.create_message(content)
-        payload = MessageSerializer(message).data
+        payload = await self.serialize_message(message)
         await self.channel_layer.group_send(self.group_name, {
             'type': 'message.sent',
             'payload': payload,
@@ -80,21 +79,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message is None:
             return
 
-        payload = MessageSerializer(message).data
+        payload = await self.serialize_message(message)
         await self.channel_layer.group_send(self.group_name, {
             'type': 'message.edited',
-            'payload': payload,
-        })
-
-    async def handle_recall(self, data):
-        message_id = data.get('message_id')
-        message = await self.recall_message(message_id)
-        if message is None:
-            return
-
-        payload = MessageSerializer(message).data
-        await self.channel_layer.group_send(self.group_name, {
-            'type': 'message.recalled',
             'payload': payload,
         })
 
@@ -110,37 +97,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
         })
 
     async def message_sent(self, event):
-        await self.send(text_data=json.dumps({'type': 'message', 'message': event['payload']}))
+        await self.send(text_data=json.dumps({'type': 'message', 'message': event['payload']}, cls=JSONEncoder))
 
     async def message_edited(self, event):
-        await self.send(text_data=json.dumps({'type': 'edited', 'message': event['payload']}))
-
-    async def message_recalled(self, event):
-        await self.send(text_data=json.dumps({'type': 'recalled', 'message': event['payload']}))
+        await self.send(text_data=json.dumps({'type': 'edited', 'message': event['payload']}, cls=JSONEncoder))
 
     async def message_deleted(self, event):
-        await self.send(text_data=json.dumps({'type': 'deleted', 'message_id': event['payload']['message_id']}))
+        await self.send(text_data=json.dumps({'type': 'deleted', 'message_id': event['payload']['message_id']}, cls=JSONEncoder))
 
     async def message_read(self, event):
-        await self.send(text_data=json.dumps({'type': 'read', **event['payload']}))
+        await self.send(text_data=json.dumps({'type': 'read', **event['payload']}, cls=JSONEncoder))
 
     async def typing_start(self, event):
         if event['payload']['user'] != str(self.user.id):
-            await self.send(text_data=json.dumps({'type': 'typing', 'is_typing': True}))
+            await self.send(text_data=json.dumps({'type': 'typing', 'is_typing': True}, cls=JSONEncoder))
 
     async def typing_stop(self, event):
         if event['payload']['user'] != str(self.user.id):
-            await self.send(text_data=json.dumps({'type': 'typing', 'is_typing': False}))
+            await self.send(text_data=json.dumps({'type': 'typing', 'is_typing': False}, cls=JSONEncoder))
 
     @database_sync_to_async
     def get_conversation(self):
-        return Conversation.objects.select_related('order', 'student', 'admin').filter(
+        return Conversation.objects.select_related('order', 'client', 'admin').filter(
             order_id=self.order_id,
         ).first()
 
     @database_sync_to_async
     def is_participant(self):
-        return self.user in (self.conversation.student, self.conversation.admin)
+        return self.user in (self.conversation.client, self.conversation.admin)
 
     @database_sync_to_async
     def create_message(self, content):
@@ -155,7 +139,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.conversation.last_message_at = message.created_at
         self.conversation.save(update_fields=['last_message_at'])
 
-        recipient = self.conversation.admin if self.user == self.conversation.student else self.conversation.student
+        recipient = self.conversation.admin if self.user == self.conversation.client else self.conversation.client
         MessageStatus.objects.create(
             message=message, user=recipient, is_delivered=True, delivered_at=timezone.now(),
         )
@@ -167,20 +151,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message is None or not message.can_edit(self.user):
             return None
         message.edit(content)
-        return message
-
-    @database_sync_to_async
-    def recall_message(self, message_id):
-        if message_id:
-            message = Message.objects.filter(id=message_id, sender=self.user).first()
-        else:
-            message = Message.objects.filter(
-                conversation=self.conversation, sender=self.user, is_recalled=False,
-            ).order_by('-created_at').first()
-
-        if message is None or not message.can_recall(self.user):
-            return None
-        message.recall()
         return message
 
     @database_sync_to_async
@@ -198,3 +168,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             conversation=self.conversation, user=self.user,
             defaults={'is_typing': is_typing},
         )
+
+    @database_sync_to_async
+    def serialize_message(self, message):
+        return MessageSerializer(message).data

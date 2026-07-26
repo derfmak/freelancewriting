@@ -8,34 +8,217 @@
         height: calc(100vh - 200px);
         overflow-y: auto;
     }
+    
+    .conversation-item {
+        transition: background-color 0.15s ease;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        position: relative;
+    }
+    
+    .conversation-item:hover {
+        background-color: #f8fafc;
+    }
+    
     .conversation-item.active {
-        background-color: #dbeafe;
-        border-left: 4px solid #2563eb;
+        background-color: #ecfdf5;
+        border-left-color: #059669;
     }
-    .conversation-item.unread {
-        background-color: #eff6ff;
+    
+    .conversation-item.active:hover {
+        background-color: #ecfdf5;
     }
-    .message-bubble {
-        max-width: 70%;
-        word-wrap: break-word;
-    }
-    .message-bubble.sent {
-        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    
+    .conversation-item .unread-badge {
+        background-color: #059669;
         color: white;
+        font-size: 0.65rem;
+        padding: 1px 8px;
+        border-radius: 12px;
+        min-width: 20px;
+        text-align: center;
+        font-weight: 600;
+        line-height: 1.6;
     }
+    
+    .conversation-item.active .unread-badge {
+        background-color: #047857;
+    }
+    
+    .messages-container {
+        background: #e5ddd5;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .message-item {
+        display: flex;
+        flex-direction: column;
+        margin: 2px 0;
+    }
+    
+    .message-item.sent {
+        align-items: flex-end;
+    }
+    
+    .message-item.received {
+        align-items: flex-start;
+    }
+    
+    .message-wrapper {
+        display: flex;
+        flex-direction: column;
+        max-width: 65%;
+    }
+    
+    .message-wrapper.sent {
+        align-items: flex-end;
+        margin-left: auto;
+    }
+    
+    .message-wrapper.received {
+        align-items: flex-start;
+        margin-right: auto;
+    }
+    
+    .message-bubble {
+        word-wrap: break-word;
+        border-radius: 12px;
+        position: relative;
+        padding: 8px 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        display: inline-block;
+        max-width: 100%;
+        min-width: 60px;
+    }
+    
+    .message-bubble.sent {
+        background: #dcf8c6;
+        color: #1e293b;
+        border-bottom-right-radius: 4px;
+    }
+    
     .message-bubble.received {
-        background: #f3f4f6;
-        color: #1f2937;
+        background: #ffffff;
+        color: #1e293b;
+        border-bottom-left-radius: 4px;
+        border: 1px solid #e5e7eb;
     }
-    .message-time {
+    
+    .message-bubble .message-content {
+        font-size: 0.9rem;
+        line-height: 1.4;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    
+    .message-bubble .message-meta {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.6rem;
+        color: #6b7280;
+        margin-top: 3px;
+        justify-content: flex-end;
+        height: 16px;
+    }
+    
+    .message-bubble .message-time {
+        font-size: 0.6rem;
+        line-height: 1;
+    }
+    
+    .message-bubble .message-status {
         font-size: 0.7rem;
-        opacity: 0.7;
+        margin-left: 2px;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
     }
+    
+    .message-bubble .message-status .tick {
+        font-size: 0.7rem;
+        line-height: 1;
+    }
+    
+    .message-bubble .message-status .tick-sent {
+        color: #9ca3af;
+    }
+    
+    .message-bubble .message-status .tick-delivered {
+        color: #9ca3af;
+    }
+    
+    .message-bubble .message-status .tick-read {
+        color: #34b7f1;
+    }
+    
+    .message-bubble .message-status .tick-single {
+        font-size: 0.7rem;
+    }
+    
+    .message-bubble .message-status .tick-double {
+        font-size: 0.7rem;
+        letter-spacing: -2px;
+    }
+    
+    .message-bubble .edited-indicator {
+        font-size: 0.55rem;
+        font-style: italic;
+        color: #9ca3af;
+        margin-right: 3px;
+    }
+    
+    .message-actions {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        position: absolute;
+        top: -6px;
+        right: 2px;
+        display: flex;
+        gap: 2px;
+        background: rgba(255,255,255,0.95);
+        padding: 2px 4px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        z-index: 10;
+    }
+    
+    .message-bubble:hover .message-actions {
+        opacity: 1;
+    }
+    
+    .message-actions button {
+        background: transparent;
+        border: none;
+        color: #6b7280;
+        padding: 2px 4px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 10px;
+        transition: all 0.2s ease;
+    }
+    
+    .message-actions button:hover {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    
+    .message-actions .delete-btn:hover {
+        color: #dc2626;
+    }
+    
     .typing-indicator {
         display: inline-flex;
         align-items: center;
         gap: 4px;
+        padding: 8px 12px;
+        background: #ffffff;
+        border-radius: 12px;
+        border-bottom-left-radius: 4px;
+        border: 1px solid #e5e7eb;
+        margin: 2px 0;
     }
+    
     .typing-dot {
         width: 8px;
         height: 8px;
@@ -43,24 +226,66 @@
         border-radius: 50%;
         animation: typing 1.4s infinite;
     }
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
     @keyframes typing {
-        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-        30% { transform: translateY(-4px); opacity: 1; }
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.4;
+        }
+        30% {
+            transform: translateY(-4px);
+            opacity: 1;
+        }
     }
-    .message-actions {
-        opacity: 0;
-        transition: opacity 0.2s;
+    
+    .message-date-divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 12px 0;
+        width: 100%;
     }
-    .message-bubble:hover .message-actions {
-        opacity: 1;
+    
+    .message-date-divider::before,
+    .message-date-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid rgba(0,0,0,0.08);
     }
-    .edited-indicator {
+    
+    .message-date-divider span {
+        padding: 4px 12px;
         font-size: 0.7rem;
-        font-style: italic;
+        color: #6b7280;
+        background: #e5ddd5;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .online-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
         margin-right: 4px;
     }
+    
+    .online-dot.online {
+        background: #22c55e;
+    }
+    
+    .online-dot.offline {
+        background: #9ca3af;
+    }
+    
     .student-avatar {
         width: 40px;
         height: 40px;
@@ -72,6 +297,159 @@
         color: white;
         font-weight: bold;
         flex-shrink: 0;
+        font-size: 16px;
+    }
+    
+    .status-badge {
+        font-size: 0.6rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+    
+    .search-input {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 8px 12px;
+        width: 100%;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+    
+    .search-input:focus {
+        border-color: #059669;
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+    
+    .message-input-container {
+        border-top: 1px solid #e5e7eb;
+        padding: 10px 16px;
+        background: #ffffff;
+    }
+    
+    .message-input {
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 10px 16px;
+        width: 100%;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+    
+    .message-input:focus {
+        border-color: #059669;
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+    
+    .send-btn {
+        background: #059669;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+    
+    .send-btn:hover:not(:disabled) {
+        background: #047857;
+        transform: scale(1.05);
+    }
+    
+    .send-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .messages-container {
+        display: flex;
+        flex-direction: column;
+        padding: 12px 16px;
+        min-height: 100%;
+    }
+    
+    .chat-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #9ca3af;
+    }
+    
+    .conversation-item .last-message-time {
+        font-size: 0.6rem;
+        color: #9ca3af;
+        white-space: nowrap;
+    }
+    
+    .conversation-item.active .last-message-time {
+        color: #6b7280;
+    }
+    
+    .navbar-unread-badge {
+        background-color: #dc2626;
+        color: white;
+        font-size: 0.6rem;
+        padding: 1px 6px;
+        border-radius: 10px;
+        min-width: 16px;
+        text-align: center;
+        font-weight: 600;
+        line-height: 1.4;
+        margin-left: 4px;
+    }
+    
+    .recall-btn {
+        background: transparent;
+        border: 1px solid #e5e7eb;
+        color: #6b7280;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    
+    .recall-btn.visible {
+        display: inline-flex;
+    }
+    
+    .recall-btn:hover {
+        background: #f3f4f6;
+        color: #dc2626;
+    }
+    
+    .input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .conversation-list {
+            height: calc(100vh - 180px);
+        }
+        
+        .message-wrapper {
+            max-width: 80%;
+        }
+        
+        .conversation-sidebar {
+            width: 100% !important;
+        }
     }
 </style>
 {% endblock %}
@@ -79,74 +457,92 @@
 {% block content %}
 <div class="h-[calc(100vh-120px)]">
     <div class="bg-white border border-gray-200 h-full flex overflow-hidden">
-
-        <div class="w-96 border-r border-gray-200 flex flex-col">
-            <div class="p-4 border-b border-gray-200">
-                <h2 class="text-xl font-bold text-gray-900">Student Conversations</h2>
+        <div class="w-96 border-r border-gray-200 flex flex-col conversation-sidebar" id="conversationSidebar">
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xl font-bold text-gray-900">Student Conversations</h2>
+                    <span class="text-xs text-gray-500" id="unreadCount">0 unread</span>
+                </div>
                 <div class="mt-2">
                     <input type="text"
-                           class="w-full border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors text-sm rounded-lg"
+                           class="search-input"
                            placeholder="Search by student name or order #..."
-                           id="search-conversations">
+                           id="searchConversations">
                 </div>
             </div>
 
-            <div class="conversation-list flex-1" id="conversations-list">
-                <div class="text-center text-gray-400 py-8">Loading conversations...</div>
+            <div class="conversation-list flex-1" id="conversationsList">
+                <div class="flex items-center justify-center h-full text-gray-400">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                        <p>Loading conversations...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col" id="chat-container">
-            <div class="p-4 border-b border-gray-200 flex justify-between items-center" id="chat-header">
-                <div class="flex items-center space-x-3">
-                    <div class="student-avatar hidden" id="student-avatar">S</div>
+        <div class="flex-1 flex flex-col" id="chatContainer">
+            <div class="p-3 border-b border-gray-200 bg-white flex justify-between items-center" id="chatHeader">
+                <div class="flex items-center gap-3">
+                    <div class="student-avatar hidden" id="studentAvatar">S</div>
                     <div>
-                        <h3 class="font-semibold text-gray-800" id="current-student">Select a conversation</h3>
-                        <p class="text-sm text-gray-500" id="order-info"></p>
+                        <h3 class="font-semibold text-gray-800" id="currentStudent">Select a conversation</h3>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span id="orderInfo" class="text-xs text-gray-500"></span>
+                            <span id="onlineStatus" class="text-xs text-gray-400"></span>
+                        </div>
                     </div>
                 </div>
-                <a href="#" class="text-green-600 hover:text-green-700 text-sm font-medium hidden" id="view-order-link">
-                    <i class="fas fa-external-link-alt mr-1"></i>View Order
-                </a>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="messages-container">
-                <div class="text-center text-gray-400 py-8">
-                    <i class="fas fa-comments text-4xl text-gray-300 mb-3"></i>
-                    <p>Select a conversation to start messaging</p>
+                <div>
+                    <a href="#" class="text-green-600 hover:text-green-700 text-sm font-medium hidden" id="viewOrderLink">
+                        <i class="fas fa-external-link-alt mr-1"></i>View Order
+                    </a>
                 </div>
             </div>
 
-            <div class="p-4 border-t border-gray-200" id="message-input-container">
-                <div class="flex items-center space-x-2">
-                    <button class="text-green-600 hover:text-green-700 text-sm font-medium hidden flex-shrink-0" id="recall-btn" title="Recall message">
-                        <i class="fas fa-undo-alt"></i>
-                    </button>
-                    <input type="text"
-                           class="w-full border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors flex-1 rounded-lg"
-                           id="message-input"
-                           placeholder="Type your message..."
-                           disabled>
-                    <button class="bg-green-600 text-white px-6 py-3 hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-lg" id="send-btn" disabled>
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
+            <div class="flex-1 overflow-y-auto" id="messagesContainerWrapper">
+                <div class="messages-container" id="messagesContainer">
+                    <div class="chat-placeholder">
+                        <div class="text-center">
+                            <i class="fas fa-comments text-4xl text-gray-300 mb-3"></i>
+                            <p>Select a conversation to start messaging</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center justify-between mt-2">
-                    <div class="text-xs text-gray-400" id="typing-indicator"></div>
-                    <div class="text-xs text-gray-400" id="online-status"></div>
+            </div>
+
+            <div id="typingIndicator" class="px-4 pt-1"></div>
+
+            <div class="message-input-container">
+                <div class="flex gap-2">
+                    <button class="recall-btn" id="recallBtn">
+                        <i class="fas fa-undo-alt"></i> Recall
+                    </button>
+                    <div class="input-wrapper">
+                        <input type="text"
+                               class="message-input"
+                               id="messageInput"
+                               placeholder="Type a message..."
+                               disabled>
+                        <button class="send-btn" id="sendBtn" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div id="edit-message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white max-w-md w-full mx-4 p-6 rounded-lg">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Message</h3>
-        <textarea class="w-full border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors rounded-lg" id="edit-message-content" rows="3"></textarea>
-        <div class="flex justify-end space-x-3 mt-4">
-            <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-2 rounded-lg" id="cancel-edit">Cancel</button>
-            <button class="bg-green-600 text-white hover:bg-green-700 transition-colors px-4 py-2 rounded-lg" id="save-edit">Save Changes</button>
+<div id="editMessageModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white max-w-md w-full rounded-lg">
+        <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Message</h3>
+            <textarea class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" id="editMessageContent" rows="3"></textarea>
+            <div class="flex justify-end gap-3 mt-4">
+                <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-2 rounded-lg" id="cancelEdit">Cancel</button>
+                <button class="bg-green-600 text-white hover:bg-green-700 transition-colors px-4 py-2 rounded-lg" id="saveEdit">Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -160,15 +556,17 @@ var typingTimer = null;
 var isTyping = false;
 var currentUser = null;
 var selectedMessageId = null;
-var recallTimeout = null;
-var recalledMessageId = null;
-var reconnectAttempts = 0;
+var isInitialLoad = true;
 
-function getCsrfToken() {
-    var token = document.querySelector('[name=csrf-token]')?.content;
-    if (token) return token;
-    var cookie = document.cookie.split('; ').find(function(row) { return row.startsWith('csrftoken='); });
-    return cookie ? cookie.split('=')[1] : '';
+function getAuthToken() {
+    return localStorage.getItem('access_token');
+}
+
+function getApiHeaders() {
+    return {
+        'Authorization': 'Bearer ' + getAuthToken(),
+        'Content-Type': 'application/json'
+    };
 }
 
 function apiRequest(endpoint, options) {
@@ -176,11 +574,7 @@ function apiRequest(endpoint, options) {
     var url = endpoint.startsWith('http') ? endpoint : (API_BASE + endpoint);
     return fetch(url, {
         method: options.method || 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken(),
-            'Accept': 'application/json'
-        },
+        headers: getApiHeaders(),
         credentials: 'include',
         body: options.body ? JSON.stringify(options.body) : undefined
     }).then(function(response) {
@@ -197,146 +591,189 @@ function apiPost(endpoint, data) {
     return apiRequest(endpoint, { method: 'POST', body: data });
 }
 
-function apiRequestAbsolute(endpoint, options) {
-    options = options || {};
-    return fetch(endpoint, {
-        method: options.method || 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken(),
-            'Accept': 'application/json'
-        },
-        credentials: 'include',
-        body: options.body ? JSON.stringify(options.body) : undefined
-    }).then(function(response) {
-        if (!response.ok) {
-            return response.text().then(function(text) {
-                throw new Error(text || 'Request failed');
-            });
-        }
-        return response.json();
-    });
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    getCurrentUser().then(loadConversations);
+    getCurrentUser().then(function() {
+        loadConversations();
+    });
 
-    document.getElementById('search-conversations').addEventListener('input', function(e) {
+    document.getElementById('searchConversations').addEventListener('input', function(e) {
         filterConversations(e.target.value);
     });
 
-    document.getElementById('message-input').addEventListener('keypress', function(e) {
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
         }
     });
 
-    document.getElementById('message-input').addEventListener('input', function() {
-        if (!currentConversation || !ws || ws.readyState !== WebSocket.OPEN) return;
-
-        if (!isTyping) {
-            isTyping = true;
-            ws.send(JSON.stringify({ type: 'typing', is_typing: true }));
-        }
-
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(function() {
-            if (isTyping) {
-                isTyping = false;
-                ws.send(JSON.stringify({ type: 'typing', is_typing: false }));
+    document.getElementById('messageInput').addEventListener('input', function() {
+        if (currentConversation && ws && ws.readyState === WebSocket.OPEN) {
+            if (!isTyping) {
+                isTyping = true;
+                ws.send(JSON.stringify({
+                    type: 'typing',
+                    is_typing: true
+                }));
             }
-        }, 1000);
+
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(function() {
+                if (isTyping) {
+                    isTyping = false;
+                    ws.send(JSON.stringify({
+                        type: 'typing',
+                        is_typing: false
+                    }));
+                }
+            }, 1000);
+        }
     });
 
-    document.getElementById('send-btn').addEventListener('click', sendMessage);
-    document.getElementById('recall-btn').addEventListener('click', recallLastMessage);
-    document.getElementById('cancel-edit').addEventListener('click', function() {
-        document.getElementById('edit-message-modal').classList.add('hidden');
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    document.getElementById('recallBtn').addEventListener('click', recallLastMessage);
+    document.getElementById('cancelEdit').addEventListener('click', function() {
+        document.getElementById('editMessageModal').classList.add('hidden');
     });
-    document.getElementById('save-edit').addEventListener('click', saveEditedMessage);
+    document.getElementById('saveEdit').addEventListener('click', saveEditedMessage);
 });
 
-async function getCurrentUser() {
-    try {
-        var data = await apiRequestAbsolute('/auth/profile/');
-        currentUser = data;
-        return data;
-    } catch (error) {
-        console.error('Failed to get user profile:', error);
-        currentUser = { id: 1, full_name: 'Admin' };
-        return currentUser;
+function updateNavbarBadge(totalUnread) {
+    var badge = document.getElementById('navbarUnreadBadge');
+    if (!badge) {
+        var navMessages = document.querySelector('a[href*="messages"]');
+        if (navMessages) {
+            var existingBadge = navMessages.querySelector('.navbar-unread-badge');
+            if (existingBadge) existingBadge.remove();
+            if (totalUnread > 0) {
+                var newBadge = document.createElement('span');
+                newBadge.className = 'navbar-unread-badge';
+                newBadge.id = 'navbarUnreadBadge';
+                newBadge.textContent = totalUnread;
+                navMessages.appendChild(newBadge);
+            }
+        }
+        return;
+    }
+    
+    if (totalUnread > 0) {
+        badge.textContent = totalUnread;
+        badge.style.display = 'inline';
+    } else {
+        badge.style.display = 'none';
     }
 }
 
+async function getCurrentUser() {
+    try {
+        var response = await fetch('/api/v1/auth/profile/', {
+            headers: getApiHeaders()
+        });
+        if (response.ok) {
+            currentUser = await response.json();
+        } else {
+            var userData = localStorage.getItem('user');
+            if (userData) {
+                currentUser = JSON.parse(userData);
+            } else {
+                currentUser = { id: 1, full_name: 'Admin' };
+            }
+        }
+    } catch (error) {
+        console.error('Failed to get user profile:', error);
+        currentUser = { id: 1, full_name: 'Admin' };
+    }
+    return currentUser;
+}
+
 async function loadConversations() {
-    var container = document.getElementById('conversations-list');
+    var container = document.getElementById('conversationsList');
     try {
         conversations = await apiRequest('/conversations/');
         if (!Array.isArray(conversations)) conversations = [];
+        
+        var totalUnread = conversations.reduce(function(sum, conv) {
+            return sum + (conv.unread_count || 0);
+        }, 0);
+        
+        updateNavbarBadge(totalUnread);
         displayConversations(conversations);
 
         var urlParams = new URLSearchParams(window.location.search);
         var orderId = urlParams.get('order');
-        if (orderId) {
-            var conv = conversations.find(function(c) { return c.order && c.order.id === orderId; });
+        if (orderId && isInitialLoad) {
+            var conv = conversations.find(function(c) {
+                return c.order && c.order.id === orderId;
+            });
             if (conv) selectConversation(conv);
         }
+        isInitialLoad = false;
     } catch (error) {
         console.error('Load conversations error:', error);
-        container.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load conversations</div>';
+        container.innerHTML = 
+            '<div class="flex items-center justify-center h-full text-red-500">' +
+                '<div class="text-center">' +
+                    '<i class="fas fa-exclamation-circle text-2xl mb-2"></i>' +
+                    '<p>Failed to load conversations</p>' +
+                    '<button onclick="loadConversations()" class="mt-4 text-green-600 hover:text-green-700">Retry</button>' +
+                '</div>' +
+            '</div>';
     }
 }
 
 function displayConversations(list) {
-    var container = document.getElementById('conversations-list');
+    var container = document.getElementById('conversationsList');
 
     if (!list || list.length === 0) {
-        container.innerHTML = `
-            <div class="text-center text-gray-400 py-8">
-                <i class="fas fa-comments text-4xl text-gray-300 mb-3"></i>
-                <p>No conversations yet</p>
-                <p class="text-sm mt-2">Students will appear here when they message</p>
-            </div>
-        `;
+        container.innerHTML = 
+            '<div class="flex items-center justify-center h-full text-gray-400">' +
+                '<div class="text-center p-4">' +
+                    '<i class="fas fa-comments text-3xl text-gray-300 mb-3"></i>' +
+                    '<p>No conversations yet</p>' +
+                    '<p class="text-sm mt-1">Students will appear here when they message</p>' +
+                '</div>' +
+            '</div>';
         return;
     }
+
+    var currentConvId = currentConversation ? currentConversation.id : null;
 
     container.innerHTML = list.map(function(conv) {
         var unreadCount = conv.unread_count || 0;
         var studentName = conv.student ? conv.student.full_name : 'Student';
         var studentInitial = studentName ? studentName.charAt(0).toUpperCase() : 'S';
-        var isActive = currentConversation && currentConversation.id === conv.id;
+        var isActive = currentConvId === conv.id;
         var lastMessage = conv.last_message || null;
         var lastMessageContent = lastMessage ? (lastMessage.content || 'No messages yet') : 'No messages yet';
         var lastMessageTime = lastMessage ? lastMessage.created_at : conv.last_message_at;
 
-        return `
-        <div class="conversation-item p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition ${unreadCount > 0 ? 'unread' : ''} ${isActive ? 'active' : ''}"
-             data-conversation-id="${conv.id}"
-             data-order-id="${conv.order ? conv.order.id : ''}">
-            <div class="flex items-start space-x-3">
-                <div class="student-avatar">${studentInitial}</div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-medium text-gray-800">${escapeHtml(studentName)}</p>
-                            <p class="text-xs text-gray-500">Order #${escapeHtml(conv.order ? conv.order.order_number : 'N/A')}</p>
-                        </div>
-                        ${unreadCount > 0 ? `<span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full">${unreadCount}</span>` : ''}
-                    </div>
-                    <p class="text-sm text-gray-600 truncate mt-1">${escapeHtml(lastMessageContent)}</p>
-                    <p class="text-xs text-gray-400 mt-1">${formatRelativeTime(lastMessageTime)}</p>
-                </div>
-            </div>
-        </div>
-        `;
+        return '<div class="conversation-item p-3 border-b border-gray-100 hover:bg-gray-50 transition ' + (isActive ? 'active' : '') + '" data-conversation-id="' + conv.id + '" data-order-id="' + (conv.order ? conv.order.id : '') + '">' +
+            '<div class="flex items-start gap-3">' +
+                '<div class="student-avatar">' + studentInitial + '</div>' +
+                '<div class="flex-1 min-w-0">' +
+                    '<div class="flex justify-between items-start">' +
+                        '<div>' +
+                            '<p class="font-medium text-gray-800 text-sm">' + escapeHtml(studentName) + '</p>' +
+                            '<p class="text-xs text-gray-500">Order #' + escapeHtml(conv.order ? conv.order.order_number : 'N/A') + '</p>' +
+                        '</div>' +
+                        (lastMessageTime ? '<span class="last-message-time">' + formatRelativeTime(lastMessageTime) + '</span>' : '') +
+                    '</div>' +
+                    '<p class="text-sm text-gray-500 truncate mt-0.5">' + escapeHtml(lastMessageContent) + '</p>' +
+                    '<div class="flex items-center justify-between mt-1">' +
+                        (conv.order && conv.order.status ? '<span class="status-badge bg-green-100 text-green-700">' + escapeHtml(conv.order.status.replace('_', ' ')) + '</span>' : '') +
+                        (unreadCount > 0 ? '<span class="unread-badge">' + unreadCount + '</span>' : '') +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
     }).join('');
 
     container.querySelectorAll('.conversation-item').forEach(function(item) {
         item.addEventListener('click', function() {
             var convId = item.dataset.conversationId;
-            var conversation = conversations.find(function(c) { return c.id === convId; });
+            var conversation = conversations.find(function(c) {
+                return c.id === convId;
+            });
             if (conversation) selectConversation(conversation);
         });
     });
@@ -361,165 +798,240 @@ function filterConversations(search) {
     displayConversations(filtered);
 }
 
-async function selectConversation(conversation) {
-    currentConversation = conversation;
-    recalledMessageId = null;
-    clearTimeout(recallTimeout);
-    document.getElementById('recall-btn').classList.add('hidden');
+function updateUnreadCount() {
+    var total = conversations.reduce(function(sum, conv) {
+        return sum + (conv.unread_count || 0);
+    }, 0);
+    document.getElementById('unreadCount').textContent = total + ' unread';
+    updateNavbarBadge(total);
+}
 
-    document.querySelectorAll('.conversation-item').forEach(function(item) {
-        item.classList.toggle('active', item.dataset.conversationId === conversation.id);
-        if (item.dataset.conversationId === conversation.id) {
-            item.classList.remove('unread');
-            var badge = item.querySelector('.bg-green-600');
-            if (badge) badge.remove();
+function updateConversationUnread(conversationId, newCount) {
+    var conv = conversations.find(function(c) { return c.id === conversationId; });
+    if (conv) {
+        conv.unread_count = newCount;
+        updateUnreadCount();
+        displayConversations(conversations);
+        var item = document.querySelector('[data-conversation-id="' + conversationId + '"]');
+        if (item) {
+            var badge = item.querySelector('.unread-badge');
+            if (newCount > 0) {
+                if (badge) {
+                    badge.textContent = newCount;
+                } else {
+                    var statusDiv = item.querySelector('.flex.items-center.justify-between.mt-1');
+                    if (statusDiv) {
+                        var newBadge = document.createElement('span');
+                        newBadge.className = 'unread-badge';
+                        newBadge.textContent = newCount;
+                        statusDiv.appendChild(newBadge);
+                    }
+                }
+            } else {
+                if (badge) badge.remove();
+            }
         }
-    });
+    }
+}
+
+async function selectConversation(conversation) {
+    if (!conversation) return;
+
+    currentConversation = conversation;
 
     var studentName = conversation.student ? conversation.student.full_name : 'Student';
     var studentEmail = conversation.student ? conversation.student.email : '';
 
-    document.getElementById('student-avatar').classList.remove('hidden');
-    document.getElementById('student-avatar').textContent = studentName.charAt(0).toUpperCase();
+    document.getElementById('studentAvatar').classList.remove('hidden');
+    document.getElementById('studentAvatar').textContent = studentName.charAt(0).toUpperCase();
 
-    document.getElementById('current-student').innerHTML =
-        `${escapeHtml(studentName)} <span class="text-sm font-normal text-gray-500 ml-2">${escapeHtml(studentEmail)}</span>`;
+    document.getElementById('currentStudent').innerHTML = 
+        escapeHtml(studentName) + ' <span class="text-sm font-normal text-gray-500 ml-2">' + escapeHtml(studentEmail) + '</span>';
 
     var orderInfo = '';
     if (conversation.order) {
-        orderInfo = `Order #${escapeHtml(conversation.order.order_number)}`;
+        orderInfo = 'Order #' + escapeHtml(conversation.order.order_number);
         if (conversation.order.topic) {
-            orderInfo += ` - ${escapeHtml(conversation.order.topic.substring(0, 50))}`;
+            orderInfo += ' - ' + escapeHtml(conversation.order.topic.substring(0, 50));
         }
         if (conversation.order.status) {
-            orderInfo += ` <span class="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">${escapeHtml(conversation.order.status.replace('_', ' '))}</span>`;
+            orderInfo += ' <span class="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">' + escapeHtml(conversation.order.status.replace('_', ' ')) + '</span>';
         }
     }
-    document.getElementById('order-info').innerHTML = orderInfo;
+    document.getElementById('orderInfo').innerHTML = orderInfo;
 
-    document.getElementById('view-order-link').classList.remove('hidden');
+    document.getElementById('viewOrderLink').classList.remove('hidden');
     if (conversation.order) {
-        document.getElementById('view-order-link').href = '/admin/orders/' + conversation.order.id + '/';
+        document.getElementById('viewOrderLink').href = '/admin/orders/' + conversation.order.id + '/';
     }
 
-    document.getElementById('message-input').disabled = false;
-    document.getElementById('send-btn').disabled = false;
-    document.getElementById('message-input').focus();
+    document.getElementById('messageInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('messageInput').focus();
+
+    if (conversation.unread_count > 0) {
+        updateConversationUnread(conversation.id, 0);
+    }
 
     await loadMessages(conversation.id);
     connectWebSocket(conversation.id);
 }
 
 async function loadMessages(conversationId) {
-    var container = document.getElementById('messages-container');
+    var container = document.getElementById('messagesContainer');
     try {
         var data = await apiRequest('/order/' + conversationId + '/');
         displayMessages(data.messages || []);
     } catch (error) {
         console.error('Load messages error:', error);
-        container.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load messages</div>';
+        container.innerHTML = 
+            '<div class="flex items-center justify-center h-full text-red-500">' +
+                '<div class="text-center">' +
+                    '<i class="fas fa-exclamation-circle text-2xl mb-2"></i>' +
+                    '<p>Failed to load messages</p>' +
+                '</div>' +
+            '</div>';
+    }
+}
+
+function getStatusTicks(message) {
+    if (message.sender !== currentUser?.id) return '';
+
+    if (message.is_read) {
+        return '<span class="message-status"><span class="tick tick-read tick-double">✓✓</span></span>';
+    } else if (message.is_delivered) {
+        return '<span class="message-status"><span class="tick tick-delivered tick-double">✓✓</span></span>';
+    } else {
+        return '<span class="message-status"><span class="tick tick-sent tick-single">✓</span></span>';
     }
 }
 
 function messageBubbleHtml(msg) {
-    var isSent = msg.sender && msg.sender.id === currentUser?.id;
-    var canManage = isSent && !msg.is_recalled;
+    var isSent = msg.sender === currentUser?.id;
+    var sentClass = isSent ? 'sent' : 'received';
+    var ticks = getStatusTicks(msg);
 
-    return `
-        <div class="flex ${isSent ? 'justify-end' : 'justify-start'}" data-message-id="${msg.id}">
-            <div class="message-bubble ${isSent ? 'sent' : 'received'} rounded-lg p-3 relative group">
-                <p class="text-sm">${escapeHtml(msg.content)}</p>
-                <div class="flex justify-end items-center space-x-2 mt-1">
-                    ${msg.is_edited && !msg.is_recalled ? `<span class="edited-indicator ${isSent ? 'text-blue-200' : 'text-gray-500'}">edited</span>` : ''}
-                    <span class="message-time ${isSent ? 'text-blue-200' : 'text-gray-500'}">${formatMessageTime(msg.created_at)}</span>
-                    ${isSent ? `
-                        <span class="message-time text-blue-200">
-                            <i class="fas ${msg.is_read ? 'fa-check-double' : 'fa-check'}" title="${msg.is_read ? 'Read' : 'Delivered'}"></i>
-                        </span>
-                    ` : ''}
-                </div>
-                ${canManage ? `
-                    <div class="message-actions absolute top-1 right-1 space-x-1">
-                        <button class="text-xs text-white hover:text-gray-200 edit-message" data-id="${msg.id}" data-content="${escapeHtml(msg.content)}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="text-xs text-white hover:text-gray-200 delete-message" data-id="${msg.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
+    return '<div class="message-item ' + sentClass + '" data-message-id="' + msg.id + '">' +
+        '<div class="message-wrapper ' + sentClass + '">' +
+            '<div class="message-bubble ' + sentClass + '">' +
+                '<div class="message-content">' + escapeHtml(msg.content) + '</div>' +
+                '<div class="message-meta">' +
+                    (msg.is_edited ? '<span class="edited-indicator">edited</span>' : '') +
+                    '<span class="message-time">' + formatMessageTime(msg.created_at) + '</span>' +
+                    ticks +
+                '</div>' +
+                (isSent ? 
+                    '<div class="message-actions">' +
+                        '<button class="edit-message" data-id="' + msg.id + '" data-content="' + escapeHtml(msg.content) + '" title="Edit">' +
+                            '<i class="fas fa-edit"></i>' +
+                        '</button>' +
+                        '<button class="delete-btn delete-message" data-id="' + msg.id + '" title="Delete">' +
+                            '<i class="fas fa-trash"></i>' +
+                        '</button>' +
+                    '</div>' : '') +
+            '</div>' +
+        '</div>' +
+    '</div>';
 }
 
 function displayMessages(messages) {
-    var container = document.getElementById('messages-container');
+    var container = document.getElementById('messagesContainer');
 
     if (!messages || messages.length === 0) {
-        container.innerHTML = `
-            <div class="text-center text-gray-400 py-8">
-                <i class="fas fa-comment-dots text-4xl text-gray-300 mb-3"></i>
-                <p>No messages yet</p>
-                <p class="text-sm mt-2">Send a message to start the conversation</p>
-            </div>
-        `;
+        container.innerHTML = 
+            '<div class="flex items-center justify-center h-full text-gray-400">' +
+                '<div class="text-center">' +
+                    '<i class="fas fa-comment-dots text-3xl text-gray-300 mb-3"></i>' +
+                    '<p>No messages yet</p>' +
+                    '<p class="text-sm mt-1">Send a message to start the conversation</p>' +
+                '</div>' +
+            '</div>';
         return;
     }
 
-    container.innerHTML = messages.map(messageBubbleHtml).join('');
+    var html = '';
+    var lastDate = '';
+
+    messages.forEach(function(msg) {
+        var msgDate = new Date(msg.created_at);
+        var dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+        if (dateStr !== lastDate) {
+            html += 
+                '<div class="message-date-divider">' +
+                    '<span>' + dateStr + '</span>' +
+                '</div>';
+            lastDate = dateStr;
+        }
+
+        html += messageBubbleHtml(msg);
+    });
+
+    container.innerHTML = html;
     container.scrollTop = container.scrollHeight;
     bindMessageActions();
 
     var lastOwn = [...messages].reverse().find(function(m) {
-        return m.sender && m.sender.id === currentUser?.id && !m.is_recalled;
+        return m.sender === currentUser?.id;
     });
-    if (lastOwn) armRecall(lastOwn.id, lastOwn.created_at);
+    if (lastOwn) {
+        var elapsed = Date.now() - new Date(lastOwn.created_at).getTime();
+        if (elapsed < 60000) {
+            document.getElementById('recallBtn').classList.add('visible');
+        } else {
+            document.getElementById('recallBtn').classList.remove('visible');
+        }
+    } else {
+        document.getElementById('recallBtn').classList.remove('visible');
+    }
 }
 
 function bindMessageActions() {
     document.querySelectorAll('.edit-message').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
             showEditModal(this.dataset.id, this.dataset.content);
         });
     });
 
     document.querySelectorAll('.delete-message').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
             deleteMessage(this.dataset.id);
         });
     });
 }
 
 function connectWebSocket(conversationId) {
-    if (ws) ws.close();
+    if (ws) {
+        ws.close();
+    }
 
+    var token = getAuthToken();
     var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    var token = localStorage.getItem('access_token') || '';
-    ws = new WebSocket(protocol + '//' + window.location.host + '/ws/messaging/' + conversationId + '/?token=' + token);
+    var wsUrl = protocol + '//' + window.location.host + '/ws/orders/' + conversationId + '/chat/?token=' + token;
+
+    ws = new WebSocket(wsUrl);
 
     ws.onopen = function() {
-        reconnectAttempts = 0;
-        document.getElementById('online-status').innerHTML =
-            '<span class="text-green-600"><i class="fas fa-circle text-xs mr-1"></i>Online</span>';
+        document.getElementById('onlineStatus').innerHTML = 
+            '<span class="online-dot online"></span>Connected';
     };
 
     ws.onmessage = function(e) {
         try {
             var data = JSON.parse(e.data);
 
-            if (data.type === 'message') {
-                handleIncomingMessage(data.message);
+            if (data.type === 'message' || data.type === 'message.sent') {
+                handleIncomingMessage(data.message || data);
             } else if (data.type === 'typing') {
-                handleTypingIndicator(data);
+                handleTypingIndicator(data.is_typing);
             } else if (data.type === 'read') {
-                handleReadReceipt();
+                handleReadReceipt(data.message_id);
             } else if (data.type === 'edited') {
                 handleEditedMessage(data.message);
             } else if (data.type === 'deleted') {
                 removeDeletedMessage(data.message_id);
-            } else if (data.type === 'recalled') {
-                handleRecalledMessage(data.message);
             }
         } catch (err) {
             console.error('WebSocket message error:', err);
@@ -527,21 +1039,34 @@ function connectWebSocket(conversationId) {
     };
 
     ws.onclose = function() {
-        document.getElementById('online-status').innerHTML = '';
-        if (reconnectAttempts < 5) {
-            reconnectAttempts++;
-            setTimeout(function() {
-                connectWebSocket(conversationId);
-            }, 3000 * reconnectAttempts);
-        }
+        document.getElementById('onlineStatus').innerHTML = 
+            '<span class="online-dot offline"></span>Disconnected';
+    };
+
+    ws.onerror = function(error) {
+        console.error('WebSocket error:', error);
+        document.getElementById('onlineStatus').innerHTML = 
+            '<span class="online-dot offline"></span>Connection error';
     };
 }
 
 function handleIncomingMessage(message) {
-    var container = document.getElementById('messages-container');
-    var isSent = message.sender && message.sender.id === currentUser?.id;
+    var container = document.getElementById('messagesContainer');
+    var isSent = message.sender === currentUser?.id;
 
-    if (container.querySelector('.text-center')) {
+    var msgDate = new Date(message.created_at);
+    var dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    var lastDivider = container.querySelector('.message-date-divider:last-child');
+    if (!lastDivider || lastDivider.querySelector('span').textContent !== dateStr) {
+        var divider = document.createElement('div');
+        divider.className = 'message-date-divider';
+        divider.innerHTML = '<span>' + dateStr + '</span>';
+        container.appendChild(divider);
+    }
+
+    var placeholder = container.querySelector('.flex.items-center.justify-center.h-full');
+    if (placeholder) {
         container.innerHTML = '';
     }
 
@@ -549,10 +1074,15 @@ function handleIncomingMessage(message) {
     container.scrollTop = container.scrollHeight;
     bindMessageActions();
 
-    if (isSent) {
-        armRecall(message.id, message.created_at);
-    } else if (currentConversation) {
-        markConversationRead(currentConversation.id);
+    if (!isSent && currentConversation) {
+        var conv = conversations.find(function(c) { return c.id === currentConversation.id; });
+        if (conv) {
+            var newCount = (conv.unread_count || 0) + 1;
+            updateConversationUnread(conv.id, newCount);
+            updateNavbarBadge(conversations.reduce(function(sum, c) {
+                return sum + (c.unread_count || 0);
+            }, 0));
+        }
     }
 
     updateConversationPreview(message);
@@ -572,74 +1102,60 @@ function updateConversationPreview(message) {
     }
 }
 
-function armRecall(messageId, createdAt) {
-    clearTimeout(recallTimeout);
-    var elapsed = Date.now() - new Date(createdAt).getTime();
-    var remaining = 60000 - elapsed;
-
-    if (remaining <= 0) {
-        recalledMessageId = null;
-        document.getElementById('recall-btn').classList.add('hidden');
-        return;
+function handleTypingIndicator(isTyping) {
+    var indicator = document.getElementById('typingIndicator');
+    if (isTyping) {
+        indicator.innerHTML = 
+            '<div class="typing-indicator">' +
+                '<span class="typing-dot"></span>' +
+                '<span class="typing-dot"></span>' +
+                '<span class="typing-dot"></span>' +
+                '<span class="ml-1">Student is typing...</span>' +
+            '</div>';
+    } else {
+        indicator.innerHTML = '';
     }
-
-    recalledMessageId = messageId;
-    document.getElementById('recall-btn').classList.remove('hidden');
-    recallTimeout = setTimeout(function() {
-        recalledMessageId = null;
-        document.getElementById('recall-btn').classList.add('hidden');
-    }, remaining);
 }
 
-function handleTypingIndicator(data) {
-    document.getElementById('typing-indicator').innerHTML = data.is_typing ? `
-        <div class="typing-indicator">
-            <span class="typing-dot"></span>
-            <span class="typing-dot"></span>
-            <span class="typing-dot"></span>
-            <span class="ml-1 text-gray-500">Student is typing...</span>
-        </div>
-    ` : '';
-}
-
-function handleReadReceipt() {
-    document.querySelectorAll('.message-bubble.sent .fa-check:not(.fa-check-double)').forEach(function(icon) {
-        icon.classList.remove('fa-check');
-        icon.classList.add('fa-check-double');
-        icon.title = 'Read';
-    });
+function handleReadReceipt(messageId) {
+    if (messageId) {
+        var messageItem = document.querySelector('[data-message-id="' + messageId + '"]');
+        if (messageItem) {
+            var statusSpan = messageItem.querySelector('.message-status');
+            if (statusSpan) {
+                statusSpan.innerHTML = '<span class="tick tick-read tick-double">✓✓</span>';
+            }
+        }
+    } else {
+        document.querySelectorAll('.message-bubble.sent .tick-sent, .message-bubble.sent .tick-delivered').forEach(function(tick) {
+            var statusSpan = tick.closest('.message-status');
+            if (statusSpan) {
+                statusSpan.innerHTML = '<span class="tick tick-read tick-double">✓✓</span>';
+            }
+        });
+    }
 }
 
 function handleEditedMessage(message) {
     var wrapper = document.querySelector('[data-message-id="' + message.id + '"]');
-    if (wrapper) wrapper.outerHTML = messageBubbleHtml(message);
-    bindMessageActions();
-}
-
-function handleRecalledMessage(message) {
-    var wrapper = document.querySelector('[data-message-id="' + message.id + '"]');
-    if (wrapper) wrapper.outerHTML = messageBubbleHtml(message);
-    bindMessageActions();
-
-    if (message.id === recalledMessageId) {
-        clearTimeout(recallTimeout);
-        recalledMessageId = null;
-        document.getElementById('recall-btn').classList.add('hidden');
+    if (wrapper) {
+        wrapper.outerHTML = messageBubbleHtml(message);
+        bindMessageActions();
     }
 }
 
 function removeDeletedMessage(messageId) {
     var wrapper = document.querySelector('[data-message-id="' + messageId + '"]');
-    if (wrapper) wrapper.remove();
-    if (messageId === recalledMessageId) {
-        clearTimeout(recallTimeout);
-        recalledMessageId = null;
-        document.getElementById('recall-btn').classList.add('hidden');
+    if (wrapper) {
+        wrapper.style.opacity = '0.3';
+        setTimeout(function() {
+            wrapper.remove();
+        }, 300);
     }
 }
 
 function sendMessage() {
-    var input = document.getElementById('message-input');
+    var input = document.getElementById('messageInput');
     var content = input.value.trim();
 
     if (!content || !currentConversation || !ws || ws.readyState !== WebSocket.OPEN) return;
@@ -648,41 +1164,61 @@ function sendMessage() {
 
     if (isTyping) {
         isTyping = false;
-        ws.send(JSON.stringify({ type: 'typing', is_typing: false }));
+        ws.send(JSON.stringify({
+            type: 'typing',
+            is_typing: false
+        }));
     }
 
-    ws.send(JSON.stringify({ type: 'message', content: content }));
+    ws.send(JSON.stringify({
+        type: 'message',
+        content: content
+    }));
+
+    document.getElementById('recallBtn').classList.add('visible');
+    setTimeout(function() {
+        document.getElementById('recallBtn').classList.remove('visible');
+    }, 60000);
 }
 
 function recallLastMessage() {
-    if (!ws || !recalledMessageId) return;
-    ws.send(JSON.stringify({ type: 'recall', message_id: recalledMessageId }));
+    if (!ws) return;
+
+    ws.send(JSON.stringify({
+        type: 'recall'
+    }));
+
+    document.getElementById('recallBtn').classList.remove('visible');
 }
 
 function showEditModal(messageId, content) {
     selectedMessageId = messageId;
-    document.getElementById('edit-message-content').value = content;
-    document.getElementById('edit-message-modal').classList.remove('hidden');
+    document.getElementById('editMessageContent').value = content;
+    document.getElementById('editMessageModal').classList.remove('hidden');
 }
 
 function saveEditedMessage() {
-    var newContent = document.getElementById('edit-message-content').value.trim();
+    var newContent = document.getElementById('editMessageContent').value.trim();
+
     if (!newContent || !selectedMessageId || !ws) return;
 
-    ws.send(JSON.stringify({ type: 'edit', message_id: selectedMessageId, content: newContent }));
-    document.getElementById('edit-message-modal').classList.add('hidden');
+    ws.send(JSON.stringify({
+        type: 'edit',
+        message_id: selectedMessageId,
+        content: newContent
+    }));
+
+    document.getElementById('editMessageModal').classList.add('hidden');
 }
 
 function deleteMessage(messageId) {
     if (!confirm('Delete this message?')) return;
-    if (ws) ws.send(JSON.stringify({ type: 'delete', message_id: messageId }));
-}
 
-async function markConversationRead(conversationId) {
-    try {
-        await apiPost('/order/' + conversationId + '/read/', {});
-    } catch (error) {
-        console.error('Failed to mark as read:', error);
+    if (ws) {
+        ws.send(JSON.stringify({
+            type: 'delete',
+            message_id: messageId
+        }));
     }
 }
 

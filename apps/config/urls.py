@@ -81,8 +81,8 @@ urlpatterns = [
     
     path('admin/', admin.site.urls),
     
-    path('auth/', include('apps.accounts.urls')),
-    path('api/auth/', include('apps.accounts.urls')),
+    path('auth/', include(('apps.accounts.urls', 'accounts'), namespace='accounts-web')),
+    path('api/v1/auth/', include(('apps.accounts.urls', 'accounts'), namespace='accounts-api')),
     path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
     path('api/v1/admin/', include('apps.admin_portal.urls')),
@@ -94,6 +94,7 @@ urlpatterns = [
     path('api/v1/client/counts/', views.client_counts, name='client-counts'),
     path('api/v1/client/wallet/', views.client_wallet_data, name='client-wallet-data'),
     path('api/v1/client/orders/', views.client_orders_data, name='client-orders-data'),
+    path('api/v1/client/orders/<uuid:order_id>/', views.client_order_detail_data, name='client-order-detail-data'),
     
     path('api/v1/admin/counts/', views.admin_counts, name='admin-counts'),
 ]

@@ -19,9 +19,9 @@ from rest_framework import status
 from decimal import Decimal
 from apps.accounts.models import User
 from apps.orders.models import Order, OrderHistory
+from apps.orders.serializers import OrderListSerializer
 from apps.admin_portal.models import Blog, Sample
 from apps.messaging.models import Conversation
-from apps.orders.serializers import OrderListSerializer
 import hashlib
 import json
 from datetime import timedelta
@@ -408,6 +408,20 @@ def client_order_detail(request, order_id):
     return render(request, 'client/order-detail.html', {'order_id': order_id})
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def client_order_detail_data(request, order_id):
+    try:
+        from apps.orders.serializers import OrderSerializer
+        order = get_object_or_404(Order, id=order_id, client=request.user)
+        serializer = OrderSerializer(order, context={'request': request})
+        return Response(serializer.data)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @login_required
 def client_wallet(request):
     if request.user.role != 'client':
@@ -428,7 +442,7 @@ def client_messages(request):
 def client_order_messages(request, order_id):
     if request.user.role != 'client':
         return render(request, 'access_denied.html')
-    return render(request, 'client/order-messages.html', {'order_id': order_id})
+    return render(request, 'client/messages.html', {'order_id': order_id})
 
 
 @login_required
@@ -957,7 +971,7 @@ def client_counts(request):
         
         unread_messages = 0
         try:
-            conversations = Conversation.objects.filter(student=request.user)
+            conversations = Conversation.objects.filter(client=request.user)
             for conv in conversations:
                 unread_messages += conv.get_unread_count(request.user)
         except Exception:
