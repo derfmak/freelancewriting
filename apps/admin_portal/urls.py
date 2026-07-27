@@ -62,6 +62,7 @@ urlpatterns = [
     path('notes/create/', views.create_note, name='create-note'),
     path('notes/<uuid:note_id>/', views.update_note, name='update-note'),
     path('notes/<uuid:note_id>/delete/', views.delete_note, name='delete-note'),
+    path('orders/<uuid:order_id>/status/', views.get_order_status, name='order-status'),
     
     path('analytics/', views.analytics_overview, name='analytics-overview'),
     path('analytics/revenue/', views.revenue_analytics, name='revenue-analytics'),

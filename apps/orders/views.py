@@ -9,7 +9,6 @@ from datetime import timezone as dt_timezone
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import Q
-from apps.payments.services import WalletService
 from .models import Order, OrderHistory, Attachment, OrderTimeline, UserPresence
 from .serializers import (
     OrderSerializer, OrderListSerializer, OrderCreateSerializer,
@@ -17,6 +16,7 @@ from .serializers import (
     RevisionRequestSerializer, RefundRequestSerializer, RatingSerializer,
     CancelOrderSerializer, DeclineOrderSerializer, ResubmitOrderSerializer
 )
+from apps.payments.models import Wallet, Transaction
 
 
 def log_history(order, user, action, from_status, to_status, data=None):
@@ -232,52 +232,56 @@ def create_order(request):
     )
 
     wallet = request.user.wallet
-    try:
-        WalletService.debit(
-            wallet=wallet,
-            amount=price_data['total_price'],
-            transaction_type='escrow_hold',
-            description=f'Order payment held in escrow for {data["topic"][:50]}'
-        )
-    except ValueError as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     links = data.get('links', [])
     sanitized_links = sanitize_links(links)
 
-    order = Order.objects.create(
-        client=request.user,
-        academic_level=data['academic_level'],
-        paper_type=data['paper_type'],
-        subject=data['subject'],
-        topic=data['topic'],
-        instructions=data['instructions'],
-        pages=pages,
-        words=words,
-        spacing=spacing,
-        slides=data.get('slides') if data['paper_type'] == 'presentation' else None,
-        sources_count=data.get('sources_count', 0),
-        deadline=data['deadline'],
-        format=data['format'],
-        links=sanitized_links,
-        base_price=price_data['base_price'],
-        level_multiplier=price_data['level_multiplier'],
-        level_adjusted=price_data['level_adjusted'],
-        urgency_multiplier=price_data['urgency_multiplier'],
-        total_price=price_data['total_price'],
-        status='request'
-    )
+    with transaction.atomic():
+        order = Order.objects.create(
+            client=request.user,
+            academic_level=data['academic_level'],
+            paper_type=data['paper_type'],
+            subject=data['subject'],
+            topic=data['topic'],
+            instructions=data['instructions'],
+            pages=pages,
+            words=words,
+            spacing=spacing,
+            slides=data.get('slides') if data['paper_type'] == 'presentation' else None,
+            sources_count=data.get('sources_count', 0),
+            deadline=data['deadline'],
+            format=data['format'],
+            links=sanitized_links,
+            base_price=price_data['base_price'],
+            level_multiplier=price_data['level_multiplier'],
+            level_adjusted=price_data['level_adjusted'],
+            urgency_multiplier=price_data['urgency_multiplier'],
+            total_price=price_data['total_price'],
+            status='request'
+        )
 
-    log_history(order, request.user, 'create', None, 'request', {
-        'total_price': str(price_data['total_price']),
-        'pages': float(price_data.get('pages', 0)),
-        'words': words,
-        'spacing': spacing
-    })
+        Transaction.objects.create(
+            user=request.user,
+            wallet=wallet,
+            amount=price_data['total_price'],
+            type='payment',
+            direction='debit',
+            status='pending',
+            payment_method='paypal',
+            description=f'Order {order.order_number} placed - pending payment',
+            order=order
+        )
 
-    create_timeline(order, 'request', 'Order Created',
-                   'Your order has been submitted and is waiting for a writer',
-                   'fa-file-alt', 'green')
+        log_history(order, request.user, 'create', None, 'request', {
+            'total_price': str(price_data['total_price']),
+            'pages': float(price_data.get('pages', 0)),
+            'words': words,
+            'spacing': spacing
+        })
+
+        create_timeline(order, 'request', 'Order Created',
+                       'Your order has been submitted and is waiting for a writer',
+                       'fa-file-alt', 'green')
 
     return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
@@ -439,10 +443,15 @@ def reject_order(request, order_id):
     order.declined_reason = reason
     order.save()
 
-    WalletService.credit(
-        wallet=order.client.wallet,
+    wallet = order.client.wallet
+    Transaction.objects.create(
+        user=order.client,
+        wallet=wallet,
         amount=order.total_price,
-        transaction_type='refund',
+        type='refund',
+        direction='credit',
+        status='completed',
+        payment_method='paypal',
         description=f'Refund for rejected order {order.order_number}',
         order=order
     )
@@ -479,10 +488,15 @@ def cancel_order(request, order_id):
     order.save()
 
     if order.status in ['awaiting_approval', 'in_progress']:
-        WalletService.credit(
-            wallet=order.client.wallet,
+        wallet = order.client.wallet
+        Transaction.objects.create(
+            user=order.client,
+            wallet=wallet,
             amount=order.total_price,
-            transaction_type='refund',
+            type='refund',
+            direction='credit',
+            status='completed',
+            payment_method='paypal',
             description=f'Refund for cancelled order {order.order_number}',
             order=order
         )
@@ -525,10 +539,15 @@ def decline_order(request, order_id):
     order.declined_feedback = serializer.validated_data.get('feedback', '')
     order.save()
 
-    WalletService.credit(
-        wallet=order.client.wallet,
+    wallet = order.client.wallet
+    Transaction.objects.create(
+        user=order.client,
+        wallet=wallet,
         amount=order.total_price,
-        transaction_type='refund',
+        type='refund',
+        direction='credit',
+        status='completed',
+        payment_method='paypal',
         description=f'Refund for declined order {order.order_number}',
         order=order
     )
@@ -624,16 +643,17 @@ def reorder_order(request, order_id):
     )
 
     wallet = request.user.wallet
-    try:
-        WalletService.debit(
-            wallet=wallet,
-            amount=price_data['total_price'],
-            transaction_type='escrow_hold',
-            description=f'Order payment held in escrow for {order.topic[:50]}'
-        )
-    except ValueError as e:
-        new_order.delete()
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    Transaction.objects.create(
+        user=request.user,
+        wallet=wallet,
+        amount=price_data['total_price'],
+        type='payment',
+        direction='debit',
+        status='pending',
+        payment_method='paypal',
+        description=f'Order {new_order.order_number} placed - pending payment',
+        order=new_order
+    )
 
     log_history(new_order, request.user, 'reorder', None, 'request', {
         'original_order': str(order.id),
@@ -714,17 +734,17 @@ def split_order(request, order_id):
         )
 
         wallet = request.user.wallet
-        try:
-            WalletService.debit(
-                wallet=wallet,
-                amount=part_price_data['total_price'],
-                transaction_type='escrow_hold',
-                description=f'Order payment held in escrow for {new_order.topic[:50]}'
-            )
-        except ValueError as e:
-            for split_order in split_orders:
-                split_order.delete()
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        Transaction.objects.create(
+            user=request.user,
+            wallet=wallet,
+            amount=part_price_data['total_price'],
+            type='payment',
+            direction='debit',
+            status='pending',
+            payment_method='paypal',
+            description=f'Order {new_order.order_number} placed - pending payment',
+            order=new_order
+        )
 
         log_history(new_order, request.user, 'split', None, 'request', {
             'parent_order': str(order.id),
@@ -821,10 +841,15 @@ def approve_order(request, order_id):
     order.save()
 
     if order.writer:
-        WalletService.credit(
-            wallet=order.writer.wallet,
+        wallet = order.writer.wallet
+        Transaction.objects.create(
+            user=order.writer,
+            wallet=wallet,
             amount=order.total_price,
-            transaction_type='payout',
+            type='payout',
+            direction='credit',
+            status='completed',
+            payment_method='paypal',
             description=f'Payment for order {order.order_number}',
             order=order
         )
@@ -984,10 +1009,15 @@ def process_auto_approvals():
         order.save()
 
         if order.writer:
-            WalletService.credit(
-                wallet=order.writer.wallet,
+            wallet = order.writer.wallet
+            Transaction.objects.create(
+                user=order.writer,
+                wallet=wallet,
                 amount=order.total_price,
-                transaction_type='payout',
+                type='payout',
+                direction='credit',
+                status='completed',
+                payment_method='paypal',
                 description=f'Payment for order {order.order_number}',
                 order=order
             )

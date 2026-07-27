@@ -1,4 +1,3 @@
-# Python
 __pycache__/
 *.py[cod]
 *.so
@@ -9,7 +8,6 @@ ENV/
 env.bak/
 venv.bak/
 
-# Django
 *.log
 db.sqlite3
 db.sqlite3-journal
@@ -17,63 +15,51 @@ media/
 static/
 staticfiles/
 
-# Environment
 .env
 .env.local
 .env.*.local
 
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 .DS_Store
 
-# Testing
 .coverage
 htmlcov/
 .pytest_cache/
 *.cover
 
-# Build artifacts
 dist/
 build/
 *.egg-info/
 *.egg
 
-# Node
 node_modules/
 npm-debug.log
 
-# Backup
 *.bak
 *.tmp
 *.temp
 
-# Windows
 Thumbs.db
 Desktop.ini
 
-# Mac
 .DS_Store
 .AppleDouble
 
-# Local settings
 local_settings.py
 secrets.py
 *.key
 *.pem
 *.crt
 
-# Uploads
 uploads/
 downloads/
 tmp/
 
-# Logs
 logs/
 *.log
 
-# Migration files (optional - uncomment if you want to ignore migrations)
-# */migrations/
-# !*/migrations/__init__.py
+*/migrations/
+!*/migrations/__init__.py

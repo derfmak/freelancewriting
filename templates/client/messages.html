@@ -414,6 +414,14 @@
         margin-left: 4px;
     }
 
+    #chatContainer {
+        min-height: 0;
+    }
+
+    #messagesContainerWrapper {
+        min-height: 0;
+    }
+
     @media (max-width: 768px) {
         .conversation-list {
             height: calc(100vh - 180px);
@@ -758,32 +766,6 @@ function updateOrderSelect() {
         }).join('');
 }
 
-function updateNavbarBadge(totalUnread) {
-    var badge = document.getElementById('navbarUnreadBadge');
-    if (!badge) {
-        var navMessages = document.querySelector('a[href*="messages"]');
-        if (navMessages) {
-            var existingBadge = navMessages.querySelector('.navbar-unread-badge');
-            if (existingBadge) existingBadge.remove();
-            if (totalUnread > 0) {
-                var newBadge = document.createElement('span');
-                newBadge.className = 'navbar-unread-badge';
-                newBadge.id = 'navbarUnreadBadge';
-                newBadge.textContent = totalUnread;
-                navMessages.appendChild(newBadge);
-            }
-        }
-        return;
-    }
-
-    if (totalUnread > 0) {
-        badge.textContent = totalUnread;
-        badge.style.display = 'inline';
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
 async function loadConversations() {
     var container = document.getElementById('conversationsList');
     try {
@@ -796,15 +778,16 @@ async function loadConversations() {
         var data = await response.json();
         conversations = data.results || data;
 
-        var totalUnread = conversations.reduce(function(sum, conv) {
-            return sum + (conv.unread_count || 0);
-        }, 0);
-
-        updateNavbarBadge(totalUnread);
         displayConversations(conversations);
+        updateUnreadCount();
+
+        if (!isInitialLoad) {
+            return;
+        }
+        isInitialLoad = false;
 
         var orderId = getOrderIdFromUrl();
-        if (orderId && isInitialLoad) {
+        if (orderId) {
             var conv = conversations.find(function(c) {
                 return c.order && c.order.id === orderId;
             });
@@ -814,12 +797,12 @@ async function loadConversations() {
                 var newConv = await getOrCreateConversation(orderId);
                 if (newConv) {
                     conversations.push(newConv);
-                    await loadConversations();
+                    displayConversations(conversations);
+                    updateUnreadCount();
                     selectConversation(newConv);
                 }
             }
         }
-        isInitialLoad = false;
 
     } catch (error) {
         console.error('Failed to load conversations:', error);
@@ -965,7 +948,6 @@ function updateUnreadCount() {
         return sum + (conv.unread_count || 0);
     }, 0);
     document.getElementById('unreadCount').textContent = total + ' unread';
-    updateNavbarBadge(total);
 }
 
 function updateConversationUnread(conversationId, newCount) {
@@ -1237,7 +1219,7 @@ function appendMessageToContainer(html, createdAt) {
         container.appendChild(divider);
     }
 
-    var placeholder = container.querySelector('.flex.items-center.justify-center.h-full');
+    var placeholder = container.querySelector('.chat-placeholder');
     if (placeholder) {
         container.innerHTML = '';
     }
@@ -1523,7 +1505,8 @@ async function startNewConversation() {
         var conversation = await getOrCreateConversation(orderId);
         if (conversation) {
             conversations.push(conversation);
-            await loadConversations();
+            displayConversations(conversations);
+            updateUnreadCount();
             selectConversation(conversation);
         } else {
             alert('Failed to start conversation. Please try again.');

@@ -828,8 +828,8 @@
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Actions</h2>
                 <div class="space-y-2">
                     {% if order.status == 'request' %}
-                    <button onclick="openAcceptModal()" id="acceptBtn" class="action-btn action-btn-primary">Accept Order</button>
-                    <button onclick="openRejectModal()" id="rejectOpenBtn" class="action-btn action-btn-danger">Reject Order</button>
+                    <button onclick="openActionModal('accept', '{{ order.id }}', '{{ order.order_number }}')" id="acceptBtn" class="action-btn action-btn-primary">Accept Order</button>
+                    <button onclick="openActionModal('reject', '{{ order.id }}', '{{ order.order_number }}')" id="rejectOpenBtn" class="action-btn action-btn-danger">Reject Order</button>
                     {% endif %}
 
                     {% if order.status == 'in_progress' %}
@@ -913,31 +913,20 @@
     </div>
 </div>
 
-<div id="acceptModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+<div id="actionModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
     <div class="modal-content bg-white rounded-xl p-6 max-w-md w-full mx-4">
-        <div class="danger-icon-wrap green">
+        <div id="actionIcon" class="danger-icon-wrap green">
             <i class="fas fa-check text-xl"></i>
         </div>
-        <h3 class="text-lg font-bold text-gray-900 mb-2">Accept This Order?</h3>
-        <p class="text-sm text-gray-600 mb-4">You'll be assigned as the writer for this order and its status will move to In Progress.</p>
-        <div class="flex gap-3">
-            <button onclick="closeAcceptModal()" id="acceptCancelBtn" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Cancel</button>
-            <button onclick="confirmAccept()" id="acceptConfirmBtn" class="action-btn action-btn-primary flex-1">Accept Order</button>
+        <h3 class="text-lg font-bold text-gray-900 mb-2" id="actionTitle">Confirm Action</h3>
+        <p class="text-sm text-gray-600 mb-4" id="actionBody">Are you sure you want to proceed?</p>
+        <div id="actionInputContainer" style="display:none;">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+            <textarea id="actionInput" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors" rows="3"></textarea>
         </div>
-    </div>
-</div>
-
-<div id="rejectModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
-    <div class="modal-content bg-white rounded-xl p-6 max-w-md w-full mx-4">
-        <div class="danger-icon-wrap red">
-            <i class="fas fa-exclamation-triangle text-xl"></i>
-        </div>
-        <h3 class="text-lg font-bold text-gray-900 mb-2">Reject Order</h3>
-        <p class="text-sm text-gray-600 mb-4">This cannot be undone. Please provide a reason for rejecting this order request.</p>
-        <textarea id="rejectReason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition text-sm" rows="4" placeholder="Reason for rejection..."></textarea>
         <div class="flex gap-3 mt-4">
-            <button onclick="closeRejectModal()" id="rejectCancelBtn" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Cancel</button>
-            <button onclick="confirmReject()" id="rejectConfirmBtn" class="action-btn action-btn-danger flex-1">Reject Order</button>
+            <button onclick="closeActionModal()" id="actionCancelBtn" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Cancel</button>
+            <button onclick="confirmAction()" id="actionConfirmBtn" class="flex-1 action-btn action-btn-primary">Confirm</button>
         </div>
     </div>
 </div>
@@ -1019,6 +1008,7 @@ let selectedFiles = [];
 let pullBackTarget = { id: null, filename: null };
 let isUploading = false;
 let uploadXhr = null;
+let currentAction = null;
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 const ORIGINAL_TITLE = document.title;
 
@@ -1054,7 +1044,7 @@ function requestNotificationPermission() {
 function notifyResult(title, body, isError) {
     if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
         try {
-            new Notification(title, { body: body, icon: isError ? undefined : undefined });
+            new Notification(title, { body: body });
         } catch (e) {}
     }
     flashTabTitle(isError ? 'Upload failed' : 'Upload complete');
@@ -1166,89 +1156,121 @@ function formatSpeed(bytesPerSec) {
     return (bytesPerSec / 1024).toFixed(0) + ' KB/s';
 }
 
-async function acceptOrder(orderId, buttonEl) {
-    const originalContent = buttonEl.innerHTML;
-    buttonEl.disabled = true;
-    buttonEl.innerHTML = '<span class="btn-spinner"></span> Accepting...';
-    try {
-        const response = await fetch(`/api/v1/admin/orders/${orderId}/accept/`, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCsrfToken() },
-            credentials: 'include'
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to accept');
-        showToast('Order accepted successfully');
-        setTimeout(() => window.location.reload(), 700);
-    } catch (error) {
-        buttonEl.disabled = false;
-        buttonEl.innerHTML = originalContent;
-        showToast(error.message || 'Failed to accept order', 'error');
+function openActionModal(action, orderId, orderNumber) {
+    currentAction = action;
+    const modal = document.getElementById('actionModal');
+    const title = document.getElementById('actionTitle');
+    const body = document.getElementById('actionBody');
+    const confirmBtn = document.getElementById('actionConfirmBtn');
+    const inputContainer = document.getElementById('actionInputContainer');
+    const input = document.getElementById('actionInput');
+    const icon = document.getElementById('actionIcon');
+    
+    if (!modal || !title || !body || !confirmBtn || !icon) return;
+    
+    if (action === 'accept') {
+        title.textContent = 'Accept Order';
+        body.textContent = `Are you sure you want to accept order #${orderNumber}?`;
+        confirmBtn.textContent = 'Accept';
+        confirmBtn.className = 'action-btn action-btn-primary flex-1';
+        icon.className = 'danger-icon-wrap green';
+        icon.innerHTML = '<i class="fas fa-check text-xl"></i>';
+        if (inputContainer) inputContainer.style.display = 'none';
+    } else if (action === 'reject') {
+        title.textContent = 'Reject Order';
+        body.textContent = `Please provide a reason for rejecting order #${orderNumber}:`;
+        confirmBtn.textContent = 'Reject';
+        confirmBtn.className = 'action-btn action-btn-danger flex-1';
+        icon.className = 'danger-icon-wrap red';
+        icon.innerHTML = '<i class="fas fa-exclamation-triangle text-xl"></i>';
+        if (inputContainer) {
+            inputContainer.style.display = 'block';
+            if (input) {
+                input.placeholder = 'Reason for rejection...';
+                input.value = '';
+            }
+        }
+    } else if (action === 'pullback') {
+        title.textContent = 'Pull Back File';
+        body.textContent = 'Are you sure you want to pull back this file?';
+        confirmBtn.textContent = 'Pull Back';
+        confirmBtn.className = 'action-btn action-btn-danger flex-1';
+        icon.className = 'danger-icon-wrap red';
+        icon.innerHTML = '<i class="fas fa-undo text-xl"></i>';
+        if (inputContainer) inputContainer.style.display = 'none';
     }
+    
+    modal.dataset.action = action;
+    modal.dataset.orderId = orderId;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 }
 
-function openAcceptModal() {
-    document.getElementById('acceptModal').classList.remove('hidden');
-    document.getElementById('acceptModal').classList.add('flex');
-}
-
-function closeAcceptModal() {
-    document.getElementById('acceptModal').classList.add('hidden');
-    document.getElementById('acceptModal').classList.remove('flex');
-}
-
-function confirmAccept() {
-    const btn = document.getElementById('acceptConfirmBtn');
-    document.getElementById('acceptCancelBtn').disabled = true;
-    acceptOrder(selectedOrderId, btn);
-}
-
-function openRejectModal() {
-    document.getElementById('rejectModal').classList.remove('hidden');
-    document.getElementById('rejectModal').classList.add('flex');
-    document.getElementById('rejectReason').value = '';
-    document.getElementById('rejectReason').focus();
-}
-
-function closeRejectModal() {
-    document.getElementById('rejectModal').classList.add('hidden');
-    document.getElementById('rejectModal').classList.remove('flex');
-}
-
-async function confirmReject() {
-    const reason = document.getElementById('rejectReason').value.trim();
-    if (!reason) {
-        showToast('Please provide a reason for rejection', 'error');
-        return;
+function closeActionModal() {
+    const modal = document.getElementById('actionModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
+    currentAction = null;
+}
 
-    const btn = document.getElementById('rejectConfirmBtn');
+function confirmAction() {
+    const modal = document.getElementById('actionModal');
+    if (!modal) return;
+    
+    const action = modal.dataset.action;
+    const orderId = modal.dataset.orderId;
+    const input = document.getElementById('actionInput');
+    
+    if (action === 'accept') {
+        const btn = document.getElementById('actionConfirmBtn');
+        acceptOrder(orderId, btn);
+    } else if (action === 'reject') {
+        const reason = input ? input.value.trim() : '';
+        if (!reason) {
+            showToast('Please provide a reason for rejection', 'error');
+            return;
+        }
+        rejectOrder(orderId, reason);
+    } else if (action === 'pullback') {
+        confirmPullBack();
+    }
+    
+    closeActionModal();
+}
+
+function rejectOrder(orderId, reason) {
+    const btn = document.getElementById('actionConfirmBtn');
     const originalContent = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="btn-spinner"></span> Rejecting...';
-    document.getElementById('rejectCancelBtn').disabled = true;
+    document.getElementById('actionCancelBtn').disabled = true;
 
-    try {
-        const response = await fetch(`/api/v1/admin/orders/${selectedOrderId}/reject/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken()
-            },
-            credentials: 'include',
-            body: JSON.stringify({ reason: reason })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to reject');
-        closeRejectModal();
-        showToast('Order rejected successfully');
-        setTimeout(() => window.location.reload(), 700);
-    } catch (error) {
+    fetch(`/api/v1/admin/orders/${orderId}/reject/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        credentials: 'include',
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message || data.success) {
+            showToast('Order rejected successfully');
+            setTimeout(() => window.location.reload(), 700);
+        } else {
+            throw new Error(data.message || data.error || 'Failed to reject');
+        }
+    })
+    .catch(error => {
         btn.disabled = false;
         btn.innerHTML = originalContent;
-        document.getElementById('rejectCancelBtn').disabled = false;
+        document.getElementById('actionCancelBtn').disabled = false;
         showToast(error.message || 'Failed to reject order', 'error');
-    }
+    });
 }
 
 function openPullBackModal(fileId, filename) {
@@ -1588,6 +1610,27 @@ async function sendMessage() {
         showToast(error.message || 'Failed to send message', 'error');
     } finally {
         sendBtn.disabled = false;
+    }
+}
+
+async function acceptOrder(orderId, buttonEl) {
+    const originalContent = buttonEl.innerHTML;
+    buttonEl.disabled = true;
+    buttonEl.innerHTML = '<span class="btn-spinner"></span> Accepting...';
+    try {
+        const response = await fetch(`/api/v1/admin/orders/${orderId}/accept/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() },
+            credentials: 'include'
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to accept');
+        showToast('Order accepted successfully');
+        setTimeout(() => window.location.reload(), 700);
+    } catch (error) {
+        buttonEl.disabled = false;
+        buttonEl.innerHTML = originalContent;
+        showToast(error.message || 'Failed to accept order', 'error');
     }
 }
 </script>

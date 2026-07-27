@@ -9,37 +9,30 @@
         position: relative;
         overflow: hidden;
     }
-    
     .order-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0,0,0,0.06);
     }
-    
     .order-card.overdue {
         border-left: 4px solid #ef4444;
         background: #fef2f2;
     }
-    
     .order-card.approaching {
         border-left: 4px solid #eab308;
         background: #fffbeb;
     }
-    
     .order-card.completed {
         border-left: 4px solid #22c55e;
         background: #f0fdf4;
     }
-    
     .order-card.cancelled {
         border-left: 4px solid #ef4444;
         background: #fef2f2;
     }
-    
     .order-card.declined {
         border-left: 4px solid #ef4444;
         background: #fef2f2;
     }
-    
     .status-dot {
         width: 8px;
         height: 8px;
@@ -47,7 +40,6 @@
         display: inline-block;
         margin-right: 6px;
     }
-    
     .status-dot.request { background: #f59e0b; }
     .status-dot.in_progress { background: #3b82f6; }
     .status-dot.awaiting_approval { background: #8b5cf6; }
@@ -55,23 +47,19 @@
     .status-dot.cancelled { background: #ef4444; }
     .status-dot.declined { background: #ef4444; }
     .status-dot.refund_pending { background: #f59e0b; }
-    
     .filter-btn {
         transition: all 0.2s ease;
         cursor: pointer;
     }
-    
     .filter-btn.active {
         background: #059669;
         color: white;
         border-color: #059669;
     }
-    
     .filter-btn.active:hover {
         background: #047857;
         border-color: #047857;
     }
-    
     .request-badge {
         background: #fef3c7;
         color: #d97706;
@@ -82,7 +70,6 @@
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
-    
     .page-size-select {
         padding: 4px 8px;
         border: 1px solid #d1d5db;
@@ -90,57 +77,25 @@
         font-size: 0.875rem;
         background: white;
     }
-    
     .time-badge {
         font-size: 0.7rem;
         padding: 2px 8px;
         border-radius: 12px;
         font-weight: 500;
     }
-    
-    .time-badge.overdue {
-        background: #fef2f2;
-        color: #dc2626;
-    }
-    
-    .time-badge.approaching {
-        background: #fffbeb;
-        color: #d97706;
-    }
-    
-    .time-badge.safe {
-        background: #f0fdf4;
-        color: #059669;
-    }
-    
-    .time-badge.completed {
-        background: #dcfce7;
-        color: #166534;
-    }
-    
+    .time-badge.overdue { background: #fef2f2; color: #dc2626; }
+    .time-badge.approaching { background: #fffbeb; color: #d97706; }
+    .time-badge.safe { background: #f0fdf4; color: #059669; }
+    .time-badge.completed { background: #dcfce7; color: #166534; }
     .action-btn {
         transition: all 0.2s ease;
     }
-    
-    .action-btn:active {
-        transform: scale(0.95);
-    }
-    
-    .modal-content {
-        animation: modalIn 0.25s ease;
-    }
-    
+    .action-btn:active { transform: scale(0.95); }
+    .modal-content { animation: modalIn 0.25s ease; }
     @keyframes modalIn {
-        from {
-            opacity: 0;
-            transform: scale(0.95) translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
     }
-    
     .search-suggestions {
         position: absolute;
         top: 100%;
@@ -156,7 +111,7 @@
         display: none;
         box-shadow: 0 8px 30px rgba(0,0,0,0.1);
     }
-    
+    .search-suggestions.active { display: block; }
     .suggestion-item {
         padding: 8px 16px;
         cursor: pointer;
@@ -166,32 +121,18 @@
         gap: 8px;
         font-size: 0.85rem;
     }
-    
-    .suggestion-item:hover {
-        background: #f3f4f6;
-    }
-    
-    .suggestion-item .highlight {
-        background: #fbbf24;
-        padding: 0 2px;
-        border-radius: 2px;
-    }
-    
-    .search-wrapper {
-        position: relative;
-    }
-    
+    .suggestion-item:hover { background: #f3f4f6; }
+    .suggestion-item .highlight { background: #fbbf24; padding: 0 2px; border-radius: 2px; }
+    .search-wrapper { position: relative; }
     .search-wrapper input {
         padding-left: 36px;
         transition: all 0.2s ease;
         width: 100%;
     }
-    
     .search-wrapper input:focus {
         border-color: #059669;
-        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
     }
-    
     .search-wrapper .search-icon {
         position: absolute;
         left: 12px;
@@ -199,7 +140,6 @@
         transform: translateY(-50%);
         color: #9ca3af;
     }
-    
     .clear-search {
         position: absolute;
         right: 12px;
@@ -211,56 +151,144 @@
         display: none;
         transition: color 0.2s ease;
     }
-    
-    .clear-search:hover {
-        color: #374151;
-    }
-    
-    .clear-search.visible {
-        display: block;
-    }
-    
-    .toast-notification {
-        animation: slideIn 0.3s ease;
-    }
-    
+    .clear-search:hover { color: #374151; }
+    .clear-search.visible { display: block; }
+    .toast-notification { animation: slideIn 0.3s ease; }
     @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
-    
     .rating-stars {
         display: inline-flex;
         gap: 0.05rem;
         font-size: 0.75rem;
     }
-    .rating-stars .filled {
-        color: #fbbf24;
+    .rating-stars .filled { color: #fbbf24; }
+    .rating-stars .empty { color: #d1d5db; }
+    .upload-progress-bar {
+        width: 100%;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 8px;
     }
-    .rating-stars .empty {
-        color: #d1d5db;
+    .upload-progress-bar .fill {
+        height: 100%;
+        background: linear-gradient(90deg, #7c3aed, #2563eb);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+        width: 0%;
     }
-    
+    .upload-progress-text {
+        font-size: 0.75rem;
+        color: #7c3aed;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+    .file-upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 0.75rem;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: #fafafa;
+    }
+    .file-upload-area:hover { border-color: #7c3aed; background: #f5f3ff; }
+    .file-upload-area.dragover { border-color: #7c3aed; background: #ede9fe; }
+    .file-upload-area .icon { color: #a78bfa; margin-bottom: 0.75rem; display: flex; justify-content: center; }
+    .file-upload-area .icon svg { width: 40px; height: 40px; }
+    .file-list {
+        margin-top: 1rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .file-list .file-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.75rem;
+        background: #f9fafb;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    .file-list .file-item .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+    }
+    .file-list .file-item .file-info .name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #1f2937;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .file-list .file-item .file-info .size {
+        font-size: 0.7rem;
+        color: #6b7280;
+        white-space: nowrap;
+    }
+    .file-list .file-item .remove-btn {
+        background: transparent;
+        border: none;
+        color: #ef4444;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        transition: all 0.2s ease;
+    }
+    .file-list .file-item .remove-btn:hover { background: #fef2f2; }
     @media (max-width: 640px) {
-        .order-card {
-            padding: 12px;
-        }
-        
-        .action-btn {
-            padding: 4px 10px;
-            font-size: 0.7rem;
-        }
-        
-        .filter-btn {
-            padding: 4px 12px;
-            font-size: 0.7rem;
-        }
+        .order-card { padding: 12px; }
+        .action-btn { padding: 4px 10px; font-size: 0.7rem; }
+        .filter-btn { padding: 4px 12px; font-size: 0.7rem; }
+    }
+
+    /* New styles for per‑file progress */
+    .upload-file-progress {
+        margin-top: 8px;
+        max-height: 150px;
+        overflow-y: auto;
+        font-size: 0.75rem;
+    }
+    .upload-file-progress .file-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .upload-file-progress .file-item .name {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .upload-file-progress .file-item .status {
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .upload-file-progress .file-item .status.done { color: #22c55e; }
+    .upload-file-progress .file-item .status.error { color: #ef4444; }
+    .upload-file-progress .file-item .status.uploading { color: #3b82f6; }
+    .upload-file-progress .file-item .status.waiting { color: #9ca3af; }
+    .upload-file-progress .file-item .progress-bar {
+        width: 60px;
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .upload-file-progress .file-item .progress-bar .fill {
+        height: 100%;
+        background: #7c3aed;
+        transition: width 0.2s ease;
     }
 </style>
 {% endblock %}
@@ -275,21 +303,11 @@
         <div class="flex flex-wrap items-center gap-3">
             <div class="search-wrapper w-48 sm:w-64">
                 <input type="text" id="searchOrders" class="w-full px-4 py-2 pr-10 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition text-sm" placeholder="Search orders..." value="{{ search }}" autocomplete="off">
-                <span class="search-icon">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </span>
-                <button id="clearSearch" class="clear-search">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                <span class="search-icon"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+                <button id="clearSearch" class="clear-search"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
                 <div id="searchSuggestions" class="search-suggestions"></div>
             </div>
-            <button id="refreshBtn" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">
-                Refresh
-            </button>
+            <button id="refreshBtn" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">Refresh</button>
         </div>
     </div>
 
@@ -327,8 +345,21 @@
 </div>
 
 <div id="actionDialog" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 modal-content">
+    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 modal-content">
         <div id="dialogContent"></div>
+    </div>
+</div>
+
+<div id="uploadProgressDialog" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 modal-content">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">Uploading Files</h3>
+        <p class="text-sm text-gray-600" id="uploadStatus">Preparing upload...</p>
+        <div class="upload-progress-bar"><div class="fill" id="uploadProgressFill" style="width:0%"></div></div>
+        <p class="upload-progress-text" id="uploadProgressText">0%</p>
+        <div id="fileUploadProgressList" class="upload-file-progress"></div>
+        <div class="flex justify-end mt-4 gap-2">
+            <button onclick="cancelUpload()" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" id="uploadCancelBtn">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -339,16 +370,61 @@ let currentSearch = '';
 let pageSize = 200;
 let totalPages = 1;
 let selectedOrderId = null;
-let autoRefreshInterval = null;
 let isLoading = false;
 let searchTimeout = null;
 let allOrders = [];
-
+let isUploading = false;
+let uploadCanceled = false;
+let selectedFiles = [];
+let uploadQueue = [];
+let activeUploads = 0;
+let completedUploads = 0;
+let totalFiles = 0;
+let fileProgress = {};
+let uploadXhrs = [];
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 const API_BASE = '/api/v1/admin';
+const CONCURRENT_LIMIT = 3;
+
+function getCsrfToken() {
+    const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+    return cookie ? cookie.split('=')[1] : '';
+}
+
+function showToast(message, type) {
+    type = type || 'success';
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm';
+    const color = type === 'success' ? 'text-green-600' : type === 'warning' ? 'text-yellow-600' : 'text-red-600';
+    const icon = type === 'success' ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' :
+                 type === 'warning' ? 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' :
+                 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            <span class="${color}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"/></svg>
+            </span>
+            <span class="text-sm text-gray-700">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600 ml-auto">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+function formatFileSize(bytes) {
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    return (bytes / 1024).toFixed(1) + ' KB';
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOrders();
-    startAutoRefresh();
     setupEventListeners();
 });
 
@@ -362,17 +438,11 @@ function setupEventListeners() {
         if (value.length > 0) {
             clearSearch.classList.add('visible');
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                showSuggestions(value);
-            }, 300);
+            searchTimeout = setTimeout(() => showSuggestions(value), 300);
         } else {
             clearSearch.classList.remove('visible');
             searchSuggestions.classList.remove('active');
-            if (currentSearch) {
-                currentSearch = '';
-                currentPage = 1;
-                loadOrders();
-            }
+            if (currentSearch) { currentSearch = ''; currentPage = 1; loadOrders(); }
         }
     });
 
@@ -411,53 +481,32 @@ function setupEventListeners() {
         });
     });
 
-    document.getElementById('refreshBtn').addEventListener('click', function() {
-        loadOrders();
-    });
-
+    document.getElementById('refreshBtn').addEventListener('click', loadOrders);
     document.getElementById('pageSizeSelect').addEventListener('change', function() {
         pageSize = parseInt(this.value);
         currentPage = 1;
         loadOrders();
     });
-
     document.getElementById('prevPage').addEventListener('click', function() {
-        if (currentPage > 1) {
-            currentPage--;
-            loadOrders();
-        }
+        if (currentPage > 1) { currentPage--; loadOrders(); }
     });
-
     document.getElementById('nextPage').addEventListener('click', function() {
-        if (currentPage < totalPages) {
-            currentPage++;
-            loadOrders();
-        }
+        if (currentPage < totalPages) { currentPage++; loadOrders(); }
     });
 }
 
 function showSuggestions(query) {
     const container = document.getElementById('searchSuggestions');
-    const searchInput = document.getElementById('searchOrders');
-    
-    if (!allOrders || allOrders.length === 0) {
-        container.classList.remove('active');
-        return;
-    }
-
+    if (!allOrders || allOrders.length === 0) { container.classList.remove('active'); return; }
     const results = allOrders.filter(order => {
         const searchStr = `${order.order_number} ${order.topic} ${order.client_name || ''} ${order.client?.full_name || ''}`.toLowerCase();
         return searchStr.includes(query.toLowerCase());
     }).slice(0, 8);
-
     if (results.length === 0) {
-        container.innerHTML = `
-            <div class="p-3 text-sm text-gray-500 text-center">No results found</div>
-        `;
+        container.innerHTML = '<div class="p-3 text-sm text-gray-500 text-center">No results found</div>';
         container.classList.add('active');
         return;
     }
-
     container.innerHTML = results.map(order => `
         <div class="suggestion-item" data-order-id="${order.id}">
             <span>#${order.order_number}</span>
@@ -466,13 +515,12 @@ function showSuggestions(query) {
             <span class="text-xs text-gray-400 ml-auto">${formatStatus(order.status)}</span>
         </div>
     `).join('');
-
     container.querySelectorAll('.suggestion-item').forEach(item => {
         item.addEventListener('click', function() {
             const orderId = this.dataset.orderId;
             const order = allOrders.find(o => o.id === orderId);
             if (order) {
-                searchInput.value = `#${order.order_number} - ${order.topic}`;
+                document.getElementById('searchOrders').value = `#${order.order_number} - ${order.topic}`;
                 currentSearch = order.order_number;
                 container.classList.remove('active');
                 currentPage = 1;
@@ -480,7 +528,6 @@ function showSuggestions(query) {
             }
         });
     });
-
     container.classList.add('active');
 }
 
@@ -490,145 +537,47 @@ function highlightText(text, query) {
     return text.replace(regex, '<span class="highlight">$1</span>');
 }
 
-function startAutoRefresh() {
-    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-    autoRefreshInterval = setInterval(function() {
-        if (!document.hidden && !isLoading) {
-            loadOrders(true);
-        }
-    }, 30000);
-}
-
-function formatCurrency(amount) {
-    if (amount === undefined || amount === null || amount === '') return '$0.00';
-    const num = parseFloat(amount);
-    if (isNaN(num)) return '$0.00';
-    return '$' + num.toFixed(2);
-}
-
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'N/A';
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    } catch (e) {
-        return 'N/A';
-    }
-}
-
-function getUrgencyLevel(deadline) {
-    if (!deadline) return 'safe';
-    const now = new Date();
-    const due = new Date(deadline);
-    const diff = due - now;
-    const hours = diff / (60 * 60 * 1000);
-    
-    if (diff < 0) return 'overdue';
-    if (hours < 24) return 'approaching';
-    if (hours < 72) return 'approaching';
-    return 'safe';
-}
-
-function getTimeRemaining(deadline) {
-    if (!deadline) return '';
-    const now = new Date();
-    const due = new Date(deadline);
-    const diff = due - now;
-    
-    if (diff < 0) {
-        const hours = Math.floor(Math.abs(diff) / (60 * 60 * 1000));
-        if (hours < 24) {
-            return hours + 'h overdue';
-        }
-        return Math.floor(hours / 24) + 'd ' + (hours % 24) + 'h overdue';
-    }
-    
-    const hours = Math.floor(diff / (60 * 60 * 1000));
-    const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
-    
-    if (hours > 24) {
-        const days = Math.floor(hours / 24);
-        return days + 'd ' + (hours % 24) + 'h remaining';
-    }
-    if (hours > 0) {
-        return hours + 'h ' + minutes + 'm remaining';
-    }
-    return minutes + 'm remaining';
-}
-
-function renderRatingStars(rating) {
-    if (!rating) return '';
-    let stars = '';
-    for (let i = 1; i <= 5; i++) {
-        stars += `<span class="${i <= rating ? 'filled' : 'empty'}">★</span>`;
-    }
-    return `<span class="rating-stars">${stars}</span>`;
-}
-
-async function loadOrders(silent = false) {
+async function loadOrders() {
     if (isLoading) return;
     isLoading = true;
-
     const container = document.getElementById('ordersContainer');
-
     try {
         const params = new URLSearchParams();
         params.append('page', currentPage);
         params.append('page_size', pageSize);
         if (currentStatus !== 'all') params.append('status', currentStatus);
         if (currentSearch) params.append('search', currentSearch);
-
         const response = await fetch(API_BASE + '/orders/?' + params.toString(), {
-            headers: {
-                'X-CSRFToken': getCsrfToken(),
-                'Accept': 'application/json'
-            },
+            headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
             credentials: 'include'
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to load orders');
-        }
-
+        if (!response.ok) throw new Error('Failed to load orders');
         const data = await response.json();
         const orders = data.results || data || [];
         allOrders = orders;
         totalPages = Math.ceil((data.total || orders.length) / (data.page_size || pageSize)) || 1;
         displayOrders(orders, data);
         updatePagination(data);
-
     } catch (error) {
         console.error('Orders load error:', error);
         container.innerHTML = `
             <div class="bg-white border border-gray-200 rounded-lg p-8 text-center">
                 <p class="text-gray-600 text-sm mb-2">Unable to load orders</p>
-                <button onclick="loadOrders()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
-                    Try Again
-                </button>
+                <button onclick="loadOrders()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">Try Again</button>
             </div>
         `;
-    } finally {
-        isLoading = false;
-    }
+    } finally { isLoading = false; }
 }
 
-function displayOrders(orders, data) {
+function displayOrders(orders) {
     const container = document.getElementById('ordersContainer');
-
     if (!orders || orders.length === 0) {
-        const emptyMessage = currentStatus === 'request'
-            ? 'No pending order requests'
-            : 'No orders found';
-        container.innerHTML = `
-            <div class="bg-white border border-gray-200 rounded-lg p-12 text-center">
-                <p class="text-gray-600 font-medium">${emptyMessage}</p>
-                <p class="text-sm text-gray-400 mt-1">Try adjusting your filters or search terms</p>
-            </div>
-        `;
+        container.innerHTML = `<div class="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <p class="text-gray-600 font-medium">${currentStatus === 'request' ? 'No pending order requests' : 'No orders found'}</p>
+            <p class="text-sm text-gray-400 mt-1">Try adjusting your filters or search terms</p>
+        </div>`;
         return;
     }
-
     container.innerHTML = orders.map((order) => {
         const clientName = order.client_name || order.client?.full_name || order.client?.email || 'N/A';
         const orderNumber = order.order_number || 'N/A';
@@ -637,55 +586,28 @@ function displayOrders(orders, data) {
         const statusColor = getStatusColor(order.status);
         const statusLabel = formatStatus(order.status);
         const urgency = getUrgencyLevel(order.deadline);
-        const isOverdue = urgency === 'overdue';
-        const isApproaching = urgency === 'approaching';
-        const isRequest = order.status === 'request';
         const timeRemaining = getTimeRemaining(order.deadline);
+        const isRequest = order.status === 'request';
         const isCompleted = order.status === 'completed';
         const isCancelled = order.status === 'cancelled';
         const isDeclined = order.status === 'declined';
         const isFinalStatus = isCompleted || isCancelled || isDeclined;
-
+        const ratingStars = order.rating ? renderRatingStars(order.rating) : '';
         let cardClass = '';
         let timeBadgeClass = 'safe';
         let timeLabel = '';
         let completionDate = '';
-        
-        if (isCompleted) {
-            cardClass = 'completed';
-            timeBadgeClass = 'completed';
-            timeLabel = 'Completed';
-            completionDate = order.completed_at ? formatDate(order.completed_at) : '';
-        } else if (isCancelled) {
-            cardClass = 'cancelled';
-            timeBadgeClass = 'overdue';
-            timeLabel = 'Cancelled';
-            completionDate = order.cancelled_at ? formatDate(order.cancelled_at) : '';
-        } else if (isDeclined) {
-            cardClass = 'declined';
-            timeBadgeClass = 'overdue';
-            timeLabel = 'Declined';
-            completionDate = order.declined_at ? formatDate(order.declined_at) : '';
-        } else if (isOverdue && !isFinalStatus) {
-            cardClass = 'overdue';
-            timeBadgeClass = 'overdue';
-            timeLabel = 'Overdue';
-        } else if (isApproaching && !isFinalStatus) {
-            cardClass = 'approaching';
-            timeBadgeClass = 'approaching';
-            timeLabel = 'Approaching';
-        }
-
-        const ratingStars = order.rating ? renderRatingStars(order.rating) : '';
-
+        if (isCompleted) { cardClass = 'completed'; timeBadgeClass = 'completed'; timeLabel = 'Completed'; completionDate = order.completed_at ? formatDate(order.completed_at) : ''; }
+        else if (isCancelled) { cardClass = 'cancelled'; timeBadgeClass = 'overdue'; timeLabel = 'Cancelled'; completionDate = order.cancelled_at ? formatDate(order.cancelled_at) : ''; }
+        else if (isDeclined) { cardClass = 'declined'; timeBadgeClass = 'overdue'; timeLabel = 'Declined'; completionDate = order.declined_at ? formatDate(order.declined_at) : ''; }
+        else if (urgency === 'overdue') { cardClass = 'overdue'; timeBadgeClass = 'overdue'; timeLabel = 'Overdue'; }
+        else if (urgency === 'approaching') { cardClass = 'approaching'; timeBadgeClass = 'approaching'; timeLabel = 'Approaching'; }
         return `
             <div class="order-card bg-white border border-gray-200 rounded-lg p-4 ${cardClass}">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-3 flex-wrap">
-                            <a href="/admin/orders/${order.id}/" class="text-sm font-medium text-green-600 hover:text-green-700">
-                                #${orderNumber}
-                            </a>
+                            <a href="/admin/orders/${order.id}/" class="text-sm font-medium text-green-600 hover:text-green-700">#${orderNumber}</a>
                             ${isRequest ? '<span class="request-badge">Request</span>' : ''}
                             <span class="text-xs px-2 py-0.5 rounded-full ${statusColor}">
                                 <span class="status-dot ${order.status}"></span>${statusLabel}
@@ -705,30 +627,12 @@ function displayOrders(orders, data) {
                                 <span>Due ${formatDate(order.deadline)}</span>
                                 <span class="time-badge ${timeBadgeClass}">${timeRemaining}</span>
                             ` : ''}
-                            ${completionDate ? `
-                                <span>•</span>
-                                <span class="text-green-600">${timeLabel} ${completionDate}</span>
-                            ` : ''}
-                            ${order.rating && order.feedback ? `
-                                <span>•</span>
-                                <span class="text-gray-400 text-xs" title="${order.feedback}">"${order.feedback.length > 30 ? order.feedback.substring(0, 30) + '...' : order.feedback}"</span>
-                            ` : ''}
+                            ${completionDate ? `<span>•</span><span class="text-green-600">${timeLabel} ${completionDate}</span>` : ''}
+                            ${order.rating && order.feedback ? `<span>•</span><span class="text-gray-400 text-xs" title="${order.feedback}">"${order.feedback.length > 30 ? order.feedback.substring(0,30)+'...' : order.feedback}"</span>` : ''}
                         </div>
-                        ${isRequest ? `
-                            <div class="mt-2 text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded border border-amber-200 inline-block">
-                                Awaiting your decision
-                            </div>
-                        ` : ''}
-                        ${isCancelled && order.cancellation_feedback ? `
-                            <div class="mt-2 text-xs text-red-600 bg-red-50 px-3 py-1 rounded border border-red-200 inline-block">
-                                Cancelled: ${order.cancellation_feedback}
-                            </div>
-                        ` : ''}
-                        ${isDeclined && order.declined_reason ? `
-                            <div class="mt-2 text-xs text-red-600 bg-red-50 px-3 py-1 rounded border border-red-200 inline-block">
-                                Declined: ${order.declined_reason}
-                            </div>
-                        ` : ''}
+                        ${isRequest ? `<div class="mt-2 text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded border border-amber-200 inline-block">Awaiting your decision</div>` : ''}
+                        ${isCancelled && order.cancellation_feedback ? `<div class="mt-2 text-xs text-red-600 bg-red-50 px-3 py-1 rounded border border-red-200 inline-block">Cancelled: ${order.cancellation_feedback}</div>` : ''}
+                        ${isDeclined && order.declined_reason ? `<div class="mt-2 text-xs text-red-600 bg-red-50 px-3 py-1 rounded border border-red-200 inline-block">Declined: ${order.declined_reason}</div>` : ''}
                     </div>
                     <div class="flex flex-col items-end gap-2">
                         <span class="text-sm font-medium text-gray-900">${formatCurrency(totalPrice)}</span>
@@ -744,62 +648,91 @@ function displayOrders(orders, data) {
 
 function getActionButtons(order) {
     const actions = [];
-
     if (order.status === 'request') {
         actions.push(`
-            <button onclick="openActionDialog('accept', '${order.id}')" class="action-btn px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
-                Accept
-            </button>
-            <button onclick="openActionDialog('reject', '${order.id}')" class="action-btn px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
-                Reject
-            </button>
+            <button onclick="openActionDialog('accept','${order.id}')" class="action-btn px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">Accept</button>
+            <button onclick="openActionDialog('reject','${order.id}')" class="action-btn px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">Reject</button>
         `);
     }
-
     if (order.status === 'in_progress') {
         actions.push(`
-            <a href="/admin/orders/${order.id}/" class="action-btn px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                Workspace
-            </a>
-            <button onclick="openActionDialog('deliver', '${order.id}')" class="action-btn px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
-                Deliver
-            </button>
+            <a href="/admin/orders/${order.id}/" class="action-btn px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">Workspace</a>
+            <button onclick="openDeliverDialog('${order.id}')" class="action-btn px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">Deliver</button>
         `);
     }
-
     if (order.status === 'awaiting_approval') {
-        actions.push(`
-            <span class="text-xs text-gray-500">Waiting for client</span>
-        `);
+        actions.push(`<span class="text-xs text-gray-500">Waiting for client</span>`);
     }
-
     if (order.status === 'refund_pending') {
-        actions.push(`
-            <a href="/admin/refunds/${order.id}/" class="action-btn px-3 py-1 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors">
-                Review Refund
-            </a>
-        `);
+        actions.push(`<a href="/admin/refunds/${order.id}/" class="action-btn px-3 py-1 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors">Review Refund</a>`);
     }
-
     if (order.status === 'completed') {
-        actions.push(`
-            <span class="text-xs text-green-600 font-medium">${order.rating ? 'Rated ' + order.rating + '/5' : 'Completed'}</span>
-        `);
+        actions.push(`<span class="text-xs text-green-600 font-medium">${order.rating ? 'Rated ' + order.rating + '/5' : 'Completed'}</span>`);
     }
-
     if (order.status === 'cancelled') {
-        actions.push(`
-            <span class="text-xs text-red-600 font-medium">Cancelled</span>
-        `);
+        actions.push(`<span class="text-xs text-red-600 font-medium">Cancelled</span>`);
     }
-
     if (order.status === 'declined') {
-        actions.push(`
-            <span class="text-xs text-red-600 font-medium">Declined</span>
-        `);
+        actions.push(`<span class="text-xs text-red-600 font-medium">Declined</span>`);
     }
-
     return actions.length ? actions.join(' ') : `<span class="text-xs text-gray-400">No actions</span>`;
+}
+
+function formatCurrency(amount) {
+    if (amount === undefined || amount === null || amount === '') return '$0.00';
+    const num = parseFloat(amount);
+    if (isNaN(num)) return '$0.00';
+    return '$' + num.toFixed(2);
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) { return 'N/A'; }
+}
+
+function getUrgencyLevel(deadline) {
+    if (!deadline) return 'safe';
+    const now = new Date();
+    const due = new Date(deadline);
+    const diff = due - now;
+    const hours = diff / (60 * 60 * 1000);
+    if (diff < 0) return 'overdue';
+    if (hours < 24) return 'approaching';
+    if (hours < 72) return 'approaching';
+    return 'safe';
+}
+
+function getTimeRemaining(deadline) {
+    if (!deadline) return '';
+    const now = new Date();
+    const due = new Date(deadline);
+    const diff = due - now;
+    if (diff < 0) {
+        const hours = Math.floor(Math.abs(diff) / (60 * 60 * 1000));
+        if (hours < 24) return hours + 'h overdue';
+        return Math.floor(hours / 24) + 'd ' + (hours % 24) + 'h overdue';
+    }
+    const hours = Math.floor(diff / (60 * 60 * 1000));
+    const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+    if (hours > 24) {
+        const days = Math.floor(hours / 24);
+        return days + 'd ' + (hours % 24) + 'h remaining';
+    }
+    if (hours > 0) return hours + 'h ' + minutes + 'm remaining';
+    return minutes + 'm remaining';
+}
+
+function renderRatingStars(rating) {
+    if (!rating) return '';
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        stars += `<span class="${i <= rating ? 'filled' : 'empty'}">★</span>`;
+    }
+    return `<span class="rating-stars">${stars}</span>`;
 }
 
 function getStatusColor(status) {
@@ -834,7 +767,6 @@ function updatePagination(data) {
     const pageSizeVal = data.page_size || pageSize;
     const start = (page - 1) * pageSizeVal + 1;
     const end = Math.min(page * pageSizeVal, total);
-
     document.getElementById('paginationInfo').textContent = 'Showing ' + (total > 0 ? start : 0) + '-' + end + ' of ' + total + ' orders';
     document.getElementById('pageInfo').textContent = 'Page ' + page + ' of ' + totalPages;
     document.getElementById('prevPage').disabled = page <= 1;
@@ -845,7 +777,6 @@ function openActionDialog(action, orderId) {
     selectedOrderId = orderId;
     const dialog = document.getElementById('actionDialog');
     const content = document.getElementById('dialogContent');
-
     const dialogs = {
         accept: {
             title: 'Accept Order Request',
@@ -858,45 +789,50 @@ function openActionDialog(action, orderId) {
         reject: {
             title: 'Reject Order Request',
             message: 'Please provide a reason for rejecting this order request.',
-            fields: `
-                <textarea id="rejectReason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition text-sm mt-3" rows="4" placeholder="Reason for rejection..."></textarea>
-            `,
+            fields: `<textarea id="rejectReason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition text-sm mt-3" rows="4" placeholder="Reason for rejection..."></textarea>`,
             buttons: `
                 <button onclick="closeActionDialog()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Cancel</button>
                 <button onclick="rejectOrder()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">Reject Request</button>
             `
         },
         deliver: {
-            title: 'Deliver Order',
-            message: 'Select the completed file to deliver to the client.',
+            title: 'Deliver Files',
+            message: 'Upload the completed files for this order. You can select multiple files.',
             fields: `
-                <div class="mt-3">
-                    <input type="file" id="deliverFile" accept=".pdf,.doc,.docx,.zip" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition text-sm">
-                    <p class="text-xs text-gray-400 mt-1">Accepted formats: PDF, DOC, DOCX, ZIP</p>
+                <div class="file-upload-area" id="fileUploadArea">
+                    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg></div>
+                    <p class="text-gray-600 mb-2">Drag &amp; drop files here or click to browse</p>
+                    <p class="text-xs text-gray-400">Accepted formats: PDF, DOC, DOCX, ZIP (Max 100MB per file)</p>
+                    <input type="file" id="deliverFiles" accept=".pdf,.doc,.docx,.zip" multiple style="display:none;">
+                    <button type="button" onclick="document.getElementById('deliverFiles').click()" class="mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">Browse Files</button>
                 </div>
+                <div class="file-list" id="fileList"></div>
             `,
             buttons: `
                 <button onclick="closeActionDialog()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Cancel</button>
-                <button onclick="deliverOrder()" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">Deliver</button>
+                <button onclick="startUpload()" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm" id="deliverSubmitBtn" disabled>Upload & Deliver</button>
             `
         }
     };
-
     const dialogData = dialogs[action];
     if (!dialogData) return;
-
     content.innerHTML = `
         <h3 class="text-lg font-bold text-gray-900 mb-2">${dialogData.title}</h3>
-        <p class="text-sm text-gray-600">${dialogData.message}</p>
+        <p class="text-sm text-gray-600 mb-4">${dialogData.message}</p>
         ${dialogData.fields || ''}
-        <div class="flex gap-3 mt-4">
-            ${dialogData.buttons}
-        </div>
+        <div class="flex gap-3 mt-4">${dialogData.buttons}</div>
     `;
-
     dialog.classList.remove('hidden');
     dialog.classList.add('flex');
     document.body.style.overflow = 'hidden';
+    if (action === 'deliver') { setupFileUpload(); }
+}
+
+function openDeliverDialog(orderId) {
+    selectedOrderId = orderId;
+    openActionDialog('deliver', orderId);
 }
 
 function closeActionDialog() {
@@ -904,131 +840,370 @@ function closeActionDialog() {
     dialog.classList.add('hidden');
     dialog.classList.remove('flex');
     document.body.style.overflow = '';
-    document.getElementById('rejectReason').value = '';
+    const reasonField = document.getElementById('rejectReason');
+    if (reasonField) reasonField.value = '';
 }
 
-async function acceptOrder() {
-    try {
-        const response = await fetch('/api/v1/admin/orders/' + selectedOrderId + '/accept/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCsrfToken(),
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
+function setupFileUpload() {
+    const fileInput = document.getElementById('deliverFiles');
+    const fileList = document.getElementById('fileList');
+    const submitBtn = document.getElementById('deliverSubmitBtn');
+    const dropZone = document.getElementById('fileUploadArea');
+    selectedFiles = [];
+    fileList.innerHTML = '';
+    submitBtn.disabled = true;
+    dropZone.addEventListener('click', function(e) {
+        if (e.target.closest('button')) return;
+        fileInput.click();
+    });
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', function(e) { e.preventDefault(); this.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        if (e.dataTransfer.files.length) { handleFiles(e.dataTransfer.files); }
+    });
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) { handleFiles(this.files); this.value = ''; }
+    });
+}
+
+function handleFiles(files) {
+    const fileList = document.getElementById('fileList');
+    const submitBtn = document.getElementById('deliverSubmitBtn');
+    Array.from(files).forEach(file => {
+        if (file.size > MAX_FILE_SIZE) {
+            showToast(`"${file.name}" exceeds 100MB limit`, 'error');
+            return;
+        }
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['pdf', 'doc', 'docx', 'zip'].includes(ext)) {
+            showToast(`"${file.name}" is not supported. Please upload PDF, DOC, DOCX, or ZIP.`, 'error');
+            return;
+        }
+        const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+        if (!exists) { selectedFiles.push(file); }
+    });
+    if (selectedFiles.length > 0) {
+        renderFileList();
+        submitBtn.disabled = false;
+    }
+}
+
+function renderFileList() {
+    const fileList = document.getElementById('fileList');
+    fileList.innerHTML = selectedFiles.map((file, index) => `
+        <div class="file-item" data-index="${index}">
+            <div class="file-info">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+                <span class="name">${file.name}</span>
+                <span class="size">${(file.size / 1024).toFixed(1)} KB</span>
+            </div>
+            <button class="remove-btn" onclick="removeFile(${index})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+}
+
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    if (selectedFiles.length === 0) {
+        document.getElementById('fileList').innerHTML = '';
+        document.getElementById('deliverSubmitBtn').disabled = true;
+    } else { renderFileList(); }
+}
+
+function startUpload() {
+    if (selectedFiles.length === 0) {
+        showToast('Please select at least one file to deliver', 'error');
+        return;
+    }
+
+    // Reset state
+    uploadCanceled = false;
+    uploadQueue = [];
+    activeUploads = 0;
+    completedUploads = 0;
+    totalFiles = selectedFiles.length;
+    fileProgress = {};
+    uploadXhrs = [];
+
+    // Build queue
+    selectedFiles.forEach((file, idx) => {
+        uploadQueue.push({
+            index: idx,
+            file: file,
+            status: 'waiting', // waiting, uploading, done, error
+            progress: 0,
+            error: null
         });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
+        fileProgress[idx] = 0;
+    });
+
+    // Open progress dialog
+    openUploadProgressDialog();
+    renderFileProgress();
+
+    // Start processing queue
+    processQueue();
+}
+
+function processQueue() {
+    if (uploadCanceled) return;
+
+    while (activeUploads < CONCURRENT_LIMIT && uploadQueue.length > 0) {
+        const item = uploadQueue.shift();
+        if (!item) break;
+        activeUploads++;
+        item.status = 'uploading';
+        renderFileProgress();
+        uploadSingleFile(item);
+    }
+
+    // If queue is empty and no active uploads, finish
+    if (uploadQueue.length === 0 && activeUploads === 0) {
+        finishUpload();
+    }
+}
+
+function uploadSingleFile(item) {
+    const { file, index } = item;
+    const formData = new FormData();
+    formData.append('files', file); // field name as expected by backend
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `/api/v1/admin/orders/${selectedOrderId}/deliver/`);
+    xhr.setRequestHeader('X-CSRFToken', getCsrfToken());
+    xhr.withCredentials = true;
+    uploadXhrs.push(xhr);
+
+    xhr.upload.addEventListener('progress', function(e) {
+        if (!e.lengthComputable) return;
+        const percent = Math.round((e.loaded / e.total) * 100);
+        fileProgress[index] = percent;
+        updateOverallProgress();
+        renderFileProgress();
+    });
+
+    xhr.onload = function() {
+        const idx = index;
+        if (xhr.status === 200 || xhr.status === 201) {
+            item.status = 'done';
+            item.progress = 100;
+            fileProgress[idx] = 100;
+        } else {
+            let errorMsg = 'Upload failed';
+            try {
+                const data = JSON.parse(xhr.responseText);
+                errorMsg = data.error || data.message || data.detail || errorMsg;
+            } catch (e) {}
+            item.status = 'error';
+            item.error = errorMsg;
+            showToast(`Failed to upload "${file.name}": ${errorMsg}`, 'error');
+        }
+        activeUploads--;
+        completedUploads++;
+        updateOverallProgress();
+        renderFileProgress();
+        // Remove xhr from list
+        const xhrIdx = uploadXhrs.indexOf(xhr);
+        if (xhrIdx > -1) uploadXhrs.splice(xhrIdx, 1);
+        // Continue
+        processQueue();
+    };
+
+    xhr.onerror = function() {
+        item.status = 'error';
+        item.error = 'Network error';
+        showToast(`Network error uploading "${file.name}"`, 'error');
+        activeUploads--;
+        completedUploads++;
+        updateOverallProgress();
+        renderFileProgress();
+        const xhrIdx = uploadXhrs.indexOf(xhr);
+        if (xhrIdx > -1) uploadXhrs.splice(xhrIdx, 1);
+        processQueue();
+    };
+
+    xhr.onabort = function() {
+        item.status = 'error';
+        item.error = 'Cancelled';
+        activeUploads--;
+        completedUploads++;
+        updateOverallProgress();
+        renderFileProgress();
+        const xhrIdx = uploadXhrs.indexOf(xhr);
+        if (xhrIdx > -1) uploadXhrs.splice(xhrIdx, 1);
+        processQueue();
+    };
+
+    xhr.send(formData);
+}
+
+function updateOverallProgress() {
+    let totalProgress = 0;
+    let completed = 0;
+    let failed = 0;
+    for (const idx in fileProgress) {
+        totalProgress += fileProgress[idx];
+        if (fileProgress[idx] === 100) completed++;
+    }
+    const overall = totalFiles > 0 ? Math.round(totalProgress / totalFiles) : 0;
+    document.getElementById('uploadProgressFill').style.width = overall + '%';
+    document.getElementById('uploadProgressText').textContent = overall + '%';
+    const statusText = document.getElementById('uploadStatus');
+    if (overall === 100) {
+        statusText.textContent = 'Upload complete!';
+    } else {
+        const done = completed;
+        const total = totalFiles;
+        statusText.textContent = `Uploading ${done} of ${total} files...`;
+    }
+}
+
+function renderFileProgress() {
+    const container = document.getElementById('fileUploadProgressList');
+    let html = '';
+    for (const idx in fileProgress) {
+        const item = uploadQueue.find(q => q.index == idx) || { file: null, status: 'waiting', error: null };
+        const file = item.file || selectedFiles[idx];
+        if (!file) continue;
+        const status = item.status || 'waiting';
+        const progress = fileProgress[idx] || 0;
+        let statusLabel = 'Waiting';
+        let statusClass = 'waiting';
+        if (status === 'uploading') { statusLabel = 'Uploading'; statusClass = 'uploading'; }
+        else if (status === 'done') { statusLabel = 'Done'; statusClass = 'done'; }
+        else if (status === 'error') { statusLabel = 'Error'; statusClass = 'error'; }
+        html += `
+            <div class="file-item">
+                <span class="name" title="${file.name}">${file.name}</span>
+                <span class="status ${statusClass}">${statusLabel}</span>
+                <div class="progress-bar"><div class="fill" style="width:${progress}%"></div></div>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
+function finishUpload() {
+    const allDone = Object.values(fileProgress).every(p => p === 100);
+    const statusEl = document.getElementById('uploadStatus');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const progressText = document.getElementById('uploadProgressText');
+    if (allDone) {
+        statusEl.textContent = 'Upload complete!';
+        progressFill.style.width = '100%';
+        progressText.textContent = '100%';
+        showToast('All files delivered successfully', 'success');
+        setTimeout(() => {
+            closeUploadProgressDialog();
+            closeActionDialog();
+            loadOrders();
+        }, 800);
+    } else {
+        // Some errors occurred
+        statusEl.textContent = 'Upload completed with errors.';
+        showToast('Some files failed to upload. Check the list.', 'warning');
+        setTimeout(() => {
+            closeUploadProgressDialog();
+            closeActionDialog();
+        }, 1500);
+    }
+    isUploading = false;
+    document.getElementById('uploadCancelBtn').disabled = false;
+}
+
+function cancelUpload() {
+    if (uploadXhrs.length > 0) {
+        if (!confirm('Cancel ongoing uploads?')) return;
+        uploadCanceled = true;
+        uploadXhrs.forEach(xhr => xhr.abort());
+        uploadXhrs = [];
+        uploadQueue = [];
+        showToast('Upload cancelled', 'warning');
+        closeUploadProgressDialog();
+        closeActionDialog();
+        isUploading = false;
+        document.getElementById('uploadCancelBtn').disabled = false;
+    } else {
+        closeUploadProgressDialog();
+        closeActionDialog();
+    }
+}
+
+function openUploadProgressDialog() {
+    const dialog = document.getElementById('uploadProgressDialog');
+    dialog.classList.remove('hidden');
+    dialog.classList.add('flex');
+    document.getElementById('uploadCancelBtn').disabled = false;
+}
+
+function closeUploadProgressDialog() {
+    if (isUploading) {
+        if (!confirm('Upload in progress. Are you sure you want to cancel?')) return;
+        cancelUpload();
+        return;
+    }
+    const dialog = document.getElementById('uploadProgressDialog');
+    dialog.classList.add('hidden');
+    dialog.classList.remove('flex');
+    document.getElementById('uploadProgressFill').style.width = '0%';
+    document.getElementById('uploadProgressText').textContent = '0%';
+    document.getElementById('uploadStatus').textContent = 'Preparing upload...';
+    document.getElementById('fileUploadProgressList').innerHTML = '';
+}
+
+function acceptOrder() {
+    const btn = document.querySelector('#actionDialog .bg-green-600');
+    if (btn) { btn.disabled = true; btn.textContent = 'Accepting...'; }
+    fetch('/api/v1/admin/orders/' + selectedOrderId + '/accept/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrfToken(), 'Content-Type': 'application/json' },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.message) {
+            closeActionDialog();
+            loadOrders();
+            showToast('Order accepted successfully');
+        } else {
             throw new Error(data.error || 'Failed to accept');
         }
-        
-        closeActionDialog();
-        loadOrders();
-        showToast('Order request accepted');
-    } catch (error) {
+    })
+    .catch(error => {
         showToast(error.message || 'Failed to accept order', 'error');
-    }
+        if (btn) { btn.disabled = false; btn.textContent = 'Accept Request'; }
+    });
 }
 
-async function rejectOrder() {
+function rejectOrder() {
     const reason = document.getElementById('rejectReason').value.trim();
-    if (!reason) {
-        showToast('Please provide a reason for rejection', 'error');
-        return;
-    }
-    try {
-        const response = await fetch('/api/v1/admin/orders/' + selectedOrderId + '/reject/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken()
-            },
-            credentials: 'include',
-            body: JSON.stringify({ reason: reason })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
+    if (!reason) { showToast('Please provide a reason for rejection', 'error'); return; }
+    const btn = document.querySelector('#actionDialog .bg-red-600');
+    if (btn) { btn.disabled = true; btn.textContent = 'Rejecting...'; }
+    fetch('/api/v1/admin/orders/' + selectedOrderId + '/reject/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+        credentials: 'include',
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.message) {
+            closeActionDialog();
+            loadOrders();
+            showToast('Order rejected');
+        } else {
             throw new Error(data.error || 'Failed to reject');
         }
-        
-        closeActionDialog();
-        loadOrders();
-        showToast('Order rejected');
-    } catch (error) {
+    })
+    .catch(error => {
         showToast(error.message || 'Failed to reject order', 'error');
-    }
-}
-
-async function deliverOrder() {
-    const fileInput = document.getElementById('deliverFile');
-    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-        showToast('Please select a file to deliver', 'error');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-
-    try {
-        const response = await fetch('/api/v1/admin/orders/' + selectedOrderId + '/deliver/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCsrfToken()
-            },
-            credentials: 'include',
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to deliver');
-        }
-        
-        closeActionDialog();
-        loadOrders();
-        showToast('Order delivered successfully');
-    } catch (error) {
-        showToast(error.message || 'Failed to deliver order', 'error');
-    }
-}
-
-function showToast(message, type) {
-    type = type || 'success';
-    const existing = document.querySelector('.toast-notification');
-    if (existing) existing.remove();
-
-    const toast = document.createElement('div');
-    toast.className = 'toast-notification fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm';
-    const color = type === 'success' ? 'text-green-600' : 'text-red-600';
-    toast.innerHTML = `
-        <div class="flex items-center gap-3">
-            <span class="${color}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${type === 'success' ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'}"/>
-                </svg>
-            </span>
-            <span class="text-sm text-gray-700">${message}</span>
-            <button onclick="this.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600 ml-auto">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(function() { toast.remove(); }, 3000);
-}
-
-function getCsrfToken() {
-    const token = document.querySelector('[name=csrf-token]')?.content;
-    if (token) return token;
-    const cookie = document.cookie.split('; ').find(function(row) { return row.startsWith('csrftoken='); });
-    return cookie ? cookie.split('=')[1] : '';
+        if (btn) { btn.disabled = false; btn.textContent = 'Reject Request'; }
+    });
 }
 </script>
 {% endblock %}

@@ -618,6 +618,19 @@ def admin_reject_order(request, order_id):
     
     return Response({'success': True, 'message': 'Order rejected successfully'})
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_order_status(request, order_id):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+    
+    order = get_object_or_404(Order, id=order_id)
+    return Response({
+        'id': str(order.id),
+        'status': order.status,
+        'order_number': order.order_number,
+        'can_deliver': order.status == 'in_progress'
+    })
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -625,66 +638,94 @@ def admin_deliver_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
 
-    order = get_object_or_404(Order, id=order_id, status='in_progress')
+    order = get_object_or_404(Order, id=order_id)
+
+    if order.status != 'in_progress':
+        return Response({
+            'error': f'Order must be in progress to deliver. Current status: {order.status}'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     files = request.FILES.getlist('files')
     if not files:
         return Response({'error': 'No files provided'}, status=status.HTTP_400_BAD_REQUEST)
 
+    allowed_extensions = ['pdf', 'doc', 'docx', 'zip']
+    max_size = 100 * 1024 * 1024
+
+    # Validate every file BEFORE creating anything, so a bad file never
+    # leaves a partial commit from files that were already processed.
+    for file in files:
+        ext = file.name.split('.')[-1].lower() if '.' in file.name else ''
+        if ext not in allowed_extensions:
+            return Response({
+                'error': f'File "{file.name}" is not supported. Please upload PDF, DOC, DOCX, or ZIP.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if file.size > max_size:
+            return Response({
+                'error': f'File "{file.name}" exceeds 100MB limit'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
     delivered_files = []
-    with transaction.atomic():
-        for file in files:
-            attachment = Attachment.objects.create(
-                file=file,
-                filename=file.name,
-                file_size=file.size,
-                mime_type=file.content_type,
-                uploaded_by=request.user,
-                delivered_at=timezone.now()
+
+    try:
+        with transaction.atomic():
+            for file in files:
+                attachment = Attachment.objects.create(
+                    file=file,
+                    filename=file.name,
+                    file_size=file.size,
+                    mime_type=file.content_type,
+                    uploaded_by=request.user,
+                    delivered_at=timezone.now()
+                )
+                order.attachments.add(attachment)
+                delivered_files.append({
+                    'id': str(attachment.id),
+                    'filename': attachment.filename,
+                    'file_size': attachment.file_size,
+                    'delivered_at': attachment.delivered_at.isoformat()
+                })
+
+            order.status = 'awaiting_approval'
+            order.delivered_at = timezone.now()
+            order.auto_approve_at = timezone.now() + timedelta(hours=Order.REVISION_WINDOW_HOURS)
+            order.save()
+
+            OrderHistory.objects.create(
+                order=order,
+                user=request.user,
+                action='deliver',
+                from_status='in_progress',
+                to_status='awaiting_approval'
             )
-            order.attachments.add(attachment)
-            delivered_files.append({
-                'id': str(attachment.id),
-                'filename': attachment.filename,
-                'file_size': attachment.file_size,
-                'delivered_at': attachment.delivered_at.isoformat()
-            })
 
-        order.status = 'awaiting_approval'
-        order.delivered_at = timezone.now()
-        order.auto_approve_at = timezone.now() + timedelta(hours=Order.REVISION_WINDOW_HOURS)
-        order.save()
+            OrderTimeline.objects.create(
+                order=order,
+                status='awaiting_approval',
+                title='Files Delivered',
+                description=f'{len(files)} file(s) delivered and awaiting client approval',
+                icon='fa-file-check',
+                color='purple'
+            )
 
-        OrderHistory.objects.create(
-            order=order,
-            user=request.user,
-            action='deliver',
-            from_status='in_progress',
-            to_status='awaiting_approval'
+        log_admin_action(
+            admin=request.user,
+            action_type='order_deliver',
+            request=request,
+            target_order=order
         )
 
-        OrderTimeline.objects.create(
-            order=order,
-            status='awaiting_approval',
-            title='Files Delivered',
-            description=f'{len(files)} file(s) delivered and awaiting client approval',
-            icon='fa-file-check',
-            color='purple'
-        )
+        return Response({
+            'success': True,
+            'message': f'{len(files)} file(s) delivered successfully',
+            'files': delivered_files
+        })
 
-    log_admin_action(
-        admin=request.user,
-        action_type='order_deliver',
-        request=request,
-        target_order=order
-    )
-
-    return Response({
-        'success': True,
-        'message': f'{len(files)} file(s) delivered successfully',
-        'files': delivered_files
-    })
-
+    except Exception as e:
+        return Response({
+            'error': f'Failed to deliver files: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

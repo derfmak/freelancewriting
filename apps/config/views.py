@@ -42,38 +42,31 @@ def home(request):
 
 @api_view(['GET'])
 def about_stats(request):
-    cache_key = 'about_page_stats'
-    stats = cache.get(cache_key)
+    total_orders = Order.objects.count()
+    completed_orders = Order.objects.filter(status='completed').count()
+    total_clients = User.objects.filter(role='client', is_active=True).count()
+    total_writers = User.objects.filter(role='writer', is_active=True).count()
     
-    if stats is None:
-        total_orders = Order.objects.count()
-        completed_orders = Order.objects.filter(status='completed').count()
-        total_clients = User.objects.filter(role='client', is_active=True).count()
-        total_writers = User.objects.filter(role='writer', is_active=True).count()
-        
-        ratings = Order.objects.filter(rating__isnull=False).aggregate(Avg('rating'))
-        avg_rating = ratings['rating__avg'] or 0
-        
-        completion_rate = 0
-        if total_orders > 0:
-            completion_rate = (completed_orders / total_orders) * 100
-        
-        satisfaction = 0
-        if avg_rating > 0:
-            satisfaction = min(99, int((avg_rating / 5) * 100))
-        
-        stats = {
-            'orders': completed_orders,
-            'completion_rate': round(completion_rate, 1),
-            'rating': round(avg_rating, 1),
-            'clients': total_clients,
-            'writers': total_writers,
-            'total_orders': total_orders,
-            'satisfaction_rate': satisfaction
-        }
-        
-        cache.set(cache_key, stats, 300)
+    ratings = Order.objects.filter(rating__isnull=False).aggregate(Avg('rating'))
+    avg_rating = ratings['rating__avg'] or 0
     
+    completion_rate = 0
+    if total_orders > 0:
+        completion_rate = (completed_orders / total_orders) * 100
+    
+    satisfaction = 0
+    if avg_rating > 0:
+        satisfaction = min(99, int((avg_rating / 5) * 100))
+    
+    stats = {
+        'orders': completed_orders,
+        'completion_rate': round(completion_rate, 1),
+        'rating': round(avg_rating, 1),
+        'clients': total_clients,
+        'writers': total_writers,
+        'total_orders': total_orders,
+        'satisfaction_rate': satisfaction
+    }
     return Response(stats)
 def about(request):
     return render(request, 'public/about.html')

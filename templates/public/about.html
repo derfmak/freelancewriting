@@ -5,393 +5,275 @@
 
 {% block extra_css %}
 <style>
-.about-hero {
+  .about-hero {
     background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    padding: 4rem 0 5rem;
+    padding: 3rem 2rem;
     margin: -1.5rem -2rem 2rem -2rem;
     border-radius: 0 0 2rem 2rem;
     position: relative;
     overflow: hidden;
-}
-
-.about-hero::before {
+  }
+  .about-hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    inset: 0;
     background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+');
     background-size: 60px 60px;
-    opacity: 0.3;
-}
-
-@media (max-width: 640px) {
+    opacity: 0.2;
+  }
+  @media (max-width: 640px) {
     .about-hero {
-        padding: 3rem 0 4rem;
-        margin: -1rem -1rem 1.5rem -1rem;
-        border-radius: 0 0 1.5rem 1.5rem;
+      padding: 2rem 1rem;
+      margin: -1rem -1rem 1.5rem -1rem;
+      border-radius: 0 0 1.5rem 1.5rem;
     }
-}
-
-.about-hero h1 {
-    font-size: 3rem;
-    font-weight: 800;
+  }
+  .about-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
     color: white;
     position: relative;
     z-index: 1;
-}
-
-.about-hero p {
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.9);
+  }
+  .about-hero p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.9);
+    max-width: 600px;
+    margin: 0.5rem auto 0;
     position: relative;
     z-index: 1;
-}
-
-@media (max-width: 640px) {
-    .about-hero h1 {
-        font-size: 2rem;
-    }
-    .about-hero p {
-        font-size: 1rem;
-    }
-}
-
-.stats-grid {
+  }
+  .stats-grid {
     display: grid;
-    gap: 1.5rem;
-    margin-top: 2rem;
-}
-
-@media (min-width: 768px) {
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+  @media (min-width: 768px) {
     .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, 1fr);
     }
-}
-
-.stat-card {
+  }
+  .stat-card {
     background: white;
     border: 1px solid #e5e7eb;
-    border-radius: 0.75rem;
-    padding: 1.75rem 1.5rem;
+    border-radius: 0.5rem;
+    padding: 1.5rem 1rem;
     text-align: center;
-    transition: all 0.3s ease;
-    animation: fadeInUp 0.6s ease forwards;
-    opacity: 0;
-}
-
-.stat-card:nth-child(1) { animation-delay: 0.1s; }
-.stat-card:nth-child(2) { animation-delay: 0.2s; }
-.stat-card:nth-child(3) { animation-delay: 0.3s; }
-
-.stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s ease;
+  }
+  .stat-card:hover {
+    transform: translateY(-3px);
     border-color: #059669;
-}
-
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: 800;
+    box-shadow: 0 8px 24px rgba(5,150,105,0.08);
+  }
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
     color: #059669;
     line-height: 1.2;
-}
-
-.stat-label {
+  }
+  .stat-label {
     color: #64748b;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     margin-top: 0.25rem;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.section-image {
-    width: 100%;
-    height: 100%;
-    min-height: 280px;
-    object-fit: cover;
-    border-radius: 0.75rem;
-    background: #f1f5f9;
-}
-
-.image-wrapper {
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    transition: all 0.4s ease;
-}
-
-.image-wrapper:hover {
-    transform: scale(1.01);
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
-}
-
-.content-section {
-    padding: 3rem 0;
-}
-
-.content-section:nth-child(even) {
-    background: #f8fafc;
-}
-
-.content-section h2 {
-    font-size: 2rem;
+  }
+  .content-section {
+    padding: 2.5rem 0;
+  }
+  .content-section:nth-child(even) {
+    background: #fafafa;
+  }
+  .content-section h2 {
+    font-size: 1.75rem;
     font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 1rem;
-}
-
-.content-section h2 span {
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+  }
+  .content-section h2 span {
     color: #059669;
-}
-
-.content-section p {
+  }
+  .content-section p {
     color: #475569;
-    font-size: 1rem;
-    line-height: 1.8;
-    margin-bottom: 1rem;
-}
-
-.content-grid {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+  }
+  .content-grid {
     display: grid;
     gap: 2rem;
-}
-
-@media (min-width: 768px) {
+  }
+  @media (min-width: 768px) {
     .content-grid {
-        grid-template-columns: 1fr 1fr;
-        align-items: center;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
     }
-}
-
-.value-card {
+  }
+  .image-wrapper {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .section-image {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    display: block;
+    background: #e5e7eb;
+  }
+  @media (min-width: 768px) {
+    .section-image {
+      height: 300px;
+    }
+  }
+  .value-grid {
+    display: grid;
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+  }
+  @media (min-width: 768px) {
+    .value-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .value-card {
     background: white;
     border: 1px solid #e5e7eb;
-    border-radius: 0.75rem;
-    padding: 2rem;
-    transition: all 0.3s ease;
-    text-align: center;
-    animation: fadeInUp 0.6s ease forwards;
-    opacity: 0;
-}
-
-.value-card:nth-child(1) { animation-delay: 0.1s; }
-.value-card:nth-child(2) { animation-delay: 0.2s; }
-.value-card:nth-child(3) { animation-delay: 0.3s; }
-
-.value-card:hover {
-    border-color: #059669;
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-}
-
-.value-icon {
-    width: 4rem;
-    height: 4rem;
-    background: #ecfdf5;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    color: #059669;
-    font-size: 1.5rem;
-}
-
-.value-card h3 {
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-}
-
-.value-card p {
-    color: #64748b;
-    font-size: 0.9rem;
-    line-height: 1.6;
-}
-
-.cta-section {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    padding: 4rem 2rem;
-    border-radius: 0.75rem;
-    text-align: center;
-    color: white;
-    margin-top: 2rem;
-}
-
-.cta-section h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-}
-
-.cta-section p {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    margin-bottom: 1.5rem;
-}
-
-.cta-btn {
-    display: inline-block;
-    background: white;
-    color: #059669;
-    padding: 0.75rem 2.5rem;
-    font-weight: 700;
-    font-size: 1rem;
     border-radius: 0.5rem;
-    transition: all 0.3s ease;
+    padding: 1.5rem 1rem;
+    text-align: center;
+  }
+  .value-card h3 {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+  .value-card p {
+    color: #64748b;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .cta-section {
+    background: #f1f5f9;
+    padding: 2.5rem 2rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    margin: 2rem 0 1rem;
+  }
+  .cta-section h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+  }
+  .cta-section p {
+    color: #475569;
+    font-size: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: #059669;
+    color: white;
+    padding: 0.6rem 2rem;
+    font-weight: 600;
+    border-radius: 0.375rem;
     text-decoration: none;
-}
-
-.cta-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-    background: #f8fafc;
-}
-
-.quality-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 0.4rem 1rem;
-    border-radius: 9999px;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.9);
-}
+    transition: background 0.2s;
+  }
+  .cta-btn:hover {
+    background: #047857;
+  }
+  .text-green {
+    color: #059669;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="about-page">
 
-    <section class="about-hero">
-        <div class="container text-center">
-            <span class="quality-badge">
-                <i class="fas fa-award"></i> Trusted Academic Partner
-            </span>
-            <h1>About <span style="color: #fbbf24;">AcademicWrite</span></h1>
-            <p>Professional academic writing services for students worldwide</p>
-        </div>
-    </section>
+  <section class="about-hero text-center">
+    <h1>About AcademicWrite</h1>
+    <p>Professional academic writing services for students worldwide</p>
+  </section>
 
+  <div class="container">
+    <div class="stats-grid" id="stats-container">
+      <div class="stat-card">
+        <div class="stat-number" id="orders-count">0</div>
+        <div class="stat-label">Orders Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="clients-count">0</div>
+        <div class="stat-label">Clients</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="satisfaction-rate">0%</div>
+        <div class="stat-label">Satisfaction Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-section">
     <div class="container">
-        <div class="stats-grid" id="stats-container">
-            <div class="stat-card">
-                <div class="stat-number" id="orders-count">0</div>
-                <div class="stat-label">Orders Completed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="clients-count">0</div>
-                <div class="stat-label">Clients</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="satisfaction-rate">0%</div>
-                <div class="stat-label">Satisfaction Rate</div>
-            </div>
+      <div class="content-grid">
+        <div class="image-wrapper">
+          <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop&crop=center"
+               alt="Students studying" class="section-image" loading="lazy">
         </div>
-    </div>
-
-    <div class="content-section">
-        <div class="container">
-            <div class="content-grid">
-                <div class="image-wrapper">
-                    <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop&crop=center" 
-                         alt="Students studying and writing" 
-                         class="section-image"
-                         loading="lazy">
-                </div>
-                <div>
-                    <h2>Your Partner in <span>Academic Success</span></h2>
-                    <p>
-                        We understand the challenges students face in today's demanding academic environment. 
-                        Our platform connects you with qualified writers who deliver high-quality, original content 
-                        tailored to your specific requirements.
-                    </p>
-                    <p>
-                        Whether you need help with essays, research papers, dissertations, or any other academic 
-                        assignment, we're here to support you every step of the way.
-                    </p>
-                </div>
-            </div>
+        <div>
+          <h2>Your Partner in <span>Academic Success</span></h2>
+          <p>We understand the challenges students face in today's demanding academic environment. Our platform connects you with qualified writers who deliver high-quality, original content tailored to your specific requirements.</p>
+          <p>Whether you need help with essays, research papers, dissertations, or any other academic assignment, we're here to support you every step of the way.</p>
         </div>
+      </div>
     </div>
+  </div>
 
-    <div class="content-section">
-        <div class="container">
-            <div class="content-grid">
-                <div class="order-2 md:order-1">
-                    <h2>Quality <span>You Can Trust</span></h2>
-                    <p>
-                        Every paper is written from scratch by subject matter experts who hold advanced degrees 
-                        in their respective fields. We ensure each piece meets the highest academic standards 
-                        and follows your specific formatting requirements.
-                    </p>
-                    <p>
-                        Our commitment to quality includes rigorous plagiarism checks, thorough proofreading, 
-                        and unlimited revisions to ensure your complete satisfaction.
-                    </p>
-                </div>
-                <div class="image-wrapper order-1 md:order-2">
-                    <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=600&fit=crop&crop=center" 
-                         alt="Academic writing and research" 
-                         class="section-image"
-                         loading="lazy">
-                </div>
-            </div>
-        </div>
-    </div>
-
+  <div class="content-section">
     <div class="container">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <h2 style="font-size: 2rem; font-weight: 700; color: #1e293b;">Our <span style="color: #059669;">Values</span></h2>
-            <p style="color: #64748b; max-width: 600px; margin: 0.5rem auto 0;">The principles that guide everything we do</p>
+      <div class="content-grid">
+        <div>
+          <h2>Quality <span>You Can Trust</span></h2>
+          <p>Every paper is written from scratch by subject matter experts who hold advanced degrees in their respective fields. We ensure each piece meets the highest academic standards and follows your specific formatting requirements.</p>
+          <p>Our commitment to quality includes rigorous plagiarism checks, thorough proofreading, and unlimited revisions to ensure your complete satisfaction.</p>
         </div>
-        
-        <div style="display: grid; gap: 1.5rem; grid-template-columns: 1fr;">
-            <div class="value-card">
-                <div class="value-icon">
-                    <i class="fas fa-star"></i>
-                </div>
-                <h3>Excellence</h3>
-                <p>We deliver nothing less than exceptional quality in every piece of work we produce.</p>
-            </div>
-            <div class="value-card">
-                <div class="value-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3>Integrity</h3>
-                <p>We maintain the highest standards of academic integrity and originality in all our work.</p>
-            </div>
-            <div class="value-card">
-                <div class="value-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <h3>Student First</h3>
-                <p>Your success is our priority. We're committed to helping you achieve your academic goals.</p>
-            </div>
+        <div class="image-wrapper">
+          <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=600&fit=crop&crop=center"
+               alt="Academic research" class="section-image" loading="lazy">
         </div>
+      </div>
     </div>
+  </div>
 
-    <div class="container">
-        <div class="cta-section">
-            <h2>Ready to Get Started?</h2>
-            <p>Join thousands of students who trust us with their academic success</p>
-            <a href="/register/" class="cta-btn">
-                <i class="fas fa-rocket"></i> Get Started Today
-            </a>
-        </div>
+  <div class="container">
+    <h2 class="text-center" style="font-size:1.75rem; font-weight:700; color:#0f172a; margin-bottom:0.5rem;">Our <span class="text-green">Values</span></h2>
+    <p class="text-center" style="color:#64748b; max-width:500px; margin:0 auto 1.5rem;">The principles that guide everything we do</p>
+    <div class="value-grid">
+      <div class="value-card">
+        <h3>Excellence</h3>
+        <p>We deliver nothing less than exceptional quality in every piece of work we produce.</p>
+      </div>
+      <div class="value-card">
+        <h3>Integrity</h3>
+        <p>We maintain the highest standards of academic integrity and originality in all our work.</p>
+      </div>
+      <div class="value-card">
+        <h3>Student First</h3>
+        <p>Your success is our priority. We're committed to helping you achieve your academic goals.</p>
+      </div>
     </div>
+  </div>
+
+  <div class="container">
+    <div class="cta-section">
+      <h2>Ready to Get Started?</h2>
+      <p>Join thousands of students who trust us with their academic success</p>
+      <a href="/register/" class="cta-btn">Get Started Today</a>
+    </div>
+  </div>
 
 </div>
 {% endblock %}
@@ -399,79 +281,58 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    fetchAboutStats();
+  fetchAboutStats();
 });
 
 function fetchAboutStats() {
-    var statsData = getCachedStats();
-    
-    if (statsData) {
-        updateStats(statsData);
-    }
-    
-    fetch('/api/about/stats/')
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(function(data) {
-            cacheStats(data);
-            updateStats(data);
-        })
-        .catch(function(error) {
-            console.warn('Failed to fetch stats:', error);
-            if (!statsData) {
-                updateStats({
-                    orders: 0,
-                    clients: 0,
-                    satisfaction_rate: 0
-                });
-            }
-        });
+  var statsData = getCachedStats();
+  if (statsData) {
+    updateStats(statsData);
+  }
+  fetch('/api/about/stats/')
+    .then(function(response) {
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    })
+    .then(function(data) {
+      cacheStats(data);
+      updateStats(data);
+    })
+    .catch(function(error) {
+      console.warn('Failed to fetch stats:', error);
+      if (!statsData) {
+        updateStats({ orders: 0, clients: 0, satisfaction_rate: 0 });
+      }
+    });
 }
 
 function getCachedStats() {
-    try {
-        var cached = localStorage.getItem('about_stats');
-        if (cached) {
-            var data = JSON.parse(cached);
-            var timestamp = data.timestamp || 0;
-            if (Date.now() - timestamp < 300000) {
-                return data.stats;
-            }
-        }
-    } catch (e) {
-        return null;
+  try {
+    var cached = localStorage.getItem('about_stats');
+    if (cached) {
+      var data = JSON.parse(cached);
+      var timestamp = data.timestamp || 0;
+      if (Date.now() - timestamp < 300000) {
+        return data.stats;
+      }
     }
-    return null;
+  } catch (e) { return null; }
+  return null;
 }
 
 function cacheStats(stats) {
-    try {
-        localStorage.setItem('about_stats', JSON.stringify({
-            stats: stats,
-            timestamp: Date.now()
-        }));
-    } catch (e) {
-    }
+  try {
+    localStorage.setItem('about_stats', JSON.stringify({ stats: stats, timestamp: Date.now() }));
+  } catch (e) {}
 }
 
 function updateStats(data) {
-    var ordersEl = document.getElementById('orders-count');
-    var clientsEl = document.getElementById('clients-count');
-    var rateEl = document.getElementById('satisfaction-rate');
-    
-    if (ordersEl) {
-        ordersEl.textContent = data.orders || data.completed_orders || 0;
-    }
-    if (clientsEl) {
-        clientsEl.textContent = data.clients || 0;
-    }
-    if (rateEl) {
-        rateEl.textContent = (data.satisfaction_rate || 0) + '%';
-    }
+  var ordersEl = document.getElementById('orders-count');
+  var clientsEl = document.getElementById('clients-count');
+  var rateEl = document.getElementById('satisfaction-rate');
+  if (ordersEl) ordersEl.textContent = data.orders || data.completed_orders || 0;
+  if (clientsEl) clientsEl.textContent = data.clients || 0;
+  if (rateEl) rateEl.textContent = (data.satisfaction_rate || 0) + '%';
 }
 </script>
 {% endblock %}

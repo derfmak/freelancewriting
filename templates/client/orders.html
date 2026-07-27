@@ -9,32 +9,32 @@
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">My Orders</h1>
             <p class="text-gray-600 text-sm sm:text-base mt-1">Manage and track all your academic orders</p>
         </div>
-        <a href="/client/orders/new/" class="bg-green-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 font-medium hover:bg-green-700 transition-colors text-sm sm:text-base w-full sm:w-auto text-center">
+        <a href="/client/orders/new/" class="bg-green-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 font-medium hover:bg-green-700 transition-colors text-sm sm:text-base w-full sm:w-auto text-center rounded-lg">
             <i class="fas fa-plus mr-2"></i>New Order
         </a>
     </div>
 
-    <div class="bg-white border border-gray-200 p-3 sm:p-4">
+    <div class="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 shadow-sm">
         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div class="flex-1 relative">
-                <input type="text" id="order-search-input" placeholder="Search orders by topic, order number..." class="w-full border border-gray-300 px-4 py-2.5 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm">
+                <input type="text" id="order-search-input" placeholder="Search orders by topic, order number..." class="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm">
                 <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                     <i class="fas fa-search"></i>
                 </div>
-                <div id="search-suggestions" class="absolute top-full left-0 right-0 bg-white border border-gray-200 shadow-lg z-50 hidden max-h-64 overflow-y-auto"></div>
+                <div id="search-suggestions" class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-64 overflow-y-auto"></div>
             </div>
             <div class="flex flex-wrap gap-2 overflow-x-auto pb-2 sm:pb-0" id="status-filters">
-                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-green-600 text-white whitespace-nowrap" data-status="all">All</button>
-                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="request">Request</button>
-                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="in_progress">In Progress</button>
-                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="completed">Completed</button>
-                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="cancelled">Cancelled</button>
-                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="revision">Revision</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-green-600 text-white whitespace-nowrap" data-status="all">All</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="request">Request</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="in_progress">In Progress</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="awaiting_approval">Awaiting Approval</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="completed">Completed</button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-status="cancelled">Cancelled</button>
             </div>
         </div>
     </div>
 
-    <div class="bg-white border border-gray-200 overflow-hidden mt-6">
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mt-6">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs sm:text-sm">
                 <thead>
@@ -112,7 +112,11 @@ document.addEventListener('DOMContentLoaded', function() {
             suggestionsContainer.style.display = 'block';
             
             debounceTimer = setTimeout(function() {
-                fetch('/api/v1/client/orders/search/?q=' + encodeURIComponent(query))
+                fetch('/api/v1/client/orders/search/?q=' + encodeURIComponent(query), {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                    }
+                })
                     .then(function(response) {
                         if (!response.ok) throw new Error('Search failed');
                         return response.json();
@@ -222,9 +226,10 @@ function getStatusClass(status) {
     const statusMap = {
         'request': 'bg-yellow-100 text-yellow-700',
         'in_progress': 'bg-blue-100 text-blue-700',
+        'awaiting_approval': 'bg-purple-100 text-purple-700',
         'completed': 'bg-green-100 text-green-700',
         'cancelled': 'bg-red-100 text-red-700',
-        'revision': 'bg-purple-100 text-purple-700'
+        'declined': 'bg-red-100 text-red-700'
     };
     return statusMap[status] || 'bg-gray-100 text-gray-700';
 }
@@ -233,9 +238,10 @@ function getStatusLabel(status) {
     const labelMap = {
         'request': 'Request',
         'in_progress': 'In Progress',
+        'awaiting_approval': 'Awaiting Approval',
         'completed': 'Completed',
         'cancelled': 'Cancelled',
-        'revision': 'Revision'
+        'declined': 'Declined'
     };
     return labelMap[status] || status.replace('_', ' ');
 }
@@ -250,36 +256,62 @@ function formatCurrency(amount) {
     return '$' + parseFloat(amount || 0).toFixed(2);
 }
 
+function getProgressPercentage(order) {
+    if (order.status === 'completed') {
+        return 100;
+    }
+    if (order.status === 'awaiting_approval') {
+        return 90;
+    }
+    if (order.status === 'in_progress') {
+        return Math.min(75, order.progress_percentage || 50);
+    }
+    if (order.status === 'request') {
+        return 10;
+    }
+    if (order.status === 'cancelled' || order.status === 'declined') {
+        return 0;
+    }
+    return order.progress_percentage || 0;
+}
+
 function displayOrders(orders) {
     const tbody = document.getElementById('orders-list');
     
-    tbody.innerHTML = orders.map(order => `
-        <tr class="border-b border-gray-100 hover:bg-gray-50">
-            <td class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-800 text-xs sm:text-sm">
-                <a href="/client/orders/${order.id}/" class="hover:text-green-600">${order.order_number || 'N/A'}</a>
-            </td>
-            <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden sm:table-cell">
-                ${order.topic ? order.topic.substring(0, 40) : 'No topic'}${order.topic && order.topic.length > 40 ? '...' : ''}
-            </td>
-            <td class="px-3 sm:px-4 py-2.5 sm:py-3">
-                <span class="text-xs px-2 py-1 ${getStatusClass(order.status)} rounded">${getStatusLabel(order.status)}</span>
-            </td>
-            <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden md:table-cell">${order.pages || 0}</td>
-            <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden lg:table-cell">${formatDate(order.deadline)}</td>
-            <td class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-800 text-xs sm:text-sm">${formatCurrency(order.total_price)}</td>
-            <td class="px-3 sm:px-4 py-2.5 sm:py-3 hidden sm:table-cell">
-                <div class="flex items-center space-x-2">
-                    <div class="w-16 sm:w-20 h-1.5 bg-gray-200 rounded">
-                        <div class="h-1.5 bg-green-600 rounded" style="width: ${order.progress_percentage || 0}%"></div>
+    tbody.innerHTML = orders.map(order => {
+        const progress = getProgressPercentage(order);
+        const isCompleted = order.status === 'completed';
+        const isCancelled = order.status === 'cancelled' || order.status === 'declined';
+        const barColor = isCompleted ? 'bg-green-600' : isCancelled ? 'bg-red-400' : 'bg-green-600';
+        
+        return `
+            <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
+                <td class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-800 text-xs sm:text-sm">
+                    <a href="/client/orders/${order.id}/" class="hover:text-green-600">${order.order_number || 'N/A'}</a>
+                </td>
+                <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden sm:table-cell">
+                    ${order.topic ? order.topic.substring(0, 40) : 'No topic'}${order.topic && order.topic.length > 40 ? '...' : ''}
+                </td>
+                <td class="px-3 sm:px-4 py-2.5 sm:py-3">
+                    <span class="text-xs px-2 py-1 ${getStatusClass(order.status)} rounded-full font-medium">${getStatusLabel(order.status)}</span>
+                </td>
+                <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden md:table-cell">${order.pages || 0}</td>
+                <td class="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 text-xs sm:text-sm hidden lg:table-cell">${formatDate(order.deadline)}</td>
+                <td class="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-gray-800 text-xs sm:text-sm">${formatCurrency(order.total_price)}</td>
+                <td class="px-3 sm:px-4 py-2.5 sm:py-3 hidden sm:table-cell">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-16 sm:w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-1.5 ${barColor} rounded-full transition-all duration-500" style="width: ${progress}%"></div>
+                        </div>
+                        <span class="text-xs font-medium ${isCompleted ? 'text-green-600' : isCancelled ? 'text-red-500' : 'text-gray-600'}">${progress}%</span>
                     </div>
-                    <span class="text-xs text-gray-600">${order.progress_percentage || 0}%</span>
-                </div>
-            </td>
-            <td class="px-3 sm:px-4 py-2.5 sm:py-3">
-                <a href="/client/orders/${order.id}/" class="text-green-600 hover:text-green-700 text-xs sm:text-sm">View</a>
-            </td>
-        </tr>
-    `).join('');
+                </td>
+                <td class="px-3 sm:px-4 py-2.5 sm:py-3">
+                    <a href="/client/orders/${order.id}/" class="text-green-600 hover:text-green-700 text-xs sm:text-sm font-medium">View <i class="fas fa-arrow-right ml-1 text-xs"></i></a>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function updatePagination(total, page, pageSize) {
@@ -298,15 +330,15 @@ function updatePagination(total, page, pageSize) {
     let buttons = '';
     
     if (page > 1) {
-        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded hover:bg-gray-50" data-page="${page - 1}">Previous</button>`;
+        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-page="${page - 1}">Previous</button>`;
     }
     
     for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
-        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border ${i === page ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 hover:bg-gray-50'}" data-page="${i}">${i}</button>`;
+        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border rounded-lg transition-colors ${i === page ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 hover:bg-gray-50'}" data-page="${i}">${i}</button>`;
     }
     
     if (page < totalPages) {
-        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded hover:bg-gray-50" data-page="${page + 1}">Next</button>`;
+        buttons += `<button class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-page="${page + 1}">Next</button>`;
     }
     
     buttonsContainer.innerHTML = buttons;
