@@ -80,3 +80,52 @@ class PayPalWithdrawForm(forms.Form):
         if not email:
             raise forms.ValidationError('PayPal email is required')
         return email
+
+
+class VerifyPayPalMethodForm(forms.Form):
+    method_id = forms.UUIDField(
+        widget=forms.HiddenInput()
+    )
+    code = forms.CharField(
+        max_length=6,
+        min_length=6,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors rounded-lg',
+            'placeholder': 'Enter 6-digit code',
+            'autocomplete': 'off'
+        })
+    )
+
+    def clean_code(self):
+        code = self.cleaned_data['code']
+        if not code.isdigit():
+            raise forms.ValidationError('Code must contain only digits')
+        return code
+
+
+class ResendVerificationCodeForm(forms.Form):
+    method_id = forms.UUIDField(
+        widget=forms.HiddenInput()
+    )
+
+
+class SelectPaymentMethodForm(forms.Form):
+    payment_method_id = forms.UUIDField(
+        widget=forms.Select(attrs={
+            'class': 'form-input w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors rounded-lg'
+        })
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        methods = PaymentMethod.objects.filter(user=user, is_active=True, paypal_verified=True)
+        choices = [(str(m.id), f"{m.paypal_email} ({m.paypal_account_type})") for m in methods]
+        if not choices:
+            choices = [('', 'No verified payment methods available')]
+        self.fields['payment_method_id'].choices = choices
+
+    def clean_payment_method_id(self):
+        method_id = self.cleaned_data['payment_method_id']
+        if not method_id:
+            raise forms.ValidationError('Please select a payment method')
+        return method_id

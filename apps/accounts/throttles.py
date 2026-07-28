@@ -1,5 +1,6 @@
 from rest_framework.throttling import SimpleRateThrottle
 
+
 class RegisterThrottle(SimpleRateThrottle):
     scope = 'register'
     
@@ -75,3 +76,29 @@ class DeletionRequestThrottle(SimpleRateThrottle):
         if not request.user.is_authenticated:
             return None
         return f'deletion_{request.user.id}_{self.get_ident(request)}'
+
+
+class SendPasswordChangeCodeThrottle(SimpleRateThrottle):
+    scope = 'send_password_change_code'
+    
+    def get_cache_key(self, request, view):
+        if not request.user.is_authenticated:
+            return None
+        return f'send_pw_code_{request.user.id}_{self.get_ident(request)}'
+
+
+class VerifyPasswordChangeCodeThrottle(SimpleRateThrottle):
+    scope = 'verify_password_change_code'
+    
+    def get_cache_key(self, request, view):
+        if not request.user.is_authenticated:
+            return None
+        return f'verify_pw_code_{request.user.id}_{self.get_ident(request)}'
+
+
+class GoogleLoginThrottle(SimpleRateThrottle):
+    scope = 'google_login'
+    
+    def get_cache_key(self, request, view):
+        ident = self.get_ident(request)
+        return f'google_login_{ident}'

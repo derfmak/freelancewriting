@@ -26,6 +26,9 @@ urlpatterns = [
     
     path('paypal/methods/', views.get_paypal_methods, name='paypal-methods'),
     path('paypal/methods/add/', views.add_paypal_method, name='add-paypal-method'),
+    path('paypal/methods/verify/', views.verify_paypal_method, name='verify-paypal-method'),
+    path('paypal/methods/resend-code/', views.resend_verification_code, name='resend-verification-code'),
+    path('paypal/methods/check/', views.check_paypal_email, name='check-paypal-email'),
     path('paypal/deposit/', views.create_paypal_deposit, name='paypal-deposit'),
     path('paypal/deposit/execute/', views.execute_paypal_payment, name='paypal-execute'),
     path('paypal/deposit/cancel/', views.cancel_paypal_payment, name='paypal-cancel'),

@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils import timezone
 
+
 class UserManager(BaseUserManager):
     def create_user(self, email, full_name, password=None, **extra_fields):
         if not email:
@@ -11,6 +12,7 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, full_name=full_name, **extra_fields)
         user.set_password(password)
+        user.username = email
         user.save(using=self._db)
         return user
 
@@ -75,3 +77,38 @@ class UserManager(BaseUserManager):
         except self.model.DoesNotExist:
             return None
         return None
+    
+    def get_by_google_id(self, google_id):
+        try:
+            return self.get(google_id=google_id)
+        except self.model.DoesNotExist:
+            return None
+    
+    def create_google_user(self, email, full_name, google_id, picture='', **extra_fields):
+        extra_fields.setdefault('role', 'client')
+        extra_fields.setdefault('email_verified', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('google_id', google_id)
+        extra_fields.setdefault('picture', picture)
+        
+        if not email:
+            raise ValueError('Email is required')
+        
+        email = self.normalize_email(email)
+        
+        # Check if user already exists with this email
+        user = self.filter(email=email).first()
+        if user:
+            if not user.google_id:
+                user.google_id = google_id
+                user.picture = picture
+                user.save(update_fields=['google_id', 'picture'])
+            return user
+        
+        # Create new user with a random password
+        password = self.model.objects.make_random_password()
+        user = self.model(email=email, full_name=full_name, google_id=google_id, picture=picture, **extra_fields)
+        user.set_password(password)
+        user.username = email
+        user.save(using=self._db)
+        return user

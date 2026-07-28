@@ -1,0 +1,211 @@
+{% extends "admin_base.html" %}
+
+{% block title %}User Details - AcademicWrite{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/admin/users/" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+        <h1 class="text-2xl font-bold text-gray-900">User Details</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1">
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <div class="text-center">
+                    <div class="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center text-3xl font-bold text-green-600 mb-4">
+                        {{ user_detail.full_name|default:user_detail.email|slice:":2"|upper }}
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900">{{ user_detail.full_name|default:"No Name" }}</h2>
+                    <p class="text-gray-500 text-sm">{{ user_detail.email }}</p>
+                    
+                    <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                        <span class="px-3 py-1 text-xs rounded-full {% if user_detail.role == 'admin' %}bg-purple-100 text-purple-700{% elif user_detail.role == 'client' %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ user_detail.get_role_display|default:user_detail.role }}
+                        </span>
+                        {% if user_detail.is_suspended %}
+                        <span class="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-full">Suspended</span>
+                        {% elif user_detail.is_active %}
+                        <span class="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full">Active</span>
+                        {% else %}
+                        <span class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr class="my-4 border-gray-200">
+
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-xs text-gray-500">Joined</p>
+                        <p class="text-sm font-medium text-gray-900">{{ user_detail.date_joined|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Last Login</p>
+                        <p class="text-sm font-medium text-gray-900">{{ user_detail.last_login|date:"M d, Y H:i"|default:"Never" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Wallet Balance</p>
+                        <p class="text-sm font-bold text-green-600">${{ wallet.balance|floatformat:2 }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Total Spent</p>
+                        <p class="text-sm font-bold text-blue-600">${{ total_spent|floatformat:2 }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Orders</p>
+                        <p class="text-sm font-medium text-gray-900">{{ order_count }}</p>
+                    </div>
+                </div>
+
+                <hr class="my-4 border-gray-200">
+
+                <div class="space-y-2">
+                    <a href="/admin/orders/?search={{ user_detail.email }}" class="block text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                        <i class="fas fa-file-alt mr-2"></i>View Orders
+                    </a>
+                    <a href="/admin/finances/?user={{ user_detail.id }}" class="block text-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                        <i class="fas fa-dollar-sign mr-2"></i>View Finances
+                    </a>
+                    <button onclick="toggleSuspend('{{ user_detail.id }}')" class="block w-full text-center px-4 py-2 {% if user_detail.is_suspended %}bg-green-600 hover:bg-green-700{% else %}bg-red-600 hover:bg-red-700{% endif %} text-white rounded-lg transition-colors text-sm">
+                        <i class="fas {% if user_detail.is_suspended %}fa-check-circle{% else %}fa-ban{% endif %} mr-2"></i>
+                        {% if user_detail.is_suspended %}Reactivate{% else %}Suspend{% endif %} User
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2">
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Orders</h3>
+                
+                {% if orders %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-3 py-2 font-medium text-gray-500">Order #</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Topic</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Status</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Total</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Date</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for order in orders|slice:":10" %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-3 py-2 font-medium text-green-600">#{{ order.order_number }}</td>
+                                <td class="px-3 py-2 text-gray-700 max-w-xs truncate">{{ order.topic|default:"Untitled" }}</td>
+                                <td class="px-3 py-2">
+                                    <span class="px-2 py-1 text-xs rounded-full status-badge {{ order.status }}">
+                                        {{ order.get_status_display|default:order.status }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-2 font-medium">${{ order.total_price|floatformat:2 }}</td>
+                                <td class="px-3 py-2 text-gray-500 text-xs">{{ order.created_at|date:"M d, Y" }}</td>
+                                <td class="px-3 py-2">
+                                    <a href="/admin/orders/{{ order.id }}/" class="text-green-600 hover:text-green-700 text-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-6">No orders found</p>
+                {% endif %}
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-lg p-6 mt-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Transactions</h3>
+                
+                {% if transactions %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-3 py-2 font-medium text-gray-500">ID</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Type</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Amount</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Status</th>
+                                <th class="px-3 py-2 font-medium text-gray-500">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for tx in transactions %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-3 py-2 text-xs text-gray-500">{{ tx.transaction_id|default:tx.id|slice:":8" }}</td>
+                                <td class="px-3 py-2 text-gray-700">{{ tx.get_type_display|default:tx.type }}</td>
+                                <td class="px-3 py-2 font-medium {% if tx.direction == 'credit' %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {% if tx.direction == 'credit' %}+{% else %}-{% endif %}${{ tx.amount|floatformat:2 }}
+                                </td>
+                                <td class="px-3 py-2">
+                                    <span class="px-2 py-1 text-xs rounded-full {% if tx.status == 'completed' %}bg-green-100 text-green-700{% elif tx.status == 'pending' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+                                        {{ tx.get_status_display|default:tx.status }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-2 text-gray-500 text-xs">{{ tx.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-6">No transactions found</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSuspend(userId) {
+    if (!confirm('Are you sure you want to suspend this user?')) return;
+    
+    fetch('/api/v1/admin/users/' + userId + '/suspend/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrf-token]')?.content || getCsrfToken(),
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+            reason: 'Suspended by admin',
+            days: 7
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Network error. Please try again.');
+    });
+}
+
+function getCsrfToken() {
+    var cookie = document.cookie.split('; ').find(function(row) { return row.startsWith('csrftoken='); });
+    return cookie ? cookie.split('=')[1] : '';
+}
+</script>
+
+<style>
+.status-badge.request { background: #fef3c7; color: #d97706; }
+.status-badge.in_progress { background: #dbeafe; color: #2563eb; }
+.status-badge.awaiting_approval { background: #ede9fe; color: #7c3aed; }
+.status-badge.completed { background: #d1fae5; color: #059669; }
+.status-badge.cancelled { background: #fee2e2; color: #dc2626; }
+.status-badge.declined { background: #fee2e2; color: #dc2626; }
+.status-badge.refund_pending { background: #fef3c7; color: #d97706; }
+</style>
+{% endblock %}

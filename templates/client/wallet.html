@@ -9,36 +9,25 @@
 
         <div class="grid md:grid-cols-3 gap-6 sm:gap-8">
             <div class="md:col-span-2 space-y-6 sm:space-y-8">
-                
                 <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div class="grid grid-cols-3 gap-4 text-center">
                         <div>
-                            <p class="text-sm text-gray-500 mb-1">Available Balance</p>
-                            <p class="text-3xl sm:text-4xl font-bold text-gray-900" id="balance">$0.00</p>
-                        </div>
-                        <button class="bg-green-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 font-medium hover:bg-green-700 transition-colors flex items-center text-sm sm:text-base w-full sm:w-auto justify-center rounded-lg" id="show-deposit-modal">
-                            <i class="fas fa-plus mr-2"></i>Add Funds
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 text-center border-t border-gray-200 pt-4 sm:pt-6">
-                        <div>
-                            <p class="text-xs sm:text-sm text-gray-500">Total In</p>
-                            <p class="text-base sm:text-lg font-semibold text-green-600" id="total-in">$0.00</p>
+                            <p class="text-xs sm:text-sm text-gray-500">Total Spent</p>
+                            <p class="text-2xl sm:text-3xl font-bold text-green-600" id="total-in">$0.00</p>
                         </div>
                         <div>
-                            <p class="text-xs sm:text-sm text-gray-500">Total Out</p>
-                            <p class="text-base sm:text-lg font-semibold text-blue-600" id="total-out">$0.00</p>
+                            <p class="text-xs sm:text-sm text-gray-500">Total Refunded</p>
+                            <p class="text-2xl sm:text-3xl font-bold text-red-500" id="total-out">$0.00</p>
                         </div>
                         <div>
-                            <p class="text-xs sm:text-sm text-gray-500">Balance</p>
-                            <p class="text-base sm:text-lg font-semibold text-orange-600" id="wallet-balance">$0.00</p>
+                            <p class="text-xs sm:text-sm text-gray-500">Net Spent</p>
+                            <p class="text-2xl sm:text-3xl font-bold text-gray-900" id="balance">$0.00</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
-                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Recent Transactions</h2>
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Transaction History</h2>
                     
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs sm:text-sm">
@@ -49,12 +38,11 @@
                                     <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500">Type</th>
                                     <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500">Amount</th>
                                     <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500 hidden md:table-cell">Status</th>
-                                    <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500 hidden lg:table-cell">Direction</th>
                                 </tr>
                             </thead>
                             <tbody id="transactions-list" class="divide-y divide-gray-200">
                                 <tr>
-                                    <td colspan="6" class="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm">
+                                    <td colspan="5" class="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm">
                                         Loading transactions...
                                     </td>
                                 </tr>
@@ -70,24 +58,6 @@
 
             <div class="space-y-6 sm:space-y-8">
                 <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
-                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
-                    
-                    <div class="space-y-3">
-                        <button class="bg-green-600 text-white w-full py-2.5 sm:py-3 font-medium hover:bg-green-700 transition-colors flex items-center justify-center text-sm sm:text-base rounded-lg" id="quick-deposit">
-                            <i class="fas fa-plus-circle mr-2"></i>Add Funds
-                        </button>
-                        
-                        <button class="border border-gray-300 text-gray-700 w-full py-2.5 sm:py-3 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center text-sm sm:text-base rounded-lg" id="withdraw-btn">
-                            <i class="fas fa-arrow-up mr-2"></i>Withdraw Funds
-                        </button>
-                        
-                        <a href="/client/orders/new/" class="border border-gray-300 text-gray-700 w-full py-2.5 sm:py-3 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center text-sm sm:text-base rounded-lg">
-                            <i class="fas fa-file-alt mr-2"></i>Place Order
-                        </a>
-                    </div>
-                </div>
-
-                <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg sm:text-xl font-bold text-gray-800">Payment Methods</h2>
                         <button class="text-green-600 hover:text-green-700 text-sm font-medium" id="add-payment-method-btn">
@@ -95,7 +65,7 @@
                         </button>
                     </div>
                     
-                    <div id="payment-methods-container" class="space-y-3">
+                    <div id="payment-methods-container">
                         <div class="text-center text-gray-500 py-6 sm:py-8" id="no-payment-methods">
                             <i class="fab fa-paypal text-3xl sm:text-4xl text-gray-300 mb-3"></i>
                             <p class="text-sm mb-3">No PayPal accounts saved</p>
@@ -115,163 +85,18 @@
                     <ul class="text-xs sm:text-sm text-gray-600 space-y-2">
                         <li class="flex items-start">
                             <span class="text-green-600 mr-2">•</span>
-                            All payments are processed via PayPal
+                            Track your spending on orders
                         </li>
                         <li class="flex items-start">
                             <span class="text-green-600 mr-2">•</span>
-                            Minimum withdrawal is $10.00
+                            Refunds are processed to your PayPal account
                         </li>
                         <li class="flex items-start">
                             <span class="text-green-600 mr-2">•</span>
-                            Funds are tracked as ledger entries
+                            View complete order history in your dashboard
                         </li>
                     </ul>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="deposit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity p-4">
-    <div class="bg-white max-w-md w-full rounded-xl">
-        <div class="p-4 sm:p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900">Add Funds</h3>
-                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-deposit-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div id="deposit-step-1">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount (USD)</label>
-                        <input type="number" 
-                               class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm sm:text-base rounded-lg" 
-                               id="deposit-amount" 
-                               min="5" 
-                               step="5" 
-                               value="50"
-                               placeholder="Enter amount">
-                        <p class="text-xs text-gray-500 mt-1">Minimum deposit: $5.00</p>
-                    </div>
-
-                    <div id="payment-methods-selector" class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Payment Method</label>
-                        
-                        <div class="mb-3">
-                            <label class="flex items-center p-3 border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors rounded-lg">
-                                <input type="radio" name="payment-method-select" value="paypal" class="w-4 h-4 text-green-600 focus:ring-green-500 mr-3" checked>
-                                <div class="flex-1 flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <i class="fab fa-paypal text-2xl text-blue-600"></i>
-                                        <div>
-                                            <p class="font-medium text-gray-800 text-sm sm:text-base">PayPal</p>
-                                            <p class="text-xs text-gray-500">Pay with your PayPal account</p>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Popular</span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <div id="payment-methods-radio-group" class="space-y-2"></div>
-                        
-                        <div class="text-center text-xs text-gray-500 mt-2">
-                            <i class="fas fa-lock mr-1"></i> Secure payments powered by PayPal
-                        </div>
-                    </div>
-
-                    <button class="w-full bg-green-600 text-white py-3 font-medium hover:bg-green-700 transition-colors text-sm sm:text-base rounded-lg" id="process-deposit">
-                        Continue to Payment
-                    </button>
-                </div>
-            </div>
-
-            <div id="deposit-step-2" class="hidden">
-                <div class="text-center py-6 sm:py-8">
-                    <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-green-600 mb-4"></div>
-                    <p class="text-gray-600 text-sm sm:text-base mb-2">Processing your payment...</p>
-                    <p class="text-xs sm:text-sm text-gray-500" id="processing-message">Connecting to PayPal</p>
-                </div>
-            </div>
-
-            <div id="deposit-step-3" class="hidden">
-                <div class="text-center py-4 sm:py-6">
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-4">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <h4 class="text-base sm:text-lg font-bold text-gray-800 mb-2">Payment Successful!</h4>
-                    <p class="text-sm sm:text-base text-gray-600 mb-4" id="success-message">$$ has been added to your wallet.</p>
-                    <button class="w-full bg-green-600 text-white py-2.5 hover:bg-green-700 transition-colors text-sm sm:text-base rounded-lg" id="deposit-success-close">Done</button>
-                </div>
-            </div>
-
-            <div id="deposit-step-4" class="hidden">
-                <div class="text-center py-4 sm:py-6">
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-4">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <h4 class="text-base sm:text-lg font-bold text-gray-800 mb-2">Payment Failed</h4>
-                    <p class="text-sm sm:text-base text-gray-600 mb-2" id="deposit-error-message"></p>
-                    <p class="text-xs sm:text-sm text-gray-500 mb-4" id="deposit-error-details"></p>
-                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                        <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors py-2 text-sm sm:text-base rounded-lg" id="deposit-fail-close">Close</button>
-                        <button class="flex-1 bg-green-600 text-white hover:bg-green-700 transition-colors py-2 text-sm sm:text-base rounded-lg" id="deposit-fail-retry">Try Again</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="paypal-success-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity p-4">
-    <div class="bg-white max-w-md w-full rounded-xl">
-        <div class="p-4 sm:p-6">
-            <div class="text-center py-4 sm:py-6">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-4">
-                    <i class="fas fa-check"></i>
-                </div>
-                <h4 class="text-base sm:text-lg font-bold text-gray-800 mb-2">Payment Successful!</h4>
-                <p class="text-sm sm:text-base text-gray-600 mb-2" id="paypal-success-message">$50.00 added to your wallet</p>
-                <p class="text-xs sm:text-sm text-gray-500 mb-4" id="paypal-success-balance">New balance: $50.00</p>
-                <button class="w-full bg-green-600 text-white py-2.5 hover:bg-green-700 transition-colors text-sm sm:text-base rounded-lg" id="paypal-success-close">Done</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="withdraw-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity p-4">
-    <div class="bg-white max-w-md w-full rounded-xl">
-        <div class="p-4 sm:p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900">Withdraw Funds</h3>
-                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-withdraw-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount (USD)</label>
-                    <input type="number" 
-                           class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm sm:text-base rounded-lg" 
-                           id="withdraw-amount" 
-                           min="10" 
-                           step="10"
-                           placeholder="Enter amount">
-                    <p class="text-xs text-gray-500 mt-1">Minimum withdrawal: $10.00</p>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">PayPal Email</label>
-                    <input type="email" class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm sm:text-base rounded-lg" id="paypal-email" placeholder="your-email@example.com">
-                    <p class="text-xs text-gray-500 mt-1">Funds will be sent to this PayPal email address</p>
-                </div>
-
-                <button class="w-full bg-green-600 text-white py-3 font-medium hover:bg-green-700 transition-colors text-sm sm:text-base rounded-lg" id="process-withdraw">
-                    Request Withdrawal
-                </button>
             </div>
         </div>
     </div>
@@ -281,35 +106,72 @@
     <div class="bg-white max-w-md w-full rounded-xl">
         <div class="p-4 sm:p-6">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900">Add Payment Method</h3>
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900" id="payment-modal-title">Add Payment Method</h3>
                 <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-payment-method-modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">PayPal Email Address</label>
-                    <input type="email" 
-                           class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm sm:text-base rounded-lg" 
-                           id="paypal-email-add" 
-                           placeholder="your-email@example.com">
-                    <p class="text-xs text-gray-500 mt-1">We'll use this email for PayPal payments</p>
+            <div id="payment-modal-step-1">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">PayPal Email Address</label>
+                        <input type="email" 
+                               class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm sm:text-base rounded-lg" 
+                               id="paypal-email-input" 
+                               placeholder="your-email@example.com">
+                        <p class="text-xs text-gray-500 mt-1">We'll send a verification code to this email</p>
+                    </div>
+                    
+                    <div id="step-1-error" class="text-red-600 text-sm hidden"></div>
+
+                    <button class="w-full bg-green-600 text-white py-3 font-medium hover:bg-green-700 transition-colors text-sm sm:text-base rounded-lg" id="send-verification-btn">
+                        Send Verification Code
+                    </button>
                 </div>
-                
-                <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p class="text-xs text-blue-700">
+            </div>
+
+            <div id="payment-modal-step-2" class="hidden">
+                <div class="space-y-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
                         <i class="fas fa-info-circle mr-1"></i>
-                        PayPal payments are processed securely. You'll be redirected to PayPal for authentication.
-                    </p>
+                        A verification code has been sent to <span id="verify-email-display" class="font-medium"></span>.
+                        Enter the 6-digit code below. It expires in 5 minutes.
+                    </div>
+                    <div id="step-2-info" class="text-sm text-gray-600"></div>
+                    <div id="step-2-attempts" class="text-sm text-gray-500 hidden"></div>
+                    
+                    <div class="flex justify-center gap-2">
+                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]" autofocus>
+                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    </div>
+                    
+                    <div id="step-2-error" class="text-red-600 text-sm hidden"></div>
+                    <div id="step-2-success" class="text-green-600 text-sm hidden"></div>
+                    
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                        <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors py-3 text-sm sm:text-base rounded-lg" id="resend-code-btn">
+                            Resend Code
+                        </button>
+                        <button class="flex-1 bg-gray-300 text-gray-500 cursor-not-allowed py-3 text-sm sm:text-base rounded-lg" id="verify-code-btn" disabled>
+                            Verify
+                        </button>
+                    </div>
                 </div>
+            </div>
 
-                <div id="card-error" class="text-red-600 text-sm hidden"></div>
-                <div id="card-success" class="text-green-600 text-sm hidden"></div>
-
-                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
-                    <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors py-3 text-sm sm:text-base rounded-lg" id="cancel-add-payment">Cancel</button>
-                    <button class="flex-1 bg-green-600 text-white hover:bg-green-700 transition-colors py-3 text-sm sm:text-base rounded-lg" id="save-payment-method">Add PayPal</button>
+            <div id="payment-modal-step-3" class="hidden">
+                <div class="text-center py-4 sm:py-6">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-4">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h4 class="text-base sm:text-lg font-bold text-gray-800 mb-2">PayPal Account Added!</h4>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4">Your PayPal account has been successfully verified.</p>
+                    <button class="w-full bg-green-600 text-white py-2.5 hover:bg-green-700 transition-colors text-sm sm:text-base rounded-lg" id="modal-success-close">Done</button>
                 </div>
             </div>
         </div>
@@ -322,6 +184,8 @@ let transactions = [];
 let paymentMethods = [];
 let currentPage = 1;
 let hasMore = true;
+let currentMethodId = null;
+let isVerificationLocked = false;
 
 const API_BASE = '/api/v1/wallet/';
 
@@ -361,44 +225,368 @@ document.addEventListener('DOMContentLoaded', function() {
     loadWalletData();
     loadTransactions();
     loadPaymentMethods();
+    setupVerificationDigits();
     
-    document.getElementById('show-deposit-modal').addEventListener('click', showDepositModal);
-    document.getElementById('quick-deposit').addEventListener('click', showDepositModal);
-    document.getElementById('close-deposit-modal').addEventListener('click', hideDepositModal);
-    
-    document.getElementById('withdraw-btn').addEventListener('click', showWithdrawModal);
-    document.getElementById('close-withdraw-modal').addEventListener('click', hideWithdrawModal);
-    document.getElementById('process-withdraw').addEventListener('click', processWithdraw);
+    document.getElementById('add-payment-method-btn').addEventListener('click', showAddPaymentModal);
+    document.getElementById('add-first-payment-method').addEventListener('click', showAddPaymentModal);
+    document.getElementById('close-payment-method-modal').addEventListener('click', closePaymentModal);
+    document.getElementById('send-verification-btn').addEventListener('click', sendVerification);
+    document.getElementById('resend-code-btn').addEventListener('click', resendCode);
+    document.getElementById('modal-success-close').addEventListener('click', function() {
+        closePaymentModal();
+        loadPaymentMethods();
+    });
     
     document.getElementById('load-more').addEventListener('click', loadMoreTransactions);
-    
-    document.getElementById('add-payment-method-btn').addEventListener('click', showPaymentMethodModal);
-    document.getElementById('add-first-payment-method').addEventListener('click', showPaymentMethodModal);
-    document.getElementById('close-payment-method-modal').addEventListener('click', hidePaymentMethodModal);
-    document.getElementById('cancel-add-payment').addEventListener('click', hidePaymentMethodModal);
-    document.getElementById('save-payment-method').addEventListener('click', savePaymentMethod);
-    
-    document.getElementById('deposit-fail-close').addEventListener('click', hideDepositModal);
-    document.getElementById('deposit-fail-retry').addEventListener('click', function() {
-        document.getElementById('deposit-step-4').classList.add('hidden');
-        document.getElementById('deposit-step-1').classList.remove('hidden');
-    });
-    document.getElementById('deposit-success-close').addEventListener('click', function() {
-        hideDepositModal();
-        loadWalletData();
-        loadTransactions();
-    });
-    document.getElementById('paypal-success-close').addEventListener('click', function() {
-        document.getElementById('paypal-success-modal').classList.add('hidden');
-        loadWalletData();
-        loadTransactions();
-    });
 });
 
-function showPayPalSuccess(amount, balance) {
-    document.getElementById('paypal-success-message').textContent = '$' + amount.toFixed(2) + ' added to your wallet';
-    document.getElementById('paypal-success-balance').textContent = 'New balance: $' + balance.toFixed(2);
-    document.getElementById('paypal-success-modal').classList.remove('hidden');
+function setupVerificationDigits() {
+    const digits = document.querySelectorAll('.verification-digit');
+    const verifyBtn = document.getElementById('verify-code-btn');
+    
+    digits.forEach((input, index) => {
+        input.addEventListener('input', function() {
+            const val = this.value;
+            if (!/^[0-9]$/.test(val)) {
+                this.value = '';
+                return;
+            }
+            if (index < digits.length - 1 && val) {
+                digits[index + 1].focus();
+            }
+            const allFilled = Array.from(digits).every(inp => inp.value.length === 1);
+            if (allFilled) {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify';
+                verifyBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                verifyBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+                setTimeout(() => {
+                    if (!verifyBtn.disabled) {
+                        verifyCode();
+                    }
+                }, 300);
+            } else {
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = 'Verify';
+                verifyBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+                verifyBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            }
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace') {
+                if (this.value === '' && index > 0) {
+                    digits[index - 1].focus();
+                } else {
+                    this.value = '';
+                }
+                const allFilled = Array.from(digits).every(inp => inp.value.length === 1);
+                if (!allFilled) {
+                    verifyBtn.disabled = true;
+                    verifyBtn.textContent = 'Verify';
+                    verifyBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+                    verifyBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                }
+            }
+        });
+
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+            if (/^\d{6}$/.test(pasteData)) {
+                const chars = pasteData.split('');
+                digits.forEach((inp, idx) => {
+                    if (idx < chars.length) {
+                        inp.value = chars[idx];
+                    }
+                });
+                digits[digits.length - 1].focus();
+                const allFilled = Array.from(digits).every(inp => inp.value.length === 1);
+                if (allFilled) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify';
+                    verifyBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                    verifyBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+                    setTimeout(() => verifyCode(), 300);
+                }
+            }
+        });
+    });
+}
+
+function showAddPaymentModal() {
+    document.getElementById('payment-modal-step-1').classList.remove('hidden');
+    document.getElementById('payment-modal-step-2').classList.add('hidden');
+    document.getElementById('payment-modal-step-3').classList.add('hidden');
+    document.getElementById('paypal-email-input').value = '';
+    document.getElementById('step-1-error').classList.add('hidden');
+    document.getElementById('step-2-error').classList.add('hidden');
+    document.getElementById('step-2-success').classList.add('hidden');
+    document.getElementById('step-2-info').textContent = '';
+    document.getElementById('step-2-attempts').classList.add('hidden');
+    document.getElementById('payment-modal-title').textContent = 'Add Payment Method';
+    
+    const digits = document.querySelectorAll('.verification-digit');
+    digits.forEach(inp => {
+        inp.value = '';
+        inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
+        inp.disabled = false;
+    });
+    const btn = document.getElementById('verify-code-btn');
+    btn.disabled = true;
+    btn.textContent = 'Verify';
+    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+    isVerificationLocked = false;
+    document.getElementById('payment-method-modal').classList.remove('hidden');
+}
+
+function closePaymentModal() {
+    document.getElementById('payment-method-modal').classList.add('hidden');
+    const digits = document.querySelectorAll('.verification-digit');
+    digits.forEach(inp => {
+        inp.value = '';
+        inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
+        inp.disabled = false;
+    });
+    const btn = document.getElementById('verify-code-btn');
+    btn.disabled = true;
+    btn.textContent = 'Verify';
+    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+    isVerificationLocked = false;
+}
+
+async function sendVerification() {
+    const email = document.getElementById('paypal-email-input').value.trim();
+    if (!email || !email.includes('@')) {
+        document.getElementById('step-1-error').textContent = 'Please enter a valid PayPal email address';
+        document.getElementById('step-1-error').classList.remove('hidden');
+        return;
+    }
+    
+    const btn = document.getElementById('send-verification-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    document.getElementById('step-1-error').classList.add('hidden');
+    
+    try {
+        const response = await apiCall(API_BASE + 'paypal/methods/add/', {
+            method: 'POST',
+            body: JSON.stringify({ paypal_email: email })
+        });
+        
+        if (response && response.ok) {
+            const data = await response.json();
+            currentMethodId = data.method_id;
+            document.getElementById('verify-email-display').textContent = email;
+            document.getElementById('payment-modal-step-1').classList.add('hidden');
+            document.getElementById('payment-modal-step-2').classList.remove('hidden');
+            document.getElementById('step-2-error').classList.add('hidden');
+            document.getElementById('step-2-success').classList.add('hidden');
+            document.getElementById('step-2-info').textContent = '';
+            document.getElementById('step-2-attempts').classList.add('hidden');
+            const digits = document.querySelectorAll('.verification-digit');
+            digits.forEach(inp => {
+                inp.value = '';
+                inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
+                inp.disabled = false;
+            });
+            digits[0].focus();
+            btn.textContent = orig;
+            btn.disabled = false;
+        } else if (response) {
+            const errorData = await response.json();
+            if (response.status === 400 && errorData.method_id) {
+                currentMethodId = errorData.method_id;
+                document.getElementById('verify-email-display').textContent = email;
+                document.getElementById('payment-modal-step-1').classList.add('hidden');
+                document.getElementById('payment-modal-step-2').classList.remove('hidden');
+                document.getElementById('step-2-info').textContent = 'A verification code was already sent. Please check your email or request a new code.';
+                document.getElementById('step-2-error').classList.add('hidden');
+                document.getElementById('step-2-success').classList.add('hidden');
+                document.getElementById('step-2-attempts').classList.add('hidden');
+                const digits = document.querySelectorAll('.verification-digit');
+                digits.forEach(inp => {
+                    inp.value = '';
+                    inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
+                    inp.disabled = false;
+                });
+                digits[0].focus();
+                btn.textContent = orig;
+                btn.disabled = false;
+                return;
+            }
+            document.getElementById('step-1-error').textContent = errorData.error || errorData.message || 'Failed to send verification code';
+            document.getElementById('step-1-error').classList.remove('hidden');
+            btn.textContent = orig;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        document.getElementById('step-1-error').textContent = 'Network error. Please try again.';
+        document.getElementById('step-1-error').classList.remove('hidden');
+        btn.textContent = orig;
+        btn.disabled = false;
+    }
+}
+
+async function verifyCode() {
+    const digits = document.querySelectorAll('.verification-digit');
+    const code = Array.from(digits).map(inp => inp.value).join('');
+    if (code.length !== 6) {
+        document.getElementById('step-2-error').textContent = 'Please enter all 6 digits';
+        document.getElementById('step-2-error').classList.remove('hidden');
+        return;
+    }
+    
+    const btn = document.getElementById('verify-code-btn');
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+    document.getElementById('step-2-error').classList.add('hidden');
+    document.getElementById('step-2-success').classList.add('hidden');
+    document.getElementById('step-2-attempts').classList.add('hidden');
+    
+    try {
+        const response = await apiCall(API_BASE + 'paypal/methods/verify/', {
+            method: 'POST',
+            body: JSON.stringify({
+                method_id: currentMethodId,
+                code: code
+            })
+        });
+        
+        if (response && response.ok) {
+            digits.forEach(inp => {
+                inp.classList.add('border-green-500', 'bg-green-50');
+                inp.classList.remove('border-red-500', 'bg-red-50');
+            });
+            document.getElementById('step-2-success').textContent = 'Verification successful!';
+            document.getElementById('step-2-success').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('payment-modal-step-2').classList.add('hidden');
+                document.getElementById('payment-modal-step-3').classList.remove('hidden');
+                btn.disabled = false;
+                btn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                btn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+                btn.textContent = 'Verified';
+            }, 800);
+        } else if (response) {
+            const error = await response.json();
+            if (error.locked) {
+                isVerificationLocked = true;
+                document.getElementById('step-2-error').textContent = error.error;
+                document.getElementById('step-2-error').classList.remove('hidden');
+                digits.forEach(inp => {
+                    inp.disabled = true;
+                    inp.classList.add('bg-gray-100');
+                });
+                btn.disabled = true;
+                btn.textContent = 'Locked';
+                btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            } else if (error.remaining_attempts !== undefined) {
+                const attempts = error.remaining_attempts;
+                document.getElementById('step-2-error').textContent = error.error;
+                document.getElementById('step-2-error').classList.remove('hidden');
+                document.getElementById('step-2-attempts').textContent = `Attempts remaining: ${attempts}`;
+                document.getElementById('step-2-attempts').classList.remove('hidden');
+                digits.forEach(inp => {
+                    inp.classList.add('border-red-500', 'bg-red-50');
+                    inp.classList.remove('border-green-500', 'bg-green-50');
+                });
+                setTimeout(() => {
+                    digits.forEach(inp => {
+                        inp.classList.remove('border-red-500', 'bg-red-50');
+                        inp.value = '';
+                    });
+                    digits[0].focus();
+                    document.getElementById('step-2-error').classList.add('hidden');
+                    document.getElementById('step-2-attempts').classList.add('hidden');
+                    btn.disabled = true;
+                    btn.textContent = 'Verify';
+                    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+                    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                }, 1500);
+            } else {
+                document.getElementById('step-2-error').textContent = error.error || 'Verification failed';
+                document.getElementById('step-2-error').classList.remove('hidden');
+                digits.forEach(inp => {
+                    inp.classList.add('border-red-500', 'bg-red-50');
+                });
+                setTimeout(() => {
+                    digits.forEach(inp => {
+                        inp.classList.remove('border-red-500', 'bg-red-50');
+                        inp.value = '';
+                    });
+                    digits[0].focus();
+                    btn.disabled = true;
+                    btn.textContent = 'Verify';
+                    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+                    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                    document.getElementById('step-2-error').classList.add('hidden');
+                }, 1500);
+            }
+            btn.disabled = false;
+        }
+    } catch (error) {
+        document.getElementById('step-2-error').textContent = 'Network error. Please try again.';
+        document.getElementById('step-2-error').classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Verify';
+        btn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        btn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+    }
+}
+
+async function resendCode() {
+    if (!currentMethodId) return;
+    const btn = document.getElementById('resend-code-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    document.getElementById('step-2-error').classList.add('hidden');
+    document.getElementById('step-2-success').classList.add('hidden');
+    document.getElementById('step-2-attempts').classList.add('hidden');
+    
+    try {
+        const response = await apiCall(API_BASE + 'paypal/methods/resend-code/', {
+            method: 'POST',
+            body: JSON.stringify({ method_id: currentMethodId })
+        });
+        
+        if (response && response.ok) {
+            document.getElementById('step-2-success').textContent = 'New verification code sent to your email';
+            document.getElementById('step-2-success').classList.remove('hidden');
+            const digits = document.querySelectorAll('.verification-digit');
+            digits.forEach(inp => {
+                inp.value = '';
+                inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
+                inp.disabled = false;
+            });
+            digits[0].focus();
+            const verifyBtn = document.getElementById('verify-code-btn');
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verify';
+            verifyBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+            verifyBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            isVerificationLocked = false;
+            btn.textContent = orig;
+            btn.disabled = false;
+        } else if (response) {
+            const error = await response.json();
+            document.getElementById('step-2-error').textContent = error.error || error.message || 'Failed to resend code';
+            document.getElementById('step-2-error').classList.remove('hidden');
+            btn.textContent = orig;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        document.getElementById('step-2-error').textContent = 'Network error. Please try again.';
+        document.getElementById('step-2-error').classList.remove('hidden');
+        btn.textContent = orig;
+        btn.disabled = false;
+    }
 }
 
 async function loadWalletData() {
@@ -415,10 +603,9 @@ async function loadWalletData() {
 
 function displayWalletData() {
     if (!walletData) return;
-    document.getElementById('balance').textContent = '$' + parseFloat(walletData.balance || 0).toFixed(2);
     document.getElementById('total-in').textContent = '$' + parseFloat(walletData.total_in || 0).toFixed(2);
     document.getElementById('total-out').textContent = '$' + parseFloat(walletData.total_out || 0).toFixed(2);
-    document.getElementById('wallet-balance').textContent = '$' + parseFloat(walletData.balance || 0).toFixed(2);
+    document.getElementById('balance').textContent = '$' + parseFloat(walletData.balance || 0).toFixed(2);
 }
 
 async function loadTransactions(page = 1) {
@@ -450,7 +637,7 @@ function displayTransactions() {
     if (transactions.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm">
+                <td colspan="5" class="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm">
                     No transactions yet
                 </td>
             </tr>
@@ -470,9 +657,6 @@ function displayTransactions() {
             </td>
             <td class="px-3 sm:px-4 py-2 sm:py-3 hidden md:table-cell">
                 <span class="text-xs px-2 py-1 ${getStatusClass(t.status)} rounded-full font-medium">${t.status}</span>
-            </td>
-            <td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden lg:table-cell">
-                <span class="text-xs px-2 py-1 ${t.direction === 'credit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded-full font-medium">${t.direction}</span>
             </td>
         </tr>
     `).join('');
@@ -506,7 +690,6 @@ async function loadPaymentMethods() {
         if (response && response.ok) {
             paymentMethods = await response.json();
             displayPaymentMethods();
-            updatePaymentMethodSelector();
         }
     } catch (error) {
         console.error('Failed to load payment methods', error);
@@ -551,186 +734,9 @@ function displayPaymentMethods() {
     });
 }
 
-function updatePaymentMethodSelector() {
-    const container = document.getElementById('payment-methods-radio-group');
-    container.innerHTML = '';
-}
-
 function loadMoreTransactions() {
     currentPage++;
     loadTransactions(currentPage);
-}
-
-function showDepositModal() {
-    document.getElementById('deposit-step-1').classList.remove('hidden');
-    document.getElementById('deposit-step-2').classList.add('hidden');
-    document.getElementById('deposit-step-3').classList.add('hidden');
-    document.getElementById('deposit-step-4').classList.add('hidden');
-    document.getElementById('deposit-modal').classList.remove('hidden');
-}
-
-function hideDepositModal() {
-    document.getElementById('deposit-modal').classList.add('hidden');
-}
-
-function showWithdrawModal() {
-    document.getElementById('withdraw-modal').classList.remove('hidden');
-}
-
-function hideWithdrawModal() {
-    document.getElementById('withdraw-modal').classList.add('hidden');
-}
-
-function showPaymentMethodModal() {
-    document.getElementById('payment-method-modal').classList.remove('hidden');
-    document.getElementById('paypal-email-add').value = '';
-    document.getElementById('card-error').classList.add('hidden');
-    document.getElementById('card-success').classList.add('hidden');
-}
-
-function hidePaymentMethodModal() {
-    document.getElementById('payment-method-modal').classList.add('hidden');
-}
-
-async function savePaymentMethod() {
-    document.getElementById('card-error').classList.add('hidden');
-    
-    const email = document.getElementById('paypal-email-add').value.trim();
-    if (!email || !email.includes('@')) {
-        document.getElementById('card-error').textContent = 'Please enter a valid PayPal email address';
-        document.getElementById('card-error').classList.remove('hidden');
-        return;
-    }
-    
-    const data = {
-        paypal_email: email,
-        paypal_account_type: 'personal',
-        set_default: true
-    };
-    const url = API_BASE + 'paypal/methods/add/';
-    
-    const saveButton = document.getElementById('save-payment-method');
-    const originalText = saveButton.textContent;
-    saveButton.textContent = 'Saving...';
-    saveButton.disabled = true;
-    
-    try {
-        const response = await apiCall(url, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        
-        if (response && response.ok) {
-            document.getElementById('card-success').textContent = 'PayPal account added successfully!';
-            document.getElementById('card-success').classList.remove('hidden');
-            
-            setTimeout(() => {
-                hidePaymentMethodModal();
-                loadPaymentMethods();
-                saveButton.textContent = originalText;
-                saveButton.disabled = false;
-            }, 1500);
-        } else if (response) {
-            const error = await response.json();
-            document.getElementById('card-error').textContent = error.message || 'Failed to add PayPal account. Please try again.';
-            document.getElementById('card-error').classList.remove('hidden');
-            saveButton.textContent = originalText;
-            saveButton.disabled = false;
-        }
-    } catch (error) {
-        document.getElementById('card-error').textContent = 'Failed to add PayPal account. Please try again.';
-        document.getElementById('card-error').classList.remove('hidden');
-        saveButton.textContent = originalText;
-        saveButton.disabled = false;
-    }
-}
-
-async function processDeposit() {
-    const amount = parseFloat(document.getElementById('deposit-amount').value);
-    
-    if (!amount || amount < 5) {
-        alert('Please enter a valid amount (minimum $5)');
-        return;
-    }
-    
-    try {
-        document.getElementById('deposit-step-1').classList.add('hidden');
-        document.getElementById('deposit-step-2').classList.remove('hidden');
-        document.getElementById('processing-message').textContent = 'Connecting to PayPal...';
-        
-        const response = await apiCall(API_BASE + 'paypal/deposit/', {
-            method: 'POST',
-            body: JSON.stringify({ amount: amount })
-        });
-        
-        if (response && response.ok) {
-            const data = await response.json();
-            if (data.approval_url) {
-                window.location.href = data.approval_url;
-            } else {
-                document.getElementById('deposit-step-2').classList.add('hidden');
-                document.getElementById('deposit-step-4').classList.remove('hidden');
-                document.getElementById('deposit-error-message').textContent = 'Failed to initiate PayPal payment';
-                document.getElementById('deposit-error-details').textContent = 'No approval URL received';
-            }
-        } else if (response) {
-            const error = await response.json();
-            document.getElementById('deposit-step-2').classList.add('hidden');
-            document.getElementById('deposit-step-4').classList.remove('hidden');
-            document.getElementById('deposit-error-message').textContent = error.message || 'Failed to initiate PayPal payment';
-            document.getElementById('deposit-error-details').textContent = 'Please try again';
-        }
-    } catch (error) {
-        document.getElementById('deposit-step-2').classList.add('hidden');
-        document.getElementById('deposit-step-4').classList.remove('hidden');
-        document.getElementById('deposit-error-message').textContent = 'Connection error';
-        document.getElementById('deposit-error-details').textContent = 'Failed to connect to PayPal. Please try again.';
-    }
-}
-
-document.getElementById('process-deposit').addEventListener('click', processDeposit);
-
-async function processWithdraw() {
-    const amount = parseFloat(document.getElementById('withdraw-amount').value);
-    const paypal_email = document.getElementById('paypal-email').value.trim();
-    
-    if (!amount || amount < 10) {
-        alert('Please enter a valid amount (minimum $10)');
-        return;
-    }
-    
-    if (!paypal_email) {
-        alert('Please enter PayPal email');
-        return;
-    }
-    
-    if (amount > parseFloat(walletData?.balance || 0)) {
-        alert('Insufficient balance');
-        return;
-    }
-    
-    try {
-        const response = await apiCall(API_BASE + 'withdraw/', {
-            method: 'POST',
-            body: JSON.stringify({
-                amount: amount,
-                paypal_email: paypal_email
-            })
-        });
-        
-        if (response && response.ok) {
-            const data = await response.json();
-            hideWithdrawModal();
-            alert('Withdrawal request submitted successfully');
-            loadWalletData();
-            loadTransactions();
-        } else if (response) {
-            const error = await response.json();
-            alert(error.message || 'Failed to process withdrawal');
-        }
-    } catch (error) {
-        alert('Failed to process withdrawal');
-    }
 }
 
 async function deletePaymentMethod(methodId) {
@@ -750,39 +756,6 @@ async function deletePaymentMethod(methodId) {
     } catch (error) {
         alert('Failed to remove payment method');
     }
-}
-
-const urlParams = new URLSearchParams(window.location.search);
-const paymentId = urlParams.get('paymentId');
-const payerId = urlParams.get('PayerID');
-
-if (paymentId && payerId) {
-    document.getElementById('deposit-step-2').classList.remove('hidden');
-    document.getElementById('deposit-step-1').classList.add('hidden');
-    document.getElementById('processing-message').textContent = 'Completing your payment...';
-    document.getElementById('deposit-modal').classList.remove('hidden');
-    
-    fetch(API_BASE + 'paypal/deposit/execute/?paymentId=' + paymentId + '&PayerID=' + payerId, {
-        headers: getAuthHeaders()
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('deposit-modal').classList.add('hidden');
-        document.getElementById('deposit-step-2').classList.add('hidden');
-        
-        if (data.success) {
-            showPayPalSuccess(data.amount || 50, data.balance || 50);
-        } else {
-            alert('Payment failed: ' + (data.error || 'Unknown error'));
-        }
-        window.history.replaceState({}, document.title, window.location.pathname);
-    })
-    .catch(error => {
-        document.getElementById('deposit-modal').classList.add('hidden');
-        document.getElementById('deposit-step-2').classList.add('hidden');
-        alert('Failed to complete payment');
-        window.history.replaceState({}, document.title, window.location.pathname);
-    });
 }
 </script>
 {% endblock %}

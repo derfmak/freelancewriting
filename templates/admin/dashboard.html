@@ -266,6 +266,98 @@
         font-size: 0.85rem;
     }
     
+    .client-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .client-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.2s ease;
+    }
+    
+    .client-item:hover {
+        background: #f8fafc;
+    }
+    
+    .client-item .client-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+    }
+    
+    .client-item .client-avatar {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 9999px;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: #6b7280;
+        flex-shrink: 0;
+    }
+    
+    .client-item .client-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .client-item .client-email {
+        font-size: 0.7rem;
+        color: #6b7280;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .client-item .client-balance {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #059669;
+        white-space: nowrap;
+        margin-left: 0.5rem;
+    }
+    
+    .client-item .client-balance.negative {
+        color: #dc2626;
+    }
+    
+    .client-item .client-status {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .client-item .client-status.active {
+        background: #d1fae5;
+        color: #059669;
+    }
+    
+    .client-item .client-status.suspended {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .client-item .client-status.pending {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
     .status-badge {
         font-size: 0.6rem;
         padding: 0.15rem 0.5rem;
@@ -430,11 +522,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg border border-gray-200 p-5 lg:col-span-2">
             <div class="section-header">
-                <h3>Recent Activity</h3>
-                <a href="/admin/logs/">View all</a>
+                <h3>Recent Clients</h3>
+                <a href="/admin/users/">View all</a>
             </div>
-            <div id="recentActivity" class="space-y-1 min-h-[140px]">
-                <div class="text-center text-gray-400 text-sm py-6">Loading activity...</div>
+            <div class="client-list" id="recentClients">
+                <div class="text-center text-gray-400 text-sm py-6">Loading clients...</div>
             </div>
         </div>
 
@@ -484,8 +576,14 @@ function formatNumber(value) {
     return parseInt(value) || 0;
 }
 
+function getInitials(name) {
+    if (!name) return 'U';
+    return name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
+}
+
 async function loadAllData() {
     try {
+        // Load orders
         var ordersResponse = await fetch(API_BASE + '/orders/?page_size=1000', {
             headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
             credentials: 'include'
@@ -607,7 +705,7 @@ async function loadAllData() {
     }
 
     loadPriorityQueue();
-    loadRecentActivity();
+    loadRecentClients();
 }
 
 async function loadPriorityQueue() {
@@ -648,10 +746,10 @@ async function loadPriorityQueue() {
     }
 }
 
-async function loadRecentActivity() {
-    var container = document.getElementById('recentActivity');
+async function loadRecentClients() {
+    var container = document.getElementById('recentClients');
     try {
-        var response = await fetch(API_BASE + '/logs/?page=1&page_size=6', {
+        var response = await fetch(API_BASE + '/users/?role=client&page=1&page_size=10', {
             headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
             credentials: 'include'
         });
@@ -660,48 +758,39 @@ async function loadRecentActivity() {
             return;
         }
         var data = await response.json();
-        var logs = data.results || [];
+        var clients = data.results || [];
 
-        if (logs.length === 0) {
-            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">No recent activity</div>';
+        if (clients.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 text-sm py-6">No clients registered yet</div>';
             return;
         }
 
-        var avatarColors = ['green', 'blue', 'purple', 'orange', 'red'];
+        var colors = ['blue', 'green', 'purple', 'orange', 'red', 'teal', 'pink'];
         var colorIndex = 0;
 
-        container.innerHTML = logs.map(function(log) {
-            var adminName = log.admin?.full_name || log.admin?.email || 'Admin';
-            var initials = adminName.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
-            var color = avatarColors[colorIndex % avatarColors.length];
+        container.innerHTML = clients.slice(0, 8).map(function(client) {
+            var balance = client.wallet_balance || 0;
+            var status = client.is_suspended ? 'suspended' : (client.is_active ? 'active' : 'pending');
+            var statusLabel = client.is_suspended ? 'Suspended' : (client.is_active ? 'Active' : 'Pending');
+            var initials = getInitials(client.full_name || client.email);
+            var color = colors[colorIndex % colors.length];
             colorIndex++;
             
-            var action = log.action_type || 'action';
-            var details = log.details || {};
-            var message = '';
-            
-            if (action === 'order_accept') {
-                message = 'Accepted order <span class="highlight">#' + (details.order_number || '') + '</span>';
-            } else if (action === 'order_reject') {
-                message = 'Rejected order <span class="highlight">#' + (details.order_number || '') + '</span>';
-            } else if (action === 'order_deliver') {
-                message = 'Delivered order <span class="highlight">#' + (details.order_number || '') + '</span>';
-            } else if (action === 'user_suspend') {
-                message = 'Suspended user <span class="highlight">' + (details.email || '') + '</span>';
-            } else if (action === 'user_reactivate') {
-                message = 'Reactivated user <span class="highlight">' + (details.email || '') + '</span>';
-            } else if (action === 'settings_change') {
-                message = 'Changed system setting: <span class="highlight">' + (details.key || '') + '</span>';
-            } else {
-                message = action.replace(/_/g, ' ');
-            }
-            
             return `
-                <div class="activity-item">
-                    <div class="avatar ${color}">${initials}</div>
-                    <div class="activity-content">
-                        <div class="activity-message">${message}</div>
-                        <div class="activity-time">${log.created_at ? new Date(log.created_at).toLocaleString() : ''}</div>
+                <div class="client-item">
+                    <div class="client-info">
+                        <div class="client-avatar">${initials}</div>
+                        <div>
+                            <div class="client-name">${client.full_name || client.email}</div>
+                            <div class="client-email">${client.email}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span class="client-balance ${balance < 0 ? 'negative' : ''}">${formatCurrency(balance)}</span>
+                        <span class="client-status ${status}">${statusLabel}</span>
+                        <a href="/admin/users/${client.id}/" class="text-gray-400 hover:text-green-600 transition-colors text-sm">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
                     </div>
                 </div>
             `;

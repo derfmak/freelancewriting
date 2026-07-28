@@ -1,37 +1,41 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from django.db import models, transaction
-from django.db.models import Count, Sum, Avg, Q
-from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.contrib import messages
+from django.core.cache import cache
+from django.core.paginator import Paginator
+from django.db.models import Q, Count, Avg, F, Sum
+from django.utils import timezone
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework import status
+from decimal import Decimal
 from datetime import timedelta
+import hashlib
+import json
+
 from apps.accounts.models import User
 from apps.orders.models import Order, OrderHistory, OrderTimeline, Attachment
 from apps.payments.models import Transaction, Wallet
 from apps.payments.services import WalletService
 from apps.messaging.models import Conversation, Message
-from .models import AdminActionLog, SystemSetting, SiteContent, Blog, PlatformStats, AdminNote, Sample
-from .serializers import (
-    UserAdminSerializer, OrderAdminSerializer, TransactionAdminSerializer,
-    DashboardStatsSerializer, SystemSettingSerializer, SiteContentSerializer,
-    BlogSerializer, AdminActionLogSerializer, WalletAdjustSerializer,
-    PriorityQueueSerializer, AdminNoteSerializer, PlatformStatsSerializer
+from apps.admin_portal.models import (
+    AdminActionLog, SystemSetting, SiteContent, Blog, 
+    PlatformStats, AdminNote, Sample
 )
 
 
-def log_admin_action(admin, action_type, request, **kwargs):
-    AdminActionLog.objects.create(
-        admin=admin,
-        action_type=action_type,
-        ip_address=request.META.get('REMOTE_ADDR'),
-        user_agent=request.META.get('HTTP_USER_AGENT', ''),
-        **kwargs
-    )
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 
 def is_admin(user):
@@ -44,6 +48,16 @@ def admin_required(view_func):
             return render(request, 'access_denied.html')
         return view_func(request, *args, **kwargs)
     return wrapper
+
+
+def log_admin_action(admin, action_type, request, **kwargs):
+    AdminActionLog.objects.create(
+        admin=admin,
+        action_type=action_type,
+        ip_address=request.META.get('REMOTE_ADDR'),
+        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        **kwargs
+    )
 
 
 @login_required
@@ -97,7 +111,106 @@ def admin_order_detail(request, order_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def admin_dashboard(request):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+    
+    today = timezone.now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    last_week = start_of_week - timedelta(days=7)
+    
+    users = User.objects.all()
+    orders = Order.objects.all()
+    
+    transactions = Transaction.objects.filter(status='completed')
+    total_revenue = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+    revenue_today = transactions.filter(created_at__date=today).aggregate(Sum('amount'))['amount__sum'] or 0
+    week_earnings = transactions.filter(created_at__date__gte=start_of_week).aggregate(Sum('amount'))['amount__sum'] or 0
+    last_week_earnings = transactions.filter(
+        created_at__date__gte=last_week,
+        created_at__date__lt=start_of_week
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    week_change = 0
+    if last_week_earnings > 0:
+        week_change = ((week_earnings - last_week_earnings) / last_week_earnings) * 100
+    
+    pending_orders = orders.filter(status='request').count()
+    in_progress = orders.filter(status='in_progress').count()
+    awaiting = orders.filter(status='awaiting_approval').count()
+    completed = orders.filter(status='completed').count()
+    cancelled = orders.filter(status='cancelled').count()
+    declined = orders.filter(status='declined').count()
+    completed_today = orders.filter(status='completed', updated_at__date=today).count()
+    
+    avg_rating = 0
+    rating_agg = orders.filter(rating__isnull=False).aggregate(Avg('rating'))
+    if rating_agg and rating_agg['rating__avg']:
+        avg_rating = rating_agg['rating__avg']
+    
+    completion_rate = 0
+    total_orders = orders.count()
+    if total_orders > 0:
+        completion_rate = (completed / total_orders) * 100
+    
+    admin_wallet = Wallet.objects.filter(user=request.user).first()
+    admin_balance = float(admin_wallet.balance) if admin_wallet else 0
+    
+    unread_messages = 0
+    try:
+        conversations = Conversation.objects.filter(admin=request.user)
+        for conv in conversations:
+            unread_messages += conv.get_unread_count(request.user)
+    except:
+        pass
+    
+    return Response({
+        'users': {
+            'total': users.count(),
+            'clients': users.filter(role='client').count(),
+            'admins': users.filter(role='admin').count(),
+            'new_today': users.filter(date_joined__date=today).count(),
+            'active': users.filter(last_login__date=today).count()
+        },
+        'orders': {
+            'total': total_orders,
+            'pending': pending_orders,
+            'in_progress': in_progress,
+            'awaiting_approval': awaiting,
+            'completed': completed,
+            'cancelled': cancelled,
+            'declined': declined,
+            'completed_today': completed_today,
+            'overdue': orders.filter(
+                deadline__lt=timezone.now(),
+                status__in=['request', 'in_progress']
+            ).count(),
+            'revisions': orders.filter(status='revision').count(),
+            'priority': orders.filter(
+                status='request',
+                deadline__lt=timezone.now() + timedelta(hours=6)
+            ).count()
+        },
+        'finance': {
+            'total_revenue': float(total_revenue),
+            'revenue_today': float(revenue_today),
+            'week_earnings': float(week_earnings),
+            'last_week_earnings': float(last_week_earnings),
+            'week_change': float(week_change),
+            'admin_balance': admin_balance,
+            'pending_payouts': 0
+        },
+        'ratings': {
+            'average': float(avg_rating),
+            'completion_rate': float(completion_rate)
+        },
+        'unread_messages': unread_messages
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def dashboard_stats(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -109,20 +222,14 @@ def dashboard_stats(request):
     users = User.objects.all()
     orders = Order.objects.all()
     
-    try:
-        transactions = Transaction.objects.filter(status='completed')
-        total_revenue = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
-        revenue_today = transactions.filter(created_at__date=today).aggregate(Sum('amount'))['amount__sum'] or 0
-        week_earnings = transactions.filter(created_at__date__gte=start_of_week).aggregate(Sum('amount'))['amount__sum'] or 0
-        last_week_earnings = transactions.filter(
-            created_at__date__gte=last_week,
-            created_at__date__lt=start_of_week
-        ).aggregate(Sum('amount'))['amount__sum'] or 0
-    except:
-        total_revenue = 0
-        revenue_today = 0
-        week_earnings = 0
-        last_week_earnings = 0
+    transactions = Transaction.objects.filter(status='completed')
+    total_revenue = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+    revenue_today = transactions.filter(created_at__date=today).aggregate(Sum('amount'))['amount__sum'] or 0
+    week_earnings = transactions.filter(created_at__date__gte=start_of_week).aggregate(Sum('amount'))['amount__sum'] or 0
+    last_week_earnings = transactions.filter(
+        created_at__date__gte=last_week,
+        created_at__date__lt=start_of_week
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
     
     week_change = 0
     if last_week_earnings > 0:
@@ -152,31 +259,36 @@ def dashboard_stats(request):
         'pending_orders': pending_orders,
         'in_progress_orders': in_progress,
         'completed_today': completed_today,
-        'total_revenue': total_revenue,
-        'revenue_today': revenue_today,
+        'total_revenue': float(total_revenue),
+        'revenue_today': float(revenue_today),
         'pending_payouts': 0,
-        'average_rating': avg_rating,
-        'completion_rate': completion_rate,
-        'overdue_orders': orders.filter(deadline__lt=timezone.now(), status__in=['request', 'in_progress']).count(),
+        'average_rating': float(avg_rating),
+        'completion_rate': float(completion_rate),
+        'overdue_orders': orders.filter(
+            deadline__lt=timezone.now(),
+            status__in=['request', 'in_progress']
+        ).count(),
         'unread_messages': 0,
-        'earnings': week_earnings,
-        'week_earnings': week_earnings,
-        'last_week_earnings': last_week_earnings,
-        'week_change': week_change,
+        'earnings': float(week_earnings),
+        'week_earnings': float(week_earnings),
+        'last_week_earnings': float(last_week_earnings),
+        'week_change': float(week_change),
         'total_clients': users.filter(role='client').count(),
         'active_clients': users.filter(role='client', is_active=True, is_suspended=False).count(),
         'new_clients': users.filter(role='client', date_joined__date=today).count(),
         'revisions': orders.filter(status='revision').count(),
         'awaiting_approval': awaiting,
-        'priority_count': orders.filter(status='request', deadline__lt=timezone.now() + timedelta(hours=6)).count(),
+        'priority_count': orders.filter(
+            status='request',
+            deadline__lt=timezone.now() + timedelta(hours=6)
+        ).count(),
     }
     
-    serializer = DashboardStatsSerializer(stats)
-    return Response(serializer.data)
+    return Response(stats)
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def priority_queue(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -235,12 +347,11 @@ def priority_queue(request):
     
     items = sorted(items, key=lambda x: ['high', 'medium', 'low'].index(x['urgency']))
     
-    serializer = PriorityQueueSerializer(items, many=True)
-    return Response(serializer.data)
+    return Response(items)
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def list_users(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -263,8 +374,8 @@ def list_users(request):
     
     if search:
         users = users.filter(
-            models.Q(email__icontains=search) |
-            models.Q(full_name__icontains=search)
+            Q(email__icontains=search) |
+            Q(full_name__icontains=search)
         )
     
     page = int(request.GET.get('page', 1))
@@ -273,18 +384,29 @@ def list_users(request):
     end = start + page_size
     
     paginated_users = users[start:end]
-    serializer = UserAdminSerializer(paginated_users, many=True)
     
     return Response({
         'total': users.count(),
         'page': page,
         'page_size': page_size,
-        'results': serializer.data
+        'results': [{
+            'id': str(user.id),
+            'email': user.email,
+            'full_name': user.full_name,
+            'role': user.role,
+            'is_active': user.is_active,
+            'is_suspended': user.is_suspended,
+            'suspension_reason': user.suspension_reason,
+            'suspended_until': user.suspended_until.isoformat() if user.suspended_until else None,
+            'email_verified': user.email_verified,
+            'date_joined': user.date_joined.isoformat(),
+            'last_login': user.last_login.isoformat() if user.last_login else None
+        } for user in paginated_users]
     })
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def search_users(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -294,27 +416,44 @@ def search_users(request):
         return Response({'results': []})
     
     users = User.objects.filter(
-        models.Q(email__icontains=query) |
-        models.Q(full_name__icontains=query)
+        Q(email__icontains=query) |
+        Q(full_name__icontains=query)
     )[:20]
     
-    serializer = UserAdminSerializer(users, many=True)
-    return Response({'results': serializer.data})
+    return Response({
+        'results': [{
+            'id': str(user.id),
+            'email': user.email,
+            'full_name': user.full_name,
+            'role': user.role
+        } for user in users]
+    })
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def user_detail(request, user_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     user = get_object_or_404(User, id=user_id)
-    serializer = UserAdminSerializer(user)
-    return Response(serializer.data)
+    return Response({
+        'id': str(user.id),
+        'email': user.email,
+        'full_name': user.full_name,
+        'role': user.role,
+        'is_active': user.is_active,
+        'is_suspended': user.is_suspended,
+        'suspension_reason': user.suspension_reason,
+        'suspended_until': user.suspended_until.isoformat() if user.suspended_until else None,
+        'email_verified': user.email_verified,
+        'date_joined': user.date_joined.isoformat(),
+        'last_login': user.last_login.isoformat() if user.last_login else None
+    })
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def suspend_user(request, user_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -346,7 +485,7 @@ def suspend_user(request, user_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def reactivate_user(request, user_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -372,7 +511,7 @@ def reactivate_user(request, user_id):
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_user(request, user_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -395,7 +534,7 @@ def delete_user(request, user_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def list_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -410,10 +549,10 @@ def list_orders(request):
     
     if search:
         orders = orders.filter(
-            models.Q(order_number__icontains=search) |
-            models.Q(client__email__icontains=search) |
-            models.Q(client__full_name__icontains=search) |
-            models.Q(topic__icontains=search)
+            Q(order_number__icontains=search) |
+            Q(client__email__icontains=search) |
+            Q(client__full_name__icontains=search) |
+            Q(topic__icontains=search)
         )
     
     page = int(request.GET.get('page', 1))
@@ -422,40 +561,67 @@ def list_orders(request):
     end = start + page_size
     
     paginated_orders = orders[start:end]
-    serializer = OrderAdminSerializer(paginated_orders, many=True)
     
     return Response({
         'total': orders.count(),
         'page': page,
         'page_size': page_size,
-        'results': serializer.data
+        'results': [{
+            'id': str(order.id),
+            'order_number': order.order_number,
+            'client': order.client.full_name if order.client else None,
+            'client_email': order.client.email if order.client else None,
+            'writer': order.writer.full_name if order.writer else None,
+            'topic': order.topic,
+            'subject': order.subject,
+            'total_price': float(order.total_price),
+            'status': order.status,
+            'deadline': order.deadline.isoformat() if order.deadline else None,
+            'created_at': order.created_at.isoformat(),
+            'updated_at': order.updated_at.isoformat()
+        } for order in paginated_orders]
     })
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def pending_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     orders = Order.objects.filter(status='request').select_related('client').order_by('deadline')
-    serializer = OrderAdminSerializer(orders, many=True)
-    return Response(serializer.data)
+    return Response([{
+        'id': str(order.id),
+        'order_number': order.order_number,
+        'client': order.client.full_name if order.client else None,
+        'client_email': order.client.email if order.client else None,
+        'topic': order.topic,
+        'total_price': float(order.total_price),
+        'deadline': order.deadline.isoformat() if order.deadline else None,
+        'created_at': order.created_at.isoformat()
+    } for order in orders])
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def active_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     orders = Order.objects.filter(status='in_progress').select_related('client').order_by('deadline')
-    serializer = OrderAdminSerializer(orders, many=True)
-    return Response(serializer.data)
+    return Response([{
+        'id': str(order.id),
+        'order_number': order.order_number,
+        'client': order.client.full_name if order.client else None,
+        'topic': order.topic,
+        'total_price': float(order.total_price),
+        'deadline': order.deadline.isoformat() if order.deadline else None,
+        'created_at': order.created_at.isoformat()
+    } for order in orders])
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def overdue_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -466,23 +632,38 @@ def overdue_orders(request):
         deadline__lt=now
     ).select_related('client').order_by('deadline')
     
-    serializer = OrderAdminSerializer(orders, many=True)
-    return Response(serializer.data)
+    return Response([{
+        'id': str(order.id),
+        'order_number': order.order_number,
+        'client': order.client.full_name if order.client else None,
+        'topic': order.topic,
+        'total_price': float(order.total_price),
+        'deadline': order.deadline.isoformat() if order.deadline else None,
+        'created_at': order.created_at.isoformat()
+    } for order in orders])
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def completed_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     orders = Order.objects.filter(status='completed').select_related('client').order_by('-updated_at')
-    serializer = OrderAdminSerializer(orders, many=True)
-    return Response(serializer.data)
+    return Response([{
+        'id': str(order.id),
+        'order_number': order.order_number,
+        'client': order.client.full_name if order.client else None,
+        'topic': order.topic,
+        'total_price': float(order.total_price),
+        'completed_at': order.completed_at.isoformat() if order.completed_at else None,
+        'rating': order.rating,
+        'feedback': order.feedback
+    } for order in orders])
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def search_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -492,37 +673,53 @@ def search_orders(request):
         return Response({'results': []})
     
     orders = Order.objects.filter(
-        models.Q(order_number__icontains=query) |
-        models.Q(client__email__icontains=query) |
-        models.Q(client__full_name__icontains=query) |
-        models.Q(topic__icontains=query)
+        Q(order_number__icontains=query) |
+        Q(client__email__icontains=query) |
+        Q(client__full_name__icontains=query) |
+        Q(topic__icontains=query)
     ).select_related('client')[:20]
     
-    serializer = OrderAdminSerializer(orders, many=True)
-    return Response({'results': serializer.data})
+    return Response({
+        'results': [{
+            'id': str(order.id),
+            'order_number': order.order_number,
+            'client': order.client.full_name if order.client else None,
+            'topic': order.topic,
+            'status': order.status,
+            'total_price': float(order.total_price)
+        } for order in orders]
+    })
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def order_workspace(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     order = get_object_or_404(Order, id=order_id)
-    
-    order_data = OrderAdminSerializer(order).data
     history = OrderHistory.objects.filter(order=order).order_by('-created_at')
     transactions = Transaction.objects.filter(order=order)
     
     return Response({
-        'order': order_data,
+        'order': {
+            'id': str(order.id),
+            'order_number': order.order_number,
+            'client': order.client.full_name if order.client else None,
+            'topic': order.topic,
+            'subject': order.subject,
+            'total_price': float(order.total_price),
+            'status': order.status,
+            'deadline': order.deadline.isoformat() if order.deadline else None,
+            'created_at': order.created_at.isoformat()
+        },
         'history': list(history.values()),
         'transactions': list(transactions.values())
     })
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_accept_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -553,7 +750,7 @@ def admin_accept_order(request, order_id):
     
     log_admin_action(
         admin=request.user,
-        action_type='order_accept',
+        action_type='order_approve',
         request=request,
         target_order=order
     )
@@ -562,7 +759,7 @@ def admin_accept_order(request, order_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_reject_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -618,8 +815,9 @@ def admin_reject_order(request, order_id):
     
     return Response({'success': True, 'message': 'Order rejected successfully'})
 
+
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def get_order_status(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -632,8 +830,9 @@ def get_order_status(request, order_id):
         'can_deliver': order.status == 'in_progress'
     })
 
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_deliver_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -652,8 +851,6 @@ def admin_deliver_order(request, order_id):
     allowed_extensions = ['pdf', 'doc', 'docx', 'zip']
     max_size = 100 * 1024 * 1024
 
-    # Validate every file BEFORE creating anything, so a bad file never
-    # leaves a partial commit from files that were already processed.
     for file in files:
         ext = file.name.split('.')[-1].lower() if '.' in file.name else ''
         if ext not in allowed_extensions:
@@ -669,6 +866,7 @@ def admin_deliver_order(request, order_id):
     delivered_files = []
 
     try:
+        from django.db import transaction
         with transaction.atomic():
             for file in files:
                 attachment = Attachment.objects.create(
@@ -727,8 +925,9 @@ def admin_deliver_order(request, order_id):
             'error': f'Failed to deliver files: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_pullback_file(request, order_id, file_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -772,7 +971,7 @@ def admin_pullback_file(request, order_id, file_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_cancel_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -821,18 +1020,24 @@ def admin_cancel_order(request, order_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def refund_requests(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     orders = Order.objects.filter(status='refund_pending').select_related('client').order_by('-updated_at')
-    serializer = OrderAdminSerializer(orders, many=True)
-    return Response(serializer.data)
+    return Response([{
+        'id': str(order.id),
+        'order_number': order.order_number,
+        'client': order.client.full_name if order.client else None,
+        'client_email': order.client.email if order.client else None,
+        'total_price': float(order.total_price),
+        'created_at': order.created_at.isoformat()
+    } for order in orders])
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def approve_refund(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -873,7 +1078,7 @@ def approve_refund(request, order_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def deny_refund(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -908,7 +1113,7 @@ def deny_refund(request, order_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def send_message(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -951,7 +1156,7 @@ def send_message(request, order_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def get_messages(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -982,7 +1187,7 @@ def get_messages(request, order_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def get_unread_count(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -997,7 +1202,7 @@ def get_unread_count(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def list_transactions(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1012,29 +1217,56 @@ def list_transactions(request):
     end = start + page_size
     
     paginated = transactions[start:end]
-    serializer = TransactionAdminSerializer(paginated, many=True)
     
     return Response({
         'total': transactions.count(),
         'page': page,
         'page_size': page_size,
-        'results': serializer.data
+        'results': [{
+            'id': str(t.id),
+            'transaction_id': t.transaction_id,
+            'user': t.user.email if t.user else None,
+            'amount': float(t.amount),
+            'type': t.type,
+            'direction': t.direction,
+            'status': t.status,
+            'payment_method': t.payment_method,
+            'description': t.description,
+            'order_id': str(t.order.id) if t.order else None,
+            'created_at': t.created_at.isoformat(),
+            'completed_at': t.completed_at.isoformat() if t.completed_at else None
+        } for t in paginated]
     })
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def transaction_detail(request, transaction_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     transaction_obj = get_object_or_404(Transaction, id=transaction_id)
-    serializer = TransactionAdminSerializer(transaction_obj)
-    return Response(serializer.data)
+    return Response({
+        'id': str(transaction_obj.id),
+        'transaction_id': transaction_obj.transaction_id,
+        'user': transaction_obj.user.email if transaction_obj.user else None,
+        'amount': float(transaction_obj.amount),
+        'fee_amount': float(transaction_obj.fee_amount),
+        'net_amount': float(transaction_obj.net_amount) if transaction_obj.net_amount else None,
+        'type': transaction_obj.type,
+        'direction': transaction_obj.direction,
+        'status': transaction_obj.status,
+        'payment_method': transaction_obj.payment_method,
+        'description': transaction_obj.description,
+        'metadata': transaction_obj.metadata,
+        'order_id': str(transaction_obj.order.id) if transaction_obj.order else None,
+        'created_at': transaction_obj.created_at.isoformat(),
+        'completed_at': transaction_obj.completed_at.isoformat() if transaction_obj.completed_at else None
+    })
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def client_wallet(request, user_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1046,43 +1278,58 @@ def client_wallet(request, user_id):
     
     return Response({
         'balance': float(wallet.balance),
-        'held_balance': float(wallet.held_balance) if wallet.held_balance else 0,
-        'total_deposited': float(wallet.total_deposited) if wallet.total_deposited else 0,
-        'total_withdrawn': float(wallet.total_withdrawn) if wallet.total_withdrawn else 0,
-        'transactions': list(transactions.values(
-            'id', 'amount', 'type', 'description', 'status', 'created_at'
-        ))
+        'held_balance': float(getattr(wallet, 'held_balance', 0)),
+        'total_deposited': float(getattr(wallet, 'total_deposited', 0)),
+        'total_withdrawn': float(getattr(wallet, 'total_withdrawn', 0)),
+        'transactions': [{
+            'id': str(t.id),
+            'amount': float(t.amount),
+            'type': t.type,
+            'description': t.description,
+            'status': t.status,
+            'created_at': t.created_at.isoformat()
+        } for t in transactions]
     })
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def adjust_wallet(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    serializer = WalletAdjustSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    user_id = request.data.get('user_id')
+    amount = Decimal(str(request.data.get('amount', 0)))
+    action_type = request.data.get('type', 'credit')
+    reason = request.data.get('reason', '').strip()
     
-    user = get_object_or_404(User, id=serializer.validated_data['user_id'])
+    if not user_id:
+        return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if amount <= 0:
+        return Response({'error': 'Amount must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not reason:
+        return Response({'error': 'Reason is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user = get_object_or_404(User, id=user_id)
     wallet, created = Wallet.objects.get_or_create(user=user)
     
     try:
-        if serializer.validated_data['type'] == 'credit':
+        if action_type == 'credit':
             transaction_obj = WalletService.credit(
                 wallet=wallet,
-                amount=serializer.validated_data['amount'],
+                amount=amount,
                 transaction_type='adjustment',
-                description=serializer.validated_data['reason'],
+                description=reason,
                 metadata={'admin': str(request.user.id)}
             )
         else:
             transaction_obj = WalletService.debit(
                 wallet=wallet,
-                amount=serializer.validated_data['amount'],
+                amount=amount,
                 transaction_type='adjustment',
-                description=serializer.validated_data['reason'],
+                description=reason,
                 metadata={'admin': str(request.user.id)}
             )
         
@@ -1091,7 +1338,7 @@ def adjust_wallet(request):
             action_type='wallet_adjust',
             request=request,
             target_user=user,
-            details=serializer.validated_data
+            details={'type': action_type, 'amount': str(amount), 'reason': reason}
         )
         
         return Response({
@@ -1105,55 +1352,91 @@ def adjust_wallet(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def list_settings(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     settings = SystemSetting.objects.all().order_by('key')
-    serializer = SystemSettingSerializer(settings, many=True)
-    return Response(serializer.data)
+    return Response([{
+        'id': str(s.id),
+        'key': s.key,
+        'value': s.value,
+        'type': s.type,
+        'description': s.description,
+        'is_public': s.is_public,
+        'updated_at': s.updated_at.isoformat()
+    } for s in settings])
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def create_setting(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    serializer = SystemSettingSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(updated_by=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    key = request.data.get('key')
+    value = request.data.get('value')
+    type = request.data.get('type', 'text')
+    description = request.data.get('description', '')
+    is_public = request.data.get('is_public', False)
+    
+    if not key or value is None:
+        return Response({'error': 'key and value are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    setting = SystemSetting.objects.create(
+        key=key,
+        value=str(value),
+        type=type,
+        description=description,
+        is_public=is_public,
+        updated_by=request.user
+    )
+    
+    return Response({
+        'id': str(setting.id),
+        'key': setting.key,
+        'value': setting.value,
+        'type': setting.type,
+        'description': setting.description,
+        'is_public': setting.is_public
+    }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def update_setting(request, setting_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     setting = get_object_or_404(SystemSetting, id=setting_id)
-    serializer = SystemSettingSerializer(setting, data=request.data, partial=True)
     
-    if serializer.is_valid():
-        serializer.save(updated_by=request.user)
-        
-        log_admin_action(
-            admin=request.user,
-            action_type='settings_change',
-            request=request,
-            details={'key': setting.key, 'value': serializer.validated_data.get('value')}
-        )
-        
-        return Response(serializer.data)
+    setting.value = str(request.data.get('value', setting.value))
+    setting.type = request.data.get('type', setting.type)
+    setting.description = request.data.get('description', setting.description)
+    setting.is_public = request.data.get('is_public', setting.is_public)
+    setting.updated_by = request.user
+    setting.save()
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    log_admin_action(
+        admin=request.user,
+        action_type='settings_change',
+        request=request,
+        details={'key': setting.key, 'value': setting.value}
+    )
+    
+    return Response({
+        'id': str(setting.id),
+        'key': setting.key,
+        'value': setting.value,
+        'type': setting.type,
+        'description': setting.description,
+        'is_public': setting.is_public
+    })
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_setting(request, setting_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1164,7 +1447,7 @@ def delete_setting(request, setting_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def list_content(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1175,160 +1458,99 @@ def list_content(request):
     if page:
         content = content.filter(page=page)
     
-    serializer = SiteContentSerializer(content, many=True)
-    return Response(serializer.data)
+    return Response([{
+        'id': str(c.id),
+        'page': c.page,
+        'section': c.section,
+        'title': c.title,
+        'content': c.content,
+        'meta_data': c.meta_data,
+        'is_active': c.is_active,
+        'updated_at': c.updated_at.isoformat()
+    } for c in content])
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def create_content(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    serializer = SiteContentSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(updated_by=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    page = request.data.get('page')
+    section = request.data.get('section')
+    title = request.data.get('title')
+    content = request.data.get('content')
+    meta_data = request.data.get('meta_data', {})
+    is_active = request.data.get('is_active', True)
+    
+    if not all([page, section, title, content]):
+        return Response({'error': 'page, section, title, and content are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    content_obj = SiteContent.objects.create(
+        page=page,
+        section=section,
+        title=title,
+        content=content,
+        meta_data=meta_data,
+        is_active=is_active,
+        updated_by=request.user
+    )
+    
+    return Response({
+        'id': str(content_obj.id),
+        'page': content_obj.page,
+        'section': content_obj.section,
+        'title': content_obj.title,
+        'content': content_obj.content,
+        'is_active': content_obj.is_active
+    }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def update_content(request, content_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    content = get_object_or_404(SiteContent, id=content_id)
-    serializer = SiteContentSerializer(content, data=request.data, partial=True)
+    content_obj = get_object_or_404(SiteContent, id=content_id)
     
-    if serializer.is_valid():
-        serializer.save(updated_by=request.user)
-        
-        log_admin_action(
-            admin=request.user,
-            action_type='content_edit',
-            request=request,
-            details={'page': content.page, 'section': content.section}
-        )
-        
-        return Response(serializer.data)
+    content_obj.title = request.data.get('title', content_obj.title)
+    content_obj.content = request.data.get('content', content_obj.content)
+    content_obj.meta_data = request.data.get('meta_data', content_obj.meta_data)
+    content_obj.is_active = request.data.get('is_active', content_obj.is_active)
+    content_obj.updated_by = request.user
+    content_obj.save()
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    log_admin_action(
+        admin=request.user,
+        action_type='content_edit',
+        request=request,
+        details={'page': content_obj.page, 'section': content_obj.section}
+    )
+    
+    return Response({
+        'id': str(content_obj.id),
+        'page': content_obj.page,
+        'section': content_obj.section,
+        'title': content_obj.title,
+        'content': content_obj.content,
+        'is_active': content_obj.is_active
+    })
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_content(request, content_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    content = get_object_or_404(SiteContent, id=content_id)
-    content.delete()
+    content_obj = get_object_or_404(SiteContent, id=content_id)
+    content_obj.delete()
     return Response({'message': 'Content deleted'})
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def list_blog_posts(request):
-    if not is_admin(request.user):
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    search = request.GET.get('search')
-    posts = Blog.objects.all().order_by('-published_at')
-    
-    if search:
-        posts = posts.filter(
-            models.Q(title__icontains=search) |
-            models.Q(content__icontains=search) |
-            models.Q(excerpt__icontains=search)
-        )
-    
-    page = int(request.GET.get('page', 1))
-    page_size = int(request.GET.get('page_size', 20))
-    start = (page - 1) * page_size
-    end = start + page_size
-    
-    paginated = posts[start:end]
-    serializer = BlogSerializer(paginated, many=True)
-    
-    return Response({
-        'total': posts.count(),
-        'page': page,
-        'page_size': page_size,
-        'results': serializer.data
-    })
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def blog_post_detail(request, blog_id):
-    if not is_admin(request.user):
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    post = get_object_or_404(Blog, id=blog_id)
-    serializer = BlogSerializer(post)
-    return Response(serializer.data)
-
-
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-def update_blog_post(request, blog_id):
-    if not is_admin(request.user):
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    post = get_object_or_404(Blog, id=blog_id)
-    serializer = BlogSerializer(post, data=request.data, partial=True)
-    
-    if serializer.is_valid():
-        serializer.save()
-        
-        log_admin_action(
-            admin=request.user,
-            action_type='blog_update',
-            request=request,
-            details={'title': post.title}
-        )
-        
-        return Response(serializer.data)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_blog_post(request, blog_id):
-    if not is_admin(request.user):
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    post = get_object_or_404(Blog, id=blog_id)
-    title = post.title
-    
-    log_admin_action(
-        admin=request.user,
-        action_type='blog_delete',
-        request=request,
-        details={'title': title}
-    )
-    
-    post.delete()
-    return Response({'message': 'Blog post deleted successfully'})
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def publish_blog_post(request, blog_id):
-    if not is_admin(request.user):
-        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
-    post = get_object_or_404(Blog, id=blog_id)
-    post.published_at = timezone.now()
-    post.save()
-    
-    return Response({'message': 'Blog post published successfully'})
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def list_logs(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1349,9 +1571,9 @@ def list_logs(request):
     
     if search:
         logs = logs.filter(
-            models.Q(admin__email__icontains=search) |
-            models.Q(target_user__email__icontains=search) |
-            models.Q(target_order__order_number__icontains=search)
+            Q(admin__email__icontains=search) |
+            Q(target_user__email__icontains=search) |
+            Q(target_order__order_number__icontains=search)
         )
     
     page = int(request.GET.get('page', 1))
@@ -1360,29 +1582,46 @@ def list_logs(request):
     end = start + page_size
     
     paginated = logs[start:end]
-    serializer = AdminActionLogSerializer(paginated, many=True)
     
     return Response({
         'total': logs.count(),
         'page': page,
         'page_size': page_size,
-        'results': serializer.data
+        'results': [{
+            'id': str(log.id),
+            'admin': log.admin.email if log.admin else None,
+            'action_type': log.action_type,
+            'target_user': log.target_user.email if log.target_user else None,
+            'target_order': log.target_order.order_number if log.target_order else None,
+            'details': log.details,
+            'ip_address': log.ip_address,
+            'created_at': log.created_at.isoformat()
+        } for log in paginated]
     })
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def log_detail(request, log_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     log = get_object_or_404(AdminActionLog, id=log_id)
-    serializer = AdminActionLogSerializer(log)
-    return Response(serializer.data)
+    return Response({
+        'id': str(log.id),
+        'admin': log.admin.email if log.admin else None,
+        'action_type': log.action_type,
+        'target_user': log.target_user.email if log.target_user else None,
+        'target_order': log.target_order.order_number if log.target_order else None,
+        'details': log.details,
+        'ip_address': log.ip_address,
+        'user_agent': log.user_agent,
+        'created_at': log.created_at.isoformat()
+    })
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def export_logs(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1401,7 +1640,7 @@ def export_logs(request):
     for log in logs:
         writer.writerow([
             log.created_at.strftime('%Y-%m-%d %H:%M'),
-            log.admin.email,
+            log.admin.email if log.admin else '',
             log.get_action_type_display(),
             log.target_user.email if log.target_user else '',
             str(log.details),
@@ -1412,46 +1651,78 @@ def export_logs(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def list_notes(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     notes = AdminNote.objects.filter(admin=request.user).order_by('-is_pinned', '-created_at')
-    serializer = AdminNoteSerializer(notes, many=True)
-    return Response(serializer.data)
+    return Response([{
+        'id': str(note.id),
+        'title': note.title,
+        'content': note.content,
+        'is_pinned': note.is_pinned,
+        'is_archived': note.is_archived,
+        'created_at': note.created_at.isoformat(),
+        'updated_at': note.updated_at.isoformat()
+    } for note in notes])
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def create_note(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
-    serializer = AdminNoteSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(admin=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    title = request.data.get('title', '').strip()
+    content = request.data.get('content', '').strip()
+    is_pinned = request.data.get('is_pinned', False)
+    
+    if not title or not content:
+        return Response({'error': 'title and content are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    note = AdminNote.objects.create(
+        admin=request.user,
+        title=title,
+        content=content,
+        is_pinned=is_pinned
+    )
+    
+    return Response({
+        'id': str(note.id),
+        'title': note.title,
+        'content': note.content,
+        'is_pinned': note.is_pinned,
+        'created_at': note.created_at.isoformat()
+    }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def update_note(request, note_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
     
     note = get_object_or_404(AdminNote, id=note_id, admin=request.user)
-    serializer = AdminNoteSerializer(note, data=request.data, partial=True)
     
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    note.title = request.data.get('title', note.title)
+    note.content = request.data.get('content', note.content)
+    note.is_pinned = request.data.get('is_pinned', note.is_pinned)
+    note.is_archived = request.data.get('is_archived', note.is_archived)
+    note.save()
+    
+    return Response({
+        'id': str(note.id),
+        'title': note.title,
+        'content': note.content,
+        'is_pinned': note.is_pinned,
+        'is_archived': note.is_archived,
+        'updated_at': note.updated_at.isoformat()
+    })
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_note(request, note_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1462,7 +1733,7 @@ def delete_note(request, note_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def analytics_overview(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1491,7 +1762,7 @@ def analytics_overview(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def revenue_analytics(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1522,7 +1793,7 @@ def revenue_analytics(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def order_analytics(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1542,7 +1813,7 @@ def order_analytics(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def client_analytics(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -1561,7 +1832,7 @@ def client_analytics(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def get_counts(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)

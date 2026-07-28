@@ -16,7 +16,7 @@ from .serializers import (
     RevisionRequestSerializer, RefundRequestSerializer, RatingSerializer,
     CancelOrderSerializer, DeclineOrderSerializer, ResubmitOrderSerializer
 )
-from apps.payments.models import Wallet, Transaction
+from apps.payments.models import Wallet, Transaction, PaymentMethod
 
 
 def log_history(order, user, action, from_status, to_status, data=None):
@@ -231,6 +231,27 @@ def create_order(request):
         data['paper_type']
     )
 
+    # Validate payment method
+    payment_method_id = request.data.get('payment_method_id')
+    if not payment_method_id:
+        return Response(
+            {'error': 'payment_method_id is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        payment_method = PaymentMethod.objects.get(
+            id=payment_method_id,
+            user=request.user,
+            is_active=True,
+            paypal_verified=True
+        )
+    except PaymentMethod.DoesNotExist:
+        return Response(
+            {'error': 'Invalid, inactive, or unverified payment method'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     wallet = request.user.wallet
 
     links = data.get('links', [])
@@ -268,15 +289,17 @@ def create_order(request):
             direction='debit',
             status='pending',
             payment_method='paypal',
-            description=f'Order {order.order_number} placed - pending payment',
-            order=order
+            description=f'Order {order.order_number} placed - payment via {payment_method.paypal_email}',
+            order=order,
+            metadata={'payment_method_id': str(payment_method.id)}
         )
 
         log_history(order, request.user, 'create', None, 'request', {
             'total_price': str(price_data['total_price']),
             'pages': float(price_data.get('pages', 0)),
             'words': words,
-            'spacing': spacing
+            'spacing': spacing,
+            'payment_method': payment_method.paypal_email
         })
 
         create_timeline(order, 'request', 'Order Created',
@@ -608,6 +631,28 @@ def reorder_order(request, order_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # For simplicity, we use the default payment method or require explicit selection
+    # Here we will use the same logic as create_order: expect payment_method_id in request
+    payment_method_id = request.data.get('payment_method_id')
+    if not payment_method_id:
+        return Response(
+            {'error': 'payment_method_id is required for reorder'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        payment_method = PaymentMethod.objects.get(
+            id=payment_method_id,
+            user=request.user,
+            is_active=True,
+            paypal_verified=True
+        )
+    except PaymentMethod.DoesNotExist:
+        return Response(
+            {'error': 'Invalid, inactive, or unverified payment method'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     price_data = Order.calculate_price(
         order.academic_level,
         order.words,
@@ -651,8 +696,9 @@ def reorder_order(request, order_id):
         direction='debit',
         status='pending',
         payment_method='paypal',
-        description=f'Order {new_order.order_number} placed - pending payment',
-        order=new_order
+        description=f'Order {new_order.order_number} placed - payment via {payment_method.paypal_email}',
+        order=new_order,
+        metadata={'payment_method_id': str(payment_method.id)}
     )
 
     log_history(new_order, request.user, 'reorder', None, 'request', {
@@ -682,6 +728,27 @@ def split_order(request, order_id):
     if parts < 2:
         return Response(
             {'error': 'Must split into at least 2 parts'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # For split, we also need a payment method
+    payment_method_id = request.data.get('payment_method_id')
+    if not payment_method_id:
+        return Response(
+            {'error': 'payment_method_id is required for split'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        payment_method = PaymentMethod.objects.get(
+            id=payment_method_id,
+            user=request.user,
+            is_active=True,
+            paypal_verified=True
+        )
+    except PaymentMethod.DoesNotExist:
+        return Response(
+            {'error': 'Invalid, inactive, or unverified payment method'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -742,8 +809,9 @@ def split_order(request, order_id):
             direction='debit',
             status='pending',
             payment_method='paypal',
-            description=f'Order {new_order.order_number} placed - pending payment',
-            order=new_order
+            description=f'Order {new_order.order_number} placed - payment via {payment_method.paypal_email}',
+            order=new_order,
+            metadata={'payment_method_id': str(payment_method.id)}
         )
 
         log_history(new_order, request.user, 'split', None, 'request', {

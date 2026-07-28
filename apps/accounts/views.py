@@ -10,20 +10,23 @@ from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
 import logging
-from .models import User, PendingUser, LoginLog
+from .models import User, PendingUser, LoginLog, PasswordChangeVerification
 from .serializers import (
     RegisterSerializer, OTPVerificationSerializer, ResendOTPSerializer,
     LoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,
-    ChangePasswordSerializer, UserProfileSerializer, UserSerializer
+    ChangePasswordSerializer, UserProfileSerializer, UserSerializer,
+    SendPasswordChangeCodeSerializer, VerifyPasswordChangeCodeSerializer,
+    CompletePasswordChangeSerializer, GoogleLoginSerializer
 )
 from .utils import (
-    generate_otp, generate_reset_token,
-    send_otp_email, send_password_reset_email,
+    generate_otp, generate_reset_token, generate_password_change_code,
+    send_otp_email, send_password_reset_email, send_password_change_code_email,
     get_client_ip, get_client_user_agent
 )
 from .throttles import (
     RegisterThrottle, LoginThrottle, PasswordResetThrottle,
-    ResendOTPThrottle, VerifyOTPThrottle
+    ResendOTPThrottle, VerifyOTPThrottle, SendPasswordChangeCodeThrottle,
+    VerifyPasswordChangeCodeThrottle, GoogleLoginThrottle
 )
 
 logger = logging.getLogger(__name__)
@@ -379,14 +382,134 @@ def change_password(request):
 
     user = request.user
 
-    if not user.check_password(serializer.validated_data['old_password']):
+    if not user.check_password(serializer.validated_data['current_password']):
         return Response(
-            {'old_password': 'Current password is incorrect.'},
+            {'current_password': 'Current password is incorrect.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
     user.set_password(serializer.validated_data['new_password'])
     user.save(update_fields=['password'])
+
+    return Response({
+        'message': 'Password changed successfully.'
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_password_change_code(request):
+    throttle = SendPasswordChangeCodeThrottle()
+    if not throttle.allow_request(request, None):
+        return Response(
+            {'error': 'Too many attempts. Please try again later.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
+    serializer = SendPasswordChangeCodeSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+
+    if not user.check_password(serializer.validated_data['current_password']):
+        return Response(
+            {'current_password': 'Current password is incorrect.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if user.check_password(serializer.validated_data['new_password']):
+        return Response(
+            {'new_password': 'New password must be different from current password.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user.set_temp_password(serializer.validated_data['new_password'])
+    code = user.generate_password_change_code()
+
+    PasswordChangeVerification.objects.create(
+        user=user,
+        code=code,
+        expires_at=timezone.now() + timezone.timedelta(minutes=5)
+    )
+
+    email_sent = send_password_change_code_email(user.email, code, user.full_name)
+
+    if not email_sent:
+        user.clear_password_change_code()
+        return Response(
+            {'error': 'Failed to send verification code. Please try again.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    return Response({
+        'message': 'Verification code sent to your email.',
+        'expires_in': 300
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_password_change_code(request):
+    throttle = VerifyPasswordChangeCodeThrottle()
+    if not throttle.allow_request(request, None):
+        return Response(
+            {'error': 'Too many verification attempts. Please try again later.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
+    serializer = VerifyPasswordChangeCodeSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+    code = serializer.validated_data['code']
+
+    try:
+        verification = PasswordChangeVerification.objects.get(
+            user=user,
+            code=code,
+            used=False,
+            expires_at__gt=timezone.now()
+        )
+    except PasswordChangeVerification.DoesNotExist:
+        return Response(
+            {'error': 'Invalid or expired verification code.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if user.apply_temp_password():
+        verification.used = True
+        verification.save()
+        user.clear_password_change_code()
+        return Response({
+            'message': 'Password changed successfully. Please login again.'
+        }, status=status.HTTP_200_OK)
+    else:
+        return Response(
+            {'error': 'Failed to apply password change.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def complete_password_change(request):
+    serializer = CompletePasswordChangeSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+
+    if not user.check_password(serializer.validated_data['current_password']):
+        return Response(
+            {'current_password': 'Current password is incorrect.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user.set_password(serializer.validated_data['new_password'])
+    user.save(update_fields=['password'])
+    user.clear_password_change_code()
 
     return Response({
         'message': 'Password changed successfully.'
@@ -436,3 +559,90 @@ def cancel_deletion(request):
     return Response({
         'message': 'Account deletion cancelled.'
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_login(request):
+    throttle = GoogleLoginThrottle()
+    if not throttle.allow_request(request, None):
+        return Response(
+            {'error': 'Too many attempts. Please try again later.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
+    serializer = GoogleLoginSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    access_token = serializer.validated_data['access_token']
+
+    try:
+        import requests
+        resp = requests.get(
+            f'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10
+        )
+        resp.raise_for_status()
+        user_data = resp.json()
+    except Exception as e:
+        logger.error(f"Google login error: {str(e)}")
+        return Response(
+            {'error': 'Failed to verify Google token.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    email = user_data.get('email')
+    full_name = user_data.get('name', '')
+    google_id = user_data.get('sub')
+    picture = user_data.get('picture', '')
+
+    if not email:
+        return Response(
+            {'error': 'Email not provided by Google.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user = User.objects.filter(email=email).first()
+
+    if user:
+        if user.is_suspended:
+            return Response(
+                {'error': 'Your account has been suspended.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        if not user.google_id:
+            user.google_id = google_id
+            user.picture = picture
+            user.save(update_fields=['google_id', 'picture'])
+    else:
+        user = User.objects.create_user(
+            email=email,
+            full_name=full_name,
+            password=None,
+            google_id=google_id,
+            picture=picture,
+            email_verified=True,
+            is_active=True,
+            role='client'
+        )
+
+    refresh = RefreshToken.for_user(user)
+    profile_serializer = UserProfileSerializer(user)
+
+    return Response({
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+        'user': profile_serializer.data,
+        'is_new_user': not user.google_id
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_callback(request):
+    return Response(
+        {'message': 'Google OAuth callback endpoint.'},
+        status=status.HTTP_200_OK
+    )

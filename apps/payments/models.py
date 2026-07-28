@@ -186,6 +186,11 @@ class PaymentMethod(models.Model):
     paypal_account_type = models.CharField(max_length=20, choices=PAYPAL_ACCOUNT_TYPES, default='personal')
     paypal_verified = models.BooleanField(default=False)
     
+    verification_code = models.CharField(max_length=6, null=True, blank=True)
+    verification_code_created_at = models.DateTimeField(null=True, blank=True)
+    verification_attempts = models.IntegerField(default=0)
+    verification_locked_until = models.DateTimeField(null=True, blank=True)
+    
     is_default = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
@@ -204,6 +209,25 @@ class PaymentMethod(models.Model):
 
     def __str__(self):
         return f"PayPal: {self.paypal_email}"
+
+    def generate_verification_code(self):
+        import random
+        code = ''.join(random.choices('0123456789', k=6))
+        self.verification_code = code
+        self.verification_code_created_at = timezone.now()
+        self.save(update_fields=['verification_code', 'verification_code_created_at'])
+        return code
+
+    def is_verification_code_expired(self):
+        if not self.verification_code_created_at:
+            return True
+        elapsed = (timezone.now() - self.verification_code_created_at).total_seconds()
+        return elapsed > 300
+
+    def clear_verification_code(self):
+        self.verification_code = None
+        self.verification_code_created_at = None
+        self.save(update_fields=['verification_code', 'verification_code_created_at'])
 
 
 class PaymentIntent(models.Model):
@@ -359,3 +383,200 @@ class PayPalWebhook(models.Model):
         self.processed_at = timezone.now()
         self.processing_errors = errors
         self.save(update_fields=['processed', 'processed_at', 'processing_errors'])
+
+
+class AdminSetting(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.CharField(max_length=100, unique=True, db_index=True)
+    value = models.JSONField()
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'admin_settings'
+        indexes = [
+            models.Index(fields=['key', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"{self.key}: {self.value}"
+
+    @classmethod
+    def get_value(cls, key, default=None):
+        try:
+            setting = cls.objects.get(key=key, is_active=True)
+            return setting.value
+        except cls.DoesNotExist:
+            return default
+
+    @classmethod
+    def set_value(cls, key, value, description=''):
+        setting, created = cls.objects.update_or_create(
+            key=key,
+            defaults={
+                'value': value,
+                'description': description,
+                'is_active': True
+            }
+        )
+        return setting
+
+
+class AdminWalletManager:
+    
+    @staticmethod
+    def get_admin_user():
+        from apps.accounts.models import User
+        admin_user, created = User.objects.get_or_create(
+            role='admin',
+            is_superuser=True,
+            defaults={
+                'email': 'admin@academicwrite.com',
+                'full_name': 'System Admin',
+                'is_active': True,
+                'is_staff': True
+            }
+        )
+        if created:
+            admin_user.set_password(secrets.token_urlsafe(16))
+            admin_user.save()
+        return admin_user
+    
+    @staticmethod
+    def get_admin_wallet():
+        admin_user = AdminWalletManager.get_admin_user()
+        wallet, created = Wallet.objects.get_or_create(
+            user=admin_user,
+            defaults={
+                'currency': 'USD',
+                'is_active': True
+            }
+        )
+        return wallet
+    
+    @staticmethod
+    def get_admin_paypal_email():
+        return AdminSetting.get_value(
+            'admin_paypal_email',
+            'admin@academicwrite.com'
+        )
+    
+    @staticmethod
+    def set_admin_paypal_email(email):
+        return AdminSetting.set_value(
+            'admin_paypal_email',
+            email,
+            'Primary PayPal email for receiving client payments'
+        )
+    
+    @staticmethod
+    def get_default_payment_method():
+        return AdminSetting.get_value(
+            'default_payment_method',
+            'paypal'
+        )
+    
+    @staticmethod
+    def get_platform_fee_percentage():
+        return Decimal(str(AdminSetting.get_value(
+            'platform_fee_percentage',
+            0.00
+        )))
+    
+    @staticmethod
+    def record_admin_credit(user, amount, order, description, payment_method='paypal'):
+        admin_wallet = AdminWalletManager.get_admin_wallet()
+        admin_user = admin_wallet.user
+        
+        Transaction.objects.create(
+            user=admin_user,
+            wallet=admin_wallet,
+            amount=amount,
+            type='payment',
+            direction='credit',
+            status='completed',
+            payment_method=payment_method,
+            description=f'Received {description} from {user.email}',
+            order=order,
+            completed_at=timezone.now()
+        )
+    
+    @staticmethod
+    def record_admin_debit(user, amount, order, description, payment_method='paypal'):
+        admin_wallet = AdminWalletManager.get_admin_wallet()
+        admin_user = admin_wallet.user
+        
+        Transaction.objects.create(
+            user=admin_user,
+            wallet=admin_wallet,
+            amount=amount,
+            type='payout',
+            direction='debit',
+            status='completed',
+            payment_method=payment_method,
+            description=f'Paid {description} to {user.email}',
+            order=order,
+            completed_at=timezone.now()
+        )
+    
+    @staticmethod
+    def record_client_debit(client, amount, order, description, payment_method='paypal'):
+        Transaction.objects.create(
+            user=client,
+            wallet=client.wallet,
+            amount=amount,
+            type='payment',
+            direction='debit',
+            status='completed',
+            payment_method=payment_method,
+            description=description,
+            order=order,
+            completed_at=timezone.now()
+        )
+    
+    @staticmethod
+    def record_client_credit(client, amount, order, description, payment_method='paypal'):
+        Transaction.objects.create(
+            user=client,
+            wallet=client.wallet,
+            amount=amount,
+            type='refund',
+            direction='credit',
+            status='completed',
+            payment_method=payment_method,
+            description=description,
+            order=order,
+            completed_at=timezone.now()
+        )
+    
+    @staticmethod
+    def record_writer_credit(writer, amount, order, description, payment_method='paypal'):
+        Transaction.objects.create(
+            user=writer,
+            wallet=writer.wallet,
+            amount=amount,
+            type='payout',
+            direction='credit',
+            status='completed',
+            payment_method=payment_method,
+            description=description,
+            order=order,
+            completed_at=timezone.now()
+        )
+    
+    @staticmethod
+    def get_admin_balance():
+        admin_wallet = AdminWalletManager.get_admin_wallet()
+        return admin_wallet.balance
+    
+    @staticmethod
+    def get_admin_total_received():
+        admin_wallet = AdminWalletManager.get_admin_wallet()
+        return admin_wallet.total_in
+    
+    @staticmethod
+    def get_admin_total_paid_out():
+        admin_wallet = AdminWalletManager.get_admin_wallet()
+        return admin_wallet.total_out

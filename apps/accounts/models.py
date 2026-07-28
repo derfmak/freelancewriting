@@ -1,5 +1,6 @@
 import uuid
 import secrets
+import random
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import RegexValidator
@@ -7,12 +8,13 @@ from django.utils import timezone
 from django.core.cache import cache
 from .managers import UserManager
 
+
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
     ROLE_CHOICES = [
-        ('client', 'client'),
-        ('admin', 'admin'),
+        ('client', 'Client'),
+        ('admin', 'Admin'),
     ]
     
     username = None
@@ -32,6 +34,11 @@ class User(AbstractUser):
     password_reset_token = models.CharField(max_length=100, blank=True, db_index=True)
     password_reset_expires = models.DateTimeField(null=True, blank=True)
     
+    # Password change verification fields
+    password_change_code = models.CharField(max_length=6, blank=True, db_index=True)
+    password_change_code_expires = models.DateTimeField(null=True, blank=True)
+    password_change_temp = models.CharField(max_length=128, blank=True)
+    
     is_suspended = models.BooleanField(default=False, db_index=True)
     suspension_reason = models.TextField(blank=True)
     suspended_until = models.DateTimeField(null=True, blank=True)
@@ -44,6 +51,10 @@ class User(AbstractUser):
     
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     deletion_scheduled_for = models.DateTimeField(null=True, blank=True)
+    
+    # Google OAuth fields
+    google_id = models.CharField(max_length=100, blank=True, db_index=True)
+    picture = models.URLField(max_length=500, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -58,9 +69,11 @@ class User(AbstractUser):
             models.Index(fields=['email', 'role']),
             models.Index(fields=['is_suspended', 'email_verified']),
             models.Index(fields=['password_reset_token']),
+            models.Index(fields=['password_change_code']),
             models.Index(fields=['deletion_scheduled_for']),
             models.Index(fields=['created_at']),
             models.Index(fields=['last_login']),
+            models.Index(fields=['google_id']),
         ]
         db_table = 'users'
         
@@ -84,7 +97,6 @@ class User(AbstractUser):
         self.save(update_fields=['failed_login_attempts', 'account_locked_until'])
     
     def generate_otp(self):
-        import random
         otp = ''.join(str(random.randint(0, 9)) for _ in range(6))
         self.otp_secret = otp
         self.otp_expires = timezone.now() + timezone.timedelta(minutes=10)
@@ -103,6 +115,41 @@ class User(AbstractUser):
         self.email_verified = True
         self.save(update_fields=['otp_secret', 'otp_expires', 'email_verified'])
         return True
+    
+    def generate_password_change_code(self):
+        code = ''.join(str(random.randint(0, 9)) for _ in range(6))
+        self.password_change_code = code
+        self.password_change_code_expires = timezone.now() + timezone.timedelta(minutes=5)
+        self.save(update_fields=['password_change_code', 'password_change_code_expires'])
+        return code
+    
+    def verify_password_change_code(self, code):
+        if not self.password_change_code or not self.password_change_code_expires:
+            return False
+        if timezone.now() > self.password_change_code_expires:
+            return False
+        if self.password_change_code != code:
+            return False
+        return True
+    
+    def clear_password_change_code(self):
+        self.password_change_code = ''
+        self.password_change_code_expires = None
+        self.password_change_temp = ''
+        self.save(update_fields=['password_change_code', 'password_change_code_expires', 'password_change_temp'])
+    
+    def set_temp_password(self, password):
+        from django.contrib.auth.hashers import make_password
+        self.password_change_temp = make_password(password)
+        self.save(update_fields=['password_change_temp'])
+    
+    def apply_temp_password(self):
+        if self.password_change_temp:
+            self.password = self.password_change_temp
+            self.password_change_temp = ''
+            self.save(update_fields=['password', 'password_change_temp'])
+            return True
+        return False
 
 
 class PendingUser(models.Model):
@@ -190,3 +237,26 @@ class RateLimit(models.Model):
         record.count += 1
         record.save()
         return True
+
+
+class PasswordChangeVerification(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_verifications')
+    code = models.CharField(max_length=6)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'password_change_verifications'
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['code']),
+            models.Index(fields=['expires_at']),
+        ]
+    
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.code}"

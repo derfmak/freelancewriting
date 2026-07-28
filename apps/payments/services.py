@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.core.cache import cache
-from .models import Wallet, Transaction, PaymentMethod, PaymentIntent, Payout, PayPalWebhook
+from .models import Wallet, Transaction, PaymentMethod, PaymentIntent, Payout, PayPalWebhook, AdminWalletManager
 
 logger = logging.getLogger(__name__)
 
@@ -292,6 +292,18 @@ class EmailService:
         }
         html_message = render_to_string('emails/withdrawal_completed.html', context)
         send_mail(subject, '', settings.DEFAULT_FROM_EMAIL, [user.email], html_message=html_message)
+    
+    @staticmethod
+    def send_paypal_verification_code(user, paypal_email, verification_code):
+        subject = 'PayPal Account Verification Code'
+        context = {
+            'user': user,
+            'paypal_email': paypal_email,
+            'verification_code': verification_code,
+            'expires_in_minutes': 5
+        }
+        html_message = render_to_string('emails/paypal_verification.html', context)
+        send_mail(subject, '', settings.DEFAULT_FROM_EMAIL, [paypal_email], html_message=html_message)
 
 
 class IdempotencyService:
@@ -422,3 +434,133 @@ class WebhookService:
                 if payment_intent.transaction:
                     payment_intent.transaction.status = 'failed'
                     payment_intent.transaction.save()
+
+
+class AdminPaymentService:
+    
+    @staticmethod
+    def process_client_payment(order, client, amount, payment_method='paypal'):
+        with db_transaction.atomic():
+            AdminWalletManager.record_client_debit(
+                client=client,
+                amount=amount,
+                order=order,
+                description=f'Payment for order {order.order_number}'
+            )
+            
+            AdminWalletManager.record_admin_credit(
+                user=client,
+                amount=amount,
+                order=order,
+                description=f'Payment for order {order.order_number}'
+            )
+            
+            order.payment_status = 'paid'
+            order.paid_at = timezone.now()
+            order.save(update_fields=['payment_status', 'paid_at'])
+            
+            return {
+                'success': True,
+                'message': f'Payment of ${amount} processed'
+            }
+    
+    @staticmethod
+    def process_writer_payout(order, writer, amount, payment_method='paypal'):
+        with db_transaction.atomic():
+            AdminWalletManager.record_admin_debit(
+                user=writer,
+                amount=amount,
+                order=order,
+                description=f'Payment to writer for order {order.order_number}'
+            )
+            
+            AdminWalletManager.record_writer_credit(
+                writer=writer,
+                amount=amount,
+                order=order,
+                description=f'Payment for order {order.order_number}'
+            )
+            
+            payout = Payout.objects.create(
+                user=writer,
+                amount=amount,
+                paypal_email=writer.paypal_email,
+                status='pending',
+                metadata={'order_id': str(order.id)}
+            )
+            
+            return {
+                'success': True,
+                'payout_id': payout.payout_id,
+                'message': f'Payout of ${amount} initiated'
+            }
+    
+    @staticmethod
+    def process_refund(order, amount, payment_method='paypal'):
+        client = order.client
+        
+        with db_transaction.atomic():
+            AdminWalletManager.record_admin_debit(
+                user=client,
+                amount=amount,
+                order=order,
+                description=f'Refund for order {order.order_number}'
+            )
+            
+            AdminWalletManager.record_client_credit(
+                client=client,
+                amount=amount,
+                order=order,
+                description=f'Refund for order {order.order_number}'
+            )
+            
+            order.payment_status = 'refunded'
+            order.refunded_at = timezone.now()
+            order.save(update_fields=['payment_status', 'refunded_at'])
+            
+            return {
+                'success': True,
+                'message': f'Refund of ${amount} processed'
+            }
+    
+    @staticmethod
+    def get_admin_financial_summary():
+        admin_wallet = AdminWalletManager.get_admin_wallet()
+        
+        return {
+            'balance': float(admin_wallet.balance),
+            'total_received': float(admin_wallet.total_in),
+            'total_paid_out': float(admin_wallet.total_out),
+            'net_position': float(admin_wallet.balance),
+            'admin_paypal_email': AdminWalletManager.get_admin_paypal_email(),
+            'wallet_id': str(admin_wallet.id),
+            'currency': admin_wallet.currency
+        }
+    
+    @staticmethod
+    def create_paypal_payment_for_order(order, return_url, cancel_url):
+        amount = order.total_price
+        admin_email = AdminWalletManager.get_admin_paypal_email()
+        
+        return PayPalService.create_payment(
+            amount=amount,
+            return_url=return_url,
+            cancel_url=cancel_url,
+            description=f'Payment for order {order.order_number}'
+        )
+    
+    @staticmethod
+    def send_paypal_payout_to_writer(writer, amount, order):
+        return PayPalService.create_payout(
+            email=writer.paypal_email,
+            amount=amount,
+            note=f'Payment for order {order.order_number}'
+        )
+    
+    @staticmethod
+    def send_paypal_refund_to_client(client, amount, order):
+        return PayPalService.create_payout(
+            email=client.paypal_email,
+            amount=amount,
+            note=f'Refund for order {order.order_number}'
+        )

@@ -429,6 +429,14 @@
         color: #059669;
         font-weight: 500;
     }
+
+    #chatContainer {
+        min-height: 0;
+    }
+
+    #messagesContainerWrapper {
+        min-height: 0;
+    }
     
     @media (max-width: 768px) {
         .conversation-list {
@@ -674,32 +682,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('saveEdit').addEventListener('click', saveEditedMessage);
 });
 
-function updateNavbarBadge(totalUnread) {
-    var badge = document.getElementById('navbarUnreadBadge');
-    if (!badge) {
-        var navMessages = document.querySelector('a[href*="messages"]');
-        if (navMessages) {
-            var existingBadge = navMessages.querySelector('.navbar-unread-badge');
-            if (existingBadge) existingBadge.remove();
-            if (totalUnread > 0) {
-                var newBadge = document.createElement('span');
-                newBadge.className = 'navbar-unread-badge';
-                newBadge.id = 'navbarUnreadBadge';
-                newBadge.textContent = totalUnread;
-                navMessages.appendChild(newBadge);
-            }
-        }
-        return;
-    }
-    
-    if (totalUnread > 0) {
-        badge.textContent = totalUnread;
-        badge.style.display = 'inline';
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
 async function getCurrentUser() {
     try {
         var response = await fetch('/api/v1/auth/profile/', {
@@ -727,13 +709,10 @@ async function loadConversations() {
     try {
         conversations = await apiRequest('/conversations/');
         if (!Array.isArray(conversations)) conversations = [];
-        
-        var totalUnread = conversations.reduce(function(sum, conv) {
-            return sum + (conv.unread_count || 0);
-        }, 0);
-        
-        updateNavbarBadge(totalUnread);
+
+        sortConversations();
         displayConversations(conversations);
+        updateUnreadCount();
 
         var urlParams = new URLSearchParams(window.location.search);
         var orderId = urlParams.get('order');
@@ -757,6 +736,12 @@ async function loadConversations() {
     }
 }
 
+function sortConversations() {
+    conversations.sort(function(a, b) {
+        return new Date(b.last_message_at) - new Date(a.last_message_at);
+    });
+}
+
 function displayConversations(list) {
     var container = document.getElementById('conversationsList');
 
@@ -771,10 +756,6 @@ function displayConversations(list) {
             '</div>';
         return;
     }
-
-    list.sort(function(a, b) {
-        return new Date(b.last_message_at) - new Date(a.last_message_at);
-    });
 
     var currentConvId = currentConversation ? currentConversation.id : null;
 
@@ -849,6 +830,32 @@ function setActiveConversationItem(conversationId) {
     });
 }
 
+function updateNavbarBadge(totalUnread) {
+    var badge = document.getElementById('navbarUnreadBadge');
+    if (!badge) {
+        var navMessages = document.querySelector('a[href*="messages"]');
+        if (navMessages) {
+            var existingBadge = navMessages.querySelector('.navbar-unread-badge');
+            if (existingBadge) existingBadge.remove();
+            if (totalUnread > 0) {
+                var newBadge = document.createElement('span');
+                newBadge.className = 'navbar-unread-badge';
+                newBadge.id = 'navbarUnreadBadge';
+                newBadge.textContent = totalUnread;
+                navMessages.appendChild(newBadge);
+            }
+        }
+        return;
+    }
+
+    if (totalUnread > 0) {
+        badge.textContent = totalUnread;
+        badge.style.display = 'inline';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
 function updateUnreadCount() {
     var total = conversations.reduce(function(sum, conv) {
         return sum + (conv.unread_count || 0);
@@ -859,29 +866,29 @@ function updateUnreadCount() {
 
 function updateConversationUnread(conversationId, newCount) {
     var conv = conversations.find(function(c) { return c.id === conversationId; });
-    if (conv) {
-        conv.unread_count = newCount;
-        updateUnreadCount();
-        displayConversations(conversations);
-        var item = document.querySelector('[data-conversation-id="' + conversationId + '"]');
-        if (item) {
-            var badge = item.querySelector('.unread-badge');
-            if (newCount > 0) {
-                if (badge) {
-                    badge.textContent = newCount;
-                } else {
-                    var statusDiv = item.querySelector('.flex.items-center.justify-between.mt-1');
-                    if (statusDiv) {
-                        var newBadge = document.createElement('span');
-                        newBadge.className = 'unread-badge';
-                        newBadge.textContent = newCount;
-                        statusDiv.appendChild(newBadge);
-                    }
-                }
-            } else {
-                if (badge) badge.remove();
+    if (!conv) return;
+
+    conv.unread_count = newCount;
+    updateUnreadCount();
+
+    var item = document.querySelector('[data-conversation-id="' + conversationId + '"]');
+    if (!item) return;
+
+    var badge = item.querySelector('.unread-badge');
+    if (newCount > 0) {
+        if (badge) {
+            badge.textContent = newCount;
+        } else {
+            var statusDiv = item.querySelector('.flex.items-center.justify-between.mt-1');
+            if (statusDiv) {
+                var newBadge = document.createElement('span');
+                newBadge.className = 'unread-badge';
+                newBadge.textContent = newCount;
+                statusDiv.appendChild(newBadge);
             }
         }
+    } else if (badge) {
+        badge.remove();
     }
 }
 
@@ -1057,7 +1064,7 @@ function appendMessageToContainer(html, createdAt) {
         container.appendChild(divider);
     }
 
-    var placeholder = container.querySelector('.flex.items-center.justify-center.h-full');
+    var placeholder = container.querySelector('.chat-placeholder');
     if (placeholder) {
         container.innerHTML = '';
     }
@@ -1193,15 +1200,13 @@ function handleIncomingMessage(message) {
 function updateConversationPreview(message) {
     if (!currentConversation) return;
     var conv = conversations.find(function(c) { return c.id === currentConversation.id; });
-    if (conv) {
-        conv.last_message = { content: message.content, created_at: message.created_at };
-        conv.last_message_at = message.created_at;
-        conversations = conversations.filter(function(c) { return c.id !== conv.id; });
-        conversations.unshift(conv);
-        displayConversations(conversations);
-        var item = document.querySelector('[data-conversation-id="' + conv.id + '"]');
-        if (item) item.classList.add('active');
-    }
+    if (!conv) return;
+
+    conv.last_message = { content: message.content, created_at: message.created_at };
+    conv.last_message_at = message.created_at;
+
+    sortConversations();
+    displayConversations(conversations);
 }
 
 function handleTypingIndicator(isTyping) {

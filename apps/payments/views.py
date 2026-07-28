@@ -10,14 +10,17 @@ from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 import logging
 import json
+import random
 from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.conf import settings
 
 from .models import Wallet, Transaction, PaymentMethod, PaymentIntent, Payout, PayPalWebhook
 from .serializers import (
     WalletSerializer, TransactionSerializer, TransactionDetailSerializer,
     PaymentMethodSerializer, PaymentIntentSerializer, PayoutSerializer
 )
-from .services import PayPalService
+from .services import PayPalService, AdminPaymentService, AdminWalletManager
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +28,17 @@ logger = logging.getLogger(__name__)
 def get_or_create_wallet(user):
     wallet, created = Wallet.objects.get_or_create(user=user)
     return wallet
+
+
+def generate_verification_code():
+    return ''.join(random.choices('0123456789', k=6))
+
+
+def send_verification_email(email, code):
+    subject = 'PayPal Account Verification'
+    message = f'Your verification code is: {code}\n\nThis code expires in 5 minutes.'
+    from_email = settings.DEFAULT_FROM_EMAIL
+    send_mail(subject, message, from_email, [email], fail_silently=False)
 
 
 @api_view(['GET'])
@@ -96,37 +110,160 @@ def get_transaction_detail(request, transaction_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def add_paypal_method(request):
+def check_paypal_email(request):
     paypal_email = request.data.get('paypal_email', '').strip()
     
     if not paypal_email:
         return Response({'error': 'PayPal email is required'}, status=status.HTTP_400_BAD_REQUEST)
     
-    existing = PaymentMethod.objects.filter(
-        user=request.user,
-        paypal_email=paypal_email,
-        is_active=True
-    ).first()
+    existing = PaymentMethod.objects.filter(user=request.user, paypal_email=paypal_email).first()
     
     if existing:
-        return Response({'error': 'This PayPal account is already added'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'exists': True,
+            'is_active': existing.is_active,
+            'is_pending': not existing.is_active and not existing.paypal_verified,
+            'method_id': str(existing.id) if not existing.is_active else None
+        })
     
+    return Response({
+        'exists': False,
+        'is_active': False,
+        'is_pending': False,
+        'method_id': None
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_paypal_method(request):
+    paypal_email = request.data.get('paypal_email', '').strip()
+    if not paypal_email:
+        return Response({'error': 'PayPal email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    existing = PaymentMethod.objects.filter(user=request.user, paypal_email=paypal_email).first()
+    if existing:
+        if existing.is_active:
+            return Response({'error': 'This PayPal account is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'error': 'This PayPal account is pending verification. Please verify or request a new code.',
+            'method_id': str(existing.id)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
     method = PaymentMethod.objects.create(
         user=request.user,
         paypal_email=paypal_email,
         paypal_account_type=request.data.get('paypal_account_type', 'personal'),
-        paypal_verified=True,
+        paypal_verified=False,
+        is_active=False,
+        verification_code=generate_verification_code(),
+        verification_code_created_at=timezone.now(),
+        verification_attempts=0,
+        verification_locked_until=None
     )
-    
+
+    try:
+        send_verification_email(paypal_email, method.verification_code)
+    except Exception as e:
+        logger.error(f"Failed to send verification email: {e}")
+        method.delete()
+        return Response({
+            'error': 'Failed to send verification email. Please check your email address and try again.'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({
+        'success': True,
+        'message': 'Verification code sent to your PayPal email. Please verify within 5 minutes.',
+        'method_id': str(method.id),
+        'expires_in': 300
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_paypal_method(request):
+    method_id = request.data.get('method_id')
+    code = request.data.get('code', '').strip()
+
+    if not method_id or not code:
+        return Response({'error': 'Method ID and verification code are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    method = get_object_or_404(PaymentMethod, id=method_id, user=request.user)
+
+    if method.is_active:
+        return Response({'error': 'This PayPal account is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if method.verification_locked_until and timezone.now() < method.verification_locked_until:
+        remaining_hours = (method.verification_locked_until - timezone.now()).seconds // 3600
+        return Response({
+            'error': f'Too many failed attempts. Try again in {remaining_hours} hours.',
+            'locked': True,
+            'locked_until': method.verification_locked_until.isoformat()
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if method.verification_code != code:
+        method.verification_attempts += 1
+        if method.verification_attempts >= 3:
+            method.verification_locked_until = timezone.now() + timezone.timedelta(hours=24)
+        method.save()
+        remaining_attempts = 3 - method.verification_attempts
+        return Response({
+            'error': 'Invalid verification code',
+            'remaining_attempts': max(0, remaining_attempts),
+            'locked': method.verification_attempts >= 3
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    method.is_active = True
+    method.paypal_verified = True
+    method.verification_code = None
+    method.verification_code_created_at = None
+    method.verification_attempts = 0
+    method.verification_locked_until = None
+    method.save()
+
     if not PaymentMethod.objects.filter(user=request.user, is_default=True).exclude(id=method.id).exists():
         method.is_default = True
         method.save()
-    
+
     return Response({
         'success': True,
-        'message': 'PayPal account added successfully',
-        'method_id': str(method.id)
-    }, status=status.HTTP_201_CREATED)
+        'message': 'PayPal account verified and added successfully',
+        'method_id': str(method.id),
+        'is_default': method.is_default
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def resend_verification_code(request):
+    method_id = request.data.get('method_id')
+
+    if not method_id:
+        return Response({'error': 'Method ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    method = get_object_or_404(PaymentMethod, id=method_id, user=request.user)
+
+    if method.is_active:
+        return Response({'error': 'This PayPal account is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+
+    method.verification_attempts = 0
+    method.verification_locked_until = None
+    new_code = generate_verification_code()
+    method.verification_code = new_code
+    method.verification_code_created_at = timezone.now()
+    method.save()
+
+    try:
+        send_verification_email(method.paypal_email, new_code)
+    except Exception as e:
+        logger.error(f"Failed to send verification email: {e}")
+        return Response({'error': 'Failed to send email. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({
+        'success': True,
+        'message': 'New verification code sent to your PayPal email',
+        'expires_in': 300
+    })
 
 
 @api_view(['GET'])
@@ -207,7 +344,7 @@ def create_paypal_deposit(request):
         if not method:
             return Response({
                 'error': 'no_paypal_account',
-                'message': 'Please add a PayPal account first'
+                'message': 'Please add and verify a PayPal account first'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         with db_transaction.atomic():
@@ -507,9 +644,7 @@ def get_payout_detail(request, payout_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_payment_methods(request):
-    methods = PaymentMethod.objects.filter(user=request.user, is_active=True)
-    serializer = PaymentMethodSerializer(methods, many=True)
-    return Response(serializer.data)
+    return get_paypal_methods(request)
 
 
 @csrf_exempt
@@ -632,3 +767,131 @@ def get_payment_stats(request):
     }
     
     return Response(stats)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_financial_summary(request):
+    summary = AdminPaymentService.get_admin_financial_summary()
+    return Response(summary)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_set_paypal_email(request):
+    email = request.data.get('paypal_email', '').strip()
+    
+    if not email:
+        return Response({'error': 'PayPal email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    AdminWalletManager.set_admin_paypal_email(email)
+    
+    return Response({
+        'success': True,
+        'message': f'Admin PayPal email set to {email}',
+        'email': email
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_process_client_payment(request):
+    order_id = request.data.get('order_id')
+    amount = Decimal(str(request.data.get('amount', 0)))
+    client_id = request.data.get('client_id')
+    
+    if not order_id or not client_id:
+        return Response({'error': 'order_id and client_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    from apps.orders.models import Order
+    from apps.accounts.models import User
+    
+    try:
+        order = get_object_or_404(Order, id=order_id)
+        client = get_object_or_404(User, id=client_id)
+        
+        result = AdminPaymentService.process_client_payment(order, client, amount)
+        return Response(result)
+    except Exception as e:
+        logger.error(f"Admin payment processing error: {e}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_process_writer_payout(request):
+    order_id = request.data.get('order_id')
+    amount = Decimal(str(request.data.get('amount', 0)))
+    writer_id = request.data.get('writer_id')
+    
+    if not order_id or not writer_id:
+        return Response({'error': 'order_id and writer_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    from apps.orders.models import Order
+    from apps.accounts.models import User
+    
+    try:
+        order = get_object_or_404(Order, id=order_id)
+        writer = get_object_or_404(User, id=writer_id)
+        
+        result = AdminPaymentService.process_writer_payout(order, writer, amount)
+        return Response(result)
+    except Exception as e:
+        logger.error(f"Admin payout processing error: {e}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_process_refund(request):
+    order_id = request.data.get('order_id')
+    amount = Decimal(str(request.data.get('amount', 0)))
+    
+    if not order_id:
+        return Response({'error': 'order_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    from apps.orders.models import Order
+    
+    try:
+        order = get_object_or_404(Order, id=order_id)
+        
+        result = AdminPaymentService.process_refund(order, amount)
+        return Response(result)
+    except Exception as e:
+        logger.error(f"Admin refund processing error: {e}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_transactions(request):
+    admin_wallet = AdminWalletManager.get_admin_wallet()
+    transactions = Transaction.objects.filter(wallet=admin_wallet).order_by('-created_at')
+    
+    transaction_type = request.GET.get('type')
+    if transaction_type:
+        transactions = transactions.filter(type=transaction_type)
+    
+    direction = request.GET.get('direction')
+    if direction:
+        transactions = transactions.filter(direction=direction)
+    
+    status_filter = request.GET.get('status')
+    if status_filter:
+        transactions = transactions.filter(status=status_filter)
+    
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 20))
+    start = (page - 1) * page_size
+    end = start + page_size
+    
+    total = transactions.count()
+    paginated = transactions[start:end]
+    serializer = TransactionSerializer(paginated, many=True)
+    
+    return Response({
+        'total': total,
+        'page': page,
+        'page_size': page_size,
+        'results': serializer.data
+    })

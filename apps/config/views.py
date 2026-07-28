@@ -17,14 +17,16 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
-from apps.accounts.models import User
-from apps.orders.models import Order, OrderHistory
-from apps.orders.serializers import OrderListSerializer
-from apps.admin_portal.models import Blog, Sample
-from apps.messaging.models import Conversation
 import hashlib
 import json
 from datetime import timedelta
+
+from apps.accounts.models import User
+from apps.orders.models import Order, OrderHistory
+from apps.orders.serializers import OrderListSerializer
+from apps.payments.models import Transaction, Wallet
+from apps.admin_portal.models import Blog, Sample
+from apps.messaging.models import Conversation
 
 
 def get_client_ip(request):
@@ -517,13 +519,124 @@ def notifications(request):
     return render(request, 'access_denied.html')
 
 
-@login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_dashboard(request):
     if request.user.role != 'admin':
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+    
+    today = timezone.now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    last_week = start_of_week - timedelta(days=7)
+    
+    users = User.objects.all()
+    orders = Order.objects.all()
+    
+    transactions = Transaction.objects.filter(status='completed')
+    total_revenue = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+    revenue_today = transactions.filter(created_at__date=today).aggregate(Sum('amount'))['amount__sum'] or 0
+    week_earnings = transactions.filter(created_at__date__gte=start_of_week).aggregate(Sum('amount'))['amount__sum'] or 0
+    last_week_earnings = transactions.filter(
+        created_at__date__gte=last_week,
+        created_at__date__lt=start_of_week
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    week_change = 0
+    if last_week_earnings > 0:
+        week_change = ((week_earnings - last_week_earnings) / last_week_earnings) * 100
+    
+    pending_orders = orders.filter(status='request').count()
+    in_progress = orders.filter(status='in_progress').count()
+    awaiting = orders.filter(status='awaiting_approval').count()
+    completed = orders.filter(status='completed').count()
+    cancelled = orders.filter(status='cancelled').count()
+    declined = orders.filter(status='declined').count()
+    completed_today = orders.filter(status='completed', updated_at__date=today).count()
+    
+    avg_rating = 0
+    rating_agg = orders.filter(rating__isnull=False).aggregate(Avg('rating'))
+    if rating_agg and rating_agg['rating__avg']:
+        avg_rating = rating_agg['rating__avg']
+    
+    completion_rate = 0
+    total_orders = orders.count()
+    if total_orders > 0:
+        completion_rate = (completed / total_orders) * 100
+    
+    admin_wallet = Wallet.objects.filter(user=request.user).first()
+    admin_balance = float(admin_wallet.balance) if admin_wallet else 0
+    
+    unread_messages = 0
+    try:
+        conversations = Conversation.objects.filter(admin=request.user)
+        for conv in conversations:
+            unread_messages += conv.get_unread_count(request.user)
+    except:
+        pass
+    
+    return Response({
+        'total_users': users.count(),
+        'total_clients': users.filter(role='client').count(),
+        'total_admins': users.filter(role='admin').count(),
+        'new_users_today': users.filter(date_joined__date=today).count(),
+        'active_users': users.filter(last_login__date=today).count(),
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'in_progress_orders': in_progress,
+        'awaiting_approval': awaiting,
+        'completed_orders': completed,
+        'cancelled_orders': cancelled,
+        'declined_orders': declined,
+        'completed_today': completed_today,
+        'total_revenue': float(total_revenue),
+        'revenue_today': float(revenue_today),
+        'week_earnings': float(week_earnings),
+        'last_week_earnings': float(last_week_earnings),
+        'week_change': float(week_change),
+        'pending_payouts': 0,
+        'average_rating': float(avg_rating),
+        'completion_rate': float(completion_rate),
+        'overdue_orders': orders.filter(
+            deadline__lt=timezone.now(),
+            status__in=['request', 'in_progress']
+        ).count(),
+        'unread_messages': unread_messages,
+        'revisions': orders.filter(status='revision').count(),
+        'priority_count': orders.filter(
+            status='request',
+            deadline__lt=timezone.now() + timedelta(hours=6)
+        ).count(),
+        'admin_balance': admin_balance
+    })
+@login_required
+def admin_user_detail(request, user_id):
+    """Admin view for a specific user's details."""
+    if request.user.role != 'admin':
         return render(request, 'access_denied.html')
-    return render(request, 'admin/dashboard.html')
-
-
+    
+    user = get_object_or_404(User, id=user_id)
+    
+    orders = Order.objects.filter(client=user).order_by('-created_at')
+    
+    wallet, created = Wallet.objects.get_or_create(user=user)
+    
+    transactions = Transaction.objects.filter(user=user).order_by('-created_at')[:20]
+    
+    context = {
+        'user_detail': user,
+        'orders': orders,
+        'wallet': wallet,
+        'transactions': transactions,
+        'order_count': orders.count(),
+        'total_spent': orders.filter(status='completed').aggregate(Sum('total_price'))['total_price__sum'] or 0,
+    }
+    
+    return render(request, 'admin/user-detail.html', context)
+@login_required
+def admin_dashboard_view(request):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    return render(request, 'admin/dashboard.html', {'user': request.user})
 @login_required
 def admin_orders(request):
     if request.user.role != 'admin':

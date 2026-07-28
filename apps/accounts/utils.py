@@ -15,6 +15,9 @@ def generate_otp():
 def generate_reset_token():
     return secrets.token_urlsafe(32)
 
+def generate_password_change_code():
+    return ''.join(secrets.choice(string.digits) for _ in range(6))
+
 def send_otp_email(email, otp, full_name):
     subject = 'Verify Your Email - AcademicWrite'
     context = {
@@ -95,6 +98,33 @@ def send_welcome_email(email, full_name):
         logger.error(f"Failed to send welcome email to {email}: {str(e)}")
         return False
 
+def send_password_change_code_email(email, code, full_name):
+    subject = 'Password Change Verification - AcademicWrite'
+    context = {
+        'email': email,
+        'code': code,
+        'full_name': full_name,
+        'expiry_minutes': 5
+    }
+    
+    try:
+        html_message = render_to_string('emails/password_change_code.html', context)
+        plain_message = strip_tags(html_message)
+        
+        send_mail(
+            subject,
+            plain_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            html_message=html_message,
+            fail_silently=False
+        )
+        logger.info(f"Password change code email sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send password change code email to {email}: {str(e)}")
+        return False
+
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
@@ -107,9 +137,6 @@ def get_client_user_agent(request):
     return request.META.get('HTTP_USER_AGENT', '')
 
 def is_rate_limited(key, limit, window_seconds, cache):
-    """
-    Simple rate limiting using cache
-    """
     cache_key = f'rate_limit_{key}'
     current = cache.get(cache_key, 0)
     

@@ -1,7 +1,7 @@
 {% extends "client_base.html" %}
 {% load static %}
 
-{% block title %}Client Portal - AcademicWrite{% endblock %}
+{% block title %}Client Dashboard - AcademicWrite{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -9,6 +9,9 @@
         max-width: 1280px;
         margin: 0 auto;
         padding: 0 24px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
 
     @media (max-width: 640px) {
@@ -24,6 +27,9 @@
         padding: 1.5rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
         transition: all 0.2s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
 
     .client-card:hover {
@@ -37,6 +43,7 @@
         border-radius: 0.75rem;
         padding: 1.25rem 1.5rem;
         transition: all 0.2s ease;
+        height: 100%;
     }
 
     .client-stat:hover {
@@ -56,6 +63,9 @@
         font-size: 0.75rem;
         color: #64748b;
         margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-weight: 600;
     }
 
     .client-stat-number.green {
@@ -87,6 +97,8 @@
         border: none;
         cursor: pointer;
         font-size: 0.875rem;
+        gap: 0.5rem;
+        white-space: nowrap;
     }
 
     .client-btn:hover {
@@ -104,6 +116,7 @@
     .client-btn-outline:hover {
         background: #ecfdf5;
         transform: translateY(-1px);
+        box-shadow: none;
     }
 
     .client-status-badge {
@@ -112,6 +125,7 @@
         font-size: 0.75rem;
         font-weight: 600;
         border-radius: 9999px;
+        white-space: nowrap;
     }
 
     .client-status-badge.request {
@@ -172,6 +186,7 @@
     .client-table td {
         padding: 0.75rem 1rem;
         border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
     }
 
     .client-table tbody tr {
@@ -186,6 +201,9 @@
         color: #059669;
         font-weight: 500;
         transition: color 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
     .client-link:hover {
@@ -198,6 +216,7 @@
         border-radius: 0.5rem;
         padding: 0.75rem 1rem;
         transition: all 0.2s ease;
+        display: block;
     }
 
     .client-message-item:hover {
@@ -222,6 +241,7 @@
         background: #e5e7eb;
         border-radius: 9999px;
         overflow: hidden;
+        min-width: 60px;
     }
 
     .client-progress-fill {
@@ -233,7 +253,7 @@
 
     .client-empty-state {
         text-align: center;
-        padding: 2rem 0;
+        padding: 1.5rem 0;
         color: #64748b;
     }
 
@@ -253,30 +273,76 @@
     .client-empty-state p {
         font-size: 0.875rem;
     }
+
+    .client-card-footer {
+        margin-top: auto;
+        padding-top: 0.75rem;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .status-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        margin-right: 4px;
+    }
+
+    .status-dot.request { background: #f59e0b; }
+    .status-dot.in_progress { background: #3b82f6; }
+    .status-dot.awaiting_approval { background: #8b5cf6; }
+    .status-dot.completed { background: #22c55e; }
+    .status-dot.cancelled { background: #ef4444; }
+    .status-dot.declined { background: #ef4444; }
+    .status-dot.refund_pending { background: #f59e0b; }
+
+    @media (max-width: 640px) {
+        .client-stat-number {
+            font-size: 1.5rem;
+        }
+        .client-card {
+            padding: 1rem;
+        }
+        .client-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .client-table {
+            font-size: 0.75rem;
+        }
+        .client-table th,
+        .client-table td {
+            padding: 0.5rem 0.5rem;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="client-container">
-    {% block client_content %}
-    <div class="py-6">
+    <div class="py-6 flex-1 flex flex-col">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Client Dashboard</h1>
-                <p class="text-gray-600 mt-1">Welcome back to your dashboard</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+                <p class="text-gray-600 mt-1">Welcome back, {{ user.full_name|default:user.email }}</p>
             </div>
-            <a href="/client/orders/new/" class="client-btn">
-                <i class="fas fa-plus mr-2"></i> New Order
-            </a>
+            <div class="flex flex-wrap gap-3 w-full sm:w-auto">
+                <a href="/client/orders/new/" class="client-btn flex-1 sm:flex-initial">
+                    <i class="fas fa-plus"></i> New Order
+                </a>
+                <a href="/client/orders/" class="client-btn client-btn-outline flex-1 sm:flex-initial">
+                    <i class="fas fa-file-alt"></i> My Orders
+                </a>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <div class="client-stat">
                 <p class="client-stat-label">Total Orders</p>
                 <p class="client-stat-number" id="total-orders">0</p>
             </div>
             <div class="client-stat">
-                <p class="client-stat-label">Active Orders</p>
+                <p class="client-stat-label">Active</p>
                 <p class="client-stat-number green" id="active-orders">0</p>
             </div>
             <div class="client-stat">
@@ -284,36 +350,40 @@
                 <p class="client-stat-number blue" id="completed-orders">0</p>
             </div>
             <div class="client-stat">
-                <p class="client-stat-label">Wallet Balance</p>
+                <p class="client-stat-label">Balance</p>
                 <p class="client-stat-number green" id="wallet-balance">$0.00</p>
             </div>
         </div>
 
-        <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div class="grid md:grid-cols-2 gap-6 mb-6 flex-1">
             <div class="client-card">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Active Orders</h2>
-                <div id="active-orders-list">
+                <div id="active-orders-list" class="flex-1">
                     <div class="client-empty-state">
                         <i class="fas fa-spinner fa-spin"></i>
                         <p>Loading...</p>
                     </div>
                 </div>
-                <a href="/client/orders/?status=active" class="client-link text-sm inline-block mt-4">
-                    View All Orders <i class="fas fa-arrow-right ml-1"></i>
-                </a>
+                <div class="client-card-footer">
+                    <a href="/client/orders/?status=active" class="client-link text-sm">
+                        View All Orders <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                    </a>
+                </div>
             </div>
 
             <div class="client-card">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Recent Messages</h2>
-                <div id="recent-messages">
+                <div id="recent-messages" class="flex-1">
                     <div class="client-empty-state">
                         <i class="fas fa-spinner fa-spin"></i>
                         <p>Loading...</p>
                     </div>
                 </div>
-                <a href="/client/messages/" class="client-link text-sm inline-block mt-4">
-                    View All Messages <i class="fas fa-arrow-right ml-1"></i>
-                </a>
+                <div class="client-card-footer">
+                    <a href="/client/messages/" class="client-link text-sm">
+                        View All Messages <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -338,12 +408,13 @@
                     </tbody>
                 </table>
             </div>
-            <a href="/client/orders/" class="client-link text-sm inline-block mt-4">
-                View All Orders <i class="fas fa-arrow-right ml-1"></i>
-            </a>
+            <div class="client-card-footer">
+                <a href="/client/orders/" class="client-link text-sm">
+                    View All Orders <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                </a>
+            </div>
         </div>
     </div>
-    {% endblock %}
 </div>
 {% endblock %}
 
@@ -429,21 +500,22 @@ async function loadDashboardStats() {
 
         const [walletRes, ordersRes] = await Promise.all([
             fetch('/api/v1/wallet/stats/', { headers: getApiHeaders() }),
-            fetch('/api/v1/client/orders/', { headers: getApiHeaders() })
+            fetch('/api/v1/client/orders/?limit=100', { headers: getApiHeaders() })
         ]);
 
         if (walletRes.ok) {
             const wallet = await walletRes.json();
-            const balance = wallet.available_balance !== undefined ? wallet.available_balance : (wallet.balance !== undefined ? wallet.balance : (wallet.total_balance || 0));
+            const balance = wallet.available_balance !== undefined ? wallet.available_balance : 
+                           (wallet.balance !== undefined ? wallet.balance : (wallet.total_balance || 0));
             document.getElementById('wallet-balance').textContent = formatCurrency(balance);
         }
 
         if (ordersRes.ok) {
-            const orders = await ordersRes.json();
-            const results = orders.results || orders;
-            const total = results.length || 0;
-            const active = results.filter(o => ['request', 'in_progress', 'awaiting_approval'].includes(o.status)).length || 0;
-            const completed = results.filter(o => o.status === 'completed').length || 0;
+            const data = await ordersRes.json();
+            const orders = data.results || data;
+            const total = orders.length || 0;
+            const active = orders.filter(o => ['request', 'in_progress', 'awaiting_approval'].includes(o.status)).length || 0;
+            const completed = orders.filter(o => o.status === 'completed').length || 0;
             document.getElementById('total-orders').textContent = total;
             document.getElementById('active-orders').textContent = active;
             document.getElementById('completed-orders').textContent = completed;
@@ -462,7 +534,7 @@ async function loadActiveOrders() {
             return;
         }
 
-        const response = await fetch('/api/v1/client/orders/?status=request,in_progress,awaiting_approval', {
+        const response = await fetch('/api/v1/client/orders/?status=request,in_progress,awaiting_approval&limit=3', {
             headers: getApiHeaders()
         });
 
@@ -482,16 +554,19 @@ async function loadActiveOrders() {
         container.innerHTML = orders.slice(0, 3).map(order => `
             <div class="client-message-item" style="margin-bottom:0.75rem;">
                 <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
-                    <a href="/client/orders/${order.id}/" class="font-medium text-green-600 hover:text-green-700">
+                    <a href="/client/orders/${order.id}/" class="font-medium text-green-600 hover:text-green-700 text-sm">
                         ${order.order_number || 'Order #' + order.id}
                     </a>
                     <span class="client-status-badge ${getStatusClass(order.status)}">${getStatusLabel(order.status)}</span>
                 </div>
-                <p class="text-sm text-gray-600 mb-3">${order.topic ? order.topic.substring(0, 60) : 'No topic'}${order.topic && order.topic.length > 60 ? '...' : ''}</p>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm">
+                <p class="text-sm text-gray-600 mb-3 line-clamp-2">${order.topic ? order.topic.substring(0, 60) : 'No topic'}${order.topic && order.topic.length > 60 ? '...' : ''}</p>
+                <div class="flex flex-wrap justify-between items-center gap-3 text-sm">
                     <span class="text-gray-500">Due: ${formatDate(order.deadline)}</span>
-                    <div class="w-full sm:w-32 client-progress-bar">
-                        <div class="client-progress-fill" style="width: ${order.progress_percentage || 0}%"></div>
+                    <div class="flex items-center gap-2 flex-1 min-w-[80px]">
+                        <span class="text-xs text-gray-400">${order.progress_percentage || 0}%</span>
+                        <div class="client-progress-bar flex-1">
+                            <div class="client-progress-fill" style="width: ${order.progress_percentage || 0}%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -511,7 +586,7 @@ async function loadRecentMessages() {
             return;
         }
 
-        const response = await fetch('/api/v1/messaging/conversations/', {
+        const response = await fetch('/api/v1/messaging/conversations/?limit=3', {
             headers: getApiHeaders()
         });
 
@@ -520,21 +595,22 @@ async function loadRecentMessages() {
             return;
         }
 
-        const conversations = await response.json();
-        const results = conversations.results || conversations;
+        const data = await response.json();
+        const conversations = data.results || data;
 
-        if (!results || results.length === 0) {
+        if (!conversations || conversations.length === 0) {
             container.innerHTML = '<div class="client-empty-state"><i class="fas fa-envelope-open-text"></i><h3>No Messages</h3><p>Your messages will appear here</p></div>';
             return;
         }
 
-        container.innerHTML = results.slice(0, 3).map(conv => {
+        container.innerHTML = conversations.slice(0, 3).map(conv => {
             const lastMessage = conv.last_message || {};
             const order = conv.order || {};
+            const orderId = order.id || conv.order_id || conv.id;
             return `
-                <a href="/client/messages/order/${order.id || conv.id}/" class="client-message-item" style="display:block;margin-bottom:0.75rem;">
+                <a href="/client/messages/order/${orderId}/" class="client-message-item" style="margin-bottom:0.75rem;">
                     <div class="flex flex-wrap justify-between items-start gap-1 mb-1">
-                        <span class="font-medium text-gray-800 text-sm">${order.order_number || 'Order #' + (order.id || conv.id)}</span>
+                        <span class="font-medium text-gray-800 text-sm">${order.order_number || 'Order #' + orderId}</span>
                         <span class="text-xs text-gray-500">${formatTimeAgo(lastMessage.created_at || conv.last_message_at)}</span>
                     </div>
                     <p class="text-sm text-gray-600 truncate">${lastMessage.content || 'No messages yet'}</p>
@@ -576,11 +652,11 @@ async function loadRecentOrders() {
 
         tbody.innerHTML = orders.slice(0, 5).map(order => `
             <tr>
-                <td class="font-medium">${order.order_number || 'N/A'}</td>
-                <td class="hidden sm:table-cell text-gray-600">${order.topic ? order.topic.substring(0, 30) : ''}${order.topic && order.topic.length > 30 ? '...' : ''}</td>
+                <td class="font-medium text-sm">${order.order_number || 'N/A'}</td>
+                <td class="hidden sm:table-cell text-gray-600 text-sm">${order.topic ? order.topic.substring(0, 30) : ''}${order.topic && order.topic.length > 30 ? '...' : ''}</td>
                 <td><span class="client-status-badge ${getStatusClass(order.status)}">${getStatusLabel(order.status)}</span></td>
-                <td class="hidden md:table-cell text-gray-600">${formatDate(order.deadline)}</td>
-                <td class="font-medium text-green-600">${formatCurrency(order.total_price)}</td>
+                <td class="hidden md:table-cell text-gray-600 text-sm">${formatDate(order.deadline)}</td>
+                <td class="font-medium text-green-600 text-sm">${formatCurrency(order.total_price)}</td>
                 <td><a href="/client/orders/${order.id}/" class="client-link text-sm">View <i class="fas fa-arrow-right ml-1 text-xs"></i></a></td>
             </tr>
         `).join('');

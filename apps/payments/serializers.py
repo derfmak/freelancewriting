@@ -91,19 +91,32 @@ class TransactionDetailSerializer(TransactionSerializer):
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
     is_paypal = serializers.SerializerMethodField()
+    is_verified = serializers.BooleanField(source='paypal_verified', read_only=True)
+    verification_required = serializers.SerializerMethodField()
+    verification_expired = serializers.SerializerMethodField()
 
     class Meta:
         model = PaymentMethod
         fields = [
             'id', 'paypal_email', 'paypal_account_type',
             'paypal_verified', 'is_default', 'is_active',
-            'is_paypal', 'last_used_at',
+            'is_paypal', 'is_verified',
+            'verification_required', 'verification_expired',
+            'last_used_at',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def get_is_paypal(self, obj):
         return True
+
+    def get_verification_required(self, obj):
+        return not obj.paypal_verified and not obj.is_active and bool(obj.verification_code)
+
+    def get_verification_expired(self, obj):
+        if not obj.verification_code_created_at:
+            return False
+        return (timezone.now() - obj.verification_code_created_at).total_seconds() > 300
 
 
 class AddPayPalMethodSerializer(serializers.Serializer):
@@ -113,6 +126,33 @@ class AddPayPalMethodSerializer(serializers.Serializer):
         default='personal'
     )
     set_default = serializers.BooleanField(default=False)
+
+
+class VerifyPayPalMethodSerializer(serializers.Serializer):
+    method_id = serializers.UUIDField(required=True)
+    code = serializers.CharField(min_length=6, max_length=6, required=True)
+
+    def validate_code(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError('Verification code must contain only digits')
+        return value
+
+
+class ResendVerificationCodeSerializer(serializers.Serializer):
+    method_id = serializers.UUIDField(required=True)
+
+
+class PaymentMethodSelectionSerializer(serializers.Serializer):
+    payment_method_id = serializers.UUIDField(required=True)
+
+    def validate_payment_method_id(self, value):
+        from .models import PaymentMethod
+        user = self.context.get('request').user
+        try:
+            method = PaymentMethod.objects.get(id=value, user=user, is_active=True, paypal_verified=True)
+        except PaymentMethod.DoesNotExist:
+            raise serializers.ValidationError('Invalid or unverified payment method')
+        return value
 
 
 class PayPalDepositSerializer(serializers.Serializer):

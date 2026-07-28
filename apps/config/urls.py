@@ -52,10 +52,11 @@ urlpatterns = [
     path('client/settings/', views.client_settings, name='client-settings'),
     path('client/notifications/', views.client_notifications, name='client-notifications'),
     
-    path('admin/dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    path('admin/dashboard/', views.admin_dashboard_view, name='admin-dashboard'),
     path('admin/orders/', views.admin_orders, name='admin-orders'),
     path('admin/orders/<uuid:order_id>/', admin_order_detail, name='admin-order-detail'),
     path('admin/users/', views.admin_users, name='admin-users'),
+    path('admin/users/<uuid:user_id>/', views.admin_user_detail, name='admin-user-detail'),
     path('admin/finances/', views.admin_finances, name='admin-finances'),
     path('admin/refunds/', views.admin_refunds, name='admin-refunds'),
     path('admin/messages/', views.admin_messages, name='admin-messages'),

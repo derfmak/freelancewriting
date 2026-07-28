@@ -4,6 +4,7 @@ from . import views
 app_name = 'admin_portal'
 
 urlpatterns = [
+    path('dashboard/', views.admin_dashboard, name='admin-dashboard'),
     path('dashboard/stats/', views.dashboard_stats, name='dashboard-stats'),
     path('dashboard/priority/', views.priority_queue, name='priority-queue'),
     
@@ -22,6 +23,7 @@ urlpatterns = [
     path('orders/<uuid:order_id>/deliver/', views.admin_deliver_order, name='admin-deliver-order'),
     path('orders/<uuid:order_id>/files/<uuid:file_id>/pullback/', views.admin_pullback_file, name='admin-pullback-file'),
     path('orders/<uuid:order_id>/cancel/', views.admin_cancel_order, name='admin-cancel-order'),
+    path('orders/<uuid:order_id>/status/', views.get_order_status, name='order-status'),
     path('orders/pending/', views.pending_orders, name='pending-orders'),
     path('orders/active/', views.active_orders, name='active-orders'),
     path('orders/overdue/', views.overdue_orders, name='overdue-orders'),
@@ -30,6 +32,7 @@ urlpatterns = [
     
     path('orders/<uuid:order_id>/messages/', views.get_messages, name='get-messages'),
     path('orders/<uuid:order_id>/messages/send/', views.send_message, name='send-message'),
+    path('messages/unread/', views.get_unread_count, name='get-unread-count'),
     
     path('refunds/', views.refund_requests, name='refund-requests'),
     path('refunds/<uuid:order_id>/approve/', views.approve_refund, name='approve-refund'),
@@ -62,7 +65,6 @@ urlpatterns = [
     path('notes/create/', views.create_note, name='create-note'),
     path('notes/<uuid:note_id>/', views.update_note, name='update-note'),
     path('notes/<uuid:note_id>/delete/', views.delete_note, name='delete-note'),
-    path('orders/<uuid:order_id>/status/', views.get_order_status, name='order-status'),
     
     path('analytics/', views.analytics_overview, name='analytics-overview'),
     path('analytics/revenue/', views.revenue_analytics, name='revenue-analytics'),

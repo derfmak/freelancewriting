@@ -41,6 +41,12 @@ class TransactionQuerySet(models.QuerySet):
     def paypal(self):
         return self.filter(payment_method='paypal')
     
+    def admin(self):
+        return self.filter(payment_method='admin')
+    
+    def system(self):
+        return self.filter(payment_method='system')
+    
     def for_user(self, user):
         return self.filter(user=user)
     
@@ -105,6 +111,28 @@ class TransactionQuerySet(models.QuerySet):
             total=models.Sum('amount'),
             count=models.Count('id')
         ).order_by('date')
+    
+    def admin_credits(self):
+        return self.filter(
+            wallet__user__role='admin',
+            direction='credit',
+            status='completed'
+        )
+    
+    def admin_debits(self):
+        return self.filter(
+            wallet__user__role='admin',
+            direction='debit',
+            status='completed'
+        )
+    
+    def admin_balance(self):
+        credits = self.admin_credits().total_amount()
+        debits = self.admin_debits().total_amount()
+        return credits - debits
+    
+    def by_wallet_and_direction(self, wallet, direction):
+        return self.filter(wallet=wallet, direction=direction)
 
 
 class TransactionManager(models.Manager):
@@ -145,6 +173,12 @@ class TransactionManager(models.Manager):
     def paypal(self):
         return self.get_queryset().paypal()
     
+    def admin(self):
+        return self.get_queryset().admin()
+    
+    def system(self):
+        return self.get_queryset().system()
+    
     def for_user(self, user):
         return self.get_queryset().for_user(user)
     
@@ -180,6 +214,18 @@ class TransactionManager(models.Manager):
     
     def create_transaction(self, **kwargs):
         return self.create(**kwargs)
+    
+    def admin_credits(self):
+        return self.get_queryset().admin_credits()
+    
+    def admin_debits(self):
+        return self.get_queryset().admin_debits()
+    
+    def admin_balance(self):
+        return self.get_queryset().admin_balance()
+    
+    def by_wallet_and_direction(self, wallet, direction):
+        return self.get_queryset().by_wallet_and_direction(wallet, direction)
 
 
 class PaymentMethodQuerySet(models.QuerySet):
@@ -199,6 +245,49 @@ class PaymentMethodQuerySet(models.QuerySet):
     def recently_used(self, days=30):
         cutoff = timezone.now() - timezone.timedelta(days=days)
         return self.filter(last_used_at__gte=cutoff)
+    
+    def verified(self):
+        return self.filter(paypal_verified=True)
+    
+    def unverified(self):
+        return self.filter(paypal_verified=False)
+    
+    def pending_verification(self):
+        return self.filter(
+            is_active=False,
+            paypal_verified=False,
+            verification_code__isnull=False,
+            verification_code_created_at__isnull=False
+        )
+    
+    def verification_expired(self):
+        from django.db.models import Q
+        cutoff = timezone.now() - timezone.timedelta(seconds=300)
+        return self.filter(
+            is_active=False,
+            paypal_verified=False,
+            verification_code__isnull=False,
+            verification_code_created_at__lt=cutoff
+        )
+    
+    def locked(self):
+        return self.filter(
+            verification_locked_until__isnull=False,
+            verification_locked_until__gt=timezone.now()
+        )
+    
+    def not_locked(self):
+        from django.db.models import Q
+        return self.filter(
+            Q(verification_locked_until__isnull=True) |
+            Q(verification_locked_until__lte=timezone.now())
+        )
+    
+    def business(self):
+        return self.filter(paypal_account_type='business')
+    
+    def personal(self):
+        return self.filter(paypal_account_type='personal')
 
 
 class PaymentMethodManager(models.Manager):
@@ -218,6 +307,30 @@ class PaymentMethodManager(models.Manager):
     def paypal(self):
         return self.get_queryset().paypal()
     
+    def verified(self):
+        return self.get_queryset().verified()
+    
+    def unverified(self):
+        return self.get_queryset().unverified()
+    
+    def pending_verification(self):
+        return self.get_queryset().pending_verification()
+    
+    def verification_expired(self):
+        return self.get_queryset().verification_expired()
+    
+    def locked(self):
+        return self.get_queryset().locked()
+    
+    def not_locked(self):
+        return self.get_queryset().not_locked()
+    
+    def business(self):
+        return self.get_queryset().business()
+    
+    def personal(self):
+        return self.get_queryset().personal()
+    
     def get_default(self, user):
         return self.get_queryset().for_user(user).default().first()
     
@@ -226,6 +339,22 @@ class PaymentMethodManager(models.Manager):
             paypal_email=paypal_email,
             is_active=True
         ).first()
+    
+    def get_verified_method(self, user, method_id):
+        return self.get_queryset().for_user(user).filter(
+            id=method_id,
+            is_active=True,
+            paypal_verified=True
+        ).first()
+    
+    def clear_expired_verifications(self):
+        expired = self.verification_expired()
+        count = expired.count()
+        expired.update(
+            verification_code=None,
+            verification_code_created_at=None
+        )
+        return count
 
 
 class WalletQuerySet(models.QuerySet):
@@ -240,6 +369,15 @@ class WalletQuerySet(models.QuerySet):
         from django.db.models import Sum
         result = self.aggregate(total=Sum('balance'))
         return result['total'] or Decimal('0.00')
+    
+    def admin_wallets(self):
+        return self.filter(user__role='admin')
+    
+    def client_wallets(self):
+        return self.filter(user__role='client')
+    
+    def writer_wallets(self):
+        return self.filter(user__role='writer')
 
 
 class WalletManager(models.Manager):
@@ -259,6 +397,18 @@ class WalletManager(models.Manager):
     def get_or_create_wallet(self, user):
         wallet, created = self.get_or_create(user=user)
         return wallet
+    
+    def admin_wallets(self):
+        return self.get_queryset().admin_wallets()
+    
+    def client_wallets(self):
+        return self.get_queryset().client_wallets()
+    
+    def writer_wallets(self):
+        return self.get_queryset().writer_wallets()
+    
+    def get_admin_wallet(self):
+        return self.get_queryset().admin_wallets().first()
 
 
 class PayoutQuerySet(models.QuerySet):
@@ -297,6 +447,28 @@ class PayoutQuerySet(models.QuerySet):
     
     def failed_total(self):
         result = self.filter(status='failed').aggregate(total=models.Sum('amount'))
+        return result['total'] or Decimal('0.00')
+    
+    def this_week(self):
+        start = timezone.now() - timezone.timedelta(days=7)
+        return self.filter(created_at__gte=start)
+    
+    def this_month(self):
+        return self.filter(created_at__month=timezone.now().month, created_at__year=timezone.now().year)
+    
+    def by_status(self, status):
+        return self.filter(status=status)
+    
+    def total_amount(self):
+        result = self.aggregate(total=models.Sum('amount'))
+        return result['total'] or Decimal('0.00')
+    
+    def total_fees(self):
+        result = self.aggregate(total=models.Sum('fee_amount'))
+        return result['total'] or Decimal('0.00')
+    
+    def total_net(self):
+        result = self.aggregate(total=models.Sum('net_amount'))
         return result['total'] or Decimal('0.00')
 
 
@@ -337,6 +509,21 @@ class PayoutManager(models.Manager):
             status='pending',
             **kwargs
         )
+    
+    def this_week(self):
+        return self.get_queryset().this_week()
+    
+    def this_month(self):
+        return self.get_queryset().this_month()
+    
+    def by_status(self, status):
+        return self.get_queryset().by_status(status)
+    
+    def total_amount(self):
+        return self.get_queryset().total_amount()
+    
+    def total_fees(self):
+        return self.get_queryset().total_fees()
 
 
 class PayPalWebhookQuerySet(models.QuerySet):
@@ -358,6 +545,17 @@ class PayPalWebhookQuerySet(models.QuerySet):
     
     def with_errors(self):
         return self.filter(processing_errors__isnull=False, processing_errors__gt='')
+    
+    def this_week(self):
+        start = timezone.now() - timezone.timedelta(days=7)
+        return self.filter(created_at__gte=start)
+    
+    def this_month(self):
+        return self.filter(created_at__month=timezone.now().month, created_at__year=timezone.now().year)
+    
+    def unprocessed_older_than(self, minutes=5):
+        cutoff = timezone.now() - timezone.timedelta(minutes=minutes)
+        return self.filter(processed=False, created_at__lte=cutoff)
 
 
 class PayPalWebhookManager(models.Manager):
@@ -388,3 +586,9 @@ class PayPalWebhookManager(models.Manager):
     
     def get_unprocessed(self):
         return self.get_queryset().pending().order_by('created_at')
+    
+    def with_errors(self):
+        return self.get_queryset().with_errors()
+    
+    def unprocessed_older_than(self, minutes=5):
+        return self.get_queryset().unprocessed_older_than(minutes)

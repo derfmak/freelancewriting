@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,6 +45,27 @@
             --transition:   all 0.18s ease;
         }
 
+        [data-theme="dark"] {
+            --green:        #10b981;
+            --green-dark:   #34d399;
+            --green-light:  #6ee7b7;
+            --green-pale:   #1a3a2a;
+            --green-border: #065f46;
+            --amber:        #fbbf24;
+            --red:          #f87171;
+            --red-pale:     #422222;
+            --ink:          #f1f5f9;
+            --ink-soft:     #e2e8f0;
+            --muted:        #94a3b8;
+            --line:         #334155;
+            --line-light:   #1e293b;
+            --surface:      #0f172a;
+            --paper:        #1e293b;
+            --shadow-sm:    0 1px 3px rgba(0,0,0,0.3);
+            --shadow:       0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg:    0 10px 30px rgba(0,0,0,0.5);
+        }
+
         *, *::before, *::after {
             margin: 0;
             padding: 0;
@@ -55,6 +76,7 @@
             background: var(--surface);
             scroll-behavior: smooth;
             -webkit-text-size-adjust: 100%;
+            min-height: 100%;
         }
 
         body {
@@ -79,6 +101,7 @@
             max-width: 1280px;
             margin: 0 auto;
             padding: 0 24px;
+            width: 100%;
         }
 
         @media (max-width: 640px) {
@@ -89,33 +112,25 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            contain: layout style;
-            animation: pageFadeIn 0.3s ease both;
+            animation: pageFadeIn 0.25s ease both;
         }
 
         @keyframes pageFadeIn {
             from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .nav-placeholder {
-            height: var(--nav-h);
-            flex-shrink: 0;
+            to   { opacity: 1; transform: translateY(0); }
         }
 
         .site-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
             height: var(--nav-h);
             background: linear-gradient(90deg, #047857 0%, #059669 50%, #10b981 100%);
-            box-shadow: 0 1px 16px rgba(4, 120, 87, 0.18);
-            z-index: 300;
+            box-shadow: 0 1px 16px rgba(4,120,87,0.18);
             border-bottom: 1px solid rgba(255,255,255,0.12);
-            will-change: transform;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
+            flex-shrink: 0;
+        }
+
+        [data-theme="dark"] .site-nav {
+            background: linear-gradient(90deg, #065f46 0%, #047857 50%, #059669 100%);
+            box-shadow: 0 1px 16px rgba(0,0,0,0.4);
         }
 
         .nav-inner {
@@ -285,9 +300,7 @@
 
         .bell-badge.visible { opacity: 1; transform: scale(1); }
 
-        .user-menu {
-            position: relative;
-        }
+        .user-menu { position: relative; }
 
         .user-trigger {
             display: flex;
@@ -301,9 +314,7 @@
             transition: var(--transition);
         }
 
-        .user-trigger:hover {
-            background: rgba(255,255,255,0.22);
-        }
+        .user-trigger:hover { background: rgba(255,255,255,0.22); }
 
         .user-avatar {
             width: 28px;
@@ -322,11 +333,7 @@
             flex-shrink: 0;
         }
 
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         .user-info {
             display: none;
@@ -362,9 +369,7 @@
             flex-shrink: 0;
         }
 
-        .user-trigger.open .chevron {
-            transform: rotate(180deg);
-        }
+        .user-trigger.open .chevron { transform: rotate(180deg); }
 
         .dropdown {
             position: absolute;
@@ -412,11 +417,7 @@
             transition: color 0.12s ease;
         }
 
-        .dropdown-item:hover {
-            background: var(--green-pale);
-            color: var(--green-dark);
-        }
-
+        .dropdown-item:hover { background: var(--green-pale); color: var(--green-dark); }
         .dropdown-item:hover i { color: var(--green); }
 
         .dropdown-divider {
@@ -425,17 +426,9 @@
             margin: 3px 0;
         }
 
-        .dropdown-item.logout {
-            color: var(--red);
-        }
-
+        .dropdown-item.logout { color: var(--red); }
         .dropdown-item.logout i { color: var(--red); }
-
-        .dropdown-item.logout:hover {
-            background: var(--red-pale);
-            color: #b91c1c;
-        }
-
+        .dropdown-item.logout:hover { background: var(--red-pale); color: #b91c1c; }
         .dropdown-item.logout:hover i { color: #b91c1c; }
 
         .hamburger {
@@ -493,9 +486,7 @@
             flex-direction: column;
         }
 
-        .drawer.open {
-            transform: translateX(0);
-        }
+        .drawer.open { transform: translateX(0); }
 
         .drawer-head {
             display: flex;
@@ -504,6 +495,10 @@
             padding: 16px 20px;
             background: linear-gradient(90deg, #047857, #059669);
             flex-shrink: 0;
+        }
+
+        [data-theme="dark"] .drawer-head {
+            background: linear-gradient(90deg, #065f46, #047857);
         }
 
         .drawer-avatar {
@@ -524,22 +519,10 @@
 
         .drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        .drawer-user-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
-        }
+        .drawer-user-name { font-size: 14px; font-weight: 600; color: white; }
+        .drawer-user-role { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 1px; }
 
-        .drawer-user-role {
-            font-size: 11px;
-            color: rgba(255,255,255,0.65);
-            margin-top: 1px;
-        }
-
-        .drawer-body {
-            padding: 10px 8px;
-            flex: 1;
-        }
+        .drawer-body { padding: 10px 8px; flex: 1; }
 
         .drawer-link {
             display: flex;
@@ -563,11 +546,7 @@
             transition: color 0.12s ease;
         }
 
-        .drawer-link:hover {
-            background: var(--green-pale);
-            color: var(--green-dark);
-        }
-
+        .drawer-link:hover { background: var(--green-pale); color: var(--green-dark); }
         .drawer-link:hover i { color: var(--green); }
 
         .drawer-link.active {
@@ -600,11 +579,7 @@
 
         .drawer-badge.visible { opacity: 1; }
 
-        .drawer-sep {
-            height: 1px;
-            background: var(--line);
-            margin: 6px 0;
-        }
+        .drawer-sep { height: 1px; background: var(--line); margin: 6px 0; }
 
         .drawer-footer {
             padding: 12px 8px;
@@ -625,23 +600,31 @@
             transition: background 0.12s ease;
         }
 
-        .drawer-logout i {
-            font-size: 14px;
-            width: 16px;
-            text-align: center;
-        }
-
+        .drawer-logout i { font-size: 14px; width: 16px; text-align: center; }
         .drawer-logout:hover { background: var(--red-pale); }
 
         .main-content {
             flex: 1;
             background: var(--surface);
             contain: content;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content > .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .main-inner {
+            flex: 1;
             padding: 28px 0 48px;
+            display: flex;
+            flex-direction: column;
         }
+
+        .main-inner > * { width: 100%; }
 
         @media (max-width: 640px) {
             .main-inner { padding: 20px 0 36px; }
@@ -649,6 +632,7 @@
 
         .page-messages {
             margin-bottom: 18px;
+            flex-shrink: 0;
         }
 
         .page-message {
@@ -662,18 +646,54 @@
 
         .page-message:last-child { margin-bottom: 0; }
         .page-message.success { background: var(--green-pale); color: var(--green-dark); border-color: var(--green); }
-        .page-message.error   { background: var(--red-pale);   color: #b91c1c;           border-color: var(--red);   }
+        .page-message.error   { background: var(--red-pale);   color: var(--red);   border-color: var(--red);   }
         .page-message.info    { background: #eff6ff;            color: #1d4ed8;           border-color: #3b82f6;      }
         .page-message.warning { background: #fffbeb;            color: #92400e;           border-color: var(--amber); }
 
         .site-footer {
-            background: linear-gradient(90deg, #047857 0%, #059669 60%, #10b981 100%);
-            border-top: 1px solid rgba(255,255,255,0.12);
+            background: linear-gradient(135deg, #064e3b 0%, #047857 35%, #059669 65%, #10b981 100%);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+            margin-top: auto;
+            padding: 16px 0;
+        }
+
+        [data-theme="dark"] .site-footer {
+            background: linear-gradient(135deg, #042f22 0%, #065f46 35%, #047857 65%, #059669 100%);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .site-footer::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.04) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 20%, rgba(251,191,36,0.06) 0%, transparent 50%);
+            pointer-events: none;
         }
 
         .footer-inner {
-            padding: 24px 0 18px;
             text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.3px;
+            margin-bottom: 2px;
+        }
+
+        .footer-brand span { color: var(--amber); }
+
+        .footer-divider {
+            max-width: 160px;
+            margin: 6px auto 10px;
+            border: none;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
         }
 
         .footer-links {
@@ -681,34 +701,46 @@
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
-            gap: 6px 24px;
-            margin-bottom: 16px;
+            gap: 2px 6px;
+            margin-bottom: 8px;
         }
 
         .footer-link-item {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 7px;
-            font-size: 13px;
-            color: rgba(255,255,255,0.85);
-            padding: 4px 8px;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.7);
+            padding: 4px 10px;
             border-radius: var(--radius-sm);
-            transition: background 0.15s ease;
+            transition: background 0.15s ease, color 0.15s ease;
         }
 
-        .footer-link-item:hover { background: rgba(255,255,255,0.1); }
+        .footer-link-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
 
         .footer-link-item i {
+            font-size: 10px;
             color: var(--amber);
-            font-size: 13px;
+            flex-shrink: 0;
         }
 
         .footer-copy {
-            font-size: 12px;
-            color: rgba(255,255,255,0.5);
-            padding-top: 14px;
-            border-top: 1px solid rgba(255,255,255,0.12);
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            flex-wrap: wrap;
         }
+
+        .footer-copy i { color: var(--amber); font-size: 9px; }
 
         .toast-stack {
             position: fixed;
@@ -779,11 +811,7 @@
             line-height: 1.5;
         }
 
-        .toast-bar {
-            height: 2.5px;
-            width: 100%;
-        }
-
+        .toast-bar { height: 2.5px; width: 100%; }
         .toast.success .toast-bar { background: var(--green); }
         .toast.error   .toast-bar { background: var(--red); }
         .toast.info    .toast-bar { background: #3b82f6; }
@@ -833,9 +861,7 @@
             transition: transform 0.18s ease;
         }
 
-        .modal-wrap.open .modal-box {
-            transform: translateY(0) scale(1);
-        }
+        .modal-wrap.open .modal-box { transform: translateY(0) scale(1); }
 
         .loading-overlay {
             position: fixed;
@@ -932,6 +958,26 @@
             transform: translateY(-1px);
         }
 
+        .theme-toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.12);
+            border: 1.5px solid rgba(255,255,255,0.22);
+            border-radius: var(--radius-sm);
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+
+        .theme-toggle-btn:hover {
+            background: rgba(255,255,255,0.22);
+            transform: scale(1.04);
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -991,6 +1037,10 @@
                 </div>
 
                 <div class="nav-right">
+                    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+
                     <button class="bell-btn" id="bellBtn" aria-label="View notifications">
                         <i class="fas fa-bell" style="font-size:14px;" aria-hidden="true"></i>
                         <span class="bell-badge" id="bellBadge" aria-label="notifications"></span>
@@ -1038,8 +1088,6 @@
             </div>
         </div>
     </nav>
-
-    <div class="nav-placeholder" aria-hidden="true"></div>
 
     <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
     <div class="drawer" id="drawer" role="navigation" aria-label="Mobile navigation">
@@ -1120,24 +1168,6 @@
         </div>
     </main>
 
-    <footer class="site-footer" role="contentinfo">
-        <div class="container">
-            <div class="footer-inner">
-                <div class="footer-links">
-                    <a href="mailto:fredrickwambua129@gmail.com" class="footer-link-item">
-                        <i class="fas fa-envelope" aria-hidden="true"></i>
-                        fredrickwambua129@gmail.com
-                    </a>
-                    <a href="tel:0740618550" class="footer-link-item">
-                        <i class="fas fa-phone" aria-hidden="true"></i>
-                        0740 618 550
-                    </a>
-                </div>
-                <div class="footer-copy">&copy; 2026 AcademicWrite. All rights reserved.</div>
-            </div>
-        </div>
-    </footer>
-
 {% else %}
 
     <div class="access-denied">
@@ -1154,6 +1184,50 @@
 {% endif %}
 
 </div>
+
+<footer class="site-footer" role="contentinfo">
+    <div class="container">
+        <div class="footer-inner">
+
+            <div class="footer-brand">
+                Academic<span>Write</span>
+            </div>
+
+            <hr class="footer-divider">
+
+            <div class="footer-links">
+                <a href="/client/dashboard/" class="footer-link-item">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="/client/orders/" class="footer-link-item">
+                    <i class="fas fa-file-alt"></i> My Orders
+                </a>
+                <a href="/client/orders/new/" class="footer-link-item">
+                    <i class="fas fa-plus"></i> New Order
+                </a>
+                <a href="/client/wallet/" class="footer-link-item">
+                    <i class="fas fa-wallet"></i> Wallet
+                </a>
+                <a href="/client/messages/" class="footer-link-item">
+                    <i class="fas fa-envelope"></i> Messages
+                </a>
+                <a href="/client/profile/" class="footer-link-item">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+                <a href="/client/settings/" class="footer-link-item">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </div>
+
+            <div class="footer-copy">
+                <span>&copy; 2026 AcademicWrite</span>
+                <span style="color:rgba(255,255,255,0.15);">&middot;</span>
+                <span>Crafted with <i class="fas fa-heart"></i></span>
+            </div>
+
+        </div>
+    </div>
+</footer>
 
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
 
@@ -1195,13 +1269,13 @@
 
     function applyAll(counts) {
         var c = {
-            orders: counts.active_orders || 0,
-            messages: counts.unread_messages || 0,
-            notifs: counts.notifications || 0
+            orders:   counts.active_orders    || 0,
+            messages: counts.unread_messages  || 0,
+            notifs:   counts.notifications    || 0
         };
-        setBadge(document.getElementById('navBadgeOrders'), c.orders);
-        setBadge(document.getElementById('navBadgeMessages'), c.messages);
-        setBadge(document.getElementById('bellBadge'), c.notifs);
+        setBadge(document.getElementById('navBadgeOrders'),    c.orders);
+        setBadge(document.getElementById('navBadgeMessages'),  c.messages);
+        setBadge(document.getElementById('bellBadge'),         c.notifs);
         setBadge(document.getElementById('drawerBadgeOrders'), c.orders);
         setBadge(document.getElementById('drawerBadgeMessages'), c.messages);
         writeCache({ active_orders: c.orders, unread_messages: c.messages, notifications: c.notifs });
@@ -1238,9 +1312,7 @@
             type = type || 'info';
             var stack = document.getElementById('toastStack');
             if (!stack) return;
-
             var icons = { success: 'check', error: 'times', info: 'info', warning: 'exclamation' };
-
             var el = document.createElement('div');
             el.className = 'toast ' + type + ' entering';
             el.innerHTML =
@@ -1249,24 +1321,17 @@
                     '<div class="toast-text">' + message + '</div>' +
                 '</div>' +
                 '<div class="toast-bar"><div class="toast-bar-fill"></div></div>';
-
             stack.appendChild(el);
-
             requestAnimationFrame(function () {
                 requestAnimationFrame(function () {
                     el.classList.remove('entering');
                     var fill = el.querySelector('.toast-bar-fill');
-                    if (fill) {
-                        setTimeout(function () { fill.classList.add('depleting'); }, 50);
-                    }
+                    if (fill) setTimeout(function () { fill.classList.add('depleting'); }, 50);
                 });
             });
-
             setTimeout(function () {
                 el.classList.add('exiting');
-                setTimeout(function () {
-                    if (el.parentNode) el.parentNode.removeChild(el);
-                }, 240);
+                setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 240);
             }, 5000);
         }
     };
@@ -1299,7 +1364,34 @@
         }
     };
 
+    function toggleTheme() {
+        var html = document.documentElement;
+        var icon = document.getElementById('themeIcon');
+        var currentTheme = html.getAttribute('data-theme');
+        var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        try {
+            localStorage.setItem('client_theme', newTheme);
+        } catch (e) {}
+    }
+
+    window.toggleTheme = toggleTheme;
+
     document.addEventListener('DOMContentLoaded', function () {
+
+        var savedTheme = localStorage.getItem('client_theme') || 'light';
+        var html = document.documentElement;
+        html.setAttribute('data-theme', savedTheme);
+        var icon = document.getElementById('themeIcon');
+        if (icon) {
+            icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        var themeToggleBtn = document.getElementById('themeToggleBtn');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', toggleTheme);
+        }
 
         {% if user.is_authenticated and user.role == 'client' %}
 
@@ -1309,8 +1401,8 @@
             if (!document.hidden) loadCounts();
         });
 
-        var userTrigger   = document.getElementById('userTrigger');
-        var userDropdown  = document.getElementById('userDropdown');
+        var userTrigger  = document.getElementById('userTrigger');
+        var userDropdown = document.getElementById('userDropdown');
 
         if (userTrigger && userDropdown) {
             function closeDropdown() {
@@ -1334,9 +1426,7 @@
                 }
             });
             document.addEventListener('click', function (e) {
-                if (!userTrigger.contains(e.target) && !userDropdown.contains(e.target)) {
-                    closeDropdown();
-                }
+                if (!userTrigger.contains(e.target) && !userDropdown.contains(e.target)) closeDropdown();
             });
         }
 
@@ -1366,17 +1456,12 @@
             hamburger.addEventListener('click', function () {
                 drawer.classList.contains('open') ? closeDrawer() : openDrawer();
             });
-            if (drawerOverlay) {
-                drawerOverlay.addEventListener('click', closeDrawer);
-            }
+            if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     if (drawer.classList.contains('open')) closeDrawer();
                     if (document.getElementById('modalWrap').classList.contains('open')) window.Modal.hide();
                 }
-            });
-            window.addEventListener('resize', function () {
-                if (window.innerWidth >= 1024 && drawer.classList.contains('open')) closeDrawer();
             });
         }
 
@@ -1391,19 +1476,11 @@
             try {
                 if (window.Loading) window.Loading.show();
                 var refresh = auth.getRefreshToken();
-                
                 try {
                     await api.post('/auth/logout/', { refresh: refresh });
-                } catch (e) {
-                    console.warn('Logout API error:', e);
-                }
-                
-                await new Promise(function(resolve) {
-                    setTimeout(resolve, 200);
-                });
-                
+                } catch (e) {}
+                await new Promise(function (resolve) { setTimeout(resolve, 200); });
             } catch (e) {
-                console.warn('Logout error:', e);
             } finally {
                 auth.clearTokens();
                 try { localStorage.removeItem(COUNTS_KEY); } catch (e2) {}
@@ -1416,27 +1493,15 @@
         var drawerLogout = document.getElementById('drawerLogout');
 
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                doLogout();
-            });
+            logoutBtn.addEventListener('click', function (e) { e.preventDefault(); doLogout(); });
             logoutBtn.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    doLogout();
-                }
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doLogout(); }
             });
         }
         if (drawerLogout) {
-            drawerLogout.addEventListener('click', function(e) {
-                e.preventDefault();
-                doLogout();
-            });
+            drawerLogout.addEventListener('click', function (e) { e.preventDefault(); doLogout(); });
             drawerLogout.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    doLogout();
-                }
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doLogout(); }
             });
         }
 

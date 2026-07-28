@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
-from .models import User, PendingUser, LoginLog, RateLimit
+from .models import User, PendingUser, LoginLog, RateLimit, PasswordChangeVerification
 
 
 @admin.register(User)
@@ -15,13 +15,13 @@ class CustomUserAdmin(UserAdmin):
         'role', 'is_suspended', 'email_verified', 'is_active', 
         'is_staff', 'is_superuser', 'phone_verified'
     )
-    search_fields = ('email', 'full_name', 'phone')
+    search_fields = ('email', 'full_name', 'phone', 'google_id')
     ordering = ('-created_at',)
     
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         (_('Personal Info'), {
-            'fields': ('full_name', 'phone', 'phone_verified', 'institution')
+            'fields': ('full_name', 'phone', 'phone_verified', 'institution', 'picture')
         }),
         (_('Permissions'), {
             'fields': ('role', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
@@ -36,6 +36,12 @@ class CustomUserAdmin(UserAdmin):
                 'last_login_ip', 'last_login_user_agent'
             )
         }),
+        (_('Password Change'), {
+            'fields': ('password_change_code', 'password_change_code_expires', 'password_change_temp')
+        }),
+        (_('Google OAuth'), {
+            'fields': ('google_id',)
+        }),
         (_('Account Management'), {
             'fields': ('deletion_requested_at', 'deletion_scheduled_for')
         }),
@@ -47,7 +53,9 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = (
         'created_at', 'updated_at', 'last_login', 
         'failed_login_attempts', 'last_login_ip', 'last_login_user_agent',
-        'otp_secret', 'otp_expires'
+        'otp_secret', 'otp_expires', 'password_change_code', 
+        'password_change_code_expires', 'password_change_temp',
+        'google_id', 'picture'
     )
     
     add_fieldsets = (
@@ -121,6 +129,21 @@ class RateLimitAdmin(admin.ModelAdmin):
     search_fields = ('key',)
     readonly_fields = ('key', 'count', 'window_start', 'window_end')
     ordering = ('-window_start',)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PasswordChangeVerification)
+class PasswordChangeVerificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'code', 'expires_at', 'used', 'created_at')
+    list_filter = ('used', 'created_at', 'expires_at')
+    search_fields = ('user__email', 'code')
+    readonly_fields = ('user', 'code', 'expires_at', 'used', 'created_at')
+    ordering = ('-created_at',)
 
     def has_add_permission(self, request):
         return False
