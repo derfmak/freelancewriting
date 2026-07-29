@@ -12,14 +12,8 @@
     }
 
     @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-8px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes spin {
@@ -45,9 +39,7 @@
         color: #1e293b;
     }
 
-    .register-title span {
-        color: #059669;
-    }
+    .register-title span { color: #059669; }
 
     .register-subtitle {
         color: #6b7280;
@@ -61,9 +53,7 @@
         margin: 0.5rem auto 0.5rem;
     }
 
-    .form-group {
-        margin-bottom: 1.25rem;
-    }
+    .form-group { margin-bottom: 1.25rem; }
 
     .form-label {
         display: block;
@@ -102,9 +92,12 @@
         background: #f0fdf4;
     }
 
-    .password-wrapper {
-        position: relative;
+    .form-input:disabled {
+        background: #f1f5f9;
+        color: #64748b;
     }
+
+    .password-wrapper { position: relative; }
 
     .password-toggle {
         position: absolute;
@@ -119,9 +112,7 @@
         transition: color 0.3s ease;
     }
 
-    .password-toggle:hover {
-        color: #059669;
-    }
+    .password-toggle:hover { color: #059669; }
 
     .error-message {
         display: none;
@@ -131,9 +122,7 @@
         animation: slideDown 0.3s ease;
     }
 
-    .error-message.show {
-        display: block;
-    }
+    .error-message.show { display: block; }
 
     .register-btn {
         width: 100%;
@@ -163,24 +152,10 @@
         box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
     }
 
-    .register-btn .btn-text {
-        position: relative;
-        z-index: 2;
-    }
-
-    .register-btn .btn-loader {
-        display: none;
-        position: relative;
-        z-index: 2;
-    }
-
-    .register-btn.loading .btn-text {
-        display: none;
-    }
-
-    .register-btn.loading .btn-loader {
-        display: inline-block;
-    }
+    .register-btn .btn-text { position: relative; z-index: 2; }
+    .register-btn .btn-loader { display: none; position: relative; z-index: 2; }
+    .register-btn.loading .btn-text { display: none; }
+    .register-btn.loading .btn-loader { display: inline-block; }
 
     .spinner {
         display: inline-block;
@@ -217,10 +192,7 @@
         transition: color 0.3s ease;
     }
 
-    .login-link:hover {
-        color: #047857;
-        text-decoration: underline;
-    }
+    .login-link:hover { color: #047857; text-decoration: underline; }
 
     .field-requirements {
         font-size: 0.7rem;
@@ -231,23 +203,10 @@
         gap: 0.2rem 1rem;
     }
 
-    .field-requirements .req {
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    .field-requirements .req i {
-        font-size: 0.4rem;
-    }
-
-    .field-requirements .req.met {
-        color: #059669;
-    }
-
-    .field-requirements .req.unmet {
-        color: #9ca3af;
-    }
+    .field-requirements .req { display: flex; align-items: center; gap: 0.3rem; }
+    .field-requirements .req i { font-size: 0.4rem; }
+    .field-requirements .req.met { color: #059669; }
+    .field-requirements .req.unmet { color: #9ca3af; }
 
     .btn-google {
         width: 100%;
@@ -274,11 +233,7 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
-    .btn-google svg {
-        width: 20px;
-        height: 20px;
-        flex-shrink: 0;
-    }
+    .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
 
     .divider {
         display: flex;
@@ -287,8 +242,7 @@
         margin: 1.5rem 0;
     }
 
-    .divider::before,
-    .divider::after {
+    .divider::before, .divider::after {
         content: '';
         flex: 1;
         height: 1px;
@@ -323,26 +277,11 @@
         gap: 0.75rem;
     }
 
-    .toast-content.error {
-        border-left-color: #ef4444;
-    }
-
-    .toast-content.success {
-        border-left-color: #059669;
-    }
-
-    .toast-icon {
-        font-size: 1.2rem;
-        flex-shrink: 0;
-    }
-
-    .toast-icon.success {
-        color: #059669;
-    }
-
-    .toast-icon.error {
-        color: #ef4444;
-    }
+    .toast-content.error { border-left-color: #ef4444; }
+    .toast-content.success { border-left-color: #059669; }
+    .toast-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .toast-icon.success { color: #059669; }
+    .toast-icon.error { color: #ef4444; }
 
     .toast-message {
         font-size: 0.85rem;
@@ -363,9 +302,7 @@
         flex-shrink: 0;
     }
 
-    .toast-close:hover {
-        color: #1e293b;
-    }
+    .toast-close:hover { color: #1e293b; }
 
     .verify-modal {
         position: fixed;
@@ -378,9 +315,7 @@
         padding: 1rem;
     }
 
-    .verify-modal.show {
-        display: flex;
-    }
+    .verify-modal.show { display: flex; }
 
     .verify-card {
         background: white;
@@ -431,21 +366,9 @@
         background: white;
     }
 
-    .otp-box.error {
-        border-color: #ef4444;
-        background: #fef2f2;
-        animation: shake 0.5s ease;
-    }
-
-    .otp-box.success {
-        border-color: #059669;
-        background: #f0fdf4;
-    }
-
-    .otp-box.filled {
-        border-color: #059669;
-        background: #f0fdf4;
-    }
+    .otp-box.error { border-color: #ef4444; background: #fef2f2; animation: shake 0.5s ease; }
+    .otp-box.success { border-color: #059669; background: #f0fdf4; }
+    .otp-box.filled { border-color: #059669; background: #f0fdf4; }
 
     .verify-actions {
         display: flex;
@@ -464,16 +387,8 @@
         transition: color 0.3s ease;
     }
 
-    .resend-btn:hover {
-        color: #047857;
-        text-decoration: underline;
-    }
-
-    .resend-btn:disabled {
-        color: #9ca3af;
-        cursor: not-allowed;
-        text-decoration: none;
-    }
+    .resend-btn:hover { color: #047857; text-decoration: underline; }
+    .resend-btn:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
 
     .verify-btn {
         padding: 0.5rem 1.5rem;
@@ -486,14 +401,8 @@
         transition: all 0.3s ease;
     }
 
-    .verify-btn:hover {
-        background: #047857;
-    }
-
-    .verify-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
+    .verify-btn:hover { background: #047857; }
+    .verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .verify-cancel {
         padding: 0.5rem 1.5rem;
@@ -506,9 +415,7 @@
         transition: all 0.3s ease;
     }
 
-    .verify-cancel:hover {
-        background: #f8fafc;
-    }
+    .verify-cancel:hover { background: #f8fafc; }
 
     .verify-error {
         color: #ef4444;
@@ -518,10 +425,7 @@
         text-align: center;
     }
 
-    .verify-error.show {
-        display: block;
-        animation: slideDown 0.3s ease;
-    }
+    .verify-error.show { display: block; animation: slideDown 0.3s ease; }
 
     .verify-success {
         color: #059669;
@@ -531,15 +435,9 @@
         text-align: center;
     }
 
-    .verify-success.show {
-        display: block;
-        animation: slideDown 0.3s ease;
-    }
+    .verify-success.show { display: block; animation: slideDown 0.3s ease; }
 
-    .resend-timer {
-        font-size: 0.8rem;
-        color: #6b7280;
-    }
+    .resend-timer { font-size: 0.8rem; color: #6b7280; }
 
     .error-message-box {
         background: #fef2f2;
@@ -549,17 +447,13 @@
         font-size: 0.85rem;
         border-left: 4px solid #dc2626;
         margin-bottom: 1rem;
+        display: none;
     }
 
-    .error-message-box a {
-        color: #059669;
-        font-weight: 600;
-        text-decoration: none;
-    }
+    .error-message-box.show { display: block; }
 
-    .error-message-box a:hover {
-        text-decoration: underline;
-    }
+    .error-message-box a { color: #059669; font-weight: 600; text-decoration: none; }
+    .error-message-box a:hover { text-decoration: underline; }
 
     .success-message-box {
         background: #ecfdf5;
@@ -572,39 +466,13 @@
     }
 
     @media (max-width: 640px) {
-        .register-card {
-            padding: 1.5rem;
-        }
-
-        .field-requirements {
-            grid-template-columns: 1fr;
-        }
-
-        .toast-notification {
-            top: 1rem;
-            right: 1rem;
-            left: 1rem;
-            max-width: none;
-        }
-
-        .verify-actions {
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .verify-cancel, .verify-btn {
-            width: 100%;
-        }
-
-        .otp-box {
-            width: 2.6rem;
-            height: 3.2rem;
-            font-size: 1.4rem;
-        }
-
-        .otp-boxes {
-            gap: 0.3rem;
-        }
+        .register-card { padding: 1.5rem; }
+        .field-requirements { grid-template-columns: 1fr; }
+        .toast-notification { top: 1rem; right: 1rem; left: 1rem; max-width: none; }
+        .verify-actions { flex-direction: column; gap: 0.75rem; }
+        .verify-cancel, .verify-btn { width: 100%; }
+        .otp-box { width: 2.6rem; height: 3.2rem; font-size: 1.4rem; }
+        .otp-boxes { gap: 0.3rem; }
     }
 </style>
 {% endblock %}
@@ -613,9 +481,9 @@
 <div class="register-container">
     <div class="register-card">
         <div class="text-center">
-            <h1 class="register-title">Create Your <span>Account</span></h1>
+            <h1 class="register-title" id="formTitle">Create Your <span>Account</span></h1>
             <div class="divider-line"></div>
-            <p class="register-subtitle">Join thousands of satisfied students</p>
+            <p class="register-subtitle" id="formSubtitle">Join thousands of satisfied students</p>
         </div>
 
         {% if messages %}
@@ -623,7 +491,7 @@
                 {% if message.tags == 'success' %}
                     <div class="success-message-box">{{ message }}</div>
                 {% else %}
-                    <div class="error-message-box">
+                    <div class="error-message-box show">
                         {{ message }}
                         {% if "sign in" in message|lower %}
                             <a href="/login/">Sign in here</a>
@@ -633,28 +501,25 @@
             {% endfor %}
         {% endif %}
 
-        <form id="registerForm" class="mt-6" novalidate>
-            {% csrf_token %}
+        <div class="error-message-box" id="googleErrorBox"></div>
 
+        <form id="normalRegisterForm" class="mt-6" novalidate>
+            {% csrf_token %}
             <div class="form-group">
                 <label for="fullName" class="form-label">Full Name</label>
                 <input type="text" id="fullName" class="form-input" placeholder="John Doe" required autocomplete="name" spellcheck="false">
                 <div class="error-message" id="nameError">Full name is required</div>
             </div>
-
             <div class="form-group">
                 <label for="email" class="form-label">Email Address</label>
                 <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email" spellcheck="false">
                 <div class="error-message" id="emailError">Please enter a valid email address</div>
             </div>
-
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
                 <div class="password-wrapper">
                     <input type="password" id="password" class="form-input" placeholder="Create a strong password" required autocomplete="new-password" spellcheck="false">
-                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
                 </div>
                 <div class="error-message" id="passwordError">Password does not meet requirements</div>
                 <div class="field-requirements" id="passwordReqs">
@@ -665,57 +530,67 @@
                     <span class="req unmet" id="reqSpecial"><i class="fas fa-circle"></i> One special character</span>
                 </div>
             </div>
-
             <div class="form-group">
                 <label for="passwordConfirm" class="form-label">Confirm Password</label>
                 <div class="password-wrapper">
                     <input type="password" id="passwordConfirm" class="form-input" placeholder="Confirm your password" required autocomplete="new-password" spellcheck="false">
-                    <button type="button" class="password-toggle" id="toggleConfirmPassword" aria-label="Toggle password visibility">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                    <button type="button" class="password-toggle" id="toggleConfirmPassword" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
                 </div>
                 <div class="error-message" id="confirmError">Passwords do not match</div>
                 <div class="field-requirements">
                     <span class="req unmet" id="reqMatch"><i class="fas fa-circle"></i> Passwords match</span>
                 </div>
             </div>
-
             <div class="form-group">
                 <label for="phone" class="form-label">Phone Number <span class="text-gray-400 text-xs">(Optional)</span></label>
                 <input type="tel" id="phone" class="form-input" placeholder="+254 700 000 000" autocomplete="tel" spellcheck="false">
             </div>
-
             <div class="form-group">
                 <label for="institution" class="form-label">Institution <span class="text-gray-400 text-xs">(Optional)</span></label>
                 <input type="text" id="institution" class="form-input" placeholder="Your school or university" spellcheck="false">
             </div>
-
             <div class="form-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="terms">
                     <span>I agree to the <a href="/terms/" class="text-green-600 hover:text-green-700">Terms of Service</a> and <a href="/privacy/" class="text-green-600 hover:text-green-700">Privacy Policy</a></span>
                 </label>
             </div>
-
             <button type="submit" class="register-btn" id="registerBtn" disabled>
                 <span class="btn-text">Create Account</span>
                 <span class="btn-loader"><span class="spinner"></span> Creating...</span>
             </button>
         </form>
 
-        <div class="divider">
-            <span>or continue with</span>
-        </div>
+        <form id="googleRegisterForm" class="mt-6" novalidate style="display:none;">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="googleEmail" class="form-label">Email</label>
+                <input type="email" id="googleEmail" class="form-input" disabled>
+            </div>
+            <div class="form-group">
+                <label for="googleFullName" class="form-label">Full Name</label>
+                <input type="text" id="googleFullName" class="form-input" placeholder="Enter your full name" required autocomplete="name" spellcheck="false">
+            </div>
+            <button type="submit" class="register-btn active" id="googleSubmitBtn">
+                <span class="btn-text">Create Account</span>
+                <span class="btn-loader"><span class="spinner"></span> Creating...</span>
+            </button>
+        </form>
 
-        <a href="/auth/google/" class="btn-google">
-            <svg viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Sign up with Google
-        </a>
+        <div id="normalDivider">
+            <div class="divider">
+                <span>or continue with</span>
+            </div>
+            <a href="/auth/google/" class="btn-google">
+                <svg viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign up with Google
+            </a>
+        </div>
 
         <div class="mt-6 text-center">
             <p class="text-sm text-gray-600">
@@ -736,10 +611,7 @@
 <div class="verify-modal" id="verifyModal">
     <div class="verify-card">
         <h3 class="verify-title">Verify Your Email</h3>
-        <p class="verify-subtitle">
-            Enter the 6-digit verification code sent to <strong id="verifyEmail" class="text-green-600"></strong>
-        </p>
-
+        <p class="verify-subtitle">Enter the 6-digit verification code sent to <strong id="verifyEmail" class="text-green-600"></strong></p>
         <div class="otp-boxes" id="otpBoxes">
             <input type="text" class="otp-box" id="otp1" maxlength="1" inputmode="numeric" autocomplete="off">
             <input type="text" class="otp-box" id="otp2" maxlength="1" inputmode="numeric" autocomplete="off">
@@ -748,10 +620,8 @@
             <input type="text" class="otp-box" id="otp5" maxlength="1" inputmode="numeric" autocomplete="off">
             <input type="text" class="otp-box" id="otp6" maxlength="1" inputmode="numeric" autocomplete="off">
         </div>
-
         <div class="verify-error" id="verifyError">Invalid verification code</div>
         <div class="verify-success" id="verifySuccess">Code verified successfully!</div>
-
         <div class="verify-actions">
             <div>
                 <button class="resend-btn" id="resendCode">Resend Code</button>
@@ -771,43 +641,124 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('registerForm');
-    const fullName = document.getElementById('fullName');
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
-    const passwordConfirm = document.getElementById('passwordConfirm');
-    const phone = document.getElementById('phone');
-    const institution = document.getElementById('institution');
-    const terms = document.getElementById('terms');
-    const registerBtn = document.getElementById('registerBtn');
+    var urlParams = new URLSearchParams(window.location.search);
+    var googleToken = urlParams.get('token');
+    var isGoogleSignup = !!googleToken;
 
-    const nameError = document.getElementById('nameError');
-    const emailError = document.getElementById('emailError');
-    const passwordError = document.getElementById('passwordError');
-    const confirmError = document.getElementById('confirmError');
+    var normalForm = document.getElementById('normalRegisterForm');
+    var googleForm = document.getElementById('googleRegisterForm');
+    var normalDivider = document.getElementById('normalDivider');
+    var formTitle = document.getElementById('formTitle');
+    var formSubtitle = document.getElementById('formSubtitle');
+    var googleErrorBox = document.getElementById('googleErrorBox');
 
-    const reqLength = document.getElementById('reqLength');
-    const reqUppercase = document.getElementById('reqUppercase');
-    const reqLowercase = document.getElementById('reqLowercase');
-    const reqNumber = document.getElementById('reqNumber');
-    const reqSpecial = document.getElementById('reqSpecial');
-    const reqMatch = document.getElementById('reqMatch');
-
-    const togglePassword = document.getElementById('togglePassword');
-    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
-
-    let isNameValid = false;
-    let isEmailValid = false;
-    let isPasswordValid = false;
-    let isConfirmValid = false;
-    let isTermsChecked = false;
-    let emailTouched = false;
-    let emailValidated = false;
-
-    function validateEmail(value) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(value);
+    if (isGoogleSignup) {
+        normalForm.style.display = 'none';
+        normalDivider.style.display = 'none';
+        googleForm.style.display = 'block';
+        formTitle.innerHTML = 'Complete <span>Registration</span>';
+        formSubtitle.textContent = 'Finish setting up your account with Google';
+        setupGoogleSignup(googleToken);
+    } else {
+        setupNormalRegister();
     }
+});
+
+function showToast(message, type) {
+    var container = document.getElementById('toastContainer');
+    var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    container.innerHTML = '<div class="toast-content ' + type + '">' +
+        '<span class="toast-icon ' + type + '"><i class="fas ' + icon + '"></i></span>' +
+        '<span class="toast-message">' + message + '</span>' +
+        '<button class="toast-close" onclick="this.closest(\'.toast-notification\').style.display=\'none\'"><i class="fas fa-times"></i></button>' +
+    '</div>';
+    container.style.display = 'block';
+    setTimeout(function() { container.style.display = 'none'; }, 5000);
+}
+
+function setupGoogleSignup(token) {
+    var errorBox = document.getElementById('googleErrorBox');
+    var fullNameInput = document.getElementById('googleFullName');
+    var submitBtn = document.getElementById('googleSubmitBtn');
+    var btnText = submitBtn.querySelector('.btn-text');
+    var btnLoader = submitBtn.querySelector('.btn-loader');
+
+    function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.add('show');
+    }
+
+    document.getElementById('googleRegisterForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var fullName = fullNameInput.value.trim();
+        if (!fullName) { showError('Please enter your full name.'); return; }
+
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+        errorBox.classList.remove('show');
+
+        try {
+            var response = await fetch('/auth/google/signup/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token, full_name: fullName })
+            });
+            var data = await response.json();
+
+            if (response.ok) {
+                if (typeof auth !== 'undefined') {
+                    auth.setTokens(data.access, data.refresh);
+                    if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+                } else {
+                    localStorage.setItem('access_token', data.access);
+                    localStorage.setItem('refresh_token', data.refresh);
+                    if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+                }
+                showToast('Account created! Redirecting...', 'success');
+                setTimeout(function() { window.location.href = '/dashboard/'; }, 1000);
+            } else {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                if (data.redirect === 'login') {
+                    showToast(data.error + ' Redirecting to sign in...', 'error');
+                    setTimeout(function() { window.location.href = '/login/'; }, 1500);
+                } else {
+                    showError(data.error || 'Registration failed.');
+                }
+            }
+        } catch (error) {
+            showError('Network error. Please check your connection.');
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+        }
+    });
+}
+
+function setupNormalRegister() {
+    var form = document.getElementById('normalRegisterForm');
+    var fullName = document.getElementById('fullName');
+    var email = document.getElementById('email');
+    var password = document.getElementById('password');
+    var passwordConfirm = document.getElementById('passwordConfirm');
+    var terms = document.getElementById('terms');
+    var registerBtn = document.getElementById('registerBtn');
+    var nameError = document.getElementById('nameError');
+    var emailError = document.getElementById('emailError');
+    var passwordError = document.getElementById('passwordError');
+    var confirmError = document.getElementById('confirmError');
+    var reqLength = document.getElementById('reqLength');
+    var reqUppercase = document.getElementById('reqUppercase');
+    var reqLowercase = document.getElementById('reqLowercase');
+    var reqNumber = document.getElementById('reqNumber');
+    var reqSpecial = document.getElementById('reqSpecial');
+    var reqMatch = document.getElementById('reqMatch');
+    var togglePassword = document.getElementById('togglePassword');
+    var toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+
+    var isNameValid = false, isEmailValid = false, isPasswordValid = false, isConfirmValid = false, isTermsChecked = false;
+    var emailTouched = false, emailValidated = false;
+
+    function validateEmail(value) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
 
     function validatePasswordStrength(value) {
         return {
@@ -830,511 +781,265 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showError(input, errorEl, message) {
-        input.classList.add('error');
-        input.classList.remove('success');
+        input.classList.add('error'); input.classList.remove('success');
         errorEl.textContent = message || errorEl.textContent;
         errorEl.classList.add('show');
     }
 
     function clearError(input, errorEl) {
-        input.classList.remove('error');
-        errorEl.classList.remove('show');
+        input.classList.remove('error'); errorEl.classList.remove('show');
     }
 
     function showSuccess(input) {
-        input.classList.remove('error');
-        input.classList.add('success');
+        input.classList.remove('error'); input.classList.add('success');
     }
 
     fullName.addEventListener('blur', function() {
-        const value = this.value.trim();
-        if (!value) {
-            isNameValid = false;
-            showError(this, nameError, 'Full name is required');
-        } else if (value.length < 2) {
-            isNameValid = false;
-            showError(this, nameError, 'Name must be at least 2 characters');
-        } else {
-            isNameValid = true;
-            clearError(this, nameError);
-            showSuccess(this);
-        }
+        var value = this.value.trim();
+        if (!value) { isNameValid = false; showError(this, nameError, 'Full name is required'); }
+        else if (value.length < 2) { isNameValid = false; showError(this, nameError, 'Name must be at least 2 characters'); }
+        else { isNameValid = true; clearError(this, nameError); showSuccess(this); }
         updateButtonState();
     });
 
     fullName.addEventListener('input', function() {
-        const value = this.value.trim();
-        if (value && value.length < 2) {
-            isNameValid = false;
-            showError(this, nameError, 'Name must be at least 2 characters');
-        } else if (value && value.length >= 2) {
-            isNameValid = true;
-            clearError(this, nameError);
-            showSuccess(this);
-        } else {
-            isNameValid = false;
-            clearError(this, nameError);
-            this.classList.remove('success');
-        }
+        var value = this.value.trim();
+        if (value && value.length < 2) { isNameValid = false; showError(this, nameError, 'Name must be at least 2 characters'); }
+        else if (value && value.length >= 2) { isNameValid = true; clearError(this, nameError); showSuccess(this); }
+        else { isNameValid = false; clearError(this, nameError); this.classList.remove('success'); }
         updateButtonState();
     });
 
     email.addEventListener('blur', function() {
         emailTouched = true;
-        const value = this.value.trim();
-        if (!value) {
-            isEmailValid = false;
-            emailValidated = true;
-            showError(this, emailError, 'Email is required');
-        } else if (!validateEmail(value)) {
-            isEmailValid = false;
-            emailValidated = true;
-            showError(this, emailError, 'Please enter a valid email address');
-        } else {
-            isEmailValid = true;
-            emailValidated = true;
-            clearError(this, emailError);
-            showSuccess(this);
-        }
+        var value = this.value.trim();
+        if (!value) { isEmailValid = false; emailValidated = true; showError(this, emailError, 'Email is required'); }
+        else if (!validateEmail(value)) { isEmailValid = false; emailValidated = true; showError(this, emailError, 'Please enter a valid email address'); }
+        else { isEmailValid = true; emailValidated = true; clearError(this, emailError); showSuccess(this); }
         updateButtonState();
     });
 
     email.addEventListener('input', function() {
         if (!emailTouched || !emailValidated) return;
-        const value = this.value.trim();
-        if (value && !validateEmail(value)) {
-            isEmailValid = false;
-            showError(this, emailError, 'Please enter a valid email address');
-        } else if (value && validateEmail(value)) {
-            isEmailValid = true;
-            clearError(this, emailError);
-            showSuccess(this);
-        } else if (!value) {
-            isEmailValid = false;
-            showError(this, emailError, 'Email is required');
-        }
+        var value = this.value.trim();
+        if (value && !validateEmail(value)) { isEmailValid = false; showError(this, emailError, 'Please enter a valid email address'); }
+        else if (value && validateEmail(value)) { isEmailValid = true; clearError(this, emailError); showSuccess(this); }
+        else if (!value) { isEmailValid = false; showError(this, emailError, 'Email is required'); }
         updateButtonState();
     });
 
     function updatePasswordRequirements() {
-        const value = password.value;
-        const checks = validatePasswordStrength(value);
-        
-        const requirements = [
-            { element: reqLength, valid: checks.length },
-            { element: reqUppercase, valid: checks.uppercase },
-            { element: reqLowercase, valid: checks.lowercase },
-            { element: reqNumber, valid: checks.number },
-            { element: reqSpecial, valid: checks.special }
+        var value = password.value;
+        var checks = validatePasswordStrength(value);
+        var reqs = [
+            { el: reqLength, valid: checks.length },
+            { el: reqUppercase, valid: checks.uppercase },
+            { el: reqLowercase, valid: checks.lowercase },
+            { el: reqNumber, valid: checks.number },
+            { el: reqSpecial, valid: checks.special }
         ];
-
-        requirements.forEach(({ element, valid }) => {
-            element.classList.remove('met', 'unmet');
-            element.classList.add(valid ? 'met' : 'unmet');
-        });
-
-        const allValid = requirements.every(r => r.valid);
-        if (value && allValid) {
-            isPasswordValid = true;
-            clearError(password, passwordError);
-            showSuccess(password);
-        } else if (value) {
-            isPasswordValid = false;
-            if (!allValid) {
-                showError(password, passwordError, 'Password does not meet all requirements');
-            }
-        } else {
-            isPasswordValid = false;
-            clearError(password, passwordError);
-            password.classList.remove('success');
-        }
-
+        reqs.forEach(function(r) { r.el.classList.remove('met', 'unmet'); r.el.classList.add(r.valid ? 'met' : 'unmet'); });
+        var allValid = reqs.every(function(r) { return r.valid; });
+        if (value && allValid) { isPasswordValid = true; clearError(password, passwordError); showSuccess(password); }
+        else if (value) { isPasswordValid = false; showError(password, passwordError, 'Password does not meet all requirements'); }
+        else { isPasswordValid = false; clearError(password, passwordError); password.classList.remove('success'); }
         updateConfirmValidation();
         updateButtonState();
     }
 
     function updateConfirmValidation() {
-        const pass = password.value;
-        const confirm = passwordConfirm.value;
-        
-        if (confirm && pass === confirm) {
-            isConfirmValid = true;
-            reqMatch.classList.remove('unmet');
-            reqMatch.classList.add('met');
-            clearError(passwordConfirm, confirmError);
-            showSuccess(passwordConfirm);
-        } else if (confirm) {
-            isConfirmValid = false;
-            reqMatch.classList.remove('met');
-            reqMatch.classList.add('unmet');
-            showError(passwordConfirm, confirmError, 'Passwords do not match');
-        } else {
-            isConfirmValid = false;
-            reqMatch.classList.remove('met');
-            reqMatch.classList.add('unmet');
-            clearError(passwordConfirm, confirmError);
-            passwordConfirm.classList.remove('success');
-        }
+        var pass = password.value, confirm = passwordConfirm.value;
+        if (confirm && pass === confirm) { isConfirmValid = true; reqMatch.classList.remove('unmet'); reqMatch.classList.add('met'); clearError(passwordConfirm, confirmError); showSuccess(passwordConfirm); }
+        else if (confirm) { isConfirmValid = false; reqMatch.classList.remove('met'); reqMatch.classList.add('unmet'); showError(passwordConfirm, confirmError, 'Passwords do not match'); }
+        else { isConfirmValid = false; reqMatch.classList.remove('met'); reqMatch.classList.add('unmet'); clearError(passwordConfirm, confirmError); passwordConfirm.classList.remove('success'); }
         updateButtonState();
     }
 
     password.addEventListener('input', updatePasswordRequirements);
 
     passwordConfirm.addEventListener('input', function() {
-        const pass = password.value;
-        const confirm = this.value;
-        
-        if (confirm && pass === confirm) {
-            isConfirmValid = true;
-            reqMatch.classList.remove('unmet');
-            reqMatch.classList.add('met');
-            clearError(this, confirmError);
-            showSuccess(this);
-        } else if (confirm) {
-            isConfirmValid = false;
-            reqMatch.classList.remove('met');
-            reqMatch.classList.add('unmet');
-            showError(this, confirmError, 'Passwords do not match');
-        } else {
-            isConfirmValid = false;
-            reqMatch.classList.remove('met');
-            reqMatch.classList.add('unmet');
-            clearError(this, confirmError);
-            this.classList.remove('success');
-        }
+        var pass = password.value, confirm = this.value;
+        if (confirm && pass === confirm) { isConfirmValid = true; reqMatch.classList.remove('unmet'); reqMatch.classList.add('met'); clearError(this, confirmError); showSuccess(this); }
+        else if (confirm) { isConfirmValid = false; reqMatch.classList.remove('met'); reqMatch.classList.add('unmet'); showError(this, confirmError, 'Passwords do not match'); }
+        else { isConfirmValid = false; reqMatch.classList.remove('met'); reqMatch.classList.add('unmet'); clearError(this, confirmError); this.classList.remove('success'); }
         updateButtonState();
     });
 
     passwordConfirm.addEventListener('blur', function() {
-        const pass = password.value;
-        const confirm = this.value;
-        if (confirm && pass !== confirm) {
-            isConfirmValid = false;
-            showError(this, confirmError, 'Passwords do not match');
-            reqMatch.classList.remove('met');
-            reqMatch.classList.add('unmet');
-        }
+        var pass = password.value, confirm = this.value;
+        if (confirm && pass !== confirm) { isConfirmValid = false; showError(this, confirmError, 'Passwords do not match'); reqMatch.classList.remove('met'); reqMatch.classList.add('unmet'); }
         updateButtonState();
     });
 
     togglePassword.addEventListener('click', function() {
-        const icon = this.querySelector('i');
-        if (password.type === 'password') {
-            password.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            password.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
+        var icon = this.querySelector('i');
+        if (password.type === 'password') { password.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+        else { password.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
     });
 
     toggleConfirmPassword.addEventListener('click', function() {
-        const icon = this.querySelector('i');
-        if (passwordConfirm.type === 'password') {
-            passwordConfirm.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            passwordConfirm.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
+        var icon = this.querySelector('i');
+        if (passwordConfirm.type === 'password') { passwordConfirm.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+        else { passwordConfirm.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
     });
 
-    terms.addEventListener('change', function() {
-        isTermsChecked = this.checked;
-        updateButtonState();
-    });
-
-    function showToast(message, type) {
-        const container = document.getElementById('toastContainer');
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-        const iconColor = type === 'success' ? 'success' : 'error';
-        
-        container.innerHTML = `
-            <div class="toast-content ${type}">
-                <span class="toast-icon ${iconColor}"><i class="fas ${icon}"></i></span>
-                <span class="toast-message">${message}</span>
-                <button class="toast-close" onclick="this.closest('.toast-notification').style.display='none'">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        container.style.display = 'block';
-
-        setTimeout(() => {
-            container.style.display = 'none';
-        }, 5000);
-    }
-
-    function showVerifyModal(userEmail) {
-        const modal = document.getElementById('verifyModal');
-        document.getElementById('verifyEmail').textContent = userEmail;
-        modal.classList.add('show');
-        document.querySelectorAll('.otp-box').forEach(box => box.value = '');
-        document.getElementById('verifyError').classList.remove('show');
-        document.getElementById('verifySuccess').classList.remove('show');
-        document.getElementById('verifySubmit').disabled = true;
-        document.getElementById('otp1').focus();
-        startResendTimer();
-    }
-
-    let resendTimer = null;
-
-    function startResendTimer() {
-        const btn = document.getElementById('resendCode');
-        const timer = document.getElementById('resendTimer');
-        let seconds = 30;
-        
-        btn.disabled = true;
-        timer.textContent = `(${seconds}s)`;
-        
-        if (resendTimer) clearInterval(resendTimer);
-        
-        resendTimer = setInterval(() => {
-            seconds--;
-            timer.textContent = `(${seconds}s)`;
-            if (seconds <= 0) {
-                clearInterval(resendTimer);
-                btn.disabled = false;
-                timer.textContent = '';
-            }
-        }, 1000);
-    }
-
-    const otpBoxes = document.querySelectorAll('.otp-box');
-    
-    otpBoxes.forEach((box, index) => {
-        box.addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '');
-            if (this.value.length === 1) {
-                this.classList.add('filled');
-                if (index < 5) {
-                    otpBoxes[index + 1].focus();
-                }
-            } else {
-                this.classList.remove('filled');
-            }
-            updateVerifyButton();
-            document.getElementById('verifyError').classList.remove('show');
-            document.getElementById('verifySuccess').classList.remove('show');
-        });
-
-        box.addEventListener('keydown', function(e) {
-            if (e.key === 'Backspace' && !this.value && index > 0) {
-                otpBoxes[index - 1].focus();
-            }
-            if (e.key === 'ArrowLeft' && index > 0) {
-                otpBoxes[index - 1].focus();
-            }
-            if (e.key === 'ArrowRight' && index < 5) {
-                otpBoxes[index + 1].focus();
-            }
-            if (e.key === 'Enter') {
-                document.getElementById('verifySubmit').click();
-            }
-        });
-
-        box.addEventListener('paste', function(e) {
-            e.preventDefault();
-            const paste = (e.clipboardData || window.clipboardData).getData('text');
-            const digits = paste.replace(/\D/g, '').slice(0, 6);
-            if (digits) {
-                digits.split('').forEach((digit, i) => {
-                    if (i < 6 && otpBoxes[i]) {
-                        otpBoxes[i].value = digit;
-                        otpBoxes[i].classList.add('filled');
-                    }
-                });
-                if (digits.length < 6) {
-                    otpBoxes[digits.length].focus();
-                } else {
-                    otpBoxes[5].focus();
-                }
-                updateVerifyButton();
-            }
-        });
-    });
-
-    function getOTP() {
-        let otp = '';
-        otpBoxes.forEach(box => otp += box.value);
-        return otp;
-    }
-
-    function updateVerifyButton() {
-        const otp = getOTP();
-        const btn = document.getElementById('verifySubmit');
-        btn.disabled = otp.length !== 6;
-    }
-
-    document.getElementById('verifySubmit').addEventListener('click', async function() {
-        const code = getOTP();
-        const userEmail = document.getElementById('verifyEmail').textContent;
-        const errorEl = document.getElementById('verifyError');
-        const successEl = document.getElementById('verifySuccess');
-        
-        if (code.length !== 6) {
-            errorEl.textContent = 'Please enter a valid 6-digit code';
-            errorEl.classList.add('show');
-            otpBoxes.forEach(box => box.classList.add('error'));
-            return;
-        }
-
-        this.disabled = true;
-        this.textContent = 'Verifying...';
-
-        try {
-            const response = await fetch('/auth/verify-otp/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: userEmail, otp_code: code })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                otpBoxes.forEach(box => {
-                    box.classList.remove('error');
-                    box.classList.add('success');
-                });
-                successEl.textContent = 'Email verified successfully!';
-                successEl.classList.add('show');
-                errorEl.classList.remove('show');
-                showToast('Email verified successfully! Redirecting to login...', 'success');
-                setTimeout(() => {
-                    window.location.href = '/login/';
-                }, 1500);
-            } else {
-                otpBoxes.forEach(box => box.classList.add('error'));
-                errorEl.textContent = data.error || 'Invalid verification code';
-                errorEl.classList.add('show');
-                successEl.classList.remove('show');
-                this.disabled = false;
-                this.textContent = 'Verify';
-                setTimeout(() => {
-                    otpBoxes.forEach(box => box.classList.remove('error'));
-                }, 3000);
-            }
-        } catch (error) {
-            otpBoxes.forEach(box => box.classList.add('error'));
-            errorEl.textContent = 'Network error. Please try again.';
-            errorEl.classList.add('show');
-            this.disabled = false;
-            this.textContent = 'Verify';
-            setTimeout(() => {
-                otpBoxes.forEach(box => box.classList.remove('error'));
-            }, 3000);
-        }
-    });
-
-    document.getElementById('verifyCancel').addEventListener('click', function() {
-        document.getElementById('verifyModal').classList.remove('show');
-    });
-
-    document.getElementById('resendCode').addEventListener('click', async function() {
-        const userEmail = document.getElementById('verifyEmail').textContent;
-        this.disabled = true;
-        this.textContent = 'Sending...';
-
-        try {
-            const response = await fetch('/auth/resend-otp/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: userEmail })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                showToast('Verification code resent successfully!', 'success');
-                document.getElementById('verifyError').classList.remove('show');
-                document.getElementById('verifySuccess').classList.remove('show');
-                otpBoxes.forEach(box => {
-                    box.value = '';
-                    box.classList.remove('filled', 'error', 'success');
-                });
-                document.getElementById('otp1').focus();
-                startResendTimer();
-            } else {
-                showToast(data.error || 'Failed to resend code', 'error');
-                this.disabled = false;
-            }
-        } catch (error) {
-            showToast('Network error. Please try again.', 'error');
-            this.disabled = false;
-        }
-
-        this.textContent = 'Resend Code';
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const toast = document.querySelector('.toast-notification');
-            if (toast && toast.style.display !== 'none') {
-                toast.style.display = 'none';
-            }
-        }
-    });
+    terms.addEventListener('change', function() { isTermsChecked = this.checked; updateButtonState(); });
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-
         if (!isNameValid || !isEmailValid || !isPasswordValid || !isConfirmValid || !isTermsChecked) return;
-
-        const formData = {
-            full_name: fullName.value.trim(),
-            email: email.value.trim(),
-            password: password.value,
-            phone: phone.value.trim(),
-            institution: institution.value.trim()
-        };
 
         registerBtn.classList.add('loading');
         registerBtn.disabled = true;
 
         try {
-            const response = await fetch('/auth/register/', {
+            var response = await fetch('/auth/register/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    full_name: fullName.value.trim(),
+                    email: email.value.trim(),
+                    password: password.value,
+                    phone: document.getElementById('phone').value.trim(),
+                    institution: document.getElementById('institution').value.trim()
+                })
             });
-
-            const data = await response.json();
-
+            var data = await response.json();
             if (response.ok) {
                 showToast('Verification code sent! Please check your email.', 'success');
-                showVerifyModal(formData.email);
+                showVerifyModal(email.value.trim());
             } else {
-                let errorMessage = 'Registration failed. Please try again.';
-                
-                if (data.email) {
-                    errorMessage = Array.isArray(data.email) ? data.email[0] : data.email;
-                    showError(email, emailError, errorMessage);
-                } else if (data.full_name) {
-                    errorMessage = Array.isArray(data.full_name) ? data.full_name[0] : data.full_name;
-                    showError(fullName, nameError, errorMessage);
-                } else if (data.password) {
-                    errorMessage = Array.isArray(data.password) ? data.password[0] : data.password;
-                    showError(password, passwordError, errorMessage);
-                } else if (data.error) {
-                    errorMessage = data.error;
-                }
-                
+                var errorMessage = 'Registration failed.';
+                if (data.email) { errorMessage = Array.isArray(data.email) ? data.email[0] : data.email; showError(email, emailError, errorMessage); }
+                else if (data.full_name) { errorMessage = Array.isArray(data.full_name) ? data.full_name[0] : data.full_name; showError(fullName, nameError, errorMessage); }
+                else if (data.password) { errorMessage = Array.isArray(data.password) ? data.password[0] : data.password; showError(password, passwordError, errorMessage); }
+                else if (data.error) { errorMessage = data.error; }
                 showToast(errorMessage, 'error');
             }
         } catch (error) {
             showToast('Network error. Please check your connection.', 'error');
         }
-
         registerBtn.classList.remove('loading');
         updateButtonState();
     });
 
     updateButtonState();
     updatePasswordRequirements();
+}
+
+var resendTimer = null;
+
+function showVerifyModal(userEmail) {
+    var modal = document.getElementById('verifyModal');
+    document.getElementById('verifyEmail').textContent = userEmail;
+    modal.classList.add('show');
+    document.querySelectorAll('.otp-box').forEach(function(box) { box.value = ''; });
+    document.getElementById('verifyError').classList.remove('show');
+    document.getElementById('verifySuccess').classList.remove('show');
+    document.getElementById('verifySubmit').disabled = true;
+    document.getElementById('otp1').focus();
+    startResendTimer();
+}
+
+function startResendTimer() {
+    var btn = document.getElementById('resendCode');
+    var timer = document.getElementById('resendTimer');
+    var seconds = 30;
+    btn.disabled = true;
+    timer.textContent = '(' + seconds + 's)';
+    if (resendTimer) clearInterval(resendTimer);
+    resendTimer = setInterval(function() {
+        seconds--;
+        timer.textContent = '(' + seconds + 's)';
+        if (seconds <= 0) { clearInterval(resendTimer); btn.disabled = false; timer.textContent = ''; }
+    }, 1000);
+}
+
+(function() {
+    var otpBoxes = document.querySelectorAll('.otp-box');
+    otpBoxes.forEach(function(box, index) {
+        box.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length === 1) { this.classList.add('filled'); if (index < 5) otpBoxes[index + 1].focus(); }
+            else { this.classList.remove('filled'); }
+            updateVerifyButton();
+            document.getElementById('verifyError').classList.remove('show');
+            document.getElementById('verifySuccess').classList.remove('show');
+        });
+        box.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !this.value && index > 0) otpBoxes[index - 1].focus();
+            if (e.key === 'ArrowLeft' && index > 0) otpBoxes[index - 1].focus();
+            if (e.key === 'ArrowRight' && index < 5) otpBoxes[index + 1].focus();
+            if (e.key === 'Enter') document.getElementById('verifySubmit').click();
+        });
+        box.addEventListener('paste', function(e) {
+            e.preventDefault();
+            var paste = (e.clipboardData || window.clipboardData).getData('text');
+            var digits = paste.replace(/\D/g, '').slice(0, 6);
+            if (digits) {
+                digits.split('').forEach(function(digit, i) { if (i < 6 && otpBoxes[i]) { otpBoxes[i].value = digit; otpBoxes[i].classList.add('filled'); } });
+                if (digits.length < 6) otpBoxes[digits.length].focus(); else otpBoxes[5].focus();
+                updateVerifyButton();
+            }
+        });
+    });
+})();
+
+function getOTP() { var otp = ''; document.querySelectorAll('.otp-box').forEach(function(box) { otp += box.value; }); return otp; }
+
+function updateVerifyButton() { document.getElementById('verifySubmit').disabled = getOTP().length !== 6; }
+
+document.getElementById('verifySubmit').addEventListener('click', async function() {
+    var code = getOTP();
+    var userEmail = document.getElementById('verifyEmail').textContent;
+    var errorEl = document.getElementById('verifyError');
+    var successEl = document.getElementById('verifySuccess');
+    if (code.length !== 6) { errorEl.textContent = 'Please enter a valid 6-digit code'; errorEl.classList.add('show'); document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.add('error'); }); return; }
+    this.disabled = true; this.textContent = 'Verifying...';
+    try {
+        var response = await fetch('/auth/verify-otp/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail, otp_code: code }) });
+        var data = await response.json();
+        if (response.ok) {
+            document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.remove('error'); b.classList.add('success'); });
+            successEl.textContent = 'Email verified successfully!'; successEl.classList.add('show'); errorEl.classList.remove('show');
+            showToast('Email verified successfully! Redirecting to login...', 'success');
+            setTimeout(function() { window.location.href = '/login/'; }, 1500);
+        } else {
+            document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.add('error'); });
+            errorEl.textContent = data.error || 'Invalid verification code'; errorEl.classList.add('show'); successEl.classList.remove('show');
+            this.disabled = false; this.textContent = 'Verify';
+            setTimeout(function() { document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.remove('error'); }); }, 3000);
+        }
+    } catch (error) {
+        document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.add('error'); });
+        errorEl.textContent = 'Network error. Please try again.'; errorEl.classList.add('show');
+        this.disabled = false; this.textContent = 'Verify';
+        setTimeout(function() { document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.remove('error'); }); }, 3000);
+    }
+});
+
+document.getElementById('verifyCancel').addEventListener('click', function() { document.getElementById('verifyModal').classList.remove('show'); });
+
+document.getElementById('resendCode').addEventListener('click', async function() {
+    var userEmail = document.getElementById('verifyEmail').textContent;
+    this.disabled = true; this.textContent = 'Sending...';
+    try {
+        var response = await fetch('/auth/resend-otp/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail }) });
+        var data = await response.json();
+        if (response.ok) {
+            showToast('Verification code resent successfully!', 'success');
+            document.getElementById('verifyError').classList.remove('show');
+            document.getElementById('verifySuccess').classList.remove('show');
+            document.querySelectorAll('.otp-box').forEach(function(b) { b.value = ''; b.classList.remove('filled', 'error', 'success'); });
+            document.getElementById('otp1').focus();
+            startResendTimer();
+        } else { showToast(data.error || 'Failed to resend code', 'error'); this.disabled = false; }
+    } catch (error) { showToast('Network error. Please try again.', 'error'); this.disabled = false; }
+    this.textContent = 'Resend Code';
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { var toast = document.querySelector('.toast-notification'); if (toast && toast.style.display !== 'none') toast.style.display = 'none'; }
 });
 </script>
 {% endblock %}

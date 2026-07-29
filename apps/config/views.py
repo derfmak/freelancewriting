@@ -373,12 +373,9 @@ def reset_password(request, token=None):
     return render(request, 'public/reset-password.html', {'token': token})
 
 
-def login_page(request):
-    if request.user.is_authenticated:
-        if request.user.role == 'admin':
-            return redirect('admin-dashboard')
-        return redirect('client-dashboard')
+from django.views.decorators.csrf import csrf_exempt
 
+def login_page(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
@@ -413,12 +410,8 @@ def login_page(request):
     return render(request, 'public/login.html')
 
 
+@csrf_exempt
 def register_page(request):
-    if request.user.is_authenticated:
-        if request.user.role == 'admin':
-            return redirect('admin-dashboard')
-        return redirect('client-dashboard')
-
     if request.method == 'POST':
         full_name = request.POST.get('full_name', '').strip()
         email = request.POST.get('email', '').strip().lower()

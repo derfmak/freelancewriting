@@ -723,6 +723,8 @@ def google_callback(request):
             user.picture = picture
             user.save(update_fields=['google_id', 'picture'])
 
+        django_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
         refresh = RefreshToken.for_user(user)
         refresh['email'] = user.email
         refresh['role'] = user.role
@@ -761,7 +763,7 @@ def google_callback(request):
         timeout=600
     )
 
-    return redirect(f'{settings.FRONTEND_URL}/register/google/?token={temp_token}')
+    return redirect(f'{settings.FRONTEND_URL}/register/?token={temp_token}')
 
 
 @api_view(['POST'])
@@ -771,7 +773,7 @@ def google_signup(request):
 
     if not temp_token:
         return Response(
-            {'error': 'Invalid signup session'},
+            {'error': 'Invalid signup session', 'redirect': 'login'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -779,7 +781,7 @@ def google_signup(request):
 
     if not google_data:
         return Response(
-            {'error': 'Signup session expired'},
+            {'error': 'Signup session expired. Please try again.', 'redirect': 'login'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -791,7 +793,7 @@ def google_signup(request):
     if User.objects.filter(email=email).exists():
         cache.delete(f'google_signup_{temp_token}')
         return Response(
-            {'error': 'An account with this email already exists. Please sign in.'},
+            {'error': 'An account with this email already exists. Please sign in.', 'redirect': 'login'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -807,6 +809,8 @@ def google_signup(request):
     )
 
     cache.delete(f'google_signup_{temp_token}')
+
+    django_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
     refresh = RefreshToken.for_user(user)
     refresh['email'] = user.email

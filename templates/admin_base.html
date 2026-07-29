@@ -774,32 +774,32 @@
         <header class="admin-header">
             <div class="container">
                 <div class="header-content">
-                    <a href="/admin/dashboard/" class="logo">AW</a>
+                    <a href="/admin-portal/dashboard/" class="logo">AW</a>
 
                     <div class="admin-nav">
-                        <a href="/admin/dashboard/" class="{% if request.path == '/admin/dashboard/' %}active{% endif %}">
+                        <a href="/admin-portal/dashboard/" class="{% if '/admin-portal/dashboard/' in request.path %}active{% endif %}">
                             <i class="fas fa-th-large"></i>
                             <span>Dashboard</span>
                         </a>
-                        <a href="/admin/orders/" class="{% if request.path == '/admin/orders/' %}active{% endif %}">
+                        <a href="/admin-portal/orders/" class="{% if '/admin-portal/orders/' in request.path %}active{% endif %}">
                             <i class="fas fa-file-alt"></i>
                             <span>Orders</span>
                             <span class="nav-badge" id="ordersBadge">0</span>
                         </a>
-                        <a href="/admin/finances/" class="{% if request.path == '/admin/finances/' %}active{% endif %}">
+                        <a href="/admin-portal/finances/" class="{% if '/admin-portal/finances/' in request.path %}active{% endif %}">
                             <i class="fas fa-dollar-sign"></i>
                             <span>Finances</span>
                         </a>
-                        <a href="/admin/messages/" class="{% if request.path == '/admin/messages/' %}active{% endif %}">
+                        <a href="/admin-portal/messages/" class="{% if '/admin-portal/messages/' in request.path %}active{% endif %}">
                             <i class="fas fa-envelope"></i>
                             <span>Messages</span>
                             <span class="nav-badge" id="messagesBadge">0</span>
                         </a>
-                        <a href="/admin/blog/" class="{% if request.path == '/admin/blog/' %}active{% endif %}">
+                        <a href="/admin-portal/blog/" class="{% if '/admin-portal/blog/' in request.path %}active{% endif %}">
                             <i class="fas fa-blog"></i>
                             <span>Blog</span>
                         </a>
-                        <a href="/admin/settings/" class="{% if request.path == '/admin/settings/' %}active{% endif %}">
+                        <a href="/admin-portal/settings/" class="{% if '/admin-portal/settings/' in request.path %}active{% endif %}">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>
                         </a>
@@ -819,10 +819,10 @@
                             </button>
 
                             <div class="user-menu-dropdown" id="userMenuDropdown">
-                                <a href="/admin/profile/" class="user-menu-item"><i class="fas fa-user"></i> Profile</a>
-                                <a href="/admin/settings/" class="user-menu-item"><i class="fas fa-cog"></i> Settings</a>
-                                <a href="/admin/blog/" class="user-menu-item"><i class="fas fa-blog"></i> Blog</a>
-                                <a href="/admin/samples/" class="user-menu-item"><i class="fas fa-file-alt"></i> Samples</a>
+                                <a href="/admin-portal/profile/" class="user-menu-item"><i class="fas fa-user"></i> Profile</a>
+                                <a href="/admin-portal/settings/" class="user-menu-item"><i class="fas fa-cog"></i> Settings</a>
+                                <a href="/admin-portal/blog/" class="user-menu-item"><i class="fas fa-blog"></i> Blog</a>
+                                <a href="/admin-portal/samples/" class="user-menu-item"><i class="fas fa-file-alt"></i> Samples</a>
                                 <div class="user-menu-divider"></div>
                                 <a href="#" class="user-menu-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
                             </div>
@@ -840,18 +840,18 @@
 
         <div class="mobile-menu" id="mobileMenu">
             <div class="mobile-nav">
-                <a href="/admin/dashboard/" class="{% if request.path == '/admin/dashboard/' %}active{% endif %}"><i class="fas fa-th-large"></i> Dashboard</a>
-                <a href="/admin/orders/" class="{% if request.path == '/admin/orders/' %}active{% endif %}"><i class="fas fa-file-alt"></i> Orders<span class="nav-badge" id="ordersBadgeMobile">0</span></a>
-                <a href="/admin/finances/" class="{% if request.path == '/admin/finances/' %}active{% endif %}"><i class="fas fa-dollar-sign"></i> Finances</a>
-                <a href="/admin/messages/" class="{% if request.path == '/admin/messages/' %}active{% endif %}"><i class="fas fa-envelope"></i> Messages<span class="nav-badge" id="messagesBadgeMobile">0</span></a>
-                <a href="/admin/blog/" class="{% if request.path == '/admin/blog/' %}active{% endif %}"><i class="fas fa-blog"></i> Blog</a>
-                <a href="/admin/settings/" class="{% if request.path == '/admin/settings/' %}active{% endif %}"><i class="fas fa-cog"></i> Settings</a>
+                <a href="/admin-portal/dashboard/" class="{% if '/admin-portal/dashboard/' in request.path %}active{% endif %}"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="/admin-portal/orders/" class="{% if '/admin-portal/orders/' in request.path %}active{% endif %}"><i class="fas fa-file-alt"></i> Orders<span class="nav-badge" id="ordersBadgeMobile">0</span></a>
+                <a href="/admin-portal/finances/" class="{% if '/admin-portal/finances/' in request.path %}active{% endif %}"><i class="fas fa-dollar-sign"></i> Finances</a>
+                <a href="/admin-portal/messages/" class="{% if '/admin-portal/messages/' in request.path %}active{% endif %}"><i class="fas fa-envelope"></i> Messages<span class="nav-badge" id="messagesBadgeMobile">0</span></a>
+                <a href="/admin-portal/blog/" class="{% if '/admin-portal/blog/' in request.path %}active{% endif %}"><i class="fas fa-blog"></i> Blog</a>
+                <a href="/admin-portal/settings/" class="{% if '/admin-portal/settings/' in request.path %}active{% endif %}"><i class="fas fa-cog"></i> Settings</a>
                 <div class="mobile-divider"></div>
-                <a href="/admin/users/"><i class="fas fa-users"></i> Clients</a>
-                <a href="/admin/refunds/"><i class="fas fa-undo-alt"></i> Refunds</a>
-                <a href="/admin/samples/"><i class="fas fa-file-alt"></i> Samples</a>
-                <a href="/admin/content/"><i class="fas fa-edit"></i> Content</a>
-                <a href="/admin/logs/"><i class="fas fa-history"></i> Logs</a>
+                <a href="/admin-portal/users/"><i class="fas fa-users"></i> Clients</a>
+                <a href="/admin-portal/refunds/"><i class="fas fa-undo-alt"></i> Refunds</a>
+                <a href="/admin-portal/samples/"><i class="fas fa-file-alt"></i> Samples</a>
+                <a href="/admin-portal/content/"><i class="fas fa-edit"></i> Content</a>
+                <a href="/admin-portal/logs/"><i class="fas fa-history"></i> Logs</a>
                 <div class="mobile-divider"></div>
                 <div class="mobile-logout" id="mobileLogoutBtn">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -884,13 +884,13 @@
                     <div class="footer-section">
                         <h4>Quick Links</h4>
                         <div class="footer-links">
-                            <a href="/admin/users/">Clients</a>
-                            <a href="/admin/refunds/">Refunds</a>
-                            <a href="/admin/blog/">Blog</a>
-                            <a href="/admin/samples/">Samples</a>
-                            <a href="/admin/content/">Content</a>
-                            <a href="/admin/logs/">Logs</a>
-                            <a href="/admin/profile/">Profile</a>
+                            <a href="/admin-portal/users/">Clients</a>
+                            <a href="/admin-portal/refunds/">Refunds</a>
+                            <a href="/admin-portal/blog/">Blog</a>
+                            <a href="/admin-portal/samples/">Samples</a>
+                            <a href="/admin-portal/content/">Content</a>
+                            <a href="/admin-portal/logs/">Logs</a>
+                            <a href="/admin-portal/profile/">Profile</a>
                         </div>
                     </div>
 
@@ -1108,7 +1108,7 @@
             const notificationBell = document.getElementById('notificationBell');
             if (notificationBell) {
                 notificationBell.addEventListener('click', function() {
-                    window.location.href = '/notifications/';
+                    window.location.href = '/admin-portal/notifications/';
                 });
             }
 
