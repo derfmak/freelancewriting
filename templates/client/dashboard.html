@@ -68,21 +68,10 @@
         font-weight: 600;
     }
 
-    .client-stat-number.green {
-        color: #059669;
-    }
-
-    .client-stat-number.blue {
-        color: #3b82f6;
-    }
-
-    .client-stat-number.orange {
-        color: #f59e0b;
-    }
-
-    .client-stat-number.red {
-        color: #ef4444;
-    }
+    .client-stat-number.green { color: #059669; }
+    .client-stat-number.blue { color: #3b82f6; }
+    .client-stat-number.orange { color: #f59e0b; }
+    .client-stat-number.red { color: #ef4444; }
 
     .client-btn {
         display: inline-flex;
@@ -99,6 +88,7 @@
         font-size: 0.875rem;
         gap: 0.5rem;
         white-space: nowrap;
+        text-decoration: none;
     }
 
     .client-btn:hover {
@@ -128,40 +118,13 @@
         white-space: nowrap;
     }
 
-    .client-status-badge.request {
-        background: #fef3c7;
-        color: #d97706;
-    }
-
-    .client-status-badge.in_progress {
-        background: #dbeafe;
-        color: #2563eb;
-    }
-
-    .client-status-badge.awaiting_approval {
-        background: #ede9fe;
-        color: #7c3aed;
-    }
-
-    .client-status-badge.completed {
-        background: #d1fae5;
-        color: #059669;
-    }
-
-    .client-status-badge.cancelled {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-    .client-status-badge.declined {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-    .client-status-badge.refund_pending {
-        background: #fef3c7;
-        color: #d97706;
-    }
+    .client-status-badge.request { background: #fef3c7; color: #d97706; }
+    .client-status-badge.in_progress { background: #dbeafe; color: #2563eb; }
+    .client-status-badge.awaiting_approval { background: #ede9fe; color: #7c3aed; }
+    .client-status-badge.completed { background: #d1fae5; color: #059669; }
+    .client-status-badge.cancelled { background: #fee2e2; color: #dc2626; }
+    .client-status-badge.declined { background: #fee2e2; color: #dc2626; }
+    .client-status-badge.refund_pending { background: #fef3c7; color: #d97706; }
 
     .client-table {
         width: 100%;
@@ -189,13 +152,8 @@
         vertical-align: middle;
     }
 
-    .client-table tbody tr {
-        transition: background 0.15s ease;
-    }
-
-    .client-table tbody tr:hover {
-        background: #f8fafc;
-    }
+    .client-table tbody tr { transition: background 0.15s ease; }
+    .client-table tbody tr:hover { background: #f8fafc; }
 
     .client-link {
         color: #059669;
@@ -204,6 +162,7 @@
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
+        text-decoration: none;
     }
 
     .client-link:hover {
@@ -217,6 +176,8 @@
         padding: 0.75rem 1rem;
         transition: all 0.2s ease;
         display: block;
+        text-decoration: none;
+        color: inherit;
     }
 
     .client-message-item:hover {
@@ -270,9 +231,7 @@
         margin-bottom: 0.25rem;
     }
 
-    .client-empty-state p {
-        font-size: 0.875rem;
-    }
+    .client-empty-state p { font-size: 0.875rem; }
 
     .client-card-footer {
         margin-top: auto;
@@ -280,40 +239,12 @@
         border-top: 1px solid #f1f5f9;
     }
 
-    .status-dot {
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        margin-right: 4px;
-    }
-
-    .status-dot.request { background: #f59e0b; }
-    .status-dot.in_progress { background: #3b82f6; }
-    .status-dot.awaiting_approval { background: #8b5cf6; }
-    .status-dot.completed { background: #22c55e; }
-    .status-dot.cancelled { background: #ef4444; }
-    .status-dot.declined { background: #ef4444; }
-    .status-dot.refund_pending { background: #f59e0b; }
-
     @media (max-width: 640px) {
-        .client-stat-number {
-            font-size: 1.5rem;
-        }
-        .client-card {
-            padding: 1rem;
-        }
-        .client-btn {
-            width: 100%;
-            justify-content: center;
-        }
-        .client-table {
-            font-size: 0.75rem;
-        }
-        .client-table th,
-        .client-table td {
-            padding: 0.5rem 0.5rem;
-        }
+        .client-stat-number { font-size: 1.5rem; }
+        .client-card { padding: 1rem; }
+        .client-btn { width: 100%; justify-content: center; }
+        .client-table { font-size: 0.75rem; }
+        .client-table th, .client-table td { padding: 0.5rem 0.5rem; }
     }
 </style>
 {% endblock %}
@@ -359,10 +290,7 @@
             <div class="client-card">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Active Orders</h2>
                 <div id="active-orders-list" class="flex-1">
-                    <div class="client-empty-state">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading...</p>
-                    </div>
+                    <div class="client-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
                 </div>
                 <div class="client-card-footer">
                     <a href="/client/orders/?status=active" class="client-link text-sm">
@@ -374,10 +302,7 @@
             <div class="client-card">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Recent Messages</h2>
                 <div id="recent-messages" class="flex-1">
-                    <div class="client-empty-state">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading...</p>
-                    </div>
+                    <div class="client-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
                 </div>
                 <div class="client-card-footer">
                     <a href="/client/messages/" class="client-link text-sm">
@@ -402,9 +327,7 @@
                         </tr>
                     </thead>
                     <tbody id="recent-orders">
-                        <tr>
-                            <td colspan="6" class="text-center py-6 text-gray-500">Loading...</td>
-                        </tr>
+                        <tr><td colspan="6" class="text-center py-6 text-gray-500">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -420,24 +343,22 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    if (typeof auth !== 'undefined') {
+        const isAuth = await auth.checkAuth();
+        if (!isAuth) {
+            window.location.href = '/login/';
+            return;
+        }
+    } else if (!localStorage.getItem('access_token')) {
+        window.location.href = '/login/';
+        return;
+    }
     loadDashboardStats();
     loadActiveOrders();
     loadRecentMessages();
     loadRecentOrders();
 });
-
-function getAuthToken() {
-    return localStorage.getItem('access_token');
-}
-
-function getApiHeaders() {
-    const token = getAuthToken();
-    return {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-    };
-}
 
 function formatCurrency(amount) {
     return '$' + parseFloat(amount || 0).toFixed(2);
@@ -445,18 +366,18 @@ function formatCurrency(amount) {
 
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
+    var date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function formatTimeAgo(timestamp) {
     if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+    var date = new Date(timestamp);
+    var now = new Date();
+    var diff = now - date;
+    var minutes = Math.floor(diff / 60000);
+    var hours = Math.floor(diff / 3600000);
+    var days = Math.floor(diff / 86400000);
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return minutes + 'm ago';
     if (hours < 24) return hours + 'h ago';
@@ -465,203 +386,124 @@ function formatTimeAgo(timestamp) {
 }
 
 function getStatusClass(status) {
-    const statusMap = {
-        'request': 'request',
-        'in_progress': 'in_progress',
-        'awaiting_approval': 'awaiting_approval',
-        'completed': 'completed',
-        'cancelled': 'cancelled',
-        'declined': 'declined',
-        'refund_pending': 'refund_pending'
-    };
-    return statusMap[status] || '';
+    var map = { request: 'request', in_progress: 'in_progress', awaiting_approval: 'awaiting_approval', completed: 'completed', cancelled: 'cancelled', declined: 'declined', refund_pending: 'refund_pending' };
+    return map[status] || '';
 }
 
 function getStatusLabel(status) {
-    const labelMap = {
-        'request': 'Request',
-        'in_progress': 'In Progress',
-        'awaiting_approval': 'Awaiting Approval',
-        'completed': 'Completed',
-        'cancelled': 'Cancelled',
-        'declined': 'Declined',
-        'refund_pending': 'Refund Pending'
-    };
-    return labelMap[status] || status.replace('_', ' ');
+    var map = { request: 'Request', in_progress: 'In Progress', awaiting_approval: 'Awaiting Approval', completed: 'Completed', cancelled: 'Cancelled', declined: 'Declined', refund_pending: 'Refund Pending' };
+    return map[status] || status.replace('_', ' ');
 }
 
 async function loadDashboardStats() {
     try {
-        const token = getAuthToken();
-        if (!token) {
-            console.warn('No auth token found');
-            return;
-        }
+        var data = await api.get('/wallet/stats/');
+        var balance = data.available_balance !== undefined ? data.available_balance : (data.balance !== undefined ? data.balance : (data.total_balance || 0));
+        document.getElementById('wallet-balance').textContent = formatCurrency(balance);
+    } catch (e) {
+        console.error('Failed to load wallet stats:', e);
+    }
 
-        const [walletRes, ordersRes] = await Promise.all([
-            fetch('/api/v1/wallet/stats/', { headers: getApiHeaders() }),
-            fetch('/api/v1/client/orders/?limit=100', { headers: getApiHeaders() })
-        ]);
-
-        if (walletRes.ok) {
-            const wallet = await walletRes.json();
-            const balance = wallet.available_balance !== undefined ? wallet.available_balance : 
-                           (wallet.balance !== undefined ? wallet.balance : (wallet.total_balance || 0));
-            document.getElementById('wallet-balance').textContent = formatCurrency(balance);
-        }
-
-        if (ordersRes.ok) {
-            const data = await ordersRes.json();
-            const orders = data.results || data;
-            const total = orders.length || 0;
-            const active = orders.filter(o => ['request', 'in_progress', 'awaiting_approval'].includes(o.status)).length || 0;
-            const completed = orders.filter(o => o.status === 'completed').length || 0;
-            document.getElementById('total-orders').textContent = total;
-            document.getElementById('active-orders').textContent = active;
-            document.getElementById('completed-orders').textContent = completed;
-        }
-    } catch (error) {
-        console.error('Failed to load stats:', error);
+    try {
+        var data = await api.get('/client/orders/?limit=100');
+        var orders = data.results || data;
+        var total = orders.length || 0;
+        var active = orders.filter(function(o) { return ['request', 'in_progress', 'awaiting_approval'].indexOf(o.status) !== -1; }).length || 0;
+        var completed = orders.filter(function(o) { return o.status === 'completed'; }).length || 0;
+        document.getElementById('total-orders').textContent = total;
+        document.getElementById('active-orders').textContent = active;
+        document.getElementById('completed-orders').textContent = completed;
+    } catch (e) {
+        console.error('Failed to load order stats:', e);
     }
 }
 
 async function loadActiveOrders() {
-    const container = document.getElementById('active-orders-list');
+    var container = document.getElementById('active-orders-list');
     try {
-        const token = getAuthToken();
-        if (!token) {
-            container.innerHTML = '<div class="client-empty-state"><p>Please login to view orders</p></div>';
-            return;
-        }
-
-        const response = await fetch('/api/v1/client/orders/?status=request,in_progress,awaiting_approval&limit=3', {
-            headers: getApiHeaders()
-        });
-
-        if (!response.ok) {
-            container.innerHTML = '<div class="client-empty-state"><p>Unable to load orders</p></div>';
-            return;
-        }
-
-        const data = await response.json();
-        const orders = data.results || data;
+        var data = await api.get('/client/orders/?status=request,in_progress,awaiting_approval&limit=3');
+        var orders = data.results || data;
 
         if (!orders || orders.length === 0) {
             container.innerHTML = '<div class="client-empty-state"><i class="fas fa-inbox"></i><h3>No Active Orders</h3><p>Your active orders will appear here</p></div>';
             return;
         }
 
-        container.innerHTML = orders.slice(0, 3).map(order => `
-            <div class="client-message-item" style="margin-bottom:0.75rem;">
-                <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
-                    <a href="/client/orders/${order.id}/" class="font-medium text-green-600 hover:text-green-700 text-sm">
-                        ${order.order_number || 'Order #' + order.id}
-                    </a>
-                    <span class="client-status-badge ${getStatusClass(order.status)}">${getStatusLabel(order.status)}</span>
-                </div>
-                <p class="text-sm text-gray-600 mb-3 line-clamp-2">${order.topic ? order.topic.substring(0, 60) : 'No topic'}${order.topic && order.topic.length > 60 ? '...' : ''}</p>
-                <div class="flex flex-wrap justify-between items-center gap-3 text-sm">
-                    <span class="text-gray-500">Due: ${formatDate(order.deadline)}</span>
-                    <div class="flex items-center gap-2 flex-1 min-w-[80px]">
-                        <span class="text-xs text-gray-400">${order.progress_percentage || 0}%</span>
-                        <div class="client-progress-bar flex-1">
-                            <div class="client-progress-fill" style="width: ${order.progress_percentage || 0}%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Failed to load active orders:', error);
+        container.innerHTML = orders.slice(0, 3).map(function(order) {
+            return '<div class="client-message-item" style="margin-bottom:0.75rem;">' +
+                '<div class="flex flex-wrap justify-between items-start gap-2 mb-2">' +
+                    '<a href="/client/orders/' + order.id + '/" class="font-medium text-green-600 hover:text-green-700 text-sm">' + (order.order_number || 'Order #' + order.id) + '</a>' +
+                    '<span class="client-status-badge ' + getStatusClass(order.status) + '">' + getStatusLabel(order.status) + '</span>' +
+                '</div>' +
+                '<p class="text-sm text-gray-600 mb-3 line-clamp-2">' + (order.topic ? order.topic.substring(0, 60) : 'No topic') + (order.topic && order.topic.length > 60 ? '...' : '') + '</p>' +
+                '<div class="flex flex-wrap justify-between items-center gap-3 text-sm">' +
+                    '<span class="text-gray-500">Due: ' + formatDate(order.deadline) + '</span>' +
+                    '<div class="flex items-center gap-2 flex-1 min-w-[80px]">' +
+                        '<span class="text-xs text-gray-400">' + (order.progress_percentage || 0) + '%</span>' +
+                        '<div class="client-progress-bar flex-1"><div class="client-progress-fill" style="width:' + (order.progress_percentage || 0) + '%"></div></div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    } catch (e) {
+        console.error('Failed to load active orders:', e);
         container.innerHTML = '<div class="client-empty-state"><p>Unable to load orders</p></div>';
     }
 }
 
 async function loadRecentMessages() {
-    const container = document.getElementById('recent-messages');
+    var container = document.getElementById('recent-messages');
     try {
-        const token = getAuthToken();
-        if (!token) {
-            container.innerHTML = '<div class="client-empty-state"><p>Please login to view messages</p></div>';
-            return;
-        }
-
-        const response = await fetch('/api/v1/messaging/conversations/?limit=3', {
-            headers: getApiHeaders()
-        });
-
-        if (!response.ok) {
-            container.innerHTML = '<div class="client-empty-state"><p>No messages available</p></div>';
-            return;
-        }
-
-        const data = await response.json();
-        const conversations = data.results || data;
+        var data = await api.get('/messaging/conversations/?limit=3');
+        var conversations = data.results || data;
 
         if (!conversations || conversations.length === 0) {
             container.innerHTML = '<div class="client-empty-state"><i class="fas fa-envelope-open-text"></i><h3>No Messages</h3><p>Your messages will appear here</p></div>';
             return;
         }
 
-        container.innerHTML = conversations.slice(0, 3).map(conv => {
-            const lastMessage = conv.last_message || {};
-            const order = conv.order || {};
-            const orderId = order.id || conv.order_id || conv.id;
-            return `
-                <a href="/client/messages/order/${orderId}/" class="client-message-item" style="margin-bottom:0.75rem;">
-                    <div class="flex flex-wrap justify-between items-start gap-1 mb-1">
-                        <span class="font-medium text-gray-800 text-sm">${order.order_number || 'Order #' + orderId}</span>
-                        <span class="text-xs text-gray-500">${formatTimeAgo(lastMessage.created_at || conv.last_message_at)}</span>
-                    </div>
-                    <p class="text-sm text-gray-600 truncate">${lastMessage.content || 'No messages yet'}</p>
-                    ${conv.unread_count > 0 ? `<div class="client-message-unread">${conv.unread_count} new</div>` : ''}
-                </a>
-            `;
+        container.innerHTML = conversations.slice(0, 3).map(function(conv) {
+            var lastMessage = conv.last_message || {};
+            var order = conv.order || {};
+            var orderId = order.id || conv.order_id || conv.id;
+            return '<a href="/client/messages/order/' + orderId + '/" class="client-message-item" style="margin-bottom:0.75rem;">' +
+                '<div class="flex flex-wrap justify-between items-start gap-1 mb-1">' +
+                    '<span class="font-medium text-gray-800 text-sm">' + (order.order_number || 'Order #' + orderId) + '</span>' +
+                    '<span class="text-xs text-gray-500">' + formatTimeAgo(lastMessage.created_at || conv.last_message_at) + '</span>' +
+                '</div>' +
+                '<p class="text-sm text-gray-600 truncate">' + (lastMessage.content || 'No messages yet') + '</p>' +
+                (conv.unread_count > 0 ? '<div class="client-message-unread">' + conv.unread_count + ' new</div>' : '') +
+            '</a>';
         }).join('');
-    } catch (error) {
-        console.error('Failed to load messages:', error);
+    } catch (e) {
+        console.error('Failed to load messages:', e);
         container.innerHTML = '<div class="client-empty-state"><p>Unable to load messages</p></div>';
     }
 }
 
 async function loadRecentOrders() {
-    const tbody = document.getElementById('recent-orders');
+    var tbody = document.getElementById('recent-orders');
     try {
-        const token = getAuthToken();
-        if (!token) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">Please login to view orders</td></tr>';
-            return;
-        }
-
-        const response = await fetch('/api/v1/client/orders/?limit=5', {
-            headers: getApiHeaders()
-        });
-
-        if (!response.ok) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">Unable to load orders</td></tr>';
-            return;
-        }
-
-        const data = await response.json();
-        const orders = data.results || data;
+        var data = await api.get('/client/orders/?limit=5');
+        var orders = data.results || data;
 
         if (!orders || orders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">No orders found</td></tr>';
             return;
         }
 
-        tbody.innerHTML = orders.slice(0, 5).map(order => `
-            <tr>
-                <td class="font-medium text-sm">${order.order_number || 'N/A'}</td>
-                <td class="hidden sm:table-cell text-gray-600 text-sm">${order.topic ? order.topic.substring(0, 30) : ''}${order.topic && order.topic.length > 30 ? '...' : ''}</td>
-                <td><span class="client-status-badge ${getStatusClass(order.status)}">${getStatusLabel(order.status)}</span></td>
-                <td class="hidden md:table-cell text-gray-600 text-sm">${formatDate(order.deadline)}</td>
-                <td class="font-medium text-green-600 text-sm">${formatCurrency(order.total_price)}</td>
-                <td><a href="/client/orders/${order.id}/" class="client-link text-sm">View <i class="fas fa-arrow-right ml-1 text-xs"></i></a></td>
-            </tr>
-        `).join('');
-    } catch (error) {
-        console.error('Failed to load recent orders:', error);
+        tbody.innerHTML = orders.slice(0, 5).map(function(order) {
+            return '<tr>' +
+                '<td class="font-medium text-sm">' + (order.order_number || 'N/A') + '</td>' +
+                '<td class="hidden sm:table-cell text-gray-600 text-sm">' + (order.topic ? order.topic.substring(0, 30) : '') + (order.topic && order.topic.length > 30 ? '...' : '') + '</td>' +
+                '<td><span class="client-status-badge ' + getStatusClass(order.status) + '">' + getStatusLabel(order.status) + '</span></td>' +
+                '<td class="hidden md:table-cell text-gray-600 text-sm">' + formatDate(order.deadline) + '</td>' +
+                '<td class="font-medium text-green-600 text-sm">' + formatCurrency(order.total_price) + '</td>' +
+                '<td><a href="/client/orders/' + order.id + '/" class="client-link text-sm">View <i class="fas fa-arrow-right ml-1 text-xs"></i></a></td>' +
+            '</tr>';
+        }).join('');
+    } catch (e) {
+        console.error('Failed to load recent orders:', e);
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">Unable to load orders</td></tr>';
     }
 }

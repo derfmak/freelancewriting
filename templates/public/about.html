@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}About Us - Professional Academic Writing Services{% endblock %}
+{% block title %}About Us - Professional Academic Writing Services | AcademicWrite{% endblock %}
+{% block meta_description %}Learn about AcademicWrite - professional academic writing services helping students worldwide with high-quality, plagiarism-free essays, research papers, and dissertations.{% endblock %}
+{% block meta_keywords %}about academic writing service, professional writers, essay help, research paper assistance, dissertation writing, academic success, student writing support{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -80,9 +82,6 @@
   .content-section {
     padding: 2.5rem 0;
   }
-  .content-section:nth-child(even) {
-    background: #fafafa;
-  }
   .content-section h2 {
     font-size: 1.75rem;
     font-weight: 700;
@@ -141,6 +140,18 @@
     border-radius: 0.5rem;
     padding: 1.5rem 1rem;
     text-align: center;
+    transition: all 0.2s ease;
+  }
+  .value-card:hover {
+    border-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5,150,105,0.06);
+  }
+  .value-card .value-icon {
+    font-size: 2rem;
+    color: #059669;
+    margin-bottom: 0.75rem;
+    display: block;
   }
   .value-card h3 {
     font-weight: 600;
@@ -155,38 +166,59 @@
     margin: 0;
   }
   .cta-section {
-    background: #f1f5f9;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
     padding: 2.5rem 2rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     text-align: center;
     margin: 2rem 0 1rem;
   }
   .cta-section h2 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0f172a;
+    color: white;
     margin-bottom: 0.5rem;
   }
   .cta-section p {
-    color: #475569;
+    color: rgba(255,255,255,0.85);
     font-size: 1rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
   .cta-btn {
     display: inline-block;
-    background: #059669;
-    color: white;
+    background: white;
+    color: #059669;
     padding: 0.6rem 2rem;
     font-weight: 600;
     border-radius: 0.375rem;
     text-decoration: none;
-    transition: background 0.2s;
+    transition: all 0.2s;
   }
   .cta-btn:hover {
-    background: #047857;
+    background: #f0fdf4;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   }
-  .text-green {
+  .section-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+  }
+  .section-title span {
     color: #059669;
+  }
+  .section-subtitle {
+    color: #64748b;
+    max-width: 500px;
+    margin: 0 auto 1.5rem;
+  }
+  @media (max-width: 640px) {
+    .about-hero h1 {
+      font-size: 1.8rem;
+    }
+    .section-title {
+      font-size: 1.4rem;
+    }
   }
 </style>
 {% endblock %}
@@ -194,20 +226,20 @@
 {% block content %}
 <div class="about-page">
 
-  <section class="about-hero text-center">
-    <h1>About AcademicWrite</h1>
-    <p>Professional academic writing services for students worldwide</p>
+  <section class="about-hero text-center" aria-labelledby="about-heading">
+    <h1 id="about-heading">About AcademicWrite</h1>
+    <p>Professional academic writing services helping students worldwide achieve their academic goals</p>
   </section>
 
   <div class="container">
-    <div class="stats-grid" id="stats-container">
+    <div class="stats-grid" id="stats-container" aria-label="Our achievements">
       <div class="stat-card">
         <div class="stat-number" id="orders-count">0</div>
         <div class="stat-label">Orders Completed</div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="clients-count">0</div>
-        <div class="stat-label">Clients</div>
+        <div class="stat-label">Satisfied Clients</div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="satisfaction-rate">0%</div>
@@ -216,63 +248,68 @@
     </div>
   </div>
 
-  <div class="content-section">
+  <section class="content-section" aria-labelledby="partner-heading">
     <div class="container">
       <div class="content-grid">
         <div class="image-wrapper">
           <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop&crop=center"
-               alt="Students studying" class="section-image" loading="lazy">
+               alt="Students collaborating on academic work together" class="section-image" loading="lazy" width="800" height="600">
         </div>
         <div>
-          <h2>Your Partner in <span>Academic Success</span></h2>
+          <h2 id="partner-heading">Your Partner in <span>Academic Success</span></h2>
           <p>We understand the challenges students face in today's demanding academic environment. Our platform connects you with qualified writers who deliver high-quality, original content tailored to your specific requirements.</p>
-          <p>Whether you need help with essays, research papers, dissertations, or any other academic assignment, we're here to support you every step of the way.</p>
+          <p>Whether you need help with essays, research papers, dissertations, or any other academic assignment, we're here to support you every step of the way. Our writers hold advanced degrees and have years of experience in academic writing.</p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="content-section">
+  <section class="content-section" style="background:#fafafa;" aria-labelledby="quality-heading">
     <div class="container">
       <div class="content-grid">
         <div>
-          <h2>Quality <span>You Can Trust</span></h2>
+          <h2 id="quality-heading">Quality <span>You Can Trust</span></h2>
           <p>Every paper is written from scratch by subject matter experts who hold advanced degrees in their respective fields. We ensure each piece meets the highest academic standards and follows your specific formatting requirements.</p>
-          <p>Our commitment to quality includes rigorous plagiarism checks, thorough proofreading, and unlimited revisions to ensure your complete satisfaction.</p>
+          <p>Our commitment to quality includes rigorous plagiarism checks, thorough proofreading, and unlimited revisions to ensure your complete satisfaction. We guarantee 100% original, plagiarism-free content delivered on time.</p>
         </div>
         <div class="image-wrapper">
           <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=600&fit=crop&crop=center"
-               alt="Academic research" class="section-image" loading="lazy">
+               alt="Academic research and writing materials on desk" class="section-image" loading="lazy" width="800" height="600">
         </div>
       </div>
     </div>
+  </section>
+
+  <div class="container">
+    <section aria-labelledby="values-heading">
+      <h2 id="values-heading" class="section-title text-center">Our <span>Values</span></h2>
+      <p class="section-subtitle text-center">The principles that guide everything we do</p>
+      <div class="value-grid">
+        <div class="value-card">
+          <span class="value-icon"><i class="fas fa-star"></i></span>
+          <h3>Excellence</h3>
+          <p>We deliver nothing less than exceptional quality in every piece of work we produce, meeting the highest academic standards.</p>
+        </div>
+        <div class="value-card">
+          <span class="value-icon"><i class="fas fa-shield-alt"></i></span>
+          <h3>Integrity</h3>
+          <p>We maintain the highest standards of academic integrity and originality, ensuring every paper is written from scratch.</p>
+        </div>
+        <div class="value-card">
+          <span class="value-icon"><i class="fas fa-user-graduate"></i></span>
+          <h3>Student First</h3>
+          <p>Your success is our priority. We're committed to helping you achieve your academic goals with personalized support.</p>
+        </div>
+      </div>
+    </section>
   </div>
 
   <div class="container">
-    <h2 class="text-center" style="font-size:1.75rem; font-weight:700; color:#0f172a; margin-bottom:0.5rem;">Our <span class="text-green">Values</span></h2>
-    <p class="text-center" style="color:#64748b; max-width:500px; margin:0 auto 1.5rem;">The principles that guide everything we do</p>
-    <div class="value-grid">
-      <div class="value-card">
-        <h3>Excellence</h3>
-        <p>We deliver nothing less than exceptional quality in every piece of work we produce.</p>
-      </div>
-      <div class="value-card">
-        <h3>Integrity</h3>
-        <p>We maintain the highest standards of academic integrity and originality in all our work.</p>
-      </div>
-      <div class="value-card">
-        <h3>Student First</h3>
-        <p>Your success is our priority. We're committed to helping you achieve your academic goals.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="cta-section">
-      <h2>Ready to Get Started?</h2>
-      <p>Join thousands of students who trust us with their academic success</p>
-      <a href="/register/" class="cta-btn">Get Started Today</a>
-    </div>
+    <section class="cta-section" aria-labelledby="cta-heading">
+      <h2 id="cta-heading">Ready to Get Started?</h2>
+      <p>Join thousands of students who trust AcademicWrite with their academic success. Get your high-quality, plagiarism-free paper today.</p>
+      <a href="/register/" class="cta-btn" aria-label="Create your account and get started">Get Started Today</a>
+    </section>
   </div>
 
 </div>

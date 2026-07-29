@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load socialaccount %}
 {% load static %}
 
 {% block title %}Login - AcademicWrite{% endblock %}
@@ -21,11 +20,6 @@
             opacity: 1;
             transform: translateY(0);
         }
-    }
-
-    @keyframes progressBar {
-        from { width: 0%; }
-        to { width: 100%; }
     }
 
     @keyframes spin {
@@ -183,29 +177,6 @@
         display: inline-block;
     }
 
-    .login-btn .progress-bar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 3px;
-        background: #fbbf24;
-        width: 0%;
-        z-index: 3;
-        transition: width 0.1s linear;
-    }
-
-    .login-btn .progress-bar.active {
-        animation: progressBar 5s linear forwards;
-    }
-
-    .login-btn .progress-bar.error {
-        background: #ef4444;
-    }
-
-    .login-btn .progress-bar.success {
-        background: #22c55e;
-    }
-
     .spinner {
         display: inline-block;
         width: 1.2rem;
@@ -255,6 +226,89 @@
     .register-link:hover {
         color: #047857;
         text-decoration: underline;
+    }
+
+    .btn-google {
+        width: 100%;
+        padding: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        background: white;
+        color: #1e293b;
+        font-weight: 500;
+        font-size: 0.9rem;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-google:hover {
+        background: #f8fafc;
+        border-color: #d1d5db;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-google svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e5e7eb;
+    }
+
+    .divider span {
+        color: #9ca3af;
+        font-size: 0.8rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .error-message-box {
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        border-left: 4px solid #dc2626;
+        margin-bottom: 1rem;
+    }
+
+    .error-message-box a {
+        color: #059669;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .error-message-box a:hover {
+        text-decoration: underline;
+    }
+
+    .success-message-box {
+        background: #ecfdf5;
+        color: #059669;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        border-left: 4px solid #059669;
+        margin-bottom: 1rem;
     }
 
     .toast-notification {
@@ -322,63 +376,6 @@
         color: #1e293b;
     }
 
-    .btn-google {
-        width: 100%;
-        padding: 0.7rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        background: white;
-        color: #1e293b;
-        font-weight: 500;
-        font-size: 0.9rem;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-    }
-
-    .btn-google:hover {
-        background: #f8fafc;
-        border-color: #d1d5db;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    }
-
-    .btn-google svg {
-        width: 20px;
-        height: 20px;
-        flex-shrink: 0;
-    }
-
-    .divider {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin: 1.5rem 0;
-    }
-
-    .divider::before,
-    .divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: #e5e7eb;
-    }
-
-    .divider span {
-        color: #9ca3af;
-        font-size: 0.8rem;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-
-    .recaptcha-wrapper {
-        margin-bottom: 1.25rem;
-    }
-
     @media (max-width: 640px) {
         .login-card {
             padding: 1.5rem;
@@ -403,9 +400,27 @@
             <p class="login-subtitle">Sign in to your account</p>
         </div>
 
-        <form id="loginForm" class="mt-6" novalidate>
-            {% csrf_token %}
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    <div class="success-message-box">{{ message }}</div>
+                {% else %}
+                    <div class="error-message-box">
+                        {{ message }}
+                        {% if "sign up" in message|lower %}
+                            <a href="/register/">Sign up here</a>
+                        {% endif %}
+                        {% if "sign in" in message|lower %}
+                            <a href="/login/">Sign in here</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
 
+        <div id="urlErrorBox" class="error-message-box" style="display:none;"></div>
+
+        <form id="loginForm" class="mt-6" novalidate>
             <div class="form-group">
                 <label for="email" class="form-label">Email Address</label>
                 <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email" spellcheck="false">
@@ -423,10 +438,6 @@
                 <div class="error-message" id="passwordError">Password must be at least 6 characters</div>
             </div>
 
-            <div class="recaptcha-wrapper">
-                {{ form.captcha }}
-            </div>
-
             <div class="flex items-center justify-between mb-6">
                 <label class="checkbox-label">
                     <input type="checkbox" id="remember">
@@ -438,7 +449,6 @@
             <button type="submit" class="login-btn" id="loginBtn" disabled>
                 <span class="btn-text">Sign In</span>
                 <span class="btn-loader"><span class="spinner"></span> Signing in...</span>
-                <span class="progress-bar" id="progressBar"></span>
             </button>
         </form>
 
@@ -446,7 +456,7 @@
             <span>or continue with</span>
         </div>
 
-        <a href="{% provider_login_url 'google' %}" class="btn-google">
+        <a href="/auth/google/" class="btn-google">
             <svg viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -490,14 +500,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailError = document.getElementById('emailError');
     const passwordError = document.getElementById('passwordError');
     const loginBtn = document.getElementById('loginBtn');
-    const progressBar = document.getElementById('progressBar');
     const togglePassword = document.getElementById('togglePassword');
     const rememberCheck = document.getElementById('remember');
+    const urlErrorBox = document.getElementById('urlErrorBox');
 
     let isEmailValid = false;
     let isPasswordValid = false;
     let emailTouched = false;
     let emailValidated = false;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlError = urlParams.get('error');
+
+    if (urlError) {
+        const errorMessages = {
+            'google_auth_failed': 'Google authentication failed. Please try again.',
+            'google_no_email': 'Google did not provide an email address.',
+            'account_suspended': 'Your account has been suspended.'
+        };
+        urlErrorBox.textContent = errorMessages[urlError] || 'An error occurred. Please try again.';
+        urlErrorBox.style.display = 'block';
+    }
 
     function validateEmail(value) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -525,13 +548,6 @@ document.addEventListener('DOMContentLoaded', function() {
         errorEl.classList.remove('show');
     }
 
-    function getCsrfToken() {
-        const token = document.querySelector('[name=csrf-token]')?.content;
-        if (token) return token;
-        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
-        return cookie ? cookie.split('=')[1] : '';
-    }
-
     email.addEventListener('blur', function() {
         emailTouched = true;
         const value = this.value.trim();
@@ -552,9 +568,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     email.addEventListener('input', function() {
-        if (!emailTouched || !emailValidated) {
-            return;
-        }
+        if (!emailTouched || !emailValidated) return;
         const value = this.value.trim();
         if (value && !validateEmail(value)) {
             isEmailValid = false;
@@ -633,138 +647,66 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 6000);
     }
 
-    function startProgressBar(type) {
-        progressBar.classList.remove('error', 'success', 'active');
-        progressBar.style.width = '0%';
-        
-        if (type === 'error') {
-            progressBar.classList.add('error');
-        } else if (type === 'success') {
-            progressBar.classList.add('success');
-        }
-        
-        progressBar.classList.add('active');
-    }
-
     function resetButton() {
         loginBtn.classList.remove('loading');
-        loginBtn.disabled = !(isEmailValid && isPasswordValid);
-        if (isEmailValid && isPasswordValid) {
-            loginBtn.classList.add('active');
-        } else {
-            loginBtn.classList.remove('active');
-        }
-        progressBar.classList.remove('active', 'error', 'success');
-        progressBar.style.width = '0%';
-        
-        if (progressTimer) {
-            clearTimeout(progressTimer);
-            progressTimer = null;
-        }
-        if (loginTimeout) {
-            clearTimeout(loginTimeout);
-            loginTimeout = null;
-        }
-    }
-
-    let progressTimer = null;
-    let loginTimeout = null;
-
-    function handleLoginSuccess() {
-        loginBtn.classList.remove('loading');
-        startProgressBar('success');
-        showToast('Login successful! Redirecting...', 'success');
-        
-        loginTimeout = setTimeout(() => {
-            window.location.href = '/dashboard/';
-        }, 1500);
-    }
-
-    function handleLoginError(message) {
-        loginBtn.classList.remove('loading');
-        startProgressBar('error');
-        showToast(message || 'Login failed. Please try again.', 'error');
-        
-        loginTimeout = setTimeout(() => {
-            resetButton();
-        }, 5000);
+        updateButtonState();
     }
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        if (!isEmailValid || !isPasswordValid) {
-            return;
-        }
-
-        const emailValue = email.value.trim();
-        const passwordValue = password.value;
+        if (!isEmailValid || !isPasswordValid) return;
 
         loginBtn.classList.add('loading');
         loginBtn.disabled = true;
-        startProgressBar('loading');
-
-        const csrfToken = getCsrfToken();
-        const apiBase = window.location.origin;
-        const loginUrl = apiBase + '/auth/login/';
 
         try {
-            const response = await fetch(loginUrl, {
+            const response = await fetch('/auth/login/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({
-                    email: emailValue,
-                    password: passwordValue
+                    email: email.value.trim(),
+                    password: password.value
                 })
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                if (data.access) {
-                    localStorage.setItem('access_token', data.access);
-                    if (data.refresh) {
-                        localStorage.setItem('refresh_token', data.refresh);
-                    }
+                if (typeof auth !== 'undefined') {
+                    auth.setTokens(data.access, data.refresh);
                     if (data.user) {
                         localStorage.setItem('user', JSON.stringify(data.user));
                     }
-                    
-                    if (rememberCheck.checked) {
-                        localStorage.setItem('saved_email', emailValue);
-                    } else {
-                        localStorage.removeItem('saved_email');
-                    }
-                    
-                    handleLoginSuccess();
                 } else {
-                    handleLoginError('Invalid server response');
+                    localStorage.setItem('access_token', data.access);
+                    localStorage.setItem('refresh_token', data.refresh);
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
                 }
+
+                if (rememberCheck.checked) {
+                    localStorage.setItem('saved_email', email.value.trim());
+                } else {
+                    localStorage.removeItem('saved_email');
+                }
+
+                showToast('Login successful! Redirecting...', 'success');
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard/';
+                }, 1000);
             } else {
-                let errorMessage = 'Invalid credentials. Please try again.';
-                if (data.error) {
-                    errorMessage = data.error;
-                } else if (data.message) {
-                    errorMessage = data.message;
-                } else if (data.non_field_errors) {
-                    errorMessage = data.non_field_errors[0];
-                } else if (data.detail) {
-                    errorMessage = data.detail;
-                }
-                handleLoginError(errorMessage);
+                resetButton();
+                const errorMessage = data.error || data.detail || 'Invalid credentials. Please try again.';
+                showToast(errorMessage, 'error');
             }
         } catch (error) {
             console.error('Login error:', error);
-            
-            if (error.message === 'Failed to fetch') {
-                handleLoginError('Cannot connect to server. Please check your connection.');
-            } else {
-                handleLoginError('Something went wrong. Please try again.');
-            }
+            resetButton();
+            showToast('Network error. Please check your connection.', 'error');
         }
     });
 

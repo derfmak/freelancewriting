@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth import login as auth_login, logout as auth_logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.core.cache import cache
@@ -22,9 +22,10 @@ import json
 from datetime import timedelta
 
 from apps.accounts.models import User
-from apps.orders.models import Order, OrderHistory
+from apps.orders.models import Order, OrderHistory, OrderTimeline
 from apps.orders.serializers import OrderListSerializer
 from apps.payments.models import Transaction, Wallet
+from apps.payments.services import WalletService
 from apps.admin_portal.models import Blog, Sample
 from apps.messaging.models import Conversation
 
@@ -43,6 +44,7 @@ def home(request):
 
 
 @api_view(['GET'])
+@permission_classes([])
 def about_stats(request):
     total_orders = Order.objects.count()
     completed_orders = Order.objects.filter(status='completed').count()
@@ -70,8 +72,11 @@ def about_stats(request):
         'satisfaction_rate': satisfaction
     }
     return Response(stats)
+
+
 def about(request):
     return render(request, 'public/about.html')
+
 
 def how_it_works(request):
     return render(request, 'public/how-it-works.html')
@@ -105,8 +110,6 @@ def faq(request):
     return render(request, 'public/faq.html')
 
 
-from django.contrib.auth.decorators import login_required
-
 def place_order(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -117,9 +120,7 @@ def place_order(request):
 
 def samples(request):
     samples = Sample.objects.filter(is_active=True).order_by('-created_at')
-    context = {
-        'samples': samples,
-    }
+    context = {'samples': samples}
     return render(request, 'public/samples.html', context)
 
 
@@ -372,21 +373,115 @@ def reset_password(request, token=None):
     return render(request, 'public/reset-password.html', {'token': token})
 
 
-def login_view(request):
+def login_page(request):
+    if request.user.is_authenticated:
+        if request.user.role == 'admin':
+            return redirect('admin-dashboard')
+        return redirect('client-dashboard')
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
+        remember = request.POST.get('remember', False)
+
+        if not email or not password:
+            messages.error(request, 'Please enter both email and password.')
+            return render(request, 'public/login.html')
+
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
+            if user.is_suspended:
+                messages.error(request, 'Your account has been suspended. Please contact support.')
+                return render(request, 'public/login.html')
+
+            auth_login(request, user)
+
+            if not remember:
+                request.session.set_expiry(0)
+
+            if user.role == 'admin':
+                return redirect('admin-dashboard')
+            return redirect('client-dashboard')
+        else:
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Invalid password. Please try again.')
+            else:
+                messages.error(request, 'No account found with this email. Please sign up first.')
+            return render(request, 'public/login.html')
+
     return render(request, 'public/login.html')
 
 
-def register_view(request):
+def register_page(request):
+    if request.user.is_authenticated:
+        if request.user.role == 'admin':
+            return redirect('admin-dashboard')
+        return redirect('client-dashboard')
+
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        phone = request.POST.get('phone', '').strip()
+        institution = request.POST.get('institution', '').strip()
+
+        if not full_name or not email or not password:
+            messages.error(request, 'Please fill in all required fields.')
+            return render(request, 'public/register.html')
+
+        if password != confirm_password:
+            messages.error(request, 'Passwords do not match.')
+            return render(request, 'public/register.html')
+
+        if len(password) < 8:
+            messages.error(request, 'Password must be at least 8 characters.')
+            return render(request, 'public/register.html')
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'An account with this email already exists. Please sign in.')
+            return render(request, 'public/register.html')
+
+        user = User.objects.create(
+            email=email,
+            full_name=full_name,
+            phone=phone,
+            institution=institution,
+            role='client',
+            email_verified=True,
+            is_active=True
+        )
+        user.set_password(password)
+        user.save()
+
+        messages.success(request, 'Account created successfully! Please sign in.')
+        return redirect('login')
+
     return render(request, 'public/register.html')
+
+
+def forgot_password_page(request):
+    if request.user.is_authenticated:
+        if request.user.role == 'admin':
+            return redirect('admin-dashboard')
+        return redirect('client-dashboard')
+    return render(request, 'public/forgot-password.html')
+
+
+def reset_password_page(request, token=None):
+    if request.user.is_authenticated:
+        if request.user.role == 'admin':
+            return redirect('admin-dashboard')
+        return redirect('client-dashboard')
+    return render(request, 'public/reset-password.html', {'token': token})
 
 
 @login_required
 def dashboard_redirect(request):
     if request.user.role == 'admin':
         return redirect('admin-dashboard')
-    elif request.user.role == 'client':
-        return redirect('client-dashboard')
-    return redirect('home')
+    return redirect('client-dashboard')
 
 
 @login_required
@@ -442,8 +537,6 @@ def client_wallet(request):
 def client_messages(request):
     if request.user.role == 'client':
         return render(request, 'client/messages.html')
-    elif request.user.role == 'admin':
-        return render(request, 'admin/messages.html')
     return render(request, 'access_denied.html')
 
 
@@ -483,6 +576,85 @@ def client_settings(request):
 
 
 @login_required
+def client_notifications(request):
+    if request.user.role != 'client':
+        return render(request, 'access_denied.html')
+    return render(request, 'client/notifications.html')
+
+
+@login_required
+def admin_dashboard_view(request):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    return render(request, 'admin/dashboard.html', {'user': request.user})
+
+
+@login_required
+def admin_orders(request):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    return render(request, 'admin/orders.html')
+
+
+@login_required
+def admin_order_workspace(request, order_id):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    order = get_object_or_404(Order, id=order_id)
+    context = {'order': order, 'order_id': order_id}
+    return render(request, 'admin/order-workspace.html', context)
+
+
+@login_required
+def admin_users(request):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    return render(request, 'admin/users.html')
+
+
+@login_required
+def admin_user_detail(request, user_id):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    
+    user = get_object_or_404(User, id=user_id)
+    orders = Order.objects.filter(client=user).order_by('-created_at')
+    wallet, created = Wallet.objects.get_or_create(user=user)
+    transactions = Transaction.objects.filter(user=user).order_by('-created_at')[:20]
+    
+    context = {
+        'user_detail': user,
+        'orders': orders,
+        'wallet': wallet,
+        'transactions': transactions,
+        'order_count': orders.count(),
+        'total_spent': orders.filter(status='completed').aggregate(Sum('total_price'))['total_price__sum'] or 0,
+    }
+    return render(request, 'admin/user-detail.html', context)
+
+
+@login_required
+def admin_finances(request):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    return render(request, 'admin/finances.html')
+
+
+@login_required
+def admin_refunds(request):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    return render(request, 'admin/refunds.html')
+
+
+@login_required
+def admin_messages(request):
+    if request.user.role != 'admin':
+        return render(request, 'access_denied.html')
+    return render(request, 'admin/messages.html')
+
+
+@login_required
 def admin_profile(request):
     if request.user.role != 'admin':
         return render(request, 'access_denied.html')
@@ -494,13 +666,6 @@ def admin_settings(request):
     if request.user.role != 'admin':
         return render(request, 'access_denied.html')
     return render(request, 'admin/settings.html')
-
-
-@login_required
-def client_notifications(request):
-    if request.user.role != 'client':
-        return render(request, 'access_denied.html')
-    return render(request, 'client/notifications.html')
 
 
 @login_required
@@ -608,80 +773,7 @@ def admin_dashboard(request):
         ).count(),
         'admin_balance': admin_balance
     })
-@login_required
-def admin_user_detail(request, user_id):
-    """Admin view for a specific user's details."""
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    
-    user = get_object_or_404(User, id=user_id)
-    
-    orders = Order.objects.filter(client=user).order_by('-created_at')
-    
-    wallet, created = Wallet.objects.get_or_create(user=user)
-    
-    transactions = Transaction.objects.filter(user=user).order_by('-created_at')[:20]
-    
-    context = {
-        'user_detail': user,
-        'orders': orders,
-        'wallet': wallet,
-        'transactions': transactions,
-        'order_count': orders.count(),
-        'total_spent': orders.filter(status='completed').aggregate(Sum('total_price'))['total_price__sum'] or 0,
-    }
-    
-    return render(request, 'admin/user-detail.html', context)
-@login_required
-def admin_dashboard_view(request):
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    return render(request, 'admin/dashboard.html', {'user': request.user})
-@login_required
-def admin_orders(request):
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    return render(request, 'admin/orders.html')
 
-
-@login_required
-def admin_order_workspace(request, order_id):
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    order = get_object_or_404(Order, id=order_id)
-    context = {'order': order, 'order_id': order_id}
-    return render(request, 'admin/order-workspace.html', context)
-
-
-@login_required
-def admin_users(request):
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    return render(request, 'admin/users.html')
-
-
-@login_required
-def admin_finances(request):
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    return render(request, 'admin/finances.html')
-
-
-@login_required
-def admin_refunds(request):
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    return render(request, 'admin/refunds.html')
-
-
-@login_required
-def admin_messages(request):
-    if request.user.role != 'admin':
-        return render(request, 'access_denied.html')
-    return render(request, 'admin/messages.html')
-
-from apps.payments.services import WalletService
-from apps.orders.models import OrderHistory, OrderTimeline
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -875,6 +967,7 @@ def client_rate_order(request, order_id):
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @login_required
 def admin_blog(request):
@@ -1228,9 +1321,7 @@ def admin_samples(request):
         else:
             messages.error(request, 'Title and file are required.')
     
-    context = {
-        'samples': samples,
-    }
+    context = {'samples': samples}
     return render(request, 'admin/samples.html', context)
 
 

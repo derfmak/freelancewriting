@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load socialaccount %}
 {% load static %}
 
 {% block title %}Register - AcademicWrite{% endblock %}
@@ -23,18 +22,8 @@
         }
     }
 
-    @keyframes progressBar {
-        from { width: 0%; }
-        to { width: 100%; }
-    }
-
     @keyframes spin {
         to { transform: rotate(360deg); }
-    }
-
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
     }
 
     .register-container {
@@ -113,11 +102,6 @@
         background: #f0fdf4;
     }
 
-    .form-input:-webkit-autofill {
-        -webkit-box-shadow: 0 0 0 30px #fafbfc inset !important;
-        -webkit-text-fill-color: #1e293b !important;
-    }
-
     .password-wrapper {
         position: relative;
     }
@@ -179,10 +163,6 @@
         box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
     }
 
-    .register-btn:disabled {
-        cursor: not-allowed;
-    }
-
     .register-btn .btn-text {
         position: relative;
         z-index: 2;
@@ -200,29 +180,6 @@
 
     .register-btn.loading .btn-loader {
         display: inline-block;
-    }
-
-    .register-btn .progress-bar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 3px;
-        background: #fbbf24;
-        width: 0%;
-        z-index: 3;
-        transition: width 0.1s linear;
-    }
-
-    .register-btn .progress-bar.active {
-        animation: progressBar 5s linear forwards;
-    }
-
-    .register-btn .progress-bar.error {
-        background: #ef4444;
-    }
-
-    .register-btn .progress-bar.success {
-        background: #22c55e;
     }
 
     .spinner {
@@ -351,6 +308,8 @@
         right: 1.5rem;
         z-index: 1000;
         animation: slideDown 0.4s ease;
+        max-width: 400px;
+        width: 100%;
     }
 
     .toast-content {
@@ -362,7 +321,6 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        min-width: 280px;
     }
 
     .toast-content.error {
@@ -375,6 +333,7 @@
 
     .toast-icon {
         font-size: 1.2rem;
+        flex-shrink: 0;
     }
 
     .toast-icon.success {
@@ -389,6 +348,8 @@
         font-size: 0.85rem;
         color: #1e293b;
         font-weight: 500;
+        word-break: break-word;
+        flex: 1;
     }
 
     .toast-close {
@@ -399,7 +360,7 @@
         font-size: 1.1rem;
         padding: 0.2rem;
         transition: color 0.3s ease;
-        margin-left: auto;
+        flex-shrink: 0;
     }
 
     .toast-close:hover {
@@ -580,8 +541,34 @@
         color: #6b7280;
     }
 
-    .recaptcha-wrapper {
-        margin-bottom: 1.25rem;
+    .error-message-box {
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        border-left: 4px solid #dc2626;
+        margin-bottom: 1rem;
+    }
+
+    .error-message-box a {
+        color: #059669;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .error-message-box a:hover {
+        text-decoration: underline;
+    }
+
+    .success-message-box {
+        background: #ecfdf5;
+        color: #059669;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        border-left: 4px solid #059669;
+        margin-bottom: 1rem;
     }
 
     @media (max-width: 640px) {
@@ -597,10 +584,7 @@
             top: 1rem;
             right: 1rem;
             left: 1rem;
-        }
-
-        .toast-content {
-            min-width: auto;
+            max-width: none;
         }
 
         .verify-actions {
@@ -634,7 +618,24 @@
             <p class="register-subtitle">Join thousands of satisfied students</p>
         </div>
 
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    <div class="success-message-box">{{ message }}</div>
+                {% else %}
+                    <div class="error-message-box">
+                        {{ message }}
+                        {% if "sign in" in message|lower %}
+                            <a href="/login/">Sign in here</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
         <form id="registerForm" class="mt-6" novalidate>
+            {% csrf_token %}
+
             <div class="form-group">
                 <label for="fullName" class="form-label">Full Name</label>
                 <input type="text" id="fullName" class="form-input" placeholder="John Doe" required autocomplete="name" spellcheck="false">
@@ -657,21 +658,11 @@
                 </div>
                 <div class="error-message" id="passwordError">Password does not meet requirements</div>
                 <div class="field-requirements" id="passwordReqs">
-                    <span class="req unmet" id="reqLength">
-                        <i class="fas fa-circle"></i> Min 8 characters
-                    </span>
-                    <span class="req unmet" id="reqUppercase">
-                        <i class="fas fa-circle"></i> One uppercase
-                    </span>
-                    <span class="req unmet" id="reqLowercase">
-                        <i class="fas fa-circle"></i> One lowercase
-                    </span>
-                    <span class="req unmet" id="reqNumber">
-                        <i class="fas fa-circle"></i> One number
-                    </span>
-                    <span class="req unmet" id="reqSpecial">
-                        <i class="fas fa-circle"></i> One special character
-                    </span>
+                    <span class="req unmet" id="reqLength"><i class="fas fa-circle"></i> Min 8 characters</span>
+                    <span class="req unmet" id="reqUppercase"><i class="fas fa-circle"></i> One uppercase</span>
+                    <span class="req unmet" id="reqLowercase"><i class="fas fa-circle"></i> One lowercase</span>
+                    <span class="req unmet" id="reqNumber"><i class="fas fa-circle"></i> One number</span>
+                    <span class="req unmet" id="reqSpecial"><i class="fas fa-circle"></i> One special character</span>
                 </div>
             </div>
 
@@ -685,9 +676,7 @@
                 </div>
                 <div class="error-message" id="confirmError">Passwords do not match</div>
                 <div class="field-requirements">
-                    <span class="req unmet" id="reqMatch">
-                        <i class="fas fa-circle"></i> Passwords match
-                    </span>
+                    <span class="req unmet" id="reqMatch"><i class="fas fa-circle"></i> Passwords match</span>
                 </div>
             </div>
 
@@ -701,10 +690,6 @@
                 <input type="text" id="institution" class="form-input" placeholder="Your school or university" spellcheck="false">
             </div>
 
-            <div class="recaptcha-wrapper">
-                {{ form.captcha }}
-            </div>
-
             <div class="form-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="terms">
@@ -715,7 +700,6 @@
             <button type="submit" class="register-btn" id="registerBtn" disabled>
                 <span class="btn-text">Create Account</span>
                 <span class="btn-loader"><span class="spinner"></span> Creating...</span>
-                <span class="progress-bar" id="progressBar"></span>
             </button>
         </form>
 
@@ -723,7 +707,7 @@
             <span>or continue with</span>
         </div>
 
-        <a href="{% provider_login_url 'google' %}" class="btn-google">
+        <a href="/auth/google/" class="btn-google">
             <svg viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -796,7 +780,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const institution = document.getElementById('institution');
     const terms = document.getElementById('terms');
     const registerBtn = document.getElementById('registerBtn');
-    const progressBar = document.getElementById('progressBar');
 
     const nameError = document.getElementById('nameError');
     const emailError = document.getElementById('emailError');
@@ -917,9 +900,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     email.addEventListener('input', function() {
-        if (!emailTouched || !emailValidated) {
-            return;
-        }
+        if (!emailTouched || !emailValidated) return;
         const value = this.value.trim();
         if (value && !validateEmail(value)) {
             isEmailValid = false;
@@ -1088,48 +1069,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    function startProgressBar(type) {
-        progressBar.classList.remove('error', 'success', 'active');
-        progressBar.style.width = '0%';
-        
-        if (type === 'error') {
-            progressBar.classList.add('error');
-        } else if (type === 'success') {
-            progressBar.classList.add('success');
-        }
-        
-        progressBar.classList.add('active');
-    }
-
-    function resetButton() {
-        registerBtn.classList.remove('loading');
-        registerBtn.disabled = !(isNameValid && isEmailValid && isPasswordValid && isConfirmValid && isTermsChecked);
-        if (isNameValid && isEmailValid && isPasswordValid && isConfirmValid && isTermsChecked) {
-            registerBtn.classList.add('active');
-        } else {
-            registerBtn.classList.remove('active');
-        }
-        progressBar.classList.remove('active', 'error', 'success');
-        progressBar.style.width = '0%';
-        
-        if (progressTimer) {
-            clearTimeout(progressTimer);
-            progressTimer = null;
-        }
-        if (registerTimeout) {
-            clearTimeout(registerTimeout);
-            registerTimeout = null;
-        }
-    }
-
-    let progressTimer = null;
-    let registerTimeout = null;
-    let resendTimer = null;
-    let resendCountdown = null;
-
-    function showVerifyModal(email) {
+    function showVerifyModal(userEmail) {
         const modal = document.getElementById('verifyModal');
-        document.getElementById('verifyEmail').textContent = email;
+        document.getElementById('verifyEmail').textContent = userEmail;
         modal.classList.add('show');
         document.querySelectorAll('.otp-box').forEach(box => box.value = '');
         document.getElementById('verifyError').classList.remove('show');
@@ -1138,6 +1080,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('otp1').focus();
         startResendTimer();
     }
+
+    let resendTimer = null;
 
     function startResendTimer() {
         const btn = document.getElementById('resendCode');
@@ -1228,7 +1172,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('verifySubmit').addEventListener('click', async function() {
         const code = getOTP();
-        const email = document.getElementById('verifyEmail').textContent;
+        const userEmail = document.getElementById('verifyEmail').textContent;
         const errorEl = document.getElementById('verifyError');
         const successEl = document.getElementById('verifySuccess');
         
@@ -1245,11 +1189,8 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch('/auth/verify-otp/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrf-token]')?.content || ''
-                },
-                body: JSON.stringify({ email, otp_code: code })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: userEmail, otp_code: code })
             });
 
             const data = await response.json();
@@ -1273,19 +1214,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 successEl.classList.remove('show');
                 this.disabled = false;
                 this.textContent = 'Verify';
-                
                 setTimeout(() => {
                     otpBoxes.forEach(box => box.classList.remove('error'));
                 }, 3000);
             }
         } catch (error) {
-            console.error('Verification error:', error);
             otpBoxes.forEach(box => box.classList.add('error'));
             errorEl.textContent = 'Network error. Please try again.';
             errorEl.classList.add('show');
             this.disabled = false;
             this.textContent = 'Verify';
-            
             setTimeout(() => {
                 otpBoxes.forEach(box => box.classList.remove('error'));
             }, 3000);
@@ -1294,22 +1232,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('verifyCancel').addEventListener('click', function() {
         document.getElementById('verifyModal').classList.remove('show');
-        window.location.href = '/login/';
     });
 
     document.getElementById('resendCode').addEventListener('click', async function() {
-        const email = document.getElementById('verifyEmail').textContent;
+        const userEmail = document.getElementById('verifyEmail').textContent;
         this.disabled = true;
         this.textContent = 'Sending...';
 
         try {
             const response = await fetch('/auth/resend-otp/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrf-token]')?.content || ''
-                },
-                body: JSON.stringify({ email })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: userEmail })
             });
 
             const data = await response.json();
@@ -1326,12 +1260,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 startResendTimer();
             } else {
                 showToast(data.error || 'Failed to resend code', 'error');
+                this.disabled = false;
             }
         } catch (error) {
             showToast('Network error. Please try again.', 'error');
+            this.disabled = false;
         }
 
-        this.disabled = false;
         this.textContent = 'Resend Code';
     });
 
@@ -1341,18 +1276,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (toast && toast.style.display !== 'none') {
                 toast.style.display = 'none';
             }
-            if (document.getElementById('verifyModal').classList.contains('show')) {
-                document.getElementById('verifyModal').classList.remove('show');
-            }
         }
     });
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        if (!isNameValid || !isEmailValid || !isPasswordValid || !isConfirmValid || !isTermsChecked) {
-            return;
-        }
+        if (!isNameValid || !isEmailValid || !isPasswordValid || !isConfirmValid || !isTermsChecked) return;
 
         const formData = {
             full_name: fullName.value.trim(),
@@ -1364,27 +1294,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         registerBtn.classList.add('loading');
         registerBtn.disabled = true;
-        startProgressBar('loading');
 
         try {
             const response = await fetch('/auth/register/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrf-token]')?.content || ''
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                startProgressBar('success');
                 showToast('Verification code sent! Please check your email.', 'success');
                 showVerifyModal(formData.email);
-                resetButton();
             } else {
-                startProgressBar('error');
                 let errorMessage = 'Registration failed. Please try again.';
                 
                 if (data.email) {
@@ -1398,37 +1321,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     showError(password, passwordError, errorMessage);
                 } else if (data.error) {
                     errorMessage = data.error;
-                } else if (data.message) {
-                    errorMessage = data.message;
                 }
                 
                 showToast(errorMessage, 'error');
-                
-                registerTimeout = setTimeout(() => {
-                    resetButton();
-                }, 5000);
             }
         } catch (error) {
-            console.error('Registration error:', error);
-            startProgressBar('error');
             showToast('Network error. Please check your connection.', 'error');
-            
-            registerTimeout = setTimeout(() => {
-                resetButton();
-            }, 5000);
         }
-    });
 
-    const savedEmail = localStorage.getItem('saved_email');
-    if (savedEmail) {
-        email.value = savedEmail;
-        emailTouched = true;
-        emailValidated = true;
-        if (validateEmail(savedEmail)) {
-            isEmailValid = true;
-            updateButtonState();
-        }
-    }
+        registerBtn.classList.remove('loading');
+        updateButtonState();
+    });
 
     updateButtonState();
     updatePasswordRequirements();

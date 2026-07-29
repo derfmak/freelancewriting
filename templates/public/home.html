@@ -2,6 +2,8 @@
 {% load static %}
 
 {% block title %}Professional Academic Writing Services - AcademicWrite{% endblock %}
+{% block meta_description %}Professional academic writing services for students worldwide. Get high-quality, plagiarism-free essays, research papers, and dissertations delivered on time.{% endblock %}
+{% block meta_keywords %}academic writing services, essay writing, research paper help, dissertation writing, student writing help, professional writers, plagiarism-free papers{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -21,6 +23,7 @@
     font-size: 2.5rem;
     font-weight: 700;
     color: #0f172a;
+    line-height: 1.2;
   }
   .hero-section h1 span {
     color: #059669;
@@ -47,7 +50,10 @@
     font-weight: 600;
     border-radius: 0.375rem;
     text-decoration: none;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn:hover {
+    transform: translateY(-1px);
   }
   .btn-green {
     background: #059669;
@@ -81,6 +87,11 @@
     border-radius: 0.5rem;
     padding: 1.25rem 1rem;
     text-align: center;
+    transition: all 0.2s ease;
+  }
+  .stat-card:hover {
+    border-color: #059669;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   }
   .stat-number {
     font-size: 2rem;
@@ -110,6 +121,18 @@
     border-radius: 0.5rem;
     padding: 1.5rem 1rem;
     text-align: center;
+    transition: all 0.2s ease;
+  }
+  .feature-card:hover {
+    border-color: #059669;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
+  }
+  .feature-card .feature-icon {
+    font-size: 2rem;
+    color: #059669;
+    margin-bottom: 0.75rem;
+    display: block;
   }
   .feature-card h3 {
     font-weight: 600;
@@ -122,6 +145,20 @@
     font-size: 0.85rem;
     line-height: 1.5;
     margin: 0;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .section-subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
   }
 
   .steps-section {
@@ -256,41 +293,43 @@
   }
 
   .cta-box {
-    background: #f1f5f9;
-    padding: 2rem 1.5rem;
-    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    padding: 2.5rem 1.5rem;
+    border-radius: 0.75rem;
     text-align: center;
     margin: 1.5rem 0;
   }
   .cta-box h2 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #0f172a;
+    color: white;
     margin-bottom: 0.5rem;
   }
   .cta-box p {
-    color: #475569;
+    color: rgba(255,255,255,0.85);
     font-size: 1rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
   .btn-white {
     display: inline-block;
-    background: #059669;
-    color: white;
+    background: white;
+    color: #059669;
     padding: 0.6rem 2rem;
     font-weight: 600;
     border-radius: 0.375rem;
     text-decoration: none;
-    transition: background 0.2s;
+    transition: all 0.2s;
   }
   .btn-white:hover {
-    background: #047857;
+    background: #f0fdf4;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   }
   .btn-outline-white {
     display: inline-block;
     background: transparent;
-    color: #0f172a;
-    border: 1px solid #d1d5db;
+    color: white;
+    border: 1.5px solid rgba(255,255,255,0.5);
     padding: 0.6rem 1.5rem;
     font-weight: 600;
     border-radius: 0.375rem;
@@ -298,8 +337,17 @@
     transition: all 0.2s;
   }
   .btn-outline-white:hover {
-    border-color: #059669;
-    color: #059669;
+    border-color: white;
+    background: rgba(255,255,255,0.1);
+  }
+
+  @media (max-width: 640px) {
+    .hero-section h1 {
+      font-size: 1.8rem;
+    }
+    .section-title {
+      font-size: 1.4rem;
+    }
   }
 </style>
 {% endblock %}
@@ -307,14 +355,14 @@
 {% block content %}
 <div class="space-y-8">
 
-  <section class="hero-section text-center">
+  <section class="hero-section text-center" aria-labelledby="hero-heading">
     <div class="hero-content max-w-4xl mx-auto">
       <span class="hero-badge">Professional Writing Help</span>
-      <h1>Quality Academic Writing<br><span>Done For You</span></h1>
-      <p>Professional academic writing services for students worldwide. Plagiarism-free papers delivered on time, tailored to your requirements.</p>
+      <h1 id="hero-heading">Quality Academic Writing<br><span>Done For You</span></h1>
+      <p>Professional academic writing services for students worldwide. Get high-quality, plagiarism-free essays, research papers, and dissertations tailored to your requirements and delivered on time.</p>
       <div class="flex flex-wrap justify-center gap-3">
-        <a href="/place-order/" class="btn btn-green">Place Order</a>
-        <a href="/how-it-works/" class="btn btn-outline">How It Works</a>
+        <a href="/place-order/" class="btn btn-green" aria-label="Place your order now">Place Order</a>
+        <a href="/how-it-works/" class="btn btn-outline" aria-label="Learn how our service works">How It Works</a>
       </div>
       <div class="stats-grid">
         <div class="stat-card">
@@ -333,84 +381,89 @@
     </div>
   </section>
 
-  <div class="full-bleed-image-wrapper">
-    <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1400&h=300&fit=crop&crop=center" alt="Academic writing and research" loading="lazy">
+  <div class="full-bleed-image-wrapper" aria-hidden="true">
+    <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1400&h=300&fit=crop&crop=center" alt="Student studying at desk with books and laptop" loading="lazy" width="1400" height="300">
   </div>
 
-  <section>
-    <h2 class="text-2xl font-bold text-center mb-4">What We Offer</h2>
+  <section aria-labelledby="services-heading">
+    <h2 id="services-heading" class="section-title">Our Academic Writing Services</h2>
+    <p class="section-subtitle">Professional writing help for every academic need</p>
     <div class="feature-grid">
       <div class="feature-card">
+        <span class="feature-icon"><i class="fas fa-pen-fancy"></i></span>
         <h3>Essay Writing</h3>
-        <p>Argumentative, persuasive, narrative, and descriptive essays for all academic levels.</p>
+        <p>Argumentative, persuasive, narrative, and descriptive essays crafted for all academic levels with proper structure and citations.</p>
       </div>
       <div class="feature-card">
+        <span class="feature-icon"><i class="fas fa-book-open"></i></span>
         <h3>Research Papers</h3>
-        <p>In-depth research papers with proper citations and analysis on any topic.</p>
+        <p>In-depth research papers with thorough analysis, proper methodology, and accurate citations in APA, MLA, Harvard, or Chicago style.</p>
       </div>
       <div class="feature-card">
+        <span class="feature-icon"><i class="fas fa-graduation-cap"></i></span>
         <h3>Dissertations</h3>
-        <p>Comprehensive dissertation assistance from proposal to final submission.</p>
+        <p>Comprehensive dissertation assistance from proposal to final defense, including literature review, methodology, and data analysis.</p>
       </div>
     </div>
   </section>
 
-  <section class="steps-section">
-    <h2 class="text-2xl font-bold text-center mb-2">How It Works</h2>
-    <p class="text-center text-gray-600 text-sm mb-6">Simple process from order to delivery</p>
+  <section class="steps-section" aria-labelledby="steps-heading">
+    <h2 id="steps-heading" class="section-title">How It Works</h2>
+    <p class="section-subtitle">Four simple steps to get your paper</p>
     <div class="steps-grid">
       <div class="step-item">
         <div class="step-number">1</div>
-        <h4>Submit Details</h4>
-        <p>Share your requirements and deadline</p>
+        <h4>Submit Your Requirements</h4>
+        <p>Share your topic, academic level, deadline, and any specific instructions</p>
       </div>
       <div class="step-item">
         <div class="step-number">2</div>
-        <h4>Make Payment</h4>
-        <p>Secure payment through the platform</p>
+        <h4>Secure Payment</h4>
+        <p>Pay securely through our platform with multiple payment options</p>
       </div>
       <div class="step-item">
         <div class="step-number">3</div>
-        <h4>We Write</h4>
-        <p>Expert writers research and write your paper</p>
+        <h4>Expert Writing</h4>
+        <p>A qualified writer researches and writes your paper from scratch</p>
       </div>
       <div class="step-item">
         <div class="step-number">4</div>
-        <h4>You Receive</h4>
-        <p>Download your completed paper</p>
+        <h4>Download &amp; Review</h4>
+        <p>Receive your completed paper, review it, and request free revisions if needed</p>
       </div>
     </div>
   </section>
 
-  <section class="about-section">
+  <section class="about-section" aria-labelledby="about-heading">
     <div class="about-grid">
       <div>
-        <span class="text-green-600 font-semibold text-sm uppercase tracking-wider">About Us</span>
-        <h2>We're Here to <span>Help You Succeed</span></h2>
-        <p>We are a team of professional academic writers dedicated to helping students achieve their academic goals. We specialize in writing high-quality, well-researched papers across various subjects and academic levels.</p>
+        <span class="text-green-600 font-semibold text-sm uppercase tracking-wider">About AcademicWrite</span>
+        <h2 id="about-heading">We're Here to <span>Help You Succeed</span></h2>
+        <p>AcademicWrite is a team of professional academic writers dedicated to helping students achieve their academic goals. We specialize in writing high-quality, well-researched papers across various subjects and academic levels.</p>
+        <p>With years of experience in academic writing, we understand what professors look for and deliver papers that meet the highest academic standards.</p>
         <ul class="benefit-list">
-          <li><i class="fas fa-check-circle"></i> Plagiarism-free content guaranteed</li>
-          <li><i class="fas fa-check-circle"></i> On-time delivery every time</li>
-          <li><i class="fas fa-check-circle"></i> Free revisions until you're satisfied</li>
-          <li><i class="fas fa-check-circle"></i> Direct communication with your writer</li>
-          <li><i class="fas fa-check-circle"></i> Affordable rates for students</li>
+          <li><i class="fas fa-check-circle"></i> <strong>100% plagiarism-free</strong> content guaranteed</li>
+          <li><i class="fas fa-check-circle"></i> <strong>On-time delivery</strong> every time</li>
+          <li><i class="fas fa-check-circle"></i> <strong>Free unlimited revisions</strong> until you're satisfied</li>
+          <li><i class="fas fa-check-circle"></i> <strong>Direct communication</strong> with your assigned writer</li>
+          <li><i class="fas fa-check-circle"></i> <strong>Affordable student-friendly</strong> rates</li>
         </ul>
       </div>
       <div class="image-wrapper">
-        <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=400&fit=crop&crop=center" alt="Students studying and writing" loading="lazy">
+        <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=400&fit=crop&crop=center" alt="Students collaborating on academic work" loading="lazy" width="800" height="400">
       </div>
     </div>
   </section>
 
-  <div class="full-bleed-image-wrapper">
-    <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1400&h=300&fit=crop&crop=center" alt="Academic writing services" loading="lazy">
+  <div class="full-bleed-image-wrapper" aria-hidden="true">
+    <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1400&h=300&fit=crop&crop=center" alt="Books and academic materials on a desk" loading="lazy" width="1400" height="300">
   </div>
 
-  <section class="cta-box">
-    <h2>Ready to Get Started?</h2>
-    <p>Let us help you with your academic writing needs. Get a high-quality paper written just for you.</p>
+  <section class="cta-box" aria-labelledby="cta-heading">
+    <h2 id="cta-heading">Ready to Get Started?</h2>
+    <p>Join thousands of students who trust AcademicWrite for their academic success. Get a high-quality, plagiarism-free paper written just for you.</p>
     <div class="flex flex-wrap justify-center gap-3">
-      <a href="/place-order/" class="btn-white">Place Your Order</a>
+      <a href="/place-order/" class="btn-white">Place Your Order Now</a>
       <a href="/contact/" class="btn-outline-white">Contact Us</a>
     </div>
   </section>

@@ -1,5 +1,6 @@
 from rest_framework import status
-from django.contrib.auth import login as django_login
+from django.contrib.auth import login as django_login, logout as auth_logout
+from django.shortcuts import redirect
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -9,14 +10,17 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
+from django.core.cache import cache
 import logging
+import requests
+import secrets
 from .models import User, PendingUser, LoginLog, PasswordChangeVerification
 from .serializers import (
     RegisterSerializer, OTPVerificationSerializer, ResendOTPSerializer,
     LoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,
     ChangePasswordSerializer, UserProfileSerializer, UserSerializer,
     SendPasswordChangeCodeSerializer, VerifyPasswordChangeCodeSerializer,
-    CompletePasswordChangeSerializer, GoogleLoginSerializer
+    CompletePasswordChangeSerializer
 )
 from .utils import (
     generate_otp, generate_reset_token, generate_password_change_code,
@@ -128,7 +132,8 @@ def verify_otp(request):
         phone=pending_user.phone,
         institution=pending_user.institution,
         email_verified=True,
-        is_active=True
+        is_active=True,
+        role='client'
     )
 
     pending_user.delete()
@@ -204,6 +209,7 @@ def login(request):
 
     email = serializer.validated_data['email']
     password = serializer.validated_data['password']
+    remember = request.data.get('remember', False)
     ip = get_client_ip(request)
 
     try:
@@ -245,11 +251,7 @@ def login(request):
             status=status.HTTP_401_UNAUTHORIZED
         )
 
-    authenticated_user = authenticate(
-        request=request,
-        username=email,
-        password=password
-    )
+    authenticated_user = authenticate(request=request, username=email, password=password)
 
     if not authenticated_user:
         user.increment_failed_login()
@@ -283,13 +285,83 @@ def login(request):
     )
 
     refresh = RefreshToken.for_user(user)
+    refresh['email'] = user.email
+    refresh['role'] = user.role
+    refresh['full_name'] = user.full_name
+
+    if not remember:
+        request.session.set_expiry(0)
+
     profile_serializer = UserProfileSerializer(user)
 
-    return Response({
-        'refresh': str(refresh),
+    response = Response({
         'access': str(refresh.access_token),
-        'user': profile_serializer.data
+        'refresh': str(refresh),
+        'user': profile_serializer.data,
+        'access_expires_in': 3600,
+        'refresh_expires_in': 604800
     }, status=status.HTTP_200_OK)
+
+    response.set_cookie(
+        'access_token',
+        str(refresh.access_token),
+        max_age=3600,
+        httponly=True,
+        secure=not settings.DEBUG,
+        samesite='Lax',
+        path='/'
+    )
+    response.set_cookie(
+        'refresh_token',
+        str(refresh),
+        max_age=604800,
+        httponly=True,
+        secure=not settings.DEBUG,
+        samesite='Lax',
+        path='/'
+    )
+
+    return response
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def refresh_token(request):
+    try:
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            refresh_token = request.COOKIES.get('refresh_token')
+
+        if not refresh_token:
+            return Response(
+                {'error': 'Refresh token is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        refresh = RefreshToken(refresh_token)
+        access_token = str(refresh.access_token)
+
+        response = Response({
+            'access': access_token,
+            'access_expires_in': 3600
+        }, status=status.HTTP_200_OK)
+
+        response.set_cookie(
+            'access_token',
+            access_token,
+            max_age=3600,
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            path='/'
+        )
+
+        return response
+    except Exception:
+        return Response(
+            {'error': 'Invalid refresh token'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
 @api_view(['POST'])
@@ -297,16 +369,25 @@ def login(request):
 def logout(request):
     try:
         refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            refresh_token = request.COOKIES.get('refresh_token')
+
         if refresh_token:
             token = RefreshToken(refresh_token)
             token.blacklist()
     except Exception:
         pass
 
-    return Response(
-        {'message': 'Logged out successfully'},
-        status=status.HTTP_200_OK
-    )
+    auth_logout(request)
+
+    response = Response({
+        'message': 'Logged out successfully'
+    }, status=status.HTTP_200_OK)
+
+    response.delete_cookie('access_token')
+    response.delete_cookie('refresh_token')
+
+    return response
 
 
 @api_view(['POST'])
@@ -561,37 +642,67 @@ def cancel_deletion(request):
     }, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes([AllowAny])
 def google_login(request):
-    throttle = GoogleLoginThrottle()
-    if not throttle.allow_request(request, None):
-        return Response(
-            {'error': 'Too many attempts. Please try again later.'},
-            status=status.HTTP_429_TOO_MANY_REQUESTS
-        )
+    redirect_uri = request.build_absolute_uri('/auth/google/callback/')
+    client_id = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
 
-    serializer = GoogleLoginSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    auth_url = (
+        'https://accounts.google.com/o/oauth2/v2/auth'
+        f'?client_id={client_id}'
+        f'&redirect_uri={redirect_uri}'
+        '&response_type=code'
+        '&scope=openid%20email%20profile'
+        '&access_type=online'
+        '&prompt=select_account'
+    )
 
-    access_token = serializer.validated_data['access_token']
+    return redirect(auth_url)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def google_callback(request):
+    code = request.GET.get('code')
+
+    if not code:
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=google_auth_failed')
+
+    client_id = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
+    client_secret = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['secret']
+    redirect_uri = request.build_absolute_uri('/auth/google/callback/')
 
     try:
-        import requests
-        resp = requests.get(
-            f'https://www.googleapis.com/oauth2/v3/userinfo',
-            headers={'Authorization': f'Bearer {access_token}'},
+        token_response = requests.post(
+            'https://oauth2.googleapis.com/token',
+            data={
+                'code': code,
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'redirect_uri': redirect_uri,
+                'grant_type': 'authorization_code'
+            },
             timeout=10
         )
-        resp.raise_for_status()
-        user_data = resp.json()
+        token_response.raise_for_status()
+        tokens = token_response.json()
+        google_access_token = tokens.get('access_token')
     except Exception as e:
-        logger.error(f"Google login error: {str(e)}")
-        return Response(
-            {'error': 'Failed to verify Google token.'},
-            status=status.HTTP_400_BAD_REQUEST
+        logger.error(f"Google token exchange failed: {str(e)}")
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=google_auth_failed')
+
+    try:
+        user_response = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {google_access_token}'},
+            timeout=10
         )
+        user_response.raise_for_status()
+        user_data = user_response.json()
+    except Exception as e:
+        logger.error(f"Google userinfo failed: {str(e)}")
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=google_auth_failed')
 
     email = user_data.get('email')
     full_name = user_data.get('name', '')
@@ -599,50 +710,136 @@ def google_login(request):
     picture = user_data.get('picture', '')
 
     if not email:
-        return Response(
-            {'error': 'Email not provided by Google.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=google_no_email')
 
     user = User.objects.filter(email=email).first()
 
     if user:
         if user.is_suspended:
-            return Response(
-                {'error': 'Your account has been suspended.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return redirect(f'{settings.FRONTEND_URL}/login/?error=account_suspended')
+
         if not user.google_id:
             user.google_id = google_id
             user.picture = picture
             user.save(update_fields=['google_id', 'picture'])
-    else:
-        user = User.objects.create_user(
-            email=email,
-            full_name=full_name,
-            password=None,
-            google_id=google_id,
-            picture=picture,
-            email_verified=True,
-            is_active=True,
-            role='client'
+
+        refresh = RefreshToken.for_user(user)
+        refresh['email'] = user.email
+        refresh['role'] = user.role
+        refresh['full_name'] = user.full_name
+
+        response = redirect(f'{settings.FRONTEND_URL}/dashboard/')
+        response.set_cookie(
+            'access_token',
+            str(refresh.access_token),
+            max_age=3600,
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            path='/'
         )
+        response.set_cookie(
+            'refresh_token',
+            str(refresh),
+            max_age=604800,
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            path='/'
+        )
+        return response
 
-    refresh = RefreshToken.for_user(user)
-    profile_serializer = UserProfileSerializer(user)
+    temp_token = secrets.token_urlsafe(32)
+    cache.set(
+        f'google_signup_{temp_token}',
+        {
+            'email': email,
+            'full_name': full_name,
+            'google_id': google_id,
+            'picture': picture
+        },
+        timeout=600
+    )
 
-    return Response({
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-        'user': profile_serializer.data,
-        'is_new_user': not user.google_id
-    }, status=status.HTTP_200_OK)
+    return redirect(f'{settings.FRONTEND_URL}/register/google/?token={temp_token}')
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def google_callback(request):
-    return Response(
-        {'message': 'Google OAuth callback endpoint.'},
-        status=status.HTTP_200_OK
+def google_signup(request):
+    temp_token = request.data.get('token')
+
+    if not temp_token:
+        return Response(
+            {'error': 'Invalid signup session'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    google_data = cache.get(f'google_signup_{temp_token}')
+
+    if not google_data:
+        return Response(
+            {'error': 'Signup session expired'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    email = google_data['email']
+    full_name = request.data.get('full_name', google_data['full_name'])
+    google_id = google_data['google_id']
+    picture = google_data['picture']
+
+    if User.objects.filter(email=email).exists():
+        cache.delete(f'google_signup_{temp_token}')
+        return Response(
+            {'error': 'An account with this email already exists. Please sign in.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user = User.objects.create_user(
+        email=email,
+        full_name=full_name,
+        password=None,
+        google_id=google_id,
+        picture=picture,
+        email_verified=True,
+        is_active=True,
+        role='client'
     )
+
+    cache.delete(f'google_signup_{temp_token}')
+
+    refresh = RefreshToken.for_user(user)
+    refresh['email'] = user.email
+    refresh['role'] = user.role
+    refresh['full_name'] = user.full_name
+
+    profile_serializer = UserProfileSerializer(user)
+
+    response = Response({
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'user': profile_serializer.data,
+        'access_expires_in': 3600,
+        'refresh_expires_in': 604800
+    }, status=status.HTTP_200_OK)
+
+    response.set_cookie(
+        'access_token',
+        str(refresh.access_token),
+        max_age=3600,
+        httponly=True,
+        secure=not settings.DEBUG,
+        samesite='Lax',
+        path='/'
+    )
+    response.set_cookie(
+        'refresh_token',
+        str(refresh),
+        max_age=604800,
+        httponly=True,
+        secure=not settings.DEBUG,
+        samesite='Lax',
+        path='/'
+    )
+
+    return response

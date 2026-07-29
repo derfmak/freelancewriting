@@ -4,11 +4,12 @@ from . import views
 app_name = 'accounts'
 
 urlpatterns = [
+    path('login/', views.login, name='login'),
+    path('refresh/', views.refresh_token, name='refresh-token'),
     path('register/', views.register, name='register'),
+    path('logout/', views.logout, name='logout'),
     path('verify-otp/', views.verify_otp, name='verify-otp'),
     path('resend-otp/', views.resend_otp, name='resend-otp'),
-    path('login/', views.login, name='login'),
-    path('logout/', views.logout, name='logout'),
     path('forgot-password/', views.forgot_password, name='forgot-password'),
     path('reset-password/', views.reset_password, name='reset-password'),
     path('change-password/', views.change_password, name='change-password'),
@@ -20,4 +21,5 @@ urlpatterns = [
     path('complete-password-change/', views.complete_password_change, name='complete-password-change'),
     path('google/', views.google_login, name='google-login'),
     path('google/callback/', views.google_callback, name='google-callback'),
+    path('google/signup/', views.google_signup, name='google-signup'),
 ]
