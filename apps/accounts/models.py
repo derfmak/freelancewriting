@@ -34,7 +34,6 @@ class User(AbstractUser):
     password_reset_token = models.CharField(max_length=100, blank=True, db_index=True)
     password_reset_expires = models.DateTimeField(null=True, blank=True)
     
-    # Password change verification fields
     password_change_code = models.CharField(max_length=6, blank=True, db_index=True)
     password_change_code_expires = models.DateTimeField(null=True, blank=True)
     password_change_temp = models.CharField(max_length=128, blank=True)
@@ -52,7 +51,6 @@ class User(AbstractUser):
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     deletion_scheduled_for = models.DateTimeField(null=True, blank=True)
     
-    # Google OAuth fields
     google_id = models.CharField(max_length=100, blank=True, db_index=True)
     picture = models.URLField(max_length=500, blank=True)
     
@@ -260,3 +258,50 @@ class PasswordChangeVerification(models.Model):
     
     def __str__(self):
         return f"{self.user.email} - {self.code}"
+
+
+class SecurityEvent(models.Model):
+    EVENT_TYPES = [
+        ('rate_limit_hit', 'Rate Limit Hit'),
+        ('register_attempt', 'Registration Attempt'),
+        ('register_success', 'Registration Success'),
+        ('register_duplicate', 'Duplicate Registration'),
+        ('otp_verification_failed', 'OTP Verification Failed'),
+        ('email_send_failed', 'Email Send Failed'),
+        ('login_success', 'Login Success'),
+        ('login_failed', 'Login Failed'),
+        ('login_user_not_found', 'Login User Not Found'),
+        ('account_locked', 'Account Locked'),
+        ('token_refresh_failed', 'Token Refresh Failed'),
+        ('password_reset', 'Password Reset'),
+        ('password_changed', 'Password Changed'),
+        ('google_callback_no_code', 'Google Callback No Code'),
+        ('google_token_exchange_failed', 'Google Token Exchange Failed'),
+        ('google_token_verification_failed', 'Google Token Verification Failed'),
+        ('google_login_success', 'Google Login Success'),
+        ('google_signup_redirect', 'Google Signup Redirect'),
+        ('google_signup_success', 'Google Signup Success'),
+        ('google_signup_rollback', 'Google Signup Rollback'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES, db_index=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='security_events')
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'security_events'
+        ordering = ['-created_at']
+        verbose_name = 'Security Event'
+        verbose_name_plural = 'Security Events'
+        indexes = [
+            models.Index(fields=['event_type', '-created_at']),
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['ip_address', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.event_type} - {self.ip_address} - {self.created_at}"

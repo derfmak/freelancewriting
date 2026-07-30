@@ -1,843 +1,736 @@
 {% extends "client_base.html" %}
+{% load static %}
 
-{% block title %}Order Details - AcademicWrite{% endblock %}
+{% block title %}Order Details — AcademicWrite{% endblock %}
 
 {% block extra_css %}
 <style>
-    .status-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        display: inline-block;
+    .page-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
     }
-    .status-badge.request { background: #fef3c7; color: #d97706; }
-    .status-badge.in_progress { background: #dbeafe; color: #2563eb; }
-    .status-badge.awaiting_approval { background: #ede9fe; color: #7c3aed; }
-    .status-badge.completed { background: #d1fae5; color: #059669; }
-    .status-badge.cancelled { background: #fee2e2; color: #dc2626; }
-    .status-badge.declined { background: #fee2e2; color: #dc2626; }
-    .status-badge.refund_pending { background: #fef3c7; color: #d97706; }
 
-    .progress-bar {
-        height: 8px;
-        background: #e5e7eb;
-        border-radius: 9999px;
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.02em;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+
+    .back-link:hover { color: var(--ink); }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 99px;
+        white-space: nowrap;
+    }
+
+    .badge.request { background: #fef3c7; color: #d97706; }
+    .badge.in_progress { background: #dbeafe; color: #2563eb; }
+    .badge.awaiting_approval { background: #ede9fe; color: #7c3aed; }
+    .badge.completed { background: #d1fae5; color: #059669; }
+    .badge.cancelled { background: #fee2e2; color: #dc2626; }
+    .badge.declined { background: #fee2e2; color: #dc2626; }
+    .badge.refund_pending { background: #fef3c7; color: #d97706; }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr 320px;
+        }
+    }
+
+    .main-col {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .side-col {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
         overflow: hidden;
     }
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #059669, #10b981);
-        border-radius: 9999px;
-        transition: width 0.8s ease;
+
+    .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line-light);
     }
 
-    .rating-star {
-        font-size: 2.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        color: #d1d5db;
-        background: none;
-        border: none;
-        padding: 0.25rem;
-        line-height: 1;
-    }
-    .rating-star:hover {
-        transform: scale(1.2);
-        color: #fbbf24;
-    }
-    .rating-star.selected {
-        color: #fbbf24;
-    }
-    .rating-star.selected.good {
-        animation: starPop 0.5s ease;
-    }
-    .rating-star.selected.bad {
-        animation: starShake 0.5s ease;
-    }
-    @keyframes starPop {
-        0% { transform: scale(1); }
-        30% { transform: scale(1.5); color: #f59e0b; }
-        60% { transform: scale(0.9); }
-        100% { transform: scale(1); }
-    }
-    @keyframes starShake {
-        0% { transform: rotate(0deg); }
-        20% { transform: rotate(-15deg); color: #ef4444; }
-        40% { transform: rotate(15deg); }
-        60% { transform: rotate(-10deg); }
-        80% { transform: rotate(10deg); }
-        100% { transform: rotate(0deg); }
-    }
-
-    .rating-label {
-        font-size: 1.1rem;
+    .card-title {
+        font-size: 15px;
         font-weight: 600;
-        margin-top: 0.5rem;
-        transition: all 0.3s ease;
-        opacity: 0;
-        transform: translateY(10px);
+        color: var(--ink);
     }
-    .rating-label.show {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    .rating-label.good { color: #059669; }
-    .rating-label.bad { color: #dc2626; }
-    .rating-label.neutral { color: #6b7280; }
 
-    .detail-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        transition: all 0.2s ease;
+    .card-body {
+        padding: 20px;
     }
-    .detail-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    @media (max-width: 480px) {
+        .detail-row { grid-template-columns: 1fr; }
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
     }
 
     .detail-label {
-        font-size: 0.7rem;
+        font-size: 11px;
         font-weight: 600;
-        color: #6b7280;
+        color: var(--muted);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.25rem;
+        letter-spacing: 0.04em;
     }
+
     .detail-value {
-        font-size: 0.95rem;
-        color: #1f2937;
+        font-size: 14px;
+        color: var(--ink-soft);
+        font-weight: 500;
+    }
+
+    .divider {
+        height: 1px;
+        background: var(--line-light);
+        margin: 16px 0;
+    }
+
+    .topic-block {
+        font-size: 14px;
+        color: var(--ink);
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .instructions-block {
+        font-size: 13px;
+        color: var(--ink-soft);
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        background: var(--surface);
+        border-radius: var(--radius-sm);
+    }
+
+    .file-item + .file-item { margin-top: 8px; }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .file-icon {
+        color: var(--muted);
+        font-size: 16px;
+    }
+
+    .file-name {
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .file-size {
+        font-size: 11px;
+        color: var(--muted);
+    }
+
+    .file-download {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--green);
+        text-decoration: none;
+    }
+
+    .file-download:hover { color: var(--green-dark); }
+
+    .file-item.delivered {
+        background: var(--green-pale);
+        border: 1px solid var(--green-border);
+    }
+
+    .file-item.delivered .file-icon { color: var(--green); }
+
+    .progress-section {
+        padding: 16px 0;
+    }
+
+    .progress-bar {
+        height: 6px;
+        background: var(--line);
+        border-radius: 99px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--green);
+        border-radius: 99px;
+        transition: width 0.6s ease;
+    }
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--muted);
+        font-weight: 500;
+    }
+
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        padding: 4px 0;
+        color: var(--muted);
+    }
+
+    .price-row.total {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--ink);
+        padding-top: 12px;
+        border-top: 1px solid var(--line-light);
+        margin-top: 8px;
+    }
+
+    .price-row.total .price-amount { color: var(--green); }
+
+    .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 11px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        text-decoration: none;
+    }
+
+    .btn + .btn { margin-top: 8px; }
+
+    .btn-primary {
+        background: var(--green);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--green-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(5,150,105,0.25);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--ink-soft);
+        border: 1.5px solid var(--line);
+    }
+
+    .btn-outline:hover {
+        background: var(--surface);
+        border-color: var(--muted);
+    }
+
+    .btn-danger {
+        background: transparent;
+        color: var(--red);
+        border: 1.5px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+        background: var(--red-pale);
+        border-color: var(--red);
+    }
+
+    .action-row {
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-row .btn { flex: 1; }
+
+    .star-rating {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .star-btn {
+        background: none;
+        border: none;
+        font-size: 2rem;
+        cursor: pointer;
+        color: #d1d5db;
+        transition: transform 0.2s ease, color 0.2s ease;
+        padding: 4px;
+        line-height: 1;
+    }
+
+    .star-btn:hover { transform: scale(1.2); }
+    .star-btn.selected { color: #fbbf24; }
+
+    .rating-label {
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 8px;
+        min-height: 20px;
+    }
+
+    .rating-label.good { color: var(--green); }
+    .rating-label.bad { color: var(--red); }
+    .rating-label.neutral { color: var(--muted); }
+
+    .stars-display {
+        display: flex;
+        gap: 2px;
+        font-size: 1.5rem;
+    }
+
+    .stars-display .star { color: #fbbf24; }
+    .stars-display .star.empty { color: #d1d5db; }
+
+    .feedback-text {
+        font-size: 13px;
+        color: var(--ink-soft);
+        font-style: italic;
+        margin-top: 8px;
     }
 
     .modal-overlay {
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-    }
-    .modal-content {
-        animation: modalSlideIn 0.3s ease;
-    }
-    @keyframes modalSlideIn {
-        from { opacity: 0; transform: scale(0.95) translateY(10px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .action-btn {
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        font-size: 0.85rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        justify-content: center;
-        width: 100%;
-    }
-    .action-btn:hover {
-        transform: translateY(-1px);
-    }
-    .action-btn-primary { background: #059669; color: white; }
-    .action-btn-primary:hover { background: #047857; }
-    .action-btn-secondary { background: #e5e7eb; color: #374151; }
-    .action-btn-secondary:hover { background: #d1d5db; }
-    .action-btn-danger { background: #dc2626; color: white; }
-    .action-btn-danger:hover { background: #b91c1c; }
-    .action-btn-outline { background: transparent; color: #374151; border: 1px solid #d1d5db; }
-    .action-btn-outline:hover { background: #f9fafb; }
-
-    .toast-notification {
         position: fixed;
-        top: 1.5rem;
-        right: 1.5rem;
-        z-index: 1000;
-        animation: slideDown 0.4s ease;
-        max-width: 400px;
-        width: 100%;
-    }
-    .toast-content {
-        background: white;
-        border-radius: 0.75rem;
-        padding: 0.75rem 1.25rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-        border-left: 4px solid #059669;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 600;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+        backdrop-filter: blur(2px);
     }
-    .toast-content.error { border-left-color: #ef4444; }
-    .toast-content.success { border-left-color: #059669; }
-    .toast-icon { font-size: 1.2rem; flex-shrink: 0; }
-    .toast-icon.success { color: #059669; }
-    .toast-icon.error { color: #ef4444; }
-    .toast-message { font-size: 0.85rem; color: #1e293b; font-weight: 500; flex: 1; }
-    .toast-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 1.1rem; padding: 0.2rem; flex-shrink: 0; }
-    .toast-close:hover { color: #1e293b; }
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-8px); }
-        to { opacity: 1; transform: translateY(0); }
+
+    .modal-overlay.open {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.18s ease;
     }
+
+    .modal-box {
+        background: var(--paper);
+        border-radius: var(--radius);
+        box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+        width: 100%;
+        max-width: 440px;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: translateY(12px) scale(0.98);
+        transition: transform 0.18s ease;
+    }
+
+    .modal-overlay.open .modal-box {
+        transform: translateY(0) scale(1);
+    }
+
+    .modal-head {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line-light);
+    }
+
+    .modal-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-body p {
+        font-size: 14px;
+        color: var(--muted);
+        margin-bottom: 16px;
+    }
+
+    .modal-body textarea,
+    .modal-body select,
+    .modal-body input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--line);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-family: inherit;
+        outline: none;
+        transition: var(--transition);
+    }
+
+    .modal-body textarea:focus,
+    .modal-body select:focus,
+    .modal-body input:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(5,150,105,0.08);
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 10px;
+        padding: 0 20px 20px;
+    }
+
+    .modal-footer .btn { flex: 1; }
+
+    .text-muted { color: var(--muted); font-size: 13px; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6">
-    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Order #<span id="order-number">Loading...</span></h1>
-            <p class="text-gray-600 mt-1" id="order-status"></p>
-        </div>
-        <a href="/client/orders/" class="action-btn action-btn-secondary" style="width:auto;">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Back to Orders
-        </a>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Order #<span id="order-number">---</span></h1>
+        <span id="order-status-badge"></span>
     </div>
+    <a href="/client/orders/" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Orders
+    </a>
+</div>
 
-    <div id="order-content">
-        <div class="text-center py-12">
-            <div class="inline-block w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-            <p class="mt-4 text-gray-500">Loading order details...</p>
-        </div>
+<div id="order-content">
+    <div style="text-align:center;padding:48px 0;">
+        <div class="spinner-sm" style="margin:0 auto;"></div>
+        <p class="text-muted" style="margin-top:12px;">Loading order details...</p>
     </div>
 </div>
 
-<div id="modal-container" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50 p-4">
-    <div class="modal-content bg-white rounded-xl max-w-md w-full" id="modal-content"></div>
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box" id="modalBox"></div>
 </div>
+{% endblock %}
 
-<div id="toast-container" class="toast-notification" style="display:none;"></div>
-
+{% block extra_js %}
 <script>
-const orderId = window.location.pathname.split('/').filter(Boolean).pop();
-let orderData = null;
+var orderId = window.location.pathname.split('/').filter(Boolean).pop();
+var orderData = null;
 
-function getAuthToken() {
-    return localStorage.getItem('access_token');
+function getToken() { return localStorage.getItem('access_token'); }
+function getHeaders() {
+    return { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' };
 }
 
-function getApiHeaders() {
-    const csrfToken = document.querySelector('[name=csrf-token]')?.content || '';
-    return {
-        'Authorization': 'Bearer ' + getAuthToken(),
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken
-    };
+function formatCurrency(amount) { return '$' + parseFloat(amount || 0).toFixed(2); }
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function showToast(message, type) {
-    const container = document.getElementById('toast-container');
-    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-    const iconColor = type === 'success' ? 'success' : 'error';
-    container.innerHTML = `
-        <div class="toast-content ${type}">
-            <span class="toast-icon ${iconColor}"><i class="fas ${icon}"></i></span>
-            <span class="toast-message">${message}</span>
-            <button class="toast-close" onclick="this.closest('.toast-notification').style.display='none'">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
-    container.style.display = 'block';
-    setTimeout(() => { container.style.display = 'none'; }, 5000);
+function getStatusLabel(status) {
+    var map = { request: 'Request', in_progress: 'In Progress', awaiting_approval: 'Awaiting Approval', completed: 'Completed', cancelled: 'Cancelled', declined: 'Declined', refund_pending: 'Refund Pending' };
+    return map[status] || status;
+}
+
+function getStatusClass(status) {
+    return getStatusLabel(status).toLowerCase().replace(/ /g, '_');
+}
+
+function getProgress(status) {
+    var map = { request: 10, in_progress: 50, awaiting_approval: 90, completed: 100 };
+    return map[status] || 0;
+}
+
+function showModal(html) {
+    var overlay = document.getElementById('modalOverlay');
+    var box = document.getElementById('modalBox');
+    box.innerHTML = html;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
-    const modal = document.getElementById('modal-container');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    var overlay = document.getElementById('modalOverlay');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
 }
 
-function showConfirmModal(title, message, confirmText, confirmClass, onConfirm) {
-    const modal = document.getElementById('modal-container');
-    const content = document.getElementById('modal-content');
-    content.innerHTML = `
-        <div class="p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">${title}</h3>
-            <p class="text-gray-600 mb-6">${message}</p>
-            <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 action-btn action-btn-secondary">Cancel</button>
-                <button id="confirm-action" class="flex-1 action-btn ${confirmClass}">${confirmText}</button>
-            </div>
-        </div>
-    `;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.getElementById('confirm-action').addEventListener('click', onConfirm);
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
+
+function apiToast(message, type) {
+    if (window.Toast) {
+        window.Toast.show(message, type);
+    }
 }
 
-function showCancelModal() {
-    const modal = document.getElementById('modal-container');
-    const content = document.getElementById('modal-content');
-    content.innerHTML = `
-        <div class="p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Cancel Order</h3>
-            <p class="text-gray-600 mb-4">Are you sure you want to cancel this order?</p>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
-                <select id="cancel-reason" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-                    <option value="changed_mind">Changed my mind</option>
-                    <option value="found_elsewhere">Found another writer</option>
-                    <option value="deadline_issue">Deadline too tight</option>
-                    <option value="price_issue">Price too high</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div id="other-reason-group" class="hidden mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Please specify</label>
-                <input type="text" id="other-reason" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-            </div>
-            <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 action-btn action-btn-secondary">Cancel</button>
-                <button id="confirm-cancel" class="flex-1 action-btn action-btn-danger">Confirm Cancellation</button>
-            </div>
-        </div>
-    `;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    
-    document.getElementById('cancel-reason').addEventListener('change', function() {
-        document.getElementById('other-reason-group').classList.toggle('hidden', this.value !== 'other');
+async function loadOrder() {
+    try {
+        var token = getToken();
+        if (!token) {
+            document.getElementById('order-content').innerHTML = '<div style="text-align:center;padding:48px;"><p style="color:var(--red);">Please login to view order details</p></div>';
+            return;
+        }
+
+        var response = await fetch('/api/v1/client/orders/' + orderId + '/', { headers: getHeaders() });
+        if (!response.ok) throw new Error(response.status === 404 ? 'Order not found' : 'Failed to load order');
+
+        orderData = await response.json();
+        renderOrder(orderData);
+    } catch (e) {
+        document.getElementById('order-content').innerHTML = '<div style="text-align:center;padding:48px;"><p style="color:var(--red);">' + e.message + '</p><a href="/client/orders/" style="color:var(--green);font-weight:600;">Back to Orders</a></div>';
+    }
+}
+
+function renderOrder(order) {
+    document.getElementById('order-number').textContent = order.order_number || 'N/A';
+    document.getElementById('order-status-badge').innerHTML = '<span class="badge ' + getStatusClass(order.status) + '">' + getStatusLabel(order.status) + '</span>';
+
+    var canApprove = order.status === 'awaiting_approval';
+    var canRate = order.status === 'completed' && !order.rating;
+    var hasRated = order.status === 'completed' && order.rating;
+    var canCancel = order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'declined';
+
+    var html = '<div class="detail-grid"><div class="main-col">';
+
+    html += '<div class="card"><div class="card-header"><h2 class="card-title">Order Details</h2></div><div class="card-body">';
+    html += '<div class="detail-row">';
+    html += '<div class="detail-item"><span class="detail-label">Academic Level</span><span class="detail-value">' + (order.academic_level || '-') + '</span></div>';
+    html += '<div class="detail-item"><span class="detail-label">Paper Type</span><span class="detail-value">' + (order.paper_type || '-') + '</span></div>';
+    html += '<div class="detail-item"><span class="detail-label">Subject</span><span class="detail-value">' + (order.subject || '-') + '</span></div>';
+    html += '<div class="detail-item"><span class="detail-label">Pages / Words</span><span class="detail-value">' + (order.pages || 'N/A') + ' / ' + (order.words || 'N/A') + '</span></div>';
+    html += '<div class="detail-item"><span class="detail-label">Deadline</span><span class="detail-value">' + formatDate(order.deadline) + '</span></div>';
+    html += '<div class="detail-item"><span class="detail-label">Format</span><span class="detail-value">' + (order.format || '-') + '</span></div>';
+    html += '<div class="detail-item"><span class="detail-label">Sources</span><span class="detail-value">' + (order.sources_count || 0) + '</span></div>';
+    html += '<div class="detail-item"><span class="detail-label">Created</span><span class="detail-value">' + formatDate(order.created_at) + '</span></div>';
+    html += '</div>';
+    html += '<div class="divider"></div>';
+    html += '<div class="detail-item"><span class="detail-label">Topic</span><div class="topic-block">' + (order.topic || '-') + '</div></div>';
+    html += '<div class="divider"></div>';
+    html += '<div class="detail-item"><span class="detail-label">Instructions</span><div class="instructions-block">' + (order.instructions || 'No instructions provided.') + '</div></div>';
+
+    if (order.attachments && order.attachments.length > 0) {
+        html += '<div class="divider"></div><span class="detail-label" style="margin-bottom:8px;display:block;">Attachments</span>';
+        order.attachments.forEach(function(att) {
+            html += '<div class="file-item"><div class="file-info"><span class="file-icon"><i class="fas fa-paperclip"></i></span><div><div class="file-name">' + att.filename + '</div><div class="file-size">' + (att.file_size / 1024).toFixed(1) + ' KB</div></div></div><a href="' + att.file + '" target="_blank" class="file-download">Download</a></div>';
+        });
+    }
+
+    if (order.delivered_file) {
+        html += '<div class="divider"></div><span class="detail-label" style="color:var(--green);margin-bottom:8px;display:block;">Delivered File</span>';
+        html += '<div class="file-item delivered"><div class="file-info"><span class="file-icon"><i class="fas fa-check-circle"></i></span><div><div class="file-name">' + (order.delivered_file.filename || 'paper.pdf') + '</div></div></div><a href="' + order.delivered_file.file + '" target="_blank" class="file-download">Download</a></div>';
+    }
+
+    html += '</div></div>';
+
+    if (canApprove) {
+        html += '<div class="card"><div class="card-header"><h2 class="card-title">Delivery Actions</h2></div><div class="card-body">';
+        html += '<div class="action-row"><button class="btn btn-primary" onclick="approveOrder()">Approve Paper</button><button class="btn btn-outline" onclick="showRevisionModal()">Request Revision</button></div>';
+        if (order.auto_approve_at) html += '<p class="text-muted" style="text-align:center;margin-top:12px;">Auto-approval in ' + formatTimeRemaining(order.auto_approve_at) + '</p>';
+        html += '</div></div>';
+    }
+
+    if (canRate) {
+        html += '<div class="card"><div class="card-header"><h2 class="card-title">Rate This Order</h2></div><div class="card-body">';
+        html += '<div class="star-rating" id="starRating">';
+        for (var i = 1; i <= 5; i++) html += '<button class="star-btn" data-rating="' + i + '">★</button>';
+        html += '</div><div class="rating-label" id="ratingLabel"></div>';
+        html += '<textarea id="ratingFeedback" style="width:100%;margin-top:12px;" rows="3" placeholder="Share your experience (optional)..."></textarea>';
+        html += '<button class="btn btn-primary" id="submitRatingBtn" disabled style="margin-top:12px;" onclick="submitRating()">Submit Rating</button>';
+        html += '</div></div>';
+    }
+
+    if (hasRated) {
+        html += '<div class="card"><div class="card-header"><h2 class="card-title">Your Rating</h2></div><div class="card-body">';
+        html += '<div class="stars-display">';
+        for (var j = 1; j <= 5; j++) html += '<span class="star' + (j <= order.rating ? '' : ' empty') + '">★</span>';
+        html += '<span style="margin-left:12px;font-weight:600;">' + order.rating + '/5</span></div>';
+        if (order.feedback) html += '<div class="feedback-text">"' + order.feedback + '"</div>';
+        html += '</div></div>';
+    }
+
+    html += '</div><div class="side-col">';
+
+    html += '<div class="card"><div class="card-header"><h2 class="card-title">Order Summary</h2></div><div class="card-body">';
+    html += '<div class="price-row"><span>Base Price</span><span>' + formatCurrency(order.base_price) + '</span></div>';
+    html += '<div class="price-row"><span>Level Multiplier</span><span>' + (order.level_multiplier || '1.00') + 'x</span></div>';
+    html += '<div class="price-row"><span>Urgency Multiplier</span><span>' + (order.urgency_multiplier || '1.00') + 'x</span></div>';
+    html += '<div class="price-row total"><span>Total</span><span class="price-amount">' + formatCurrency(order.total_price) + '</span></div>';
+    html += '</div></div>';
+
+    html += '<div class="card"><div class="card-header"><h2 class="card-title">Progress</h2></div><div class="card-body">';
+    html += '<div class="progress-section"><div class="progress-bar"><div class="progress-fill" style="width:' + getProgress(order.status) + '%"></div></div>';
+    html += '<div class="progress-steps"><span>Request</span><span>In Progress</span><span>Delivered</span><span>Completed</span></div></div>';
+    html += '</div></div>';
+
+    html += '<div class="card"><div class="card-header"><h2 class="card-title">Actions</h2></div><div class="card-body">';
+    html += '<a href="/client/messages/' + order.id + '/" class="btn btn-primary"><i class="fas fa-comment"></i> Send Message</a>';
+    if (canCancel) html += '<button class="btn btn-danger" onclick="showCancelModal()"><i class="fas fa-times"></i> Cancel Order</button>';
+    if (order.status === 'completed') html += '<button class="btn btn-outline" onclick="window.location.href=\'/client/refund/request/' + order.id + '/\'">Request Refund</button>';
+    html += '</div></div>';
+
+    html += '<div class="card"><div class="card-body">';
+    html += '<p class="text-muted">Need help with your order?</p>';
+    html += '<a href="/contact/" style="color:var(--green);font-weight:600;display:block;margin-bottom:6px;">Contact Support</a>';
+    html += '<a href="/faq/" style="color:var(--green);font-weight:600;">View FAQ</a>';
+    html += '</div></div>';
+
+    html += '</div></div>';
+
+    document.getElementById('order-content').innerHTML = html;
+
+    if (canRate) setupStarRating();
+}
+
+function setupStarRating() {
+    var stars = document.querySelectorAll('#starRating .star-btn');
+    var label = document.getElementById('ratingLabel');
+    var submitBtn = document.getElementById('submitRatingBtn');
+    var selectedRating = 0;
+
+    stars.forEach(function(star) {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.rating);
+            stars.forEach(function(s, i) { s.classList.toggle('selected', i < selectedRating); });
+            var labels = { 1: { text: 'Terrible', cls: 'bad' }, 2: { text: 'Poor', cls: 'bad' }, 3: { text: 'Okay', cls: 'neutral' }, 4: { text: 'Good', cls: 'good' }, 5: { text: 'Excellent', cls: 'good' } };
+            var l = labels[selectedRating];
+            label.textContent = l.text; label.className = 'rating-label ' + l.cls;
+            submitBtn.disabled = false;
+        });
     });
-    
-    document.getElementById('confirm-cancel').addEventListener('click', confirmCancel);
+
+    window._selectedRating = 0;
+    window._getSelectedRating = function() { return selectedRating; };
 }
 
-async function confirmCancel() {
-    const reason = document.getElementById('cancel-reason').value;
-    const otherReason = document.getElementById('other-reason').value;
-    const cancelReason = reason === 'other' ? otherReason : reason;
-    try {
-        const response = await fetch(`/api/v1/client/orders/${orderId}/cancel/`, {
-            method: 'POST',
-            headers: getApiHeaders(),
-            body: JSON.stringify({ reason: cancelReason })
-        });
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to cancel');
-        }
-        closeModal();
-        showToast('Order cancelled successfully', 'success');
-        setTimeout(() => window.location.href = '/client/orders/', 1500);
-    } catch (error) {
-        showToast(error.message || 'Failed to cancel order', 'error');
-    }
-}
-
-function showRevisionModal() {
-    const modal = document.getElementById('modal-container');
-    const content = document.getElementById('modal-content');
-    content.innerHTML = `
-        <div class="p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Request Revision</h3>
-            <p class="text-gray-600 mb-4">Please specify what changes you need:</p>
-            <div class="mb-4">
-                <textarea id="revision-notes" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none" rows="4" placeholder="Describe the revisions needed..."></textarea>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 action-btn action-btn-secondary">Cancel</button>
-                <button id="confirm-revision" class="flex-1 action-btn action-btn-primary">Submit Request</button>
-            </div>
-        </div>
-    `;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    
-    document.getElementById('confirm-revision').addEventListener('click', confirmRevision);
-}
-
-async function confirmRevision() {
-    const notes = document.getElementById('revision-notes').value.trim();
-    if (!notes) {
-        showToast('Please specify the revisions needed', 'error');
-        return;
-    }
-    try {
-        const response = await fetch(`/api/v1/client/orders/${orderId}/revision/`, {
-            method: 'POST',
-            headers: getApiHeaders(),
-            body: JSON.stringify({ notes: notes })
-        });
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to request revision');
-        }
-        closeModal();
-        showToast('Revision requested successfully', 'success');
-        setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-        showToast(error.message || 'Failed to request revision', 'error');
-    }
-}
-
-function showApproveConfirmModal() {
-    showConfirmModal(
-        'Confirm Approval',
-        'Are you sure you want to approve this paper? This will mark the order as completed and release payment to the writer.',
-        'Approve',
-        'action-btn-primary',
-        approveOrder
-    );
+function formatTimeRemaining(timestamp) {
+    var diff = new Date(timestamp) - new Date();
+    if (diff <= 0) return 'pending';
+    var hours = Math.floor(diff / 3600000);
+    var minutes = Math.floor((diff % 3600000) / 60000);
+    return hours + 'h ' + minutes + 'm';
 }
 
 async function approveOrder() {
     try {
-        const response = await fetch(`/api/v1/client/orders/${orderId}/approve/`, {
-            method: 'POST',
-            headers: getApiHeaders()
-        });
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to approve');
-        }
-        closeModal();
-        showToast('Order approved successfully!', 'success');
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
-    } catch (error) {
-        closeModal();
-        showToast(error.message || 'Failed to approve order', 'error');
-    }
+        var r = await fetch('/api/v1/client/orders/' + orderId + '/approve/', { method: 'POST', headers: getHeaders() });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Failed');
+        apiToast('Order approved successfully!', 'success');
+        setTimeout(function() { location.reload(); }, 1500);
+    } catch (e) { apiToast(e.message, 'error'); }
 }
 
-function showRatingModal() {
-    const modal = document.getElementById('modal-container');
-    const content = document.getElementById('modal-content');
-    let selectedRating = 0;
-
-    content.innerHTML = `
-        <div class="p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Rate Your Experience</h3>
-            <p class="text-gray-600 mb-6">How would you rate the quality of this paper?</p>
-
-            <div class="flex justify-center gap-2 mb-2" id="rating-stars">
-                ${[1,2,3,4,5].map(star => `
-                    <button class="rating-star" data-rating="${star}">★</button>
-                `).join('')}
-            </div>
-
-            <div class="text-center mb-4">
-                <span class="rating-label" id="rating-label-text"></span>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Feedback (Optional)</label>
-                <textarea id="rating-feedback" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none" rows="3" placeholder="Share your experience..."></textarea>
-            </div>
-
-            <div class="flex gap-3">
-                <button onclick="skipRating()" class="flex-1 action-btn action-btn-secondary">Skip</button>
-                <button id="submit-rating" class="flex-1 action-btn action-btn-primary" disabled>Submit Rating</button>
-            </div>
-        </div>
-    `;
-
-    const stars = content.querySelectorAll('.rating-star');
-    const labelText = document.getElementById('rating-label-text');
-    const submitBtn = document.getElementById('submit-rating');
-
-    stars.forEach(star => {
-        star.addEventListener('click', function() {
-            selectedRating = parseInt(this.dataset.rating);
-            const isGood = selectedRating >= 4;
-            const isBad = selectedRating <= 2;
-
-            stars.forEach((s, index) => {
-                if (index < selectedRating) {
-                    s.classList.add('selected');
-                    if (isGood) s.classList.add('good');
-                    else if (isBad) s.classList.add('bad');
-                    else s.classList.remove('good', 'bad');
-                } else {
-                    s.classList.remove('selected', 'good', 'bad');
-                }
-            });
-
-            const labels = {
-                1: { text: 'Terrible - Very Poor Quality', class: 'bad' },
-                2: { text: 'Poor - Needs Improvement', class: 'bad' },
-                3: { text: 'Okay - Meets Expectations', class: 'neutral' },
-                4: { text: 'Good - Satisfied with Quality', class: 'good' },
-                5: { text: 'Excellent - Outstanding Work', class: 'good' }
-            };
-
-            const label = labels[selectedRating];
-            labelText.textContent = label.text;
-            labelText.className = 'rating-label show ' + label.class;
-            submitBtn.disabled = false;
-        });
-    });
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-
-    document.getElementById('submit-rating').addEventListener('click', async function() {
-        const selectedRatingCount = document.querySelectorAll('#rating-stars .rating-star.selected').length;
-        if (selectedRatingCount === 0) {
-            showToast('Please select a rating', 'error');
-            return;
-        }
-        const feedback = document.getElementById('rating-feedback').value.trim();
+function showRevisionModal() {
+    showModal(
+        '<div class="modal-head"><h3 class="modal-title">Request Revision</h3></div>' +
+        '<div class="modal-body"><p>Please specify what changes you need:</p><textarea id="revisionNotes" rows="4" placeholder="Describe the revisions needed..."></textarea></div>' +
+        '<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="confirmRevision">Submit Request</button></div>'
+    );
+    document.getElementById('confirmRevision').addEventListener('click', async function() {
+        var notes = document.getElementById('revisionNotes').value.trim();
+        if (!notes) { apiToast('Please specify the revisions needed', 'error'); return; }
         try {
-            const response = await fetch(`/api/v1/client/orders/${orderId}/rate/`, {
-                method: 'POST',
-                headers: getApiHeaders(),
-                body: JSON.stringify({
-                    rating: selectedRatingCount,
-                    feedback: feedback
-                })
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to submit rating');
-            }
+            var r = await fetch('/api/v1/client/orders/' + orderId + '/revision/', { method: 'POST', headers: getHeaders(), body: JSON.stringify({ notes: notes }) });
+            var d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Failed');
             closeModal();
-            showToast('Thank you for your feedback!', 'success');
-            setTimeout(() => window.location.href = '/client/orders/', 1500);
-        } catch (error) {
-            showToast(error.message || 'Failed to submit rating', 'error');
-        }
+            apiToast('Revision requested successfully', 'success');
+            setTimeout(function() { location.reload(); }, 1500);
+        } catch (e) { apiToast(e.message, 'error'); }
     });
 }
 
-function skipRating() {
-    closeModal();
-    window.location.href = '/client/orders/';
-}
-
-document.getElementById('modal-container').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
-    }
-});
-
-async function loadOrder() {
-    try {
-        const token = getAuthToken();
-        if (!token) {
-            document.getElementById('order-content').innerHTML = `
-                <div class="text-center py-12 text-red-600">
-                    <p>Please login to view order details</p>
-                    <a href="/login/" class="text-green-600 hover:underline">Login</a>
-                </div>
-            `;
-            return;
-        }
-
-        const response = await fetch(`/api/v1/client/orders/${orderId}/`, {
-            headers: getApiHeaders()
-        });
-
-        if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error('Order not found');
-            }
-            throw new Error('Failed to load order');
-        }
-
-        orderData = await response.json();
-        displayOrder(orderData);
-    } catch (error) {
-        document.getElementById('order-content').innerHTML = `
-            <div class="text-center py-12 text-red-600">
-                <p>${error.message || 'Failed to load order details'}</p>
-                <a href="/client/orders/" class="text-green-600 hover:underline mt-4 inline-block">Back to Orders</a>
-            </div>
-        `;
-    }
-}
-
-function displayOrder(order) {
-    const statusLabels = {
-        'request': 'Request',
-        'in_progress': 'In Progress',
-        'awaiting_approval': 'Awaiting Approval',
-        'completed': 'Completed',
-        'cancelled': 'Cancelled',
-        'declined': 'Declined',
-        'refund_pending': 'Refund Pending'
-    };
-
-    const statusColors = {
-        'request': 'bg-yellow-100 text-yellow-700',
-        'in_progress': 'bg-blue-100 text-blue-700',
-        'awaiting_approval': 'bg-purple-100 text-purple-700',
-        'completed': 'bg-green-100 text-green-700',
-        'cancelled': 'bg-red-100 text-red-700',
-        'declined': 'bg-red-100 text-red-700',
-        'refund_pending': 'bg-yellow-100 text-yellow-700'
-    };
-
-    document.getElementById('order-number').textContent = order.order_number || 'N/A';
-    document.getElementById('order-status').innerHTML = `
-        <span class="status-badge ${statusColors[order.status] || 'bg-gray-100 text-gray-700'}">
-            ${statusLabels[order.status] || order.status}
-        </span>
-    `;
-
-    const canApprove = order.status === 'awaiting_approval';
-    const canRate = order.status === 'completed' && !order.rating;
-    const hasRated = order.status === 'completed' && order.rating;
-
-    document.getElementById('order-content').innerHTML = `
-        <div class="grid md:grid-cols-3 gap-6">
-            <div class="md:col-span-2 space-y-6">
-                <div class="detail-card">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Order Details</h2>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div><p class="detail-label">Academic Level</p><p class="detail-value">${order.academic_level || '-'}</p></div>
-                        <div><p class="detail-label">Paper Type</p><p class="detail-value">${order.paper_type || '-'}</p></div>
-                        <div><p class="detail-label">Subject</p><p class="detail-value">${order.subject || '-'}</p></div>
-                        <div><p class="detail-label">Pages / Words</p><p class="detail-value">${order.pages || 'N/A'} pages / ${order.words || 'N/A'} words</p></div>
-                        <div><p class="detail-label">Deadline</p><p class="detail-value">${order.deadline ? new Date(order.deadline).toLocaleString() : '-'}</p></div>
-                        <div><p class="detail-label">Format</p><p class="detail-value">${order.format || '-'}</p></div>
-                        <div><p class="detail-label">Sources</p><p class="detail-value">${order.sources_count || 0}</p></div>
-                        <div><p class="detail-label">Created</p><p class="detail-value">${order.created_at ? new Date(order.created_at).toLocaleString() : '-'}</p></div>
-                    </div>
-                    <div class="border-t pt-4"><p class="detail-label">Topic</p><p class="detail-value">${order.topic || '-'}</p></div>
-                    <div class="border-t pt-4 mt-4"><p class="detail-label">Instructions</p><p class="detail-value text-sm whitespace-pre-wrap">${order.instructions || 'No instructions provided.'}</p></div>
-                    ${order.attachments && order.attachments.length > 0 ? `
-                        <div class="border-t pt-4 mt-4"><p class="detail-label">Attachments</p>
-                            <div class="space-y-2 mt-2">
-                                ${order.attachments.map(att => `
-                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div class="flex items-center gap-3">
-                                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                            <div><p class="text-sm font-medium">${att.filename}</p><p class="text-xs text-gray-500">${(att.file_size / 1024).toFixed(1)} KB</p></div>
-                                        </div>
-                                        <a href="${att.file}" target="_blank" class="text-green-600 hover:text-green-700 text-sm">Download</a>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                    ${order.delivered_file ? `
-                        <div class="border-t pt-4 mt-4">
-                            <p class="detail-label text-green-600">Delivered File</p>
-                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg mt-2">
-                                <div class="flex items-center gap-3">
-                                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    <div><p class="text-sm font-medium">${order.delivered_file.filename || 'paper.pdf'}</p></div>
-                                </div>
-                                <a href="${order.delivered_file.file}" target="_blank" class="text-green-600 hover:text-green-700 text-sm">Download</a>
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-
-                ${canApprove ? `
-                    <div class="detail-card">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4">Delivery Actions</h2>
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <button onclick="showApproveConfirmModal()" class="action-btn action-btn-primary">Approve Paper</button>
-                            <button onclick="showRevisionModal()" class="action-btn action-btn-secondary">Request Revision</button>
-                        </div>
-                        ${order.auto_approve_at ? `<p class="text-sm text-gray-500 text-center mt-4">Auto-approval in ${formatTimeRemaining(order.auto_approve_at)}</p>` : ''}
-                    </div>
-                ` : ''}
-
-                ${canRate ? `
-                    <div class="detail-card">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4">Rate This Order</h2>
-                        <p class="text-sm text-gray-600 mb-4">How would you rate the quality of this paper?</p>
-                        <div class="flex justify-center gap-2 mb-4" id="rating-stars-section">
-                            ${[1,2,3,4,5].map(star => `
-                                <button class="rating-star" data-rating="${star}" onclick="selectRating(${star})">★</button>
-                            `).join('')}
-                        </div>
-                        <div class="text-center mb-4"><span class="rating-label" id="rating-label-section"></span></div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Feedback (Optional)</label>
-                            <textarea id="rating-feedback-section" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none" rows="3" placeholder="Share your experience..."></textarea>
-                        </div>
-                        <button onclick="submitRating()" id="submit-rating-section" class="action-btn action-btn-primary" disabled>Submit Rating</button>
-                    </div>
-                ` : ''}
-
-                ${hasRated ? `
-                    <div class="detail-card">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4">Your Rating</h2>
-                        <div class="flex items-center gap-4">
-                            <div class="flex gap-1 text-2xl">
-                                ${[1,2,3,4,5].map(star => `
-                                    <span class="${star <= order.rating ? 'text-yellow-400' : 'text-gray-300'}">★</span>
-                                `).join('')}
-                            </div>
-                            <span class="text-sm text-gray-600">${order.rating}/5</span>
-                        </div>
-                        ${order.feedback ? `<p class="text-sm text-gray-600 mt-2">"${order.feedback}"</p>` : ''}
-                    </div>
-                ` : ''}
-            </div>
-
-            <div class="space-y-6">
-                <div class="detail-card">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm"><span class="text-gray-600">Base Price</span><span class="font-medium">$${parseFloat(order.base_price || 0).toFixed(2)}</span></div>
-                        <div class="flex justify-between text-sm"><span class="text-gray-600">Level Multiplier</span><span class="font-medium">${order.level_multiplier || '1.00'}x</span></div>
-                        <div class="flex justify-between text-sm"><span class="text-gray-600">Urgency Multiplier</span><span class="font-medium">${order.urgency_multiplier || '1.00'}x</span></div>
-                        <div class="flex justify-between text-sm"><span class="text-gray-600">Level Adjusted</span><span class="font-medium">$${parseFloat(order.level_adjusted || 0).toFixed(2)}</span></div>
-                        <div class="border-t pt-3 mt-2"><div class="flex justify-between font-bold"><span>Total</span><span class="text-green-600">$${parseFloat(order.total_price || 0).toFixed(2)}</span></div></div>
-                    </div>
-                </div>
-
-                <div class="detail-card">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Progress</h2>
-                    <div class="space-y-3">
-                        <div class="flex justify-between text-sm"><span class="text-gray-600">Status</span><span class="font-medium">${statusLabels[order.status] || order.status}</span></div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:${getProgress(order.status)}%"></div></div>
-                        <div class="flex justify-between text-xs text-gray-500"><span>Request</span><span>In Progress</span><span>Delivered</span><span>Completed</span></div>
-                    </div>
-                </div>
-
-                <div class="detail-card">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Actions</h2>
-                    <div class="space-y-2">
-                        <a href="/client/messages/${order.id}/" class="action-btn action-btn-primary">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                            Send Message
-                        </a>
-                        ${order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'declined' ? `
-                            <button onclick="showCancelModal()" class="action-btn action-btn-danger">Cancel Order</button>
-                        ` : ''}
-                        ${order.status === 'completed' ? `
-                            <button onclick="window.location.href='/client/refund/request/${order.id}/'" class="action-btn action-btn-outline">Request Refund</button>
-                        ` : ''}
-                    </div>
-                </div>
-
-                <div class="detail-card">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Need Help?</h2>
-                    <p class="text-sm text-gray-600 mb-4">If you have questions about your order, contact support.</p>
-                    <a href="/contact/" class="text-green-600 hover:text-green-700 text-sm block mb-2">Contact Support</a>
-                    <a href="/faq/" class="text-green-600 hover:text-green-700 text-sm block">View FAQ</a>
-                </div>
-            </div>
-        </div>
-    `;
-
-    if (canRate) {
-        setupRatingListeners();
-    }
-}
-
-function getProgress(status) {
-    const progressMap = {
-        'request': 10,
-        'in_progress': 50,
-        'awaiting_approval': 90,
-        'completed': 100
-    };
-    return progressMap[status] || 0;
-}
-
-function formatTimeRemaining(timestamp) {
-    const now = new Date();
-    const target = new Date(timestamp);
-    const diff = target - now;
-    if (diff <= 0) return 'pending';
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return hours + 'h ' + minutes + 'm';
-}
-
-let selectedRatingValue = 0;
-
-function setupRatingListeners() {
-    const stars = document.querySelectorAll('#rating-stars-section .rating-star');
-    const labelText = document.getElementById('rating-label-section');
-    const submitBtn = document.getElementById('submit-rating-section');
-
-    stars.forEach(star => {
-        star.addEventListener('click', function() {
-            selectedRatingValue = parseInt(this.dataset.rating);
-            const isGood = selectedRatingValue >= 4;
-            const isBad = selectedRatingValue <= 2;
-
-            stars.forEach((s, index) => {
-                if (index < selectedRatingValue) {
-                    s.classList.add('selected');
-                    if (isGood) s.classList.add('good');
-                    else if (isBad) s.classList.add('bad');
-                    else s.classList.remove('good', 'bad');
-                } else {
-                    s.classList.remove('selected', 'good', 'bad');
-                }
-            });
-
-            const labels = {
-                1: { text: 'Terrible - Very Poor Quality', class: 'bad' },
-                2: { text: 'Poor - Needs Improvement', class: 'bad' },
-                3: { text: 'Okay - Meets Expectations', class: 'neutral' },
-                4: { text: 'Good - Satisfied with Quality', class: 'good' },
-                5: { text: 'Excellent - Outstanding Work', class: 'good' }
-            };
-
-            const label = labels[selectedRatingValue];
-            labelText.textContent = label.text;
-            labelText.className = 'rating-label show ' + label.class;
-            submitBtn.disabled = false;
-        });
+function showCancelModal() {
+    showModal(
+        '<div class="modal-head"><h3 class="modal-title">Cancel Order</h3></div>' +
+        '<div class="modal-body"><p>Are you sure you want to cancel this order?</p><select id="cancelReason"><option value="changed_mind">Changed my mind</option><option value="found_elsewhere">Found another writer</option><option value="deadline_issue">Deadline too tight</option><option value="price_issue">Price too high</option><option value="other">Other</option></select><input type="text" id="cancelOther" placeholder="Please specify" style="display:none;margin-top:8px;"></div>' +
+        '<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-danger" id="confirmCancel">Confirm Cancellation</button></div>'
+    );
+    document.getElementById('cancelReason').addEventListener('change', function() {
+        document.getElementById('cancelOther').style.display = this.value === 'other' ? 'block' : 'none';
+    });
+    document.getElementById('confirmCancel').addEventListener('click', async function() {
+        var reason = document.getElementById('cancelReason').value;
+        var other = document.getElementById('cancelOther').value;
+        var finalReason = reason === 'other' ? other : reason;
+        try {
+            var r = await fetch('/api/v1/client/orders/' + orderId + '/cancel/', { method: 'POST', headers: getHeaders(), body: JSON.stringify({ reason: finalReason }) });
+            var d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Failed');
+            closeModal();
+            apiToast('Order cancelled successfully', 'success');
+            setTimeout(function() { window.location.href = '/client/orders/'; }, 1500);
+        } catch (e) { apiToast(e.message, 'error'); }
     });
 }
 
 async function submitRating() {
-    if (selectedRatingValue === 0) {
-        showToast('Please select a rating', 'error');
-        return;
-    }
-    const feedback = document.getElementById('rating-feedback-section').value.trim();
+    var rating = document.querySelectorAll('#starRating .star-btn.selected').length;
+    if (rating === 0) { apiToast('Please select a rating', 'error'); return; }
+    var feedback = document.getElementById('ratingFeedback').value.trim();
     try {
-        const response = await fetch(`/api/v1/client/orders/${orderId}/rate/`, {
-            method: 'POST',
-            headers: getApiHeaders(),
-            body: JSON.stringify({
-                rating: selectedRatingValue,
-                feedback: feedback
-            })
-        });
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to submit rating');
-        }
-        showToast('Thank you for your feedback!', 'success');
-        setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-        showToast(error.message || 'Failed to submit rating', 'error');
-    }
-}
-
-function selectRating(rating) {
-    selectedRatingValue = rating;
-    const stars = document.querySelectorAll('#rating-stars-section .rating-star');
-    const isGood = rating >= 4;
-    const isBad = rating <= 2;
-    stars.forEach((s, index) => {
-        if (index < rating) {
-            s.classList.add('selected');
-            if (isGood) s.classList.add('good');
-            else if (isBad) s.classList.add('bad');
-            else s.classList.remove('good', 'bad');
-        } else {
-            s.classList.remove('selected', 'good', 'bad');
-        }
-    });
-    const labels = {
-        1: { text: 'Terrible - Very Poor Quality', class: 'bad' },
-        2: { text: 'Poor - Needs Improvement', class: 'bad' },
-        3: { text: 'Okay - Meets Expectations', class: 'neutral' },
-        4: { text: 'Good - Satisfied with Quality', class: 'good' },
-        5: { text: 'Excellent - Outstanding Work', class: 'good' }
-    };
-    const label = labels[rating];
-    document.getElementById('rating-label-section').textContent = label.text;
-    document.getElementById('rating-label-section').className = 'rating-label show ' + label.class;
-    document.getElementById('submit-rating-section').disabled = false;
+        var r = await fetch('/api/v1/client/orders/' + orderId + '/rate/', { method: 'POST', headers: getHeaders(), body: JSON.stringify({ rating: rating, feedback: feedback }) });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Failed');
+        apiToast('Thank you for your feedback!', 'success');
+        setTimeout(function() { location.reload(); }, 1500);
+    } catch (e) { apiToast(e.message, 'error'); }
 }
 
 document.addEventListener('DOMContentLoaded', loadOrder);

@@ -3,20 +3,27 @@
 {% block title %}New Order - AcademicWrite{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
 <style>
-    .form-section {
+    .form-card {
+        max-width: 640px;
+        margin: 0 auto;
         background: white;
         border: 1px solid #e5e7eb;
-        border-radius: 0.75rem;
-        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+
+    .form-section {
         margin-bottom: 1.5rem;
     }
 
     .form-section h3 {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 700;
         color: #1e293b;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #ecfdf5;
     }
@@ -25,24 +32,18 @@
         background: #f8fafc;
         border: 1px solid #e5e7eb;
         border-radius: 0.75rem;
-        padding: 1.5rem;
+        padding: 1.25rem;
     }
 
     .price-row {
         display: flex;
         justify-content: space-between;
-        padding: 0.4rem 0;
-        font-size: 0.9rem;
+        padding: 0.3rem 0;
+        font-size: 0.85rem;
     }
 
-    .price-row .label {
-        color: #64748b;
-    }
-
-    .price-row .value {
-        font-weight: 500;
-        color: #1e293b;
-    }
+    .price-row .label { color: #64748b; }
+    .price-row .value { font-weight: 500; color: #1e293b; }
 
     .price-total {
         border-top: 2px solid #e5e7eb;
@@ -50,231 +51,207 @@
         margin-top: 0.5rem;
     }
 
-    .price-total .label {
-        font-weight: 700;
-        color: #1e293b;
-        font-size: 1rem;
-    }
-
-    .price-total .value {
-        font-weight: 700;
-        color: #059669;
-        font-size: 1.3rem;
-    }
+    .price-total .label { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+    .price-total .value { font-weight: 700; color: #059669; font-size: 1.2rem; }
 
     .drop-zone {
         border: 2px dashed #d1d5db;
         border-radius: 0.75rem;
-        padding: 2rem;
+        padding: 1.5rem;
         text-align: center;
         transition: all 0.3s ease;
         cursor: pointer;
     }
 
-    .drop-zone:hover {
-        border-color: #059669;
-        background: #f0fdf4;
-    }
-
-    .drop-zone.dragover {
-        border-color: #059669;
-        background: #ecfdf5;
-    }
+    .drop-zone:hover { border-color: #059669; background: #f0fdf4; }
+    .drop-zone.dragover { border-color: #059669; background: #ecfdf5; }
 
     .file-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.75rem 1rem;
+        padding: 0.6rem 0.8rem;
         background: #f9fafb;
         border: 1px solid #e5e7eb;
         border-radius: 0.5rem;
         margin-bottom: 0.5rem;
     }
 
-    .file-item .file-info {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .file-item .file-info .name {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: #1f2937;
-    }
-
-    .file-item .file-info .size {
-        font-size: 0.75rem;
-        color: #6b7280;
-    }
+    .file-item .file-info { display: flex; align-items: center; gap: 0.5rem; }
+    .file-item .file-info .name { font-size: 0.8rem; font-weight: 500; color: #1f2937; }
+    .file-item .file-info .size { font-size: 0.7rem; color: #6b7280; }
 
     .file-item .status-badge {
-        font-size: 0.7rem;
-        padding: 0.15rem 0.5rem;
-        border-radius: 9999px;
-        font-weight: 500;
+        font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 9999px; font-weight: 500;
     }
+    .file-item .status-badge.scanning { background: #fef3c7; color: #d97706; }
+    .file-item .status-badge.verified { background: #d1fae5; color: #059669; }
 
-    .file-item .status-badge.scanning {
-        background: #fef3c7;
-        color: #d97706;
-    }
+    .file-item .remove-btn { color: #ef4444; background: none; border: none; cursor: pointer; padding: 0.2rem; }
+    .file-item .remove-btn:hover { color: #dc2626; }
 
-    .file-item .status-badge.verified {
-        background: #d1fae5;
-        color: #059669;
-    }
+    .add-link-btn { color: #059669; font-weight: 500; cursor: pointer; background: none; border: none; font-size: 0.8rem; }
+    .add-link-btn:hover { color: #047857; }
 
-    .file-item .remove-btn {
-        color: #ef4444;
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0.25rem;
-        transition: color 0.2s ease;
-    }
+    .link-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .link-item input { flex: 1; }
+    .link-item .remove-link { color: #ef4444; background: none; border: none; cursor: pointer; padding: 0.2rem; }
+    .link-item .remove-link:hover { color: #dc2626; }
 
-    .file-item .remove-btn:hover {
-        color: #dc2626;
-    }
-
-    .add-link-btn {
-        color: #059669;
-        font-weight: 500;
-        cursor: pointer;
-        transition: color 0.2s ease;
-        background: none;
-        border: none;
-        font-size: 0.85rem;
-    }
-
-    .add-link-btn:hover {
-        color: #047857;
-    }
-
-    .link-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .link-item input {
-        flex: 1;
-    }
-
-    .link-item .remove-link {
-        color: #ef4444;
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0.25rem;
-    }
-
-    .link-item .remove-link:hover {
-        color: #dc2626;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #374151;
-        margin-bottom: 0.5rem;
-    }
-
-    .form-label .required {
-        color: #ef4444;
-    }
+    .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: #374151; margin-bottom: 0.3rem; }
+    .form-label .required { color: #ef4444; }
 
     .form-control {
-        width: 100%;
-        border: 1px solid #d1d5db;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
-        outline: none;
-        transition: all 0.2s;
-        background: white;
-        font-size: 0.9rem;
+        width: 100%; border: 1px solid #d1d5db; padding: 0.6rem 0.8rem; border-radius: 0.5rem;
+        outline: none; transition: all 0.2s; background: white; font-size: 0.85rem;
     }
+    .form-control:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+    .form-control.error { border-color: #ef4444; }
+    .form-control.error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
 
-    .form-control:focus {
-        border-color: #059669;
-        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
-    }
+    .form-hint { font-size: 0.7rem; color: #6b7280; margin-top: 0.2rem; }
 
-    .form-control.error {
-        border-color: #ef4444;
-    }
-
-    .form-control.error:focus {
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-    }
-
-    .form-hint {
-        font-size: 0.75rem;
-        color: #6b7280;
-        margin-top: 0.25rem;
-    }
-
-    .form-error {
-        font-size: 0.75rem;
-        color: #ef4444;
-        margin-top: 0.25rem;
-        display: none;
-    }
-
-    .form-error.show {
-        display: block;
-    }
-
-    .input-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .input-group .form-control {
-        flex: 1;
-    }
+    .grid-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 
     @media (max-width: 640px) {
-        .form-section {
-            padding: 1rem;
-        }
-        .price-total .value {
-            font-size: 1.1rem;
-        }
-        .grid-cols-2 {
-            grid-template-columns: 1fr;
-        }
+        .form-card { padding: 1.25rem; margin: 0 0.5rem; }
+        .grid-cols-2, .grid-cols-3 { grid-template-columns: 1fr; }
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255,255,255,0.8);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        backdrop-filter: blur(4px);
+        animation: fadeInUp 0.3s ease;
+    }
+
+    .spinner-lg {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e5e7eb;
+        border-top-color: #059669;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 1rem;
+    }
+
+    .loading-text {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #374151;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .paypal-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+        animation: fadeInUp 0.3s ease;
+    }
+
+    .paypal-modal-box {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 420px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        animation: fadeInUp 0.3s ease;
+    }
+
+    .paypal-modal-box h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #1e293b;
+    }
+
+    .paypal-modal-box p {
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .btn-cancel {
+        margin-top: 1rem;
+        background: none;
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        color: #6b7280;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .btn-cancel:hover { background: #f9fafb; color: #374151; }
+
+    .capture-status {
+        padding: 2rem 0;
+    }
+
+    .flatpickr-calendar {
+        border-radius: 0.75rem !important;
+        box-shadow: 0 12px 36px rgba(0,0,0,0.12) !important;
+        border: 1px solid #e5e7eb !important;
+    }
+    .flatpickr-day.selected {
+        background: #059669 !important;
+        border-color: #059669 !important;
+    }
+    .flatpickr-day.today {
+        border-color: #059669 !important;
+    }
+    .flatpickr-day.today:hover {
+        background: #059669 !important;
+        color: white !important;
+    }
+    .flatpickr-months .flatpickr-month,
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 600;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6 sm:py-8">
-    <div class="max-w-4xl mx-auto">
-        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 md:p-8">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Place New Order</h1>
-            <p class="text-gray-600 text-sm sm:text-base mb-6">Fill in the details below to get a price estimate and place your order</p>
+<div class="container">
+    <div class="main-inner">
+        <div class="form-card">
+            <h1 style="font-size:1.5rem; font-weight:700; margin-bottom:0.25rem;">Place New Order</h1>
+            <p style="color:#6b7280; font-size:0.85rem; margin-bottom:1.5rem;">Fill in the details to get a price estimate</p>
 
-            <div id="priceError" class="hidden bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-circle text-red-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-red-700" id="priceErrorMessage">Unable to calculate price. Please check your inputs.</p>
-                    </div>
-                </div>
-            </div>
+            <div id="priceError" class="hidden bg-red-50 border-l-4 border-red-400 p-3 mb-4 rounded text-sm text-red-700" id="priceErrorMessage"></div>
 
             <form id="orderForm" enctype="multipart/form-data" novalidate>
                 <div class="form-section">
                     <h3>Paper Details</h3>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid-cols-2">
                         <div>
                             <label class="form-label" for="academicLevel">Academic Level <span class="required">*</span></label>
                             <select class="form-control" id="academicLevel" required>
@@ -303,13 +280,13 @@
                         </div>
                         <div>
                             <label class="form-label" for="subject">Subject <span class="required">*</span></label>
-                            <input type="text" class="form-control" id="subject" required placeholder="e.g., Psychology, History">
+                            <input type="text" class="form-control" id="subject" required placeholder="e.g., Psychology">
                         </div>
                         <div>
                             <label class="form-label" for="format">Citation Style <span class="required">*</span></label>
                             <select class="form-control" id="format" required>
-                                <option value="apa">APA (7th Edition)</option>
-                                <option value="mla">MLA (9th Edition)</option>
+                                <option value="apa">APA (7th)</option>
+                                <option value="mla">MLA (9th)</option>
                                 <option value="chicago">Chicago</option>
                                 <option value="harvard">Harvard</option>
                                 <option value="turabian">Turabian</option>
@@ -319,62 +296,58 @@
                             </select>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <div style="margin-top:1rem;">
                         <label class="form-label" for="topic">Topic <span class="required">*</span></label>
                         <input type="text" class="form-control" id="topic" required placeholder="Your paper topic">
                     </div>
-                    <div class="mt-4">
+                    <div style="margin-top:1rem;">
                         <label class="form-label" for="instructions">Instructions <span class="required">*</span></label>
-                        <textarea class="form-control" id="instructions" rows="6" required placeholder="Detailed instructions for your order..."></textarea>
+                        <textarea class="form-control" id="instructions" rows="5" required placeholder="Detailed instructions..."></textarea>
                     </div>
                 </div>
 
                 <div class="form-section">
-                    <h3>Order Specifications</h3>
-
+                    <h3>Specifications</h3>
                     <div id="slidesSection" class="hidden">
-                        <div class="mb-4">
+                        <div>
                             <label class="form-label" for="slides">Number of Slides <span class="required">*</span></label>
-                            <input type="number" class="form-control" id="slides" min="1" value="5" placeholder="Number of slides">
-                            <p class="form-hint">$8.00 per slide, fixed price regardless of academic level</p>
+                            <input type="number" class="form-control" id="slides" min="1" value="5">
+                            <p class="form-hint">$8.00 per slide</p>
                         </div>
                     </div>
-
                     <div id="paperFields">
-                        <div class="grid grid-cols-3 gap-4">
+                        <div class="grid-cols-3">
                             <div>
                                 <label class="form-label" for="pages">Pages</label>
                                 <input type="number" class="form-control" id="pages" value="1" min="0.5" step="0.5">
-                                <p class="form-hint">Minimum 0.5 pages</p>
                             </div>
                             <div>
                                 <label class="form-label" for="words">Words</label>
                                 <input type="number" class="form-control" id="words" value="275" min="1">
-                                <p class="form-hint">Minimum 1 word</p>
                             </div>
                             <div>
-                                <label class="form-label" for="spacing">Line Spacing</label>
+                                <label class="form-label" for="spacing">Spacing</label>
                                 <select class="form-control" id="spacing">
-                                    <option value="single">Single (550 words/page)</option>
-                                    <option value="one_point_five">1.5 Line (367 words/page)</option>
-                                    <option value="double" selected>Double (275 words/page)</option>
+                                    <option value="single">Single (550 w/p)</option>
+                                    <option value="one_point_five">1.5 (367 w/p)</option>
+                                    <option value="double" selected>Double (275 w/p)</option>
                                 </select>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-500 mt-2">Enter either pages or words — the other will auto-calculate based on spacing.</p>
+                        <p class="text-xs text-gray-500 mt-2">Enter pages or words – the other calculates automatically.</p>
                     </div>
                 </div>
 
                 <div class="form-section">
-                    <h3>Timeline & Requirements</h3>
-                    <div class="grid grid-cols-2 gap-4">
+                    <h3>Timeline</h3>
+                    <div class="grid-cols-2">
                         <div>
                             <label class="form-label" for="deadline">Deadline <span class="required">*</span></label>
-                            <input type="datetime-local" class="form-control" id="deadline" required>
+                            <input type="text" class="form-control" id="deadline" placeholder="Select date & time" readonly required>
                             <p class="form-hint">Minimum 12 hours from now</p>
                         </div>
                         <div>
-                            <label class="form-label" for="sources">Number of Sources</label>
+                            <label class="form-label" for="sources">Sources</label>
                             <input type="number" class="form-control" id="sources" value="5" min="0" max="100">
                             <p class="form-hint">Does not affect price</p>
                         </div>
@@ -398,23 +371,17 @@
 
                 <div class="form-section">
                     <h3>Attachments</h3>
-                    <p class="text-sm text-gray-600 mb-3">Upload images, PDFs or documents. Max 10MB per file.</p>
-
+                    <p class="text-xs text-gray-600 mb-2">Max 10MB per file. JPG, PNG, PDF, DOC, etc.</p>
                     <div class="drop-zone" id="dropZone">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
-                        <p class="text-gray-600 mb-2">Drag and drop files here or click to browse</p>
-                        <p class="text-xs text-gray-400">Supported: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT</p>
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-600">Drag & drop files or click to browse</p>
                         <input type="file" id="fileInput" multiple class="hidden" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt">
-                        <button type="button" id="browseFilesBtn" class="mt-3 bg-green-600 text-white px-4 py-2 text-sm hover:bg-green-700 transition-colors rounded">
-                            Browse Files
-                        </button>
+                        <button type="button" id="browseFilesBtn" class="mt-2 bg-green-600 text-white px-4 py-1.5 text-sm hover:bg-green-700 rounded">Browse Files</button>
                     </div>
-
-                    <div id="fileList" class="mt-4 space-y-2"></div>
-
-                    <div class="mt-3 flex items-center text-sm text-gray-500">
-                        <i class="fas fa-shield-alt text-green-600 mr-2"></i>
-                        <span>Files are scanned for security before upload</span>
+                    <div id="fileList" class="mt-3 space-y-2"></div>
+                    <div class="mt-2 flex items-center text-xs text-gray-500">
+                        <i class="fas fa-shield-alt text-green-600 mr-1"></i>
+                        <span>Files scanned for security</span>
                     </div>
                 </div>
 
@@ -443,42 +410,134 @@
                                 <span class="value" id="totalPrice">$0.00</span>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-400 text-center mt-3">Final price confirmed at order placement</p>
                     </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
-                    <a href="/client/orders/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-6 py-3 text-center rounded">Cancel</a>
-                    <button type="submit" class="bg-green-600 text-white hover:bg-green-700 transition-colors px-6 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed" id="submitBtn">Place Order</button>
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <a href="/client/orders/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2 text-sm rounded">Cancel</a>
+                    <button type="submit" class="bg-green-600 text-white hover:bg-green-700 px-5 py-2 text-sm rounded disabled:opacity-50" id="submitBtn">Place Order</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD" data-sdk-integration-source="button-factory"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <script>
 let filesToUpload = [];
 let verifiedFiles = [];
 let priceData = null;
 let priceUpdateTimeout = null;
+let deadlinePicker = null;
+
+function showLoading(message) {
+    var overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    overlay.id = 'loadingOverlay';
+    overlay.innerHTML = '<div class="spinner-lg"></div><div class="loading-text">' + message + '</div>';
+    document.body.appendChild(overlay);
+}
+
+function hideLoading() {
+    var overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.remove();
+}
+
+function showPayPalModal(orderId, paypalOrderId, amount) {
+    var existing = document.getElementById('paypalModal');
+    if (existing) existing.remove();
+
+    var modal = document.createElement('div');
+    modal.id = 'paypalModal';
+    modal.className = 'paypal-modal';
+    modal.innerHTML = '<div class="paypal-modal-box"><h3>Complete Payment</h3><p>Amount: <strong>$' + parseFloat(amount).toFixed(2) + '</strong></p><div id="paypal-button-container"></div><button class="btn-cancel" id="cancelPayPalBtn">Cancel</button></div>';
+    document.body.appendChild(modal);
+
+    document.getElementById('cancelPayPalBtn').addEventListener('click', function() {
+        modal.remove();
+        enableSubmit();
+    });
+
+    paypal.Buttons({
+        createOrder: function() {
+            return paypalOrderId;
+        },
+        onApprove: async function(data) {
+            var container = document.getElementById('paypal-button-container');
+            container.innerHTML = '<div class="capture-status"><div class="spinner-lg" style="margin:0 auto 1rem;"></div><p style="color:#059669; font-weight:500;">Processing payment…</p></div>';
+            try {
+                var res = await fetch('/api/v1/orders/' + orderId + '/capture-payment/', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+                });
+                var captureData = await res.json();
+                if (res.ok) {
+                    container.innerHTML = '<i class="fas fa-check-circle" style="font-size:3rem; color:#059669;"></i><p style="font-weight:600; margin-top:0.5rem;">Payment successful!</p>';
+                    setTimeout(function() {
+                        modal.remove();
+                        window.location.href = '/client/orders/' + orderId + '/';
+                    }, 1500);
+                } else {
+                    container.innerHTML = '<i class="fas fa-times-circle" style="font-size:3rem; color:#ef4444;"></i><p style="color:#dc2626; margin-top:0.5rem;">' + (captureData.error || 'Payment failed') + '</p>';
+                    setTimeout(function() { modal.remove(); }, 3000);
+                }
+            } catch (err) {
+                container.innerHTML = '<i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#f59e0b;"></i><p style="color:#92400e;">Network error</p>';
+                setTimeout(function() { modal.remove(); }, 3000);
+            }
+        },
+        onCancel: function() {
+            modal.remove();
+            enableSubmit();
+        },
+        onError: function(err) {
+            alert('PayPal error. Please try again.');
+            modal.remove();
+            enableSubmit();
+        }
+    }).render('#paypal-button-container');
+}
+
+function enableSubmit() {
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.textContent = 'Place Order';
+}
 
 document.addEventListener('DOMContentLoaded', function() {
-    setDefaultDeadline();
+    var now = new Date();
+    var minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+
+    deadlinePicker = flatpickr('#deadline', {
+        enableTime: true,
+        dateFormat: 'Y-m-d H:i',
+        minDate: minDate,
+        defaultDate: minDate,
+        minuteIncrement: 15,
+        disableMobile: true,
+        onChange: function(selectedDates, dateStr, instance) {
+            clearTimeout(priceUpdateTimeout);
+            priceUpdateTimeout = setTimeout(calculatePrice, 300);
+        }
+    });
+
     setupEventListeners();
     calculatePrice();
 });
 
 function setupEventListeners() {
-    const paperType = document.getElementById('paperType');
+    var paperType = document.getElementById('paperType');
     paperType.addEventListener('change', function() {
         togglePaperTypeFields(this.value);
         clearTimeout(priceUpdateTimeout);
         priceUpdateTimeout = setTimeout(calculatePrice, 300);
     });
 
-    const priceInputs = ['academicLevel', 'pages', 'words', 'spacing', 'deadline', 'slides'];
-    priceInputs.forEach(id => {
-        const element = document.getElementById(id);
+    var priceInputs = ['academicLevel', 'pages', 'words', 'spacing', 'slides'];
+    priceInputs.forEach(function(id) {
+        var element = document.getElementById(id);
         if (element) {
             element.addEventListener('change', function() {
                 clearTimeout(priceUpdateTimeout);
@@ -506,19 +565,13 @@ function setupEventListeners() {
     });
 
     document.getElementById('spacing').addEventListener('change', function() {
-        const words = parseInt(document.getElementById('words').value) || 0;
-        const pages = parseFloat(document.getElementById('pages').value) || 0;
+        var words = parseInt(document.getElementById('words').value) || 0;
+        var pages = parseFloat(document.getElementById('pages').value) || 0;
         if (words > 0) {
             syncWordsToPages(words);
         } else if (pages > 0) {
             syncPagesToWords(pages);
         }
-        clearTimeout(priceUpdateTimeout);
-        priceUpdateTimeout = setTimeout(calculatePrice, 300);
-    });
-
-    document.getElementById('deadline').addEventListener('change', function() {
-        validateDeadline(this);
         clearTimeout(priceUpdateTimeout);
         priceUpdateTimeout = setTimeout(calculatePrice, 300);
     });
@@ -529,28 +582,28 @@ function setupEventListeners() {
 }
 
 function syncPagesToWords(pagesValue) {
-    const pages = parseFloat(pagesValue) || 0;
-    const spacing = document.getElementById('spacing').value;
-    const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
+    var pages = parseFloat(pagesValue) || 0;
+    var spacing = document.getElementById('spacing').value;
+    var wordsPerPage = { single: 550, one_point_five: 367, double: 275 };
     if (pages > 0) {
-        const words = Math.round(pages * (wordsPerPage[spacing] || 275));
+        var words = Math.round(pages * (wordsPerPage[spacing] || 275));
         document.getElementById('words').value = words;
     }
 }
 
 function syncWordsToPages(wordsValue) {
-    const words = parseInt(wordsValue) || 0;
-    const spacing = document.getElementById('spacing').value;
-    const wordsPerPage = {'single': 550, 'one_point_five': 367, 'double': 275};
+    var words = parseInt(wordsValue) || 0;
+    var spacing = document.getElementById('spacing').value;
+    var wordsPerPage = { single: 550, one_point_five: 367, double: 275 };
     if (words > 0) {
-        const pages = words / (wordsPerPage[spacing] || 275);
+        var pages = words / (wordsPerPage[spacing] || 275);
         document.getElementById('pages').value = pages.toFixed(1);
     }
 }
 
 function togglePaperTypeFields(paperType) {
-    const slidesSection = document.getElementById('slidesSection');
-    const paperFields = document.getElementById('paperFields');
+    var slidesSection = document.getElementById('slidesSection');
+    var paperFields = document.getElementById('paperFields');
 
     if (paperType === 'presentation') {
         slidesSection.classList.remove('hidden');
@@ -567,50 +620,16 @@ function togglePaperTypeFields(paperType) {
     }
 }
 
-function validateDeadline(input) {
-    const selectedDate = new Date(input.value);
-    const now = new Date();
-    const minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
-
-    if (selectedDate < now) {
-        input.setCustomValidity('Deadline cannot be in the past');
-        input.reportValidity();
-        return false;
-    }
-    if (selectedDate < minDate) {
-        input.setCustomValidity('Deadline must be at least 12 hours from now');
-        input.reportValidity();
-        return false;
-    }
-    input.setCustomValidity('');
-    return true;
-}
-
-function setDefaultDeadline() {
-    const now = new Date();
-    const minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
-    document.getElementById('deadline').value = formatDateTimeLocal(minDate);
-}
-
-function formatDateTimeLocal(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
 async function calculatePrice() {
-    const academicLevel = document.getElementById('academicLevel').value;
-    const words = parseInt(document.getElementById('words').value) || 0;
-    const pages = parseFloat(document.getElementById('pages').value) || 0;
-    const spacing = document.getElementById('spacing').value;
-    const deadline = document.getElementById('deadline').value;
-    const paperType = document.getElementById('paperType').value;
-    const slides = parseInt(document.getElementById('slides').value) || 0;
-    const errorEl = document.getElementById('priceError');
-    const errorMsg = document.getElementById('priceErrorMessage');
+    var academicLevel = document.getElementById('academicLevel').value;
+    var words = parseInt(document.getElementById('words').value) || 0;
+    var pages = parseFloat(document.getElementById('pages').value) || 0;
+    var spacing = document.getElementById('spacing').value;
+    var deadline = document.getElementById('deadline').value;
+    var paperType = document.getElementById('paperType').value;
+    var slides = parseInt(document.getElementById('slides').value) || 0;
+    var errorEl = document.getElementById('priceError');
+    var errorMsg = document.getElementById('priceErrorMessage');
 
     if (!academicLevel || !deadline) {
         return;
@@ -618,27 +637,27 @@ async function calculatePrice() {
 
     if (paperType === 'presentation') {
         if (!slides || slides < 1) {
-            errorMsg.textContent = 'Please enter the number of slides for your presentation.';
+            errorMsg.textContent = 'Please enter the number of slides.';
             errorEl.classList.remove('hidden');
             return;
         }
     } else {
         if (words === 0 && pages === 0) {
-            errorMsg.textContent = 'Please enter either pages or words for your order.';
+            errorMsg.textContent = 'Please enter pages or words.';
             errorEl.classList.remove('hidden');
             return;
         }
     }
 
     try {
-        const token = localStorage.getItem('access_token');
+        var token = localStorage.getItem('access_token');
         if (!token) {
             errorMsg.textContent = 'Please login to continue.';
             errorEl.classList.remove('hidden');
             return;
         }
 
-        const requestData = {
+        var requestData = {
             academic_level: academicLevel,
             spacing: spacing,
             deadline: deadline,
@@ -652,7 +671,7 @@ async function calculatePrice() {
             if (pages > 0) requestData.pages = pages;
         }
 
-        const response = await fetch('/api/v1/orders/price-quote/', {
+        var response = await fetch('/api/v1/orders/price-quote/', {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -662,9 +681,9 @@ async function calculatePrice() {
         });
 
         if (!response.ok) {
-            let errorMessage = 'Failed to calculate price';
+            var errorMessage = 'Failed to calculate price';
             try {
-                const errorData = await response.json();
+                var errorData = await response.json();
                 errorMessage = errorData.error || errorData.message || errorMessage;
             } catch (e) {
                 errorMessage = response.statusText || errorMessage;
@@ -678,7 +697,7 @@ async function calculatePrice() {
 
     } catch (error) {
         console.error('Price calculation error:', error);
-        errorMsg.textContent = error.message || 'Unable to calculate price. Please check your inputs.';
+        errorMsg.textContent = error.message || 'Unable to calculate price.';
         errorEl.classList.remove('hidden');
         resetPriceDisplay();
     }
@@ -704,49 +723,50 @@ function resetPriceDisplay() {
 }
 
 function setupFileUpload() {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const browseBtn = document.getElementById('browseFilesBtn');
+    var dropZone = document.getElementById('dropZone');
+    var fileInput = document.getElementById('fileInput');
+    var browseBtn = document.getElementById('browseFilesBtn');
 
-    dropZone.addEventListener('click', () => fileInput.click());
-    browseBtn.addEventListener('click', (e) => {
+    dropZone.addEventListener('click', function() { fileInput.click(); });
+    browseBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         fileInput.click();
     });
 
-    dropZone.addEventListener('dragover', (e) => {
+    dropZone.addEventListener('dragover', function(e) {
         e.preventDefault();
         dropZone.classList.add('dragover');
     });
 
-    dropZone.addEventListener('dragleave', () => {
+    dropZone.addEventListener('dragleave', function() {
         dropZone.classList.remove('dragover');
     });
 
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', function(e) {
         e.preventDefault();
         dropZone.classList.remove('dragover');
         handleFiles(e.dataTransfer.files);
     });
 
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener('change', function(e) {
         handleFiles(e.target.files);
     });
 }
 
 function handleFiles(files) {
-    for (let file of files) {
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
         if (file.size > 10 * 1024 * 1024) {
             alert('File "' + file.name + '" exceeds 10MB limit');
             continue;
         }
 
-        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf',
+        var allowedTypes = ['image/jpeg', 'image/png', 'application/pdf',
                             'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                             'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                             'text/plain'];
 
-        if (!allowedTypes.includes(file.type)) {
+        if (allowedTypes.indexOf(file.type) === -1) {
             alert('File type "' + file.type + '" not supported');
             continue;
         }
@@ -754,48 +774,36 @@ function handleFiles(files) {
         filesToUpload.push(file);
         addFileToList(file);
 
-        setTimeout(() => {
-            verifiedFiles.push(file);
-            updateFileStatus(file.name);
-            document.getElementById('fileInput').value = '';
-        }, 1000);
+        (function(f) {
+            setTimeout(function() {
+                verifiedFiles.push(f);
+                updateFileStatus(f.name);
+                document.getElementById('fileInput').value = '';
+            }, 1000);
+        })(file);
     }
 }
 
 function addFileToList(file) {
-    const fileList = document.getElementById('fileList');
-    const fileItem = document.createElement('div');
+    var fileList = document.getElementById('fileList');
+    var fileItem = document.createElement('div');
     fileItem.className = 'file-item';
     fileItem.dataset.filename = file.name;
 
-    fileItem.innerHTML = `
-        <div class="file-info">
-            <i class="fas fa-file text-gray-400"></i>
-            <div>
-                <span class="name">${file.name}</span>
-                <span class="size">${(file.size / 1024).toFixed(2)} KB</span>
-            </div>
-            <span class="status-badge scanning" id="status-${file.name}">
-                <i class="fas fa-spinner fa-spin mr-1"></i> Scanning
-            </span>
-        </div>
-        <button type="button" class="remove-btn" data-filename="${file.name}">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
+    fileItem.innerHTML = '<div class="file-info"><i class="fas fa-file text-gray-400"></i><div><span class="name">' + file.name + '</span><span class="size">' + (file.size / 1024).toFixed(2) + ' KB</span></div><span class="status-badge scanning" id="status-' + file.name + '"><i class="fas fa-spinner fa-spin mr-1"></i> Scanning</span></div><button type="button" class="remove-btn" data-filename="' + file.name + '"><i class="fas fa-times"></i></button>';
 
     fileList.appendChild(fileItem);
 
     fileItem.querySelector('.remove-btn').addEventListener('click', function() {
-        const filename = this.dataset.filename;
-        filesToUpload = filesToUpload.filter(f => f.name !== filename);
-        verifiedFiles = verifiedFiles.filter(f => f.name !== filename);
+        var filename = this.dataset.filename;
+        filesToUpload = filesToUpload.filter(function(f) { return f.name !== filename; });
+        verifiedFiles = verifiedFiles.filter(function(f) { return f.name !== filename; });
         fileItem.remove();
     });
 }
 
 function updateFileStatus(filename) {
-    const statusSpan = document.getElementById('status-' + filename);
+    var statusSpan = document.getElementById('status-' + filename);
     if (statusSpan) {
         statusSpan.className = 'status-badge verified';
         statusSpan.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Verified';
@@ -803,7 +811,7 @@ function updateFileStatus(filename) {
 }
 
 function normalizeUrl(value) {
-    const trimmed = value.trim();
+    var trimmed = value.trim();
     if (!trimmed) return '';
     if (!/^https?:\/\//i.test(trimmed)) {
         return 'https://' + trimmed;
@@ -813,7 +821,7 @@ function normalizeUrl(value) {
 
 function isValidUrl(value) {
     try {
-        const url = new URL(value);
+        var url = new URL(value);
         return url.protocol === 'http:' || url.protocol === 'https:';
     } catch (e) {
         return false;
@@ -823,7 +831,7 @@ function isValidUrl(value) {
 function setupLinks() {
     document.getElementById('linksContainer').addEventListener('click', function(e) {
         if (e.target.closest('.remove-link')) {
-            const linkItem = e.target.closest('.link-item');
+            var linkItem = e.target.closest('.link-item');
             if (linkItem && linkItem.querySelectorAll('input').length > 1) {
                 linkItem.remove();
             }
@@ -831,15 +839,10 @@ function setupLinks() {
     });
 
     document.querySelector('.add-link-btn').addEventListener('click', function() {
-        const container = document.getElementById('linksContainer');
-        const newField = document.createElement('div');
+        var container = document.getElementById('linksContainer');
+        var newField = document.createElement('div');
         newField.className = 'link-item';
-        newField.innerHTML = `
-            <input type="url" class="form-control" placeholder="https://example.com/source">
-            <button type="button" class="remove-link">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
+        newField.innerHTML = '<input type="url" class="form-control" placeholder="https://example.com/source"><button type="button" class="remove-link"><i class="fas fa-times"></i></button>';
         container.appendChild(newField);
     });
 }
@@ -850,40 +853,43 @@ function setupFormSubmit() {
 
 function formatOrderError(error) {
     if (!error) return 'Failed to create order. Please try again.';
-
     if (typeof error === 'string') return error;
-
     if (error.non_field_errors) {
         return Array.isArray(error.non_field_errors) ? error.non_field_errors[0] : error.non_field_errors;
     }
-
     if (error.detail) return error.detail;
     if (error.error) return error.error;
     if (error.message) return error.message;
-
     if (typeof error === 'object') {
-        const messages = Object.keys(error).map(function(key) {
+        var messages = Object.keys(error).map(function(key) {
             return key + ': ' + (typeof error[key] === 'string' ? error[key] : JSON.stringify(error[key]));
         });
-        if (messages.length > 0) {
-            return messages.join('\n');
-        }
+        if (messages.length > 0) return messages.join('\n');
     }
-
     return 'Failed to create order. Please try again.';
 }
 
 async function submitOrder(e) {
     e.preventDefault();
 
-    const deadlineInput = document.getElementById('deadline');
-    if (!validateDeadline(deadlineInput)) {
+    var selectedDates = deadlinePicker.selectedDates;
+    if (!selectedDates || selectedDates.length === 0) {
+        alert('Please select a valid deadline.');
         return;
     }
 
-    const paperType = document.getElementById('paperType').value;
+    var selectedDate = selectedDates[0];
+    var now = new Date();
+    var diffHours = (selectedDate - now) / (1000 * 60 * 60);
+    if (diffHours < 12) {
+        alert('Deadline must be at least 12 hours from now.');
+        deadlinePicker.setDate(now.getTime() + 12 * 60 * 60 * 1000);
+        return;
+    }
+
+    var paperType = document.getElementById('paperType').value;
     if (paperType === 'presentation') {
-        const slides = parseInt(document.getElementById('slides').value) || 0;
+        var slides = parseInt(document.getElementById('slides').value) || 0;
         if (slides < 1) {
             alert('Please enter the number of slides for your presentation.');
             return;
@@ -895,32 +901,30 @@ async function submitOrder(e) {
         return;
     }
 
-    const linkInputs = document.querySelectorAll('#linksContainer input[type="url"]');
-    const links = [];
-    let hasInvalidLink = false;
+    var linkInputs = document.querySelectorAll('#linksContainer input[type="url"]');
+    var links = [];
+    var hasInvalidLink = false;
 
     linkInputs.forEach(function(input) {
         input.classList.remove('error');
-        const raw = input.value.trim();
+        var raw = input.value.trim();
         if (!raw) return;
-
-        const normalized = normalizeUrl(raw);
+        var normalized = normalizeUrl(raw);
         if (!isValidUrl(normalized)) {
             input.classList.add('error');
             hasInvalidLink = true;
             return;
         }
-
         input.value = normalized;
         links.push(normalized);
     });
 
     if (hasInvalidLink) {
-        alert('One or more reference links are not valid URLs. Please check the highlighted fields.');
+        alert('One or more reference links are not valid URLs.');
         return;
     }
 
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('academic_level', document.getElementById('academicLevel').value);
     formData.append('paper_type', paperType);
     formData.append('subject', document.getElementById('subject').value);
@@ -931,49 +935,45 @@ async function submitOrder(e) {
     formData.append('spacing', document.getElementById('spacing').value);
     formData.append('slides', document.getElementById('slides').value || '');
     formData.append('sources_count', document.getElementById('sources').value);
-    formData.append('deadline', document.getElementById('deadline').value);
+    formData.append('deadline', flatpickr.formatDate(selectedDate, 'Y-m-d H:i'));
     formData.append('format', document.getElementById('format').value);
-    links.forEach(function(link) {
-        formData.append('links', link);
-    });
+    links.forEach(function(link) { formData.append('links', link); });
+    verifiedFiles.forEach(function(file) { formData.append('attachments', file); });
 
-    verifiedFiles.forEach(file => {
-        formData.append('attachments', file);
-    });
+    showLoading('Creating your order…');
+
+    var submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
 
     try {
-        if (window.Loading) window.Loading.show();
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').textContent = 'Processing...';
-
-        const response = await fetch('/api/v1/orders/create/', {
+        var response = await fetch('/api/v1/orders/create/', {
             method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-            },
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
             body: formData
         });
 
         if (!response.ok) {
-            let errorData = null;
-            try {
-                errorData = await response.json();
-            } catch (e) {
-                errorData = { error: response.statusText || 'Failed to create order' };
-            }
-            throw errorData;
+            var errorData = null;
+            try { errorData = await response.json(); } catch (e) {}
+            throw errorData || { error: 'Failed to create order' };
         }
 
-        const data = await response.json();
-        window.location.href = '/client/orders/' + data.id + '/';
+        var data = await response.json();
+        hideLoading();
+
+        if (data.paypal_order_id) {
+            showPayPalModal(data.id, data.paypal_order_id, data.total_price);
+        } else {
+            window.location.href = '/client/orders/' + data.id + '/';
+        }
 
     } catch (error) {
+        hideLoading();
         console.error('Order creation error:', error);
         alert(formatOrderError(error));
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').textContent = 'Place Order';
-    } finally {
-        if (window.Loading) window.Loading.hide();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Place Order';
     }
 }
 </script>

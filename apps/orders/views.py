@@ -2,12 +2,12 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from datetime import timedelta
 from datetime import timezone as dt_timezone
 from decimal import Decimal
-from django.db import transaction
+from django.db import transaction as db_transaction
 from django.db.models import Q
 from .models import Order, OrderHistory, Attachment, OrderTimeline, UserPresence
 from .serializers import (
@@ -16,7 +16,11 @@ from .serializers import (
     RevisionRequestSerializer, RefundRequestSerializer, RatingSerializer,
     CancelOrderSerializer, DeclineOrderSerializer, ResubmitOrderSerializer
 )
-from apps.payments.models import Wallet, Transaction, PaymentMethod
+from apps.payments.models import Wallet, Transaction
+from apps.payments.services import PayPalService
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def log_history(order, user, action, from_status, to_status, data=None):
@@ -231,33 +235,11 @@ def create_order(request):
         data['paper_type']
     )
 
-    # Validate payment method
-    payment_method_id = request.data.get('payment_method_id')
-    if not payment_method_id:
-        return Response(
-            {'error': 'payment_method_id is required'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        payment_method = PaymentMethod.objects.get(
-            id=payment_method_id,
-            user=request.user,
-            is_active=True,
-            paypal_verified=True
-        )
-    except PaymentMethod.DoesNotExist:
-        return Response(
-            {'error': 'Invalid, inactive, or unverified payment method'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
     wallet = request.user.wallet
-
     links = data.get('links', [])
     sanitized_links = sanitize_links(links)
 
-    with transaction.atomic():
+    with db_transaction.atomic():
         order = Order.objects.create(
             client=request.user,
             academic_level=data['academic_level'],
@@ -281,7 +263,7 @@ def create_order(request):
             status='request'
         )
 
-        Transaction.objects.create(
+        transaction_obj = Transaction.objects.create(
             user=request.user,
             wallet=wallet,
             amount=price_data['total_price'],
@@ -289,24 +271,143 @@ def create_order(request):
             direction='debit',
             status='pending',
             payment_method='paypal',
-            description=f'Order {order.order_number} placed - payment via {payment_method.paypal_email}',
+            description=f'Order {order.order_number} placed – PayPal payment to admin',
             order=order,
-            metadata={'payment_method_id': str(payment_method.id)}
+            metadata={}
         )
+
+        # ---------- Create PayPal order (no redirect URL needed for modal) ----------
+        return_url = request.build_absolute_uri(f'/client/orders/{order.id}/')
+        cancel_url = request.build_absolute_uri(f'/client/orders/new/')
+
+        paypal_result = PayPalService.create_payment(
+            amount=price_data['total_price'],
+            return_url=return_url,
+            cancel_url=cancel_url
+        )
+
+        if not paypal_result['success']:
+            transaction_obj.status = 'failed'
+            transaction_obj.metadata['failure_reason'] = paypal_result.get('error', 'PayPal error')
+            transaction_obj.save()
+            return Response(
+                {'error': 'PayPal payment creation failed', 'detail': paypal_result.get('error')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        transaction_obj.metadata['paypal_order_id'] = paypal_result['payment_id']
+        transaction_obj.save()
 
         log_history(order, request.user, 'create', None, 'request', {
             'total_price': str(price_data['total_price']),
             'pages': float(price_data.get('pages', 0)),
             'words': words,
             'spacing': spacing,
-            'payment_method': payment_method.paypal_email
         })
 
         create_timeline(order, 'request', 'Order Created',
                        'Your order has been submitted and is waiting for a writer',
                        'fa-file-alt', 'green')
 
-    return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+        response_data = OrderSerializer(order).data
+        response_data['paypal_order_id'] = paypal_result['payment_id']
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def capture_order_payment(request, order_id):
+    """
+    Capture the PayPal order after the customer approves the payment in the modal.
+    """
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+
+    transaction_obj = Transaction.objects.filter(
+        order=order, type='payment', status='pending'
+    ).first()
+    if not transaction_obj:
+        return Response(
+            {'error': 'No pending payment found for this order'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    paypal_order_id = transaction_obj.metadata.get('paypal_order_id')
+    if not paypal_order_id:
+        return Response(
+            {'error': 'PayPal order ID missing'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    result = PayPalService.execute_payment(paypal_order_id)
+
+    if result['success'] and result['state'] == 'approved':
+        transaction_obj.status = 'completed'
+        transaction_obj.completed_at = timezone.now()
+        transaction_obj.paypal_transaction_id = paypal_order_id
+        transaction_obj.save()
+        return Response({
+            'success': True,
+            'order_id': str(order.id),
+            'order_number': order.order_number,
+        })
+    else:
+        transaction_obj.status = 'failed'
+        transaction_obj.metadata['failure_reason'] = result.get('error', 'Capture failed')
+        transaction_obj.save()
+        return Response(
+            {'error': result.get('error', 'Payment capture failed')},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_paypal_success(request, order_id):
+    """
+    Fallback for redirect-based payment (not used with modal, but kept for compatibility).
+    """
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+
+    paypal_order_id = request.GET.get('token')   # v2 uses 'token'
+    if not paypal_order_id:
+        return redirect(f'/client/orders/{order_id}/')
+
+    transaction_obj = Transaction.objects.filter(
+        order=order, type='payment', status='pending'
+    ).first()
+    if not transaction_obj:
+        return redirect(f'/client/orders/{order_id}/')
+
+    result = PayPalService.execute_payment(paypal_order_id)
+
+    if result['success'] and result['state'] == 'approved':
+        transaction_obj.status = 'completed'
+        transaction_obj.completed_at = timezone.now()
+        transaction_obj.paypal_transaction_id = paypal_order_id
+        transaction_obj.save()
+    else:
+        transaction_obj.status = 'failed'
+        transaction_obj.metadata['failure_reason'] = result.get('error', 'Capture failed')
+        transaction_obj.save()
+        return redirect(f'/client/orders/{order_id}/')
+
+    return render(request, 'client/order_success.html', {'order_id': str(order_id)})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_paypal_cancel(request, order_id):
+    """
+    Fallback for redirect-based payment cancellation.
+    """
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+    transaction_obj = Transaction.objects.filter(
+        order=order, type='payment', status='pending'
+    ).first()
+    if transaction_obj:
+        transaction_obj.status = 'cancelled'
+        transaction_obj.save()
+    return redirect(f'/client/orders/{order_id}/')
 
 
 @api_view(['GET'])
@@ -631,28 +732,6 @@ def reorder_order(request, order_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # For simplicity, we use the default payment method or require explicit selection
-    # Here we will use the same logic as create_order: expect payment_method_id in request
-    payment_method_id = request.data.get('payment_method_id')
-    if not payment_method_id:
-        return Response(
-            {'error': 'payment_method_id is required for reorder'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        payment_method = PaymentMethod.objects.get(
-            id=payment_method_id,
-            user=request.user,
-            is_active=True,
-            paypal_verified=True
-        )
-    except PaymentMethod.DoesNotExist:
-        return Response(
-            {'error': 'Invalid, inactive, or unverified payment method'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
     price_data = Order.calculate_price(
         order.academic_level,
         order.words,
@@ -696,9 +775,9 @@ def reorder_order(request, order_id):
         direction='debit',
         status='pending',
         payment_method='paypal',
-        description=f'Order {new_order.order_number} placed - payment via {payment_method.paypal_email}',
+        description=f'Order {new_order.order_number} placed – PayPal payment to admin',
         order=new_order,
-        metadata={'payment_method_id': str(payment_method.id)}
+        metadata={}
     )
 
     log_history(new_order, request.user, 'reorder', None, 'request', {
@@ -728,27 +807,6 @@ def split_order(request, order_id):
     if parts < 2:
         return Response(
             {'error': 'Must split into at least 2 parts'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # For split, we also need a payment method
-    payment_method_id = request.data.get('payment_method_id')
-    if not payment_method_id:
-        return Response(
-            {'error': 'payment_method_id is required for split'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        payment_method = PaymentMethod.objects.get(
-            id=payment_method_id,
-            user=request.user,
-            is_active=True,
-            paypal_verified=True
-        )
-    except PaymentMethod.DoesNotExist:
-        return Response(
-            {'error': 'Invalid, inactive, or unverified payment method'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -809,9 +867,9 @@ def split_order(request, order_id):
             direction='debit',
             status='pending',
             payment_method='paypal',
-            description=f'Order {new_order.order_number} placed - payment via {payment_method.paypal_email}',
+            description=f'Order {new_order.order_number} placed – PayPal payment to admin',
             order=new_order,
-            metadata={'payment_method_id': str(payment_method.id)}
+            metadata={}
         )
 
         log_history(new_order, request.user, 'split', None, 'request', {

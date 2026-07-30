@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from apps.admin_portal.views import admin_order_detail
+from apps.orders.views import order_paypal_success, order_paypal_cancel
 
 app_name = 'config'
 
@@ -43,6 +44,8 @@ urlpatterns = [
     path('client/orders/', views.client_orders, name='client-orders'),
     path('client/orders/new/', views.client_new_order, name='client-new-order'),
     path('client/orders/<uuid:order_id>/', views.client_order_detail, name='client-order-detail'),
+    path('client/orders/<uuid:order_id>/paypal/success/', order_paypal_success, name='order-paypal-success'),
+    path('client/orders/<uuid:order_id>/paypal/cancel/', order_paypal_cancel, name='order-paypal-cancel'),
     path('client/wallet/', views.client_wallet, name='client-wallet'),
     path('client/messages/', views.client_messages, name='client-messages'),
     path('client/messages/<uuid:order_id>/', views.client_order_messages, name='client-order-messages'),
@@ -86,7 +89,6 @@ urlpatterns = [
     
     path('auth/', include('apps.accounts.urls')),
     
-    path('api/v1/auth/', include('apps.accounts.urls')),
     path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
     path('api/v1/admin/', include('apps.admin_portal.urls')),

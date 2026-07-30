@@ -30,6 +30,8 @@ urlpatterns = [
     path('<uuid:order_id>/attachments/', views.list_attachments, name='list-attachments'),
     path('<uuid:order_id>/attachments/upload/', views.upload_attachment, name='upload-attachment'),
     
+    path('<uuid:order_id>/capture-payment/', views.capture_order_payment, name='capture-order-payment'),
+    
     path('writer/assigned/', views.assigned_orders, name='assigned-orders'),
     path('writer/available/', views.available_orders, name='available-orders'),
     

@@ -1,20 +1,23 @@
 from rest_framework import status
 from django.contrib.auth import login as django_login, logout as auth_logout
 from django.shortcuts import redirect
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
 from django.core.cache import cache
+from django.views.decorators.csrf import csrf_exempt
 import logging
 import requests
 import secrets
-from .models import User, PendingUser, LoginLog, PasswordChangeVerification
+import hashlib
+from .models import User, PendingUser, LoginLog, PasswordChangeVerification, SecurityEvent
 from .serializers import (
     RegisterSerializer, OTPVerificationSerializer, ResendOTPSerializer,
     LoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,
@@ -36,11 +39,80 @@ from .throttles import (
 logger = logging.getLogger(__name__)
 
 
+def log_security_event(event_type, ip_address, user_agent, user=None, metadata=None):
+    """Log security events for audit trail without affecting request flow."""
+    try:
+        SecurityEvent.objects.create(
+            event_type=event_type,
+            user=user,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            metadata=metadata or {}
+        )
+    except Exception as e:
+        logger.error(f"Failed to log security event: {str(e)}")
+
+
+def verify_google_token(access_token, id_token, client_id):
+    """
+    Verify Google token authenticity.
+    Checks audience, issuer, and expiry.
+    """
+    if id_token:
+        try:
+            response = requests.get(
+                f'https://oauth2.googleapis.com/tokeninfo?id_token={id_token}',
+                timeout=10
+            )
+            response.raise_for_status()
+            token_info = response.json()
+
+            if token_info.get('aud') != client_id:
+                logger.warning(f"Google token audience mismatch: expected {client_id}, got {token_info.get('aud')}")
+                return None
+
+            if token_info.get('iss') not in ['accounts.google.com', 'https://accounts.google.com']:
+                logger.warning(f"Google token issuer mismatch: {token_info.get('iss')}")
+                return None
+
+            if int(token_info.get('exp', 0)) < timezone.now().timestamp():
+                logger.warning("Google token expired")
+                return None
+
+            return token_info
+        except Exception as e:
+            logger.error(f"Google ID token verification failed: {str(e)}")
+            return None
+
+    if access_token:
+        try:
+            response = requests.get(
+                'https://www.googleapis.com/oauth2/v3/userinfo',
+                headers={'Authorization': f'Bearer {access_token}'},
+                timeout=10
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"Google access token verification failed: {str(e)}")
+            return None
+
+    return None
+
+
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def register(request):
     throttle = RegisterThrottle()
     if not throttle.allow_request(request, None):
+        log_security_event(
+            'rate_limit_hit',
+            get_client_ip(request),
+            get_client_user_agent(request),
+            metadata={'endpoint': 'register'}
+        )
         return Response(
             {'error': 'Too many registration attempts. Please try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS
@@ -51,8 +123,15 @@ def register(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     email = serializer.validated_data['email']
+    ip = get_client_ip(request)
 
     if User.objects.filter(email=email).exists():
+        log_security_event(
+            'register_duplicate',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email}
+        )
         return Response(
             {'email': 'An account with this email already exists'},
             status=status.HTTP_400_BAD_REQUEST
@@ -61,7 +140,6 @@ def register(request):
     PendingUser.objects.filter(email=email).delete()
 
     otp = generate_otp()
-    ip = get_client_ip(request)
 
     pending_user = PendingUser.objects.create(
         email=email,
@@ -78,10 +156,23 @@ def register(request):
 
     if not email_sent:
         pending_user.delete()
+        log_security_event(
+            'email_send_failed',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email}
+        )
         return Response(
             {'error': 'Failed to send verification email. Please try again.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+    log_security_event(
+        'register_attempt',
+        ip,
+        get_client_user_agent(request),
+        metadata={'email': email}
+    )
 
     return Response({
         'message': 'Verification code sent to your email.',
@@ -105,6 +196,7 @@ def verify_otp(request):
 
     email = serializer.validated_data['email']
     otp = serializer.validated_data['otp_code']
+    ip = get_client_ip(request)
 
     try:
         pending_user = PendingUser.objects.get(
@@ -113,6 +205,12 @@ def verify_otp(request):
             otp_expires__gt=timezone.now()
         )
     except PendingUser.DoesNotExist:
+        log_security_event(
+            'otp_verification_failed',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email}
+        )
         return Response(
             {'error': 'Invalid or expired verification code'},
             status=status.HTTP_400_BAD_REQUEST
@@ -125,18 +223,26 @@ def verify_otp(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    user = User.objects.create_user(
-        email=pending_user.email,
-        full_name=pending_user.full_name,
-        password=pending_user.password,
-        phone=pending_user.phone,
-        institution=pending_user.institution,
-        email_verified=True,
-        is_active=True,
-        role='client'
-    )
+    with transaction.atomic():
+        user = User.objects.create_user(
+            email=pending_user.email,
+            full_name=pending_user.full_name,
+            password=pending_user.password,
+            phone=pending_user.phone,
+            institution=pending_user.institution,
+            email_verified=True,
+            is_active=True,
+            role='client'
+        )
+        pending_user.delete()
 
-    pending_user.delete()
+    log_security_event(
+        'register_success',
+        ip,
+        get_client_user_agent(request),
+        user=user,
+        metadata={'email': email}
+    )
 
     return Response({
         'message': 'Email verified successfully. You can now login.'
@@ -192,12 +298,20 @@ def resend_otp(request):
     }, status=status.HTTP_200_OK)
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def login(request):
     if not settings.DEBUG:
         throttle = LoginThrottle()
         if not throttle.allow_request(request, None):
+            log_security_event(
+                'rate_limit_hit',
+                get_client_ip(request),
+                get_client_user_agent(request),
+                metadata={'endpoint': 'login'}
+            )
             return Response(
                 {'error': 'Too many login attempts. Please try again later.'},
                 status=status.HTTP_429_TOO_MANY_REQUESTS
@@ -216,6 +330,12 @@ def login(request):
         user = User.objects.get(email=email)
 
         if user.account_locked_until and user.account_locked_until > timezone.now():
+            log_security_event(
+                'account_locked',
+                ip,
+                get_client_user_agent(request),
+                user=user
+            )
             return Response(
                 {'error': 'Account locked due to multiple failed attempts. Try again later.'},
                 status=status.HTTP_403_FORBIDDEN
@@ -246,6 +366,12 @@ def login(request):
             user_agent=get_client_user_agent(request),
             success=False
         )
+        log_security_event(
+            'login_user_not_found',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email}
+        )
         return Response(
             {'error': 'No account found with this email address.'},
             status=status.HTTP_401_UNAUTHORIZED
@@ -261,6 +387,12 @@ def login(request):
             ip_address=ip,
             user_agent=get_client_user_agent(request),
             success=False
+        )
+        log_security_event(
+            'login_failed',
+            ip,
+            get_client_user_agent(request),
+            user=user
         )
         return Response(
             {'error': 'Invalid password. Please try again.'},
@@ -321,11 +453,20 @@ def login(request):
         path='/'
     )
 
+    log_security_event(
+        'login_success',
+        ip,
+        get_client_user_agent(request),
+        user=user
+    )
+
     return response
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def refresh_token(request):
     try:
         refresh_token = request.data.get('refresh')
@@ -358,14 +499,21 @@ def refresh_token(request):
 
         return response
     except Exception:
+        log_security_event(
+            'token_refresh_failed',
+            get_client_ip(request),
+            get_client_user_agent(request)
+        )
         return Response(
             {'error': 'Invalid refresh token'},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
 def logout(request):
     try:
         refresh_token = request.data.get('refresh')
@@ -432,6 +580,7 @@ def reset_password(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     token = serializer.validated_data['token']
+    ip = get_client_ip(request)
 
     try:
         user = User.objects.get(
@@ -448,6 +597,13 @@ def reset_password(request):
     user.password_reset_token = ''
     user.password_reset_expires = None
     user.save(update_fields=['password', 'password_reset_token', 'password_reset_expires'])
+
+    log_security_event(
+        'password_reset',
+        ip,
+        get_client_user_agent(request),
+        user=user
+    )
 
     return Response({
         'message': 'Password reset successful. You can now login.'
@@ -471,6 +627,13 @@ def change_password(request):
 
     user.set_password(serializer.validated_data['new_password'])
     user.save(update_fields=['password'])
+
+    log_security_event(
+        'password_changed',
+        get_client_ip(request),
+        get_client_user_agent(request),
+        user=user
+    )
 
     return Response({
         'message': 'Password changed successfully.'
@@ -648,6 +811,10 @@ def google_login(request):
     redirect_uri = request.build_absolute_uri('/auth/google/callback/')
     client_id = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
 
+    state = secrets.token_urlsafe(32)
+    nonce = secrets.token_urlsafe(32)
+    cache.set(f'google_oauth_state_{state}', nonce, timeout=600)
+
     auth_url = (
         'https://accounts.google.com/o/oauth2/v2/auth'
         f'?client_id={client_id}'
@@ -656,6 +823,8 @@ def google_login(request):
         '&scope=openid%20email%20profile'
         '&access_type=online'
         '&prompt=select_account'
+        f'&state={state}'
+        f'&nonce={nonce}'
     )
 
     return redirect(auth_url)
@@ -665,8 +834,12 @@ def google_login(request):
 @permission_classes([AllowAny])
 def google_callback(request):
     code = request.GET.get('code')
+    state = request.GET.get('state', '')
+    ip = get_client_ip(request)
+    user_agent = get_client_user_agent(request)
 
     if not code:
+        log_security_event('google_callback_no_code', ip, user_agent)
         return redirect(f'{settings.FRONTEND_URL}/login/?error=google_auth_failed')
 
     client_id = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
@@ -688,26 +861,31 @@ def google_callback(request):
         token_response.raise_for_status()
         tokens = token_response.json()
         google_access_token = tokens.get('access_token')
+        google_id_token = tokens.get('id_token')
     except Exception as e:
         logger.error(f"Google token exchange failed: {str(e)}")
-        return redirect(f'{settings.FRONTEND_URL}/login/?error=google_auth_failed')
-
-    try:
-        user_response = requests.get(
-            'https://www.googleapis.com/oauth2/v3/userinfo',
-            headers={'Authorization': f'Bearer {google_access_token}'},
-            timeout=10
+        log_security_event(
+            'google_token_exchange_failed',
+            ip,
+            user_agent,
+            metadata={'error': str(e)}
         )
-        user_response.raise_for_status()
-        user_data = user_response.json()
-    except Exception as e:
-        logger.error(f"Google userinfo failed: {str(e)}")
         return redirect(f'{settings.FRONTEND_URL}/login/?error=google_auth_failed')
 
-    email = user_data.get('email')
-    full_name = user_data.get('name', '')
-    google_id = user_data.get('sub')
-    picture = user_data.get('picture', '')
+    idempotency_key = hashlib.sha256(f"google_callback:{code}".encode()).hexdigest()
+    cached_result = cache.get(f'google_result_{idempotency_key}')
+    if cached_result:
+        return cached_result
+
+    user_info = verify_google_token(google_access_token, google_id_token, client_id)
+    if not user_info:
+        log_security_event('google_token_verification_failed', ip, user_agent)
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=google_auth_failed')
+
+    email = user_info.get('email')
+    full_name = user_info.get('name', '')
+    google_id = user_info.get('sub')
+    picture = user_info.get('picture', '')
 
     if not email:
         return redirect(f'{settings.FRONTEND_URL}/login/?error=google_no_email')
@@ -749,9 +927,18 @@ def google_callback(request):
             samesite='Lax',
             path='/'
         )
+
+        log_security_event('google_login_success', ip, user_agent, user=user)
+        cache.set(f'google_result_{idempotency_key}', response, timeout=60)
         return response
 
+    cache_key = f'google_signup_{google_id}'
+    existing_signup = cache.get(cache_key)
+    if existing_signup:
+        return redirect(f'{settings.FRONTEND_URL}/register/?token={existing_signup}')
+
     temp_token = secrets.token_urlsafe(32)
+    cache.set(cache_key, temp_token, timeout=600)
     cache.set(
         f'google_signup_{temp_token}',
         {
@@ -763,6 +950,13 @@ def google_callback(request):
         timeout=600
     )
 
+    log_security_event(
+        'google_signup_redirect',
+        ip,
+        user_agent,
+        metadata={'email': email}
+    )
+
     return redirect(f'{settings.FRONTEND_URL}/register/?token={temp_token}')
 
 
@@ -770,6 +964,8 @@ def google_callback(request):
 @permission_classes([AllowAny])
 def google_signup(request):
     temp_token = request.data.get('token')
+    ip = get_client_ip(request)
+    user_agent = get_client_user_agent(request)
 
     if not temp_token:
         return Response(
@@ -792,25 +988,42 @@ def google_signup(request):
 
     if User.objects.filter(email=email).exists():
         cache.delete(f'google_signup_{temp_token}')
+        cache.delete(f'google_signup_{google_id}')
         return Response(
             {'error': 'An account with this email already exists. Please sign in.', 'redirect': 'login'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    user = User.objects.create_user(
-        email=email,
-        full_name=full_name,
-        password=None,
-        google_id=google_id,
-        picture=picture,
-        email_verified=True,
-        is_active=True,
-        role='client'
-    )
+    try:
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=email,
+                full_name=full_name,
+                password=None,
+                google_id=google_id,
+                picture=picture,
+                email_verified=True,
+                is_active=True,
+                role='client'
+            )
 
-    cache.delete(f'google_signup_{temp_token}')
+            cache.delete(f'google_signup_{temp_token}')
+            cache.delete(f'google_signup_{google_id}')
 
-    django_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            django_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+    except Exception as e:
+        logger.error(f"Google signup transaction failed: {str(e)}")
+        log_security_event(
+            'google_signup_rollback',
+            ip,
+            user_agent,
+            metadata={'email': email, 'error': str(e)}
+        )
+        return Response(
+            {'error': 'Registration failed. Please try again.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
     refresh = RefreshToken.for_user(user)
     refresh['email'] = user.email
@@ -845,5 +1058,7 @@ def google_signup(request):
         samesite='Lax',
         path='/'
     )
+
+    log_security_event('google_signup_success', ip, user_agent, user=user)
 
     return response

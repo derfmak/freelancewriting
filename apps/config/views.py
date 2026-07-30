@@ -495,7 +495,9 @@ def client_orders(request):
 def client_new_order(request):
     if request.user.role != 'client':
         return render(request, 'access_denied.html')
-    return render(request, 'client/new-order.html')
+    return render(request, 'client/new-order.html', {
+        'paypal_client_id': settings.PAYPAL_CLIENT_ID
+    })
 
 
 @login_required

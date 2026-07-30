@@ -1,100 +1,431 @@
 {% extends "client_base.html" %}
 
-{% block title %}Wallet - AcademicWrite{% endblock %}
+{% block title %}Wallet — AcademicWrite{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wallet-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .wallet-grid {
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+    }
+
+    .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--muted);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .stat-value.green { color: var(--green); }
+    .stat-value.red { color: var(--red); }
+    .stat-value.dark { color: var(--ink); }
+
+    .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+        width: 100%;
+        font-size: 0.875rem;
+        border-collapse: collapse;
+    }
+
+    .table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+    }
+
+    .table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--line-light);
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background: var(--surface);
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border-radius: 9999px;
+        white-space: nowrap;
+    }
+
+    .badge.deposit { background: var(--green-pale); color: var(--green); }
+    .badge.payment { background: #dbeafe; color: #2563eb; }
+    .badge.refund { background: #ffedd5; color: #c2410c; }
+    .badge.withdrawal { background: #ede9fe; color: #7c3aed; }
+    .badge.payout { background: #e0e7ff; color: #4338ca; }
+    .badge.completed { background: var(--green-pale); color: var(--green); }
+    .badge.pending { background: #fef3c7; color: #b45309; }
+    .badge.processing { background: #dbeafe; color: #2563eb; }
+    .badge.failed { background: #fee2e2; color: #dc2626; }
+
+    .payment-method-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.5rem;
+        transition: border-color 0.2s;
+    }
+
+    .payment-method-item:hover {
+        border-color: var(--green-border);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+        cursor: pointer;
+        border: none;
+        font-size: 0.8rem;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: var(--green);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--green-dark);
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1.5px solid var(--line);
+        color: var(--ink-soft);
+    }
+
+    .btn-outline:hover {
+        background: var(--surface);
+        border-color: var(--muted);
+    }
+
+    .btn-danger {
+        background: transparent;
+        border: 1.5px solid #fecaca;
+        color: var(--red);
+    }
+
+    .btn-danger:hover {
+        background: var(--red-pale);
+        border-color: var(--red);
+    }
+
+    .tips-card {
+        background: var(--green-pale);
+        border: 1px solid var(--green-border);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+    }
+
+    .tips-card h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--ink);
+    }
+
+    .tips-card ul {
+        list-style: none;
+        padding: 0;
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+    }
+
+    .tips-card li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .tips-card li::before {
+        content: "•";
+        color: var(--green);
+    }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+    }
+
+    .modal-overlay.open {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.18s ease;
+    }
+
+    .modal-box {
+        background: var(--paper);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-lg);
+        width: 100%;
+        max-width: 28rem;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: translateY(12px) scale(0.98);
+        transition: transform 0.18s ease;
+    }
+
+    .modal-overlay.open .modal-box {
+        transform: translateY(0) scale(1);
+    }
+
+    .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--line-light);
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 1.1rem;
+        cursor: pointer;
+    }
+
+    .modal-close:hover {
+        color: var(--ink);
+    }
+
+    .modal-body {
+        padding: 1.25rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--ink-soft);
+        margin-bottom: 0.25rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1.5px solid var(--line);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        transition: var(--transition);
+        background: var(--surface);
+    }
+
+    .form-input:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+        outline: none;
+        background: var(--paper);
+    }
+
+    .verification-digits {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .digit-input {
+        width: 3rem;
+        height: 3.5rem;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border: 2px solid var(--line);
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+    }
+
+    .digit-input:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+        outline: none;
+    }
+
+    .digit-input.filled {
+        border-color: var(--green-border);
+        background: var(--green-pale);
+    }
+
+    .digit-input.error {
+        border-color: var(--red);
+        background: var(--red-pale);
+    }
+
+    .error-text {
+        color: var(--red);
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .error-text.show { display: block; }
+
+    .success-text {
+        color: var(--green);
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .success-text.show { display: block; }
+
+    .attempts-info {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 0.25rem;
+    }
+
+    .hidden { display: none !important; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6 sm:py-8">
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">My Wallet</h1>
+<div class="container">
+    <div class="main-inner">
+        <h1 style="font-size:1.75rem;font-weight:700;margin-bottom:1.5rem;">My Wallet</h1>
 
-        <div class="grid md:grid-cols-3 gap-6 sm:gap-8">
-            <div class="md:col-span-2 space-y-6 sm:space-y-8">
-                <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
-                    <div class="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                            <p class="text-xs sm:text-sm text-gray-500">Total Spent</p>
-                            <p class="text-2xl sm:text-3xl font-bold text-green-600" id="total-in">$0.00</p>
-                        </div>
-                        <div>
-                            <p class="text-xs sm:text-sm text-gray-500">Total Refunded</p>
-                            <p class="text-2xl sm:text-3xl font-bold text-red-500" id="total-out">$0.00</p>
-                        </div>
-                        <div>
-                            <p class="text-xs sm:text-sm text-gray-500">Net Spent</p>
-                            <p class="text-2xl sm:text-3xl font-bold text-gray-900" id="balance">$0.00</p>
+        <div class="wallet-grid">
+            <div>
+                <!-- Balance Stats -->
+                <div class="card">
+                    <div class="card-header"><h2 class="card-title">Overview</h2></div>
+                    <div class="card-body">
+                        <div class="stat-cards">
+                            <div>
+                                <div class="stat-label">Total Spent</div>
+                                <div class="stat-value green" id="total-in">$0.00</div>
+                            </div>
+                            <div>
+                                <div class="stat-label">Total Refunded</div>
+                                <div class="stat-value red" id="total-out">$0.00</div>
+                            </div>
+                            <div>
+                                <div class="stat-label">Net Spent</div>
+                                <div class="stat-value dark" id="balance">$0.00</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
-                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Transaction History</h2>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs sm:text-sm">
-                            <thead class="bg-gray-50 border-b border-gray-200">
+                <!-- Transactions -->
+                <div class="card" style="margin-top:1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Transaction History</h2>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead>
                                 <tr>
-                                    <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500">Date</th>
-                                    <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500 hidden sm:table-cell">Description</th>
-                                    <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500">Type</th>
-                                    <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500">Amount</th>
-                                    <th class="px-3 sm:px-4 py-2 sm:py-3 font-medium text-gray-500 hidden md:table-cell">Status</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="transactions-list" class="divide-y divide-gray-200">
-                                <tr>
-                                    <td colspan="5" class="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm">
-                                        Loading transactions...
-                                    </td>
-                                </tr>
+                            <tbody id="transactions-list">
+                                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Loading transactions...</td></tr>
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="mt-4 text-center" id="transactions-pagination">
-                        <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors px-4 py-2 text-sm rounded-lg" id="load-more">Load More</button>
+                    <div class="card-footer" style="text-align:center;">
+                        <button class="btn btn-outline" id="load-more" style="display:none;">Load More</button>
                     </div>
                 </div>
             </div>
 
-            <div class="space-y-6 sm:space-y-8">
-                <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg sm:text-xl font-bold text-gray-800">Payment Methods</h2>
-                        <button class="text-green-600 hover:text-green-700 text-sm font-medium" id="add-payment-method-btn">
-                            <i class="fas fa-plus mr-1"></i>Add New
+            <div>
+                <!-- Payment Methods -->
+                <div class="card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                        <h2 class="card-title">Payment Methods</h2>
+                        <button class="btn btn-primary" id="add-payment-method-btn" style="font-size:0.75rem;padding:0.4rem 0.8rem;">
+                            <i class="fas fa-plus"></i> Add
                         </button>
                     </div>
-                    
-                    <div id="payment-methods-container">
-                        <div class="text-center text-gray-500 py-6 sm:py-8" id="no-payment-methods">
-                            <i class="fab fa-paypal text-3xl sm:text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-sm mb-3">No PayPal accounts saved</p>
-                            <button class="bg-green-600 text-white px-4 py-2 text-sm hover:bg-green-700 transition-colors rounded-lg" id="add-first-payment-method">
-                                Add PayPal Account
-                            </button>
+                    <div class="card-body">
+                        <div id="no-payment-methods" class="text-center" style="padding:2rem 0;">
+                            <i class="fab fa-paypal" style="font-size:2.5rem;color:var(--line);margin-bottom:0.5rem;"></i>
+                            <p style="color:var(--muted);margin-bottom:1rem;">No PayPal accounts saved</p>
+                            <button class="btn btn-primary" id="add-first-payment-method">Add PayPal Account</button>
                         </div>
-                        <div id="payment-methods-list" class="hidden space-y-3"></div>
+                        <div id="payment-methods-list" class="hidden"></div>
                     </div>
                 </div>
 
-                <div class="bg-green-50 border border-green-100 rounded-xl p-4 sm:p-6">
-                    <h3 class="font-bold text-gray-800 mb-3 flex items-center text-sm sm:text-base">
-                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
-                        Quick Tips
-                    </h3>
-                    <ul class="text-xs sm:text-sm text-gray-600 space-y-2">
-                        <li class="flex items-start">
-                            <span class="text-green-600 mr-2">•</span>
-                            Track your spending on orders
-                        </li>
-                        <li class="flex items-start">
-                            <span class="text-green-600 mr-2">•</span>
-                            Refunds are processed to your PayPal account
-                        </li>
-                        <li class="flex items-start">
-                            <span class="text-green-600 mr-2">•</span>
-                            View complete order history in your dashboard
-                        </li>
+                <!-- Tips -->
+                <div class="tips-card" style="margin-top:1.5rem;">
+                    <h3><i class="fas fa-lightbulb" style="color:var(--amber);"></i> Quick Tips</h3>
+                    <ul>
+                        <li>Track your spending on orders</li>
+                        <li>Refunds are processed to your PayPal account</li>
+                        <li>View complete order history in your dashboard</li>
                     </ul>
                 </div>
             </div>
@@ -102,77 +433,57 @@
     </div>
 </div>
 
-<div id="payment-method-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity p-4">
-    <div class="bg-white max-w-md w-full rounded-xl">
-        <div class="p-4 sm:p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900" id="payment-modal-title">Add Payment Method</h3>
-                <button class="text-gray-500 hover:text-gray-700 transition-colors" id="close-payment-method-modal">
-                    <i class="fas fa-times"></i>
-                </button>
+<!-- Payment Method Modal -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3 class="modal-title" id="modal-title">Add Payment Method</h3>
+            <button class="modal-close" id="close-modal"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <!-- Step 1: Email -->
+            <div id="step1">
+                <div class="form-group">
+                    <label class="form-label">PayPal Email Address</label>
+                    <input type="email" class="form-input" id="paypal-email-input" placeholder="your-email@example.com">
+                    <p style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">We'll send a verification code to this email</p>
+                </div>
+                <div class="error-text" id="step1-error"></div>
+                <button class="btn btn-primary" style="width:100%;" id="send-verification-btn">Send Verification Code</button>
             </div>
 
-            <div id="payment-modal-step-1">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">PayPal Email Address</label>
-                        <input type="email" 
-                               class="w-full border border-gray-300 px-4 py-3 focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors text-sm sm:text-base rounded-lg" 
-                               id="paypal-email-input" 
-                               placeholder="your-email@example.com">
-                        <p class="text-xs text-gray-500 mt-1">We'll send a verification code to this email</p>
-                    </div>
-                    
-                    <div id="step-1-error" class="text-red-600 text-sm hidden"></div>
-
-                    <button class="w-full bg-green-600 text-white py-3 font-medium hover:bg-green-700 transition-colors text-sm sm:text-base rounded-lg" id="send-verification-btn">
-                        Send Verification Code
-                    </button>
+            <!-- Step 2: Code -->
+            <div id="step2" class="hidden">
+                <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:0.75rem;font-size:0.85rem;color:#1d4ed8;margin-bottom:1rem;">
+                    <i class="fas fa-info-circle"></i>
+                    A verification code has been sent to <span id="verify-email-display" class="font-medium"></span>.
+                    Enter the 6-digit code below.
+                </div>
+                <div class="verification-digits">
+                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
+                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
+                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
+                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
+                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
+                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
+                </div>
+                <div class="error-text" id="step2-error"></div>
+                <div class="success-text" id="step2-success"></div>
+                <div class="attempts-info" id="step2-attempts" style="display:none;"></div>
+                <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+                    <button class="btn btn-outline" style="flex:1;" id="resend-code-btn">Resend Code</button>
+                    <button class="btn btn-primary" style="flex:1;opacity:0.5;pointer-events:none;" id="verify-code-btn" disabled>Verify</button>
                 </div>
             </div>
 
-            <div id="payment-modal-step-2" class="hidden">
-                <div class="space-y-4">
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        A verification code has been sent to <span id="verify-email-display" class="font-medium"></span>.
-                        Enter the 6-digit code below. It expires in 5 minutes.
-                    </div>
-                    <div id="step-2-info" class="text-sm text-gray-600"></div>
-                    <div id="step-2-attempts" class="text-sm text-gray-500 hidden"></div>
-                    
-                    <div class="flex justify-center gap-2">
-                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]" autofocus>
-                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                        <input type="text" class="verification-digit w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-600 outline-none transition-colors" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                    </div>
-                    
-                    <div id="step-2-error" class="text-red-600 text-sm hidden"></div>
-                    <div id="step-2-success" class="text-green-600 text-sm hidden"></div>
-                    
-                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                        <button class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors py-3 text-sm sm:text-base rounded-lg" id="resend-code-btn">
-                            Resend Code
-                        </button>
-                        <button class="flex-1 bg-gray-300 text-gray-500 cursor-not-allowed py-3 text-sm sm:text-base rounded-lg" id="verify-code-btn" disabled>
-                            Verify
-                        </button>
-                    </div>
+            <!-- Step 3: Success -->
+            <div id="step3" class="hidden" style="text-align:center;padding:1.5rem 0;">
+                <div style="width:4rem;height:4rem;background:var(--green-pale);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;color:var(--green);margin-bottom:1rem;">
+                    <i class="fas fa-check"></i>
                 </div>
-            </div>
-
-            <div id="payment-modal-step-3" class="hidden">
-                <div class="text-center py-4 sm:py-6">
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-4">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <h4 class="text-base sm:text-lg font-bold text-gray-800 mb-2">PayPal Account Added!</h4>
-                    <p class="text-sm sm:text-base text-gray-600 mb-4">Your PayPal account has been successfully verified.</p>
-                    <button class="w-full bg-green-600 text-white py-2.5 hover:bg-green-700 transition-colors text-sm sm:text-base rounded-lg" id="modal-success-close">Done</button>
-                </div>
+                <h4 style="font-weight:700;margin-bottom:0.5rem;">PayPal Account Added!</h4>
+                <p style="color:var(--muted);margin-bottom:1.5rem;">Your PayPal account has been successfully verified.</p>
+                <button class="btn btn-primary" id="done-btn">Done</button>
             </div>
         </div>
     </div>
@@ -185,7 +496,6 @@ let paymentMethods = [];
 let currentPage = 1;
 let hasMore = true;
 let currentMethodId = null;
-let isVerificationLocked = false;
 
 const API_BASE = '/api/v1/wallet/';
 
@@ -204,20 +514,14 @@ function getAuthHeaders() {
 async function apiCall(url, options = {}) {
     const headers = getAuthHeaders();
     if (!headers) return null;
-    
     const response = await fetch(url, {
         ...options,
-        headers: {
-            ...headers,
-            ...options.headers
-        }
+        headers: { ...headers, ...options.headers }
     });
-    
     if (response.status === 401) {
         window.location.href = '/login/';
         return null;
     }
-    
     return response;
 }
 
@@ -225,368 +529,197 @@ document.addEventListener('DOMContentLoaded', function() {
     loadWalletData();
     loadTransactions();
     loadPaymentMethods();
-    setupVerificationDigits();
-    
-    document.getElementById('add-payment-method-btn').addEventListener('click', showAddPaymentModal);
-    document.getElementById('add-first-payment-method').addEventListener('click', showAddPaymentModal);
-    document.getElementById('close-payment-method-modal').addEventListener('click', closePaymentModal);
+
+    document.getElementById('add-payment-method-btn').addEventListener('click', showAddModal);
+    document.getElementById('add-first-payment-method').addEventListener('click', showAddModal);
+    document.getElementById('close-modal').addEventListener('click', closeModal);
     document.getElementById('send-verification-btn').addEventListener('click', sendVerification);
     document.getElementById('resend-code-btn').addEventListener('click', resendCode);
-    document.getElementById('modal-success-close').addEventListener('click', function() {
-        closePaymentModal();
+    document.getElementById('done-btn').addEventListener('click', function() {
+        closeModal();
         loadPaymentMethods();
     });
-    
     document.getElementById('load-more').addEventListener('click', loadMoreTransactions);
-});
 
-function setupVerificationDigits() {
-    const digits = document.querySelectorAll('.verification-digit');
+    // Digit input handling
+    const digits = document.querySelectorAll('.digit-input');
     const verifyBtn = document.getElementById('verify-code-btn');
-    
     digits.forEach((input, index) => {
         input.addEventListener('input', function() {
-            const val = this.value;
-            if (!/^[0-9]$/.test(val)) {
-                this.value = '';
-                return;
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value) {
+                if (index < digits.length - 1) digits[index + 1].focus();
+                this.classList.add('filled');
+            } else {
+                this.classList.remove('filled');
             }
-            if (index < digits.length - 1 && val) {
-                digits[index + 1].focus();
-            }
-            const allFilled = Array.from(digits).every(inp => inp.value.length === 1);
-            if (allFilled) {
+            const code = Array.from(digits).map(d => d.value).join('');
+            if (code.length === 6) {
                 verifyBtn.disabled = false;
-                verifyBtn.textContent = 'Verify';
-                verifyBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                verifyBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
-                setTimeout(() => {
-                    if (!verifyBtn.disabled) {
-                        verifyCode();
-                    }
-                }, 300);
+                verifyBtn.style.opacity = '1';
+                verifyBtn.style.pointerEvents = 'auto';
             } else {
                 verifyBtn.disabled = true;
-                verifyBtn.textContent = 'Verify';
-                verifyBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-                verifyBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                verifyBtn.style.opacity = '0.5';
+                verifyBtn.style.pointerEvents = 'none';
             }
+            document.getElementById('step2-error').classList.remove('show');
+            document.getElementById('step2-success').classList.remove('show');
         });
-
         input.addEventListener('keydown', function(e) {
-            if (e.key === 'Backspace') {
-                if (this.value === '' && index > 0) {
-                    digits[index - 1].focus();
-                } else {
-                    this.value = '';
-                }
-                const allFilled = Array.from(digits).every(inp => inp.value.length === 1);
-                if (!allFilled) {
-                    verifyBtn.disabled = true;
-                    verifyBtn.textContent = 'Verify';
-                    verifyBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-                    verifyBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                }
+            if (e.key === 'Backspace' && !this.value && index > 0) {
+                digits[index - 1].focus();
             }
         });
-
         input.addEventListener('paste', function(e) {
             e.preventDefault();
-            const pasteData = (e.clipboardData || window.clipboardData).getData('text');
-            if (/^\d{6}$/.test(pasteData)) {
-                const chars = pasteData.split('');
-                digits.forEach((inp, idx) => {
-                    if (idx < chars.length) {
-                        inp.value = chars[idx];
+            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            if (paste) {
+                paste.split('').forEach((char, i) => {
+                    if (digits[i]) {
+                        digits[i].value = char;
+                        digits[i].classList.add('filled');
                     }
                 });
-                digits[digits.length - 1].focus();
-                const allFilled = Array.from(digits).every(inp => inp.value.length === 1);
-                if (allFilled) {
+                if (paste.length < 6) digits[paste.length].focus();
+                const code = Array.from(digits).map(d => d.value).join('');
+                if (code.length === 6) {
                     verifyBtn.disabled = false;
-                    verifyBtn.textContent = 'Verify';
-                    verifyBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                    verifyBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
-                    setTimeout(() => verifyCode(), 300);
+                    verifyBtn.style.opacity = '1';
+                    verifyBtn.style.pointerEvents = 'auto';
                 }
             }
         });
     });
-}
+    verifyBtn.addEventListener('click', verifyCode);
+});
 
-function showAddPaymentModal() {
-    document.getElementById('payment-modal-step-1').classList.remove('hidden');
-    document.getElementById('payment-modal-step-2').classList.add('hidden');
-    document.getElementById('payment-modal-step-3').classList.add('hidden');
+function showAddModal() {
+    document.getElementById('step1').classList.remove('hidden');
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step3').classList.add('hidden');
     document.getElementById('paypal-email-input').value = '';
-    document.getElementById('step-1-error').classList.add('hidden');
-    document.getElementById('step-2-error').classList.add('hidden');
-    document.getElementById('step-2-success').classList.add('hidden');
-    document.getElementById('step-2-info').textContent = '';
-    document.getElementById('step-2-attempts').classList.add('hidden');
-    document.getElementById('payment-modal-title').textContent = 'Add Payment Method';
-    
-    const digits = document.querySelectorAll('.verification-digit');
-    digits.forEach(inp => {
-        inp.value = '';
-        inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
-        inp.disabled = false;
-    });
-    const btn = document.getElementById('verify-code-btn');
-    btn.disabled = true;
-    btn.textContent = 'Verify';
-    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-    isVerificationLocked = false;
-    document.getElementById('payment-method-modal').classList.remove('hidden');
+    document.getElementById('step1-error').classList.remove('show');
+    document.getElementById('step2-error').classList.remove('show');
+    document.getElementById('step2-success').classList.remove('show');
+    document.getElementById('step2-attempts').style.display = 'none';
+    document.getElementById('modal-title').textContent = 'Add Payment Method';
+    document.querySelectorAll('.digit-input').forEach(d => { d.value = ''; d.classList.remove('filled', 'error'); });
+    document.getElementById('verify-code-btn').disabled = true;
+    document.getElementById('verify-code-btn').style.opacity = '0.5';
+    document.getElementById('verify-code-btn').style.pointerEvents = 'none';
+    document.getElementById('paymentModal').classList.add('open');
 }
 
-function closePaymentModal() {
-    document.getElementById('payment-method-modal').classList.add('hidden');
-    const digits = document.querySelectorAll('.verification-digit');
-    digits.forEach(inp => {
-        inp.value = '';
-        inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
-        inp.disabled = false;
-    });
-    const btn = document.getElementById('verify-code-btn');
-    btn.disabled = true;
-    btn.textContent = 'Verify';
-    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-    isVerificationLocked = false;
+function closeModal() {
+    document.getElementById('paymentModal').classList.remove('open');
 }
 
 async function sendVerification() {
     const email = document.getElementById('paypal-email-input').value.trim();
     if (!email || !email.includes('@')) {
-        document.getElementById('step-1-error').textContent = 'Please enter a valid PayPal email address';
-        document.getElementById('step-1-error').classList.remove('hidden');
+        document.getElementById('step1-error').textContent = 'Please enter a valid email';
+        document.getElementById('step1-error').classList.add('show');
         return;
     }
-    
     const btn = document.getElementById('send-verification-btn');
-    const orig = btn.textContent;
-    btn.textContent = 'Sending...';
     btn.disabled = true;
-    document.getElementById('step-1-error').classList.add('hidden');
-    
+    btn.textContent = 'Sending...';
+    document.getElementById('step1-error').classList.remove('show');
     try {
         const response = await apiCall(API_BASE + 'paypal/methods/add/', {
             method: 'POST',
             body: JSON.stringify({ paypal_email: email })
         });
-        
         if (response && response.ok) {
             const data = await response.json();
             currentMethodId = data.method_id;
             document.getElementById('verify-email-display').textContent = email;
-            document.getElementById('payment-modal-step-1').classList.add('hidden');
-            document.getElementById('payment-modal-step-2').classList.remove('hidden');
-            document.getElementById('step-2-error').classList.add('hidden');
-            document.getElementById('step-2-success').classList.add('hidden');
-            document.getElementById('step-2-info').textContent = '';
-            document.getElementById('step-2-attempts').classList.add('hidden');
-            const digits = document.querySelectorAll('.verification-digit');
-            digits.forEach(inp => {
-                inp.value = '';
-                inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
-                inp.disabled = false;
-            });
-            digits[0].focus();
-            btn.textContent = orig;
-            btn.disabled = false;
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            document.querySelector('.digit-input').focus();
         } else if (response) {
-            const errorData = await response.json();
-            if (response.status === 400 && errorData.method_id) {
-                currentMethodId = errorData.method_id;
-                document.getElementById('verify-email-display').textContent = email;
-                document.getElementById('payment-modal-step-1').classList.add('hidden');
-                document.getElementById('payment-modal-step-2').classList.remove('hidden');
-                document.getElementById('step-2-info').textContent = 'A verification code was already sent. Please check your email or request a new code.';
-                document.getElementById('step-2-error').classList.add('hidden');
-                document.getElementById('step-2-success').classList.add('hidden');
-                document.getElementById('step-2-attempts').classList.add('hidden');
-                const digits = document.querySelectorAll('.verification-digit');
-                digits.forEach(inp => {
-                    inp.value = '';
-                    inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
-                    inp.disabled = false;
-                });
-                digits[0].focus();
-                btn.textContent = orig;
-                btn.disabled = false;
-                return;
-            }
-            document.getElementById('step-1-error').textContent = errorData.error || errorData.message || 'Failed to send verification code';
-            document.getElementById('step-1-error').classList.remove('hidden');
-            btn.textContent = orig;
-            btn.disabled = false;
+            const error = await response.json();
+            document.getElementById('step1-error').textContent = error.error || 'Failed to send code';
+            document.getElementById('step1-error').classList.add('show');
         }
-    } catch (error) {
-        document.getElementById('step-1-error').textContent = 'Network error. Please try again.';
-        document.getElementById('step-1-error').classList.remove('hidden');
-        btn.textContent = orig;
-        btn.disabled = false;
+    } catch (e) {
+        document.getElementById('step1-error').textContent = 'Network error';
+        document.getElementById('step1-error').classList.add('show');
     }
+    btn.disabled = false;
+    btn.textContent = 'Send Verification Code';
 }
 
 async function verifyCode() {
-    const digits = document.querySelectorAll('.verification-digit');
-    const code = Array.from(digits).map(inp => inp.value).join('');
-    if (code.length !== 6) {
-        document.getElementById('step-2-error').textContent = 'Please enter all 6 digits';
-        document.getElementById('step-2-error').classList.remove('hidden');
-        return;
-    }
-    
+    const digits = document.querySelectorAll('.digit-input');
+    const code = Array.from(digits).map(d => d.value).join('');
+    if (code.length !== 6) return;
     const btn = document.getElementById('verify-code-btn');
     btn.disabled = true;
     btn.textContent = 'Verifying...';
-    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-    document.getElementById('step-2-error').classList.add('hidden');
-    document.getElementById('step-2-success').classList.add('hidden');
-    document.getElementById('step-2-attempts').classList.add('hidden');
-    
+    document.getElementById('step2-error').classList.remove('show');
+    document.getElementById('step2-success').classList.remove('show');
+    document.getElementById('step2-attempts').style.display = 'none';
     try {
         const response = await apiCall(API_BASE + 'paypal/methods/verify/', {
             method: 'POST',
-            body: JSON.stringify({
-                method_id: currentMethodId,
-                code: code
-            })
+            body: JSON.stringify({ method_id: currentMethodId, code })
         });
-        
         if (response && response.ok) {
-            digits.forEach(inp => {
-                inp.classList.add('border-green-500', 'bg-green-50');
-                inp.classList.remove('border-red-500', 'bg-red-50');
-            });
-            document.getElementById('step-2-success').textContent = 'Verification successful!';
-            document.getElementById('step-2-success').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('payment-modal-step-2').classList.add('hidden');
-                document.getElementById('payment-modal-step-3').classList.remove('hidden');
-                btn.disabled = false;
-                btn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                btn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
-                btn.textContent = 'Verified';
-            }, 800);
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
         } else if (response) {
             const error = await response.json();
-            if (error.locked) {
-                isVerificationLocked = true;
-                document.getElementById('step-2-error').textContent = error.error;
-                document.getElementById('step-2-error').classList.remove('hidden');
-                digits.forEach(inp => {
-                    inp.disabled = true;
-                    inp.classList.add('bg-gray-100');
-                });
-                btn.disabled = true;
-                btn.textContent = 'Locked';
-                btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-            } else if (error.remaining_attempts !== undefined) {
-                const attempts = error.remaining_attempts;
-                document.getElementById('step-2-error').textContent = error.error;
-                document.getElementById('step-2-error').classList.remove('hidden');
-                document.getElementById('step-2-attempts').textContent = `Attempts remaining: ${attempts}`;
-                document.getElementById('step-2-attempts').classList.remove('hidden');
-                digits.forEach(inp => {
-                    inp.classList.add('border-red-500', 'bg-red-50');
-                    inp.classList.remove('border-green-500', 'bg-green-50');
-                });
+            if (error.remaining_attempts !== undefined) {
+                document.getElementById('step2-error').textContent = error.error;
+                document.getElementById('step2-error').classList.add('show');
+                document.getElementById('step2-attempts').textContent = 'Attempts remaining: ' + error.remaining_attempts;
+                document.getElementById('step2-attempts').style.display = 'block';
+                digits.forEach(d => { d.value = ''; d.classList.add('error'); });
                 setTimeout(() => {
-                    digits.forEach(inp => {
-                        inp.classList.remove('border-red-500', 'bg-red-50');
-                        inp.value = '';
-                    });
-                    digits[0].focus();
-                    document.getElementById('step-2-error').classList.add('hidden');
-                    document.getElementById('step-2-attempts').classList.add('hidden');
-                    btn.disabled = true;
-                    btn.textContent = 'Verify';
-                    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-                    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                }, 1500);
+                    digits.forEach(d => d.classList.remove('error'));
+                    document.getElementById('step2-error').classList.remove('show');
+                    document.getElementById('step2-attempts').style.display = 'none';
+                }, 2000);
             } else {
-                document.getElementById('step-2-error').textContent = error.error || 'Verification failed';
-                document.getElementById('step-2-error').classList.remove('hidden');
-                digits.forEach(inp => {
-                    inp.classList.add('border-red-500', 'bg-red-50');
-                });
-                setTimeout(() => {
-                    digits.forEach(inp => {
-                        inp.classList.remove('border-red-500', 'bg-red-50');
-                        inp.value = '';
-                    });
-                    digits[0].focus();
-                    btn.disabled = true;
-                    btn.textContent = 'Verify';
-                    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-                    btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                    document.getElementById('step-2-error').classList.add('hidden');
-                }, 1500);
+                document.getElementById('step2-error').textContent = error.error || 'Verification failed';
+                document.getElementById('step2-error').classList.add('show');
             }
-            btn.disabled = false;
         }
-    } catch (error) {
-        document.getElementById('step-2-error').textContent = 'Network error. Please try again.';
-        document.getElementById('step-2-error').classList.remove('hidden');
-        btn.disabled = false;
-        btn.textContent = 'Verify';
-        btn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-        btn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+    } catch (e) {
+        document.getElementById('step2-error').textContent = 'Network error';
+        document.getElementById('step2-error').classList.add('show');
     }
+    btn.disabled = false;
+    btn.textContent = 'Verify';
 }
 
 async function resendCode() {
-    if (!currentMethodId) return;
     const btn = document.getElementById('resend-code-btn');
-    const orig = btn.textContent;
-    btn.textContent = 'Sending...';
     btn.disabled = true;
-    document.getElementById('step-2-error').classList.add('hidden');
-    document.getElementById('step-2-success').classList.add('hidden');
-    document.getElementById('step-2-attempts').classList.add('hidden');
-    
+    btn.textContent = 'Sending...';
     try {
         const response = await apiCall(API_BASE + 'paypal/methods/resend-code/', {
             method: 'POST',
             body: JSON.stringify({ method_id: currentMethodId })
         });
-        
         if (response && response.ok) {
-            document.getElementById('step-2-success').textContent = 'New verification code sent to your email';
-            document.getElementById('step-2-success').classList.remove('hidden');
-            const digits = document.querySelectorAll('.verification-digit');
-            digits.forEach(inp => {
-                inp.value = '';
-                inp.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'bg-gray-100');
-                inp.disabled = false;
-            });
-            digits[0].focus();
-            const verifyBtn = document.getElementById('verify-code-btn');
-            verifyBtn.disabled = true;
-            verifyBtn.textContent = 'Verify';
-            verifyBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-            verifyBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-            isVerificationLocked = false;
-            btn.textContent = orig;
-            btn.disabled = false;
+            document.getElementById('step2-success').textContent = 'New code sent';
+            document.getElementById('step2-success').classList.add('show');
+            document.querySelectorAll('.digit-input').forEach(d => { d.value = ''; d.classList.remove('filled', 'error'); });
+            document.querySelector('.digit-input').focus();
         } else if (response) {
             const error = await response.json();
-            document.getElementById('step-2-error').textContent = error.error || error.message || 'Failed to resend code';
-            document.getElementById('step-2-error').classList.remove('hidden');
-            btn.textContent = orig;
-            btn.disabled = false;
+            document.getElementById('step2-error').textContent = error.error || 'Failed to resend';
+            document.getElementById('step2-error').classList.add('show');
         }
-    } catch (error) {
-        document.getElementById('step-2-error').textContent = 'Network error. Please try again.';
-        document.getElementById('step-2-error').classList.remove('hidden');
-        btn.textContent = orig;
-        btn.disabled = false;
+    } catch (e) {
+        document.getElementById('step2-error').textContent = 'Network error';
+        document.getElementById('step2-error').classList.add('show');
     }
+    btn.disabled = false;
+    btn.textContent = 'Resend Code';
 }
 
 async function loadWalletData() {
@@ -596,9 +729,7 @@ async function loadWalletData() {
             walletData = await response.json();
             displayWalletData();
         }
-    } catch (error) {
-        console.error('Failed to load wallet data', error);
-    }
+    } catch (e) {}
 }
 
 function displayWalletData() {
@@ -611,77 +742,33 @@ function displayWalletData() {
 async function loadTransactions(page = 1) {
     try {
         const response = await apiCall(API_BASE + 'transactions/?page=' + page);
-        if (!response || !response.ok) throw new Error('Failed to load transactions');
-        
+        if (!response || !response.ok) return;
         const data = await response.json();
-        
-        if (page === 1) {
-            transactions = data.results || [];
-        } else {
-            transactions = [...transactions, ...(data.results || [])];
-        }
-        
-        hasMore = data.next ? true : false;
+        if (page === 1) transactions = data.results || [];
+        else transactions = [...transactions, ...(data.results || [])];
+        hasMore = !!data.next;
         displayTransactions();
-        
         document.getElementById('load-more').style.display = hasMore ? 'inline-block' : 'none';
-        
-    } catch (error) {
-        console.error('Failed to load transactions', error);
-    }
+    } catch (e) {}
 }
 
 function displayTransactions() {
     const tbody = document.getElementById('transactions-list');
-    
-    if (transactions.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm">
-                    No transactions yet
-                </td>
-            </tr>
-        `;
+    if (!transactions.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">No transactions yet</td></tr>';
         return;
     }
-    
     tbody.innerHTML = transactions.map(t => `
-        <tr class="hover:bg-gray-50 transition-colors duration-150">
-            <td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">${new Date(t.created_at).toLocaleDateString()}</td>
-            <td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">${t.description || t.type}</td>
-            <td class="px-3 sm:px-4 py-2 sm:py-3">
-                <span class="text-xs px-2 py-1 ${getTypeClass(t.type)} rounded-full font-medium">${t.type}</span>
-            </td>
-            <td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium ${t.direction === 'credit' ? 'text-green-600' : 'text-red-600'}">
+        <tr>
+            <td style="color:var(--muted);">${new Date(t.created_at).toLocaleDateString()}</td>
+            <td style="color:var(--ink-soft);">${t.description || t.type}</td>
+            <td><span class="badge ${t.type}">${t.type}</span></td>
+            <td style="font-weight:600;color:${t.direction === 'credit' ? 'var(--green)' : 'var(--red)'};">
                 ${t.direction === 'credit' ? '+' : '-'}$${Math.abs(parseFloat(t.amount)).toFixed(2)}
             </td>
-            <td class="px-3 sm:px-4 py-2 sm:py-3 hidden md:table-cell">
-                <span class="text-xs px-2 py-1 ${getStatusClass(t.status)} rounded-full font-medium">${t.status}</span>
-            </td>
+            <td><span class="badge ${t.status}">${t.status}</span></td>
         </tr>
     `).join('');
-}
-
-function getTypeClass(type) {
-    const classes = {
-        'deposit': 'bg-green-100 text-green-700',
-        'payment': 'bg-blue-100 text-blue-700',
-        'refund': 'bg-orange-100 text-orange-700',
-        'withdrawal': 'bg-purple-100 text-purple-700',
-        'payout': 'bg-indigo-100 text-indigo-700',
-        'adjustment': 'bg-gray-100 text-gray-700'
-    };
-    return classes[type] || 'bg-gray-100 text-gray-700';
-}
-
-function getStatusClass(status) {
-    const classes = {
-        'completed': 'bg-green-100 text-green-700',
-        'pending': 'bg-yellow-100 text-yellow-700',
-        'processing': 'bg-blue-100 text-blue-700',
-        'failed': 'bg-red-100 text-red-700'
-    };
-    return classes[status] || 'bg-gray-100 text-gray-700';
 }
 
 async function loadPaymentMethods() {
@@ -691,47 +778,36 @@ async function loadPaymentMethods() {
             paymentMethods = await response.json();
             displayPaymentMethods();
         }
-    } catch (error) {
-        console.error('Failed to load payment methods', error);
-    }
+    } catch (e) {}
 }
 
 function displayPaymentMethods() {
-    const container = document.getElementById('payment-methods-list');
+    const list = document.getElementById('payment-methods-list');
     const noMethods = document.getElementById('no-payment-methods');
-    
-    if (!paymentMethods || paymentMethods.length === 0) {
+    if (!paymentMethods || !paymentMethods.length) {
         noMethods.classList.remove('hidden');
-        container.classList.add('hidden');
+        list.classList.add('hidden');
         return;
     }
-    
     noMethods.classList.add('hidden');
-    container.classList.remove('hidden');
-    
-    container.innerHTML = paymentMethods.map(m => `
-        <div class="flex items-center justify-between p-3 border border-gray-200 hover:border-green-300 transition-colors rounded-lg">
-            <div class="flex items-center space-x-3">
-                <i class="fab fa-paypal text-2xl text-blue-600"></i>
+    list.classList.remove('hidden');
+    list.innerHTML = paymentMethods.map(m => `
+        <div class="payment-method-item">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <i class="fab fa-paypal" style="font-size:1.5rem;color:#3b82f6;"></i>
                 <div>
-                    <p class="font-medium text-gray-800 text-sm sm:text-base">${m.paypal_email}</p>
-                    <p class="text-xs text-gray-500">${m.paypal_account_type} ${m.is_default ? '• Default' : ''}</p>
+                    <div style="font-weight:500;">${m.paypal_email}</div>
+                    <div style="font-size:0.75rem;color:var(--muted);">${m.paypal_account_type} ${m.is_default ? '· Default' : ''}</div>
                 </div>
             </div>
-            <div class="flex items-center space-x-2">
-                ${m.is_default ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Default</span>' : ''}
-                <button class="text-gray-400 hover:text-red-600 transition-colors delete-payment-method" data-id="${m.id}">
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+                ${m.is_default ? '<span class="badge" style="background:var(--green-pale);color:var(--green);">Default</span>' : ''}
+                <button class="btn btn-danger" style="padding:0.25rem 0.5rem;font-size:0.75rem;" data-id="${m.id}" onclick="deletePaymentMethod('${m.id}')">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         </div>
     `).join('');
-    
-    document.querySelectorAll('.delete-payment-method').forEach(btn => {
-        btn.addEventListener('click', function() {
-            deletePaymentMethod(this.dataset.id);
-        });
-    });
 }
 
 function loadMoreTransactions() {
@@ -741,20 +817,16 @@ function loadMoreTransactions() {
 
 async function deletePaymentMethod(methodId) {
     if (!confirm('Remove this PayPal account?')) return;
-    
     try {
-        const response = await apiCall(API_BASE + 'paypal/methods/' + methodId + '/remove/', {
-            method: 'DELETE'
-        });
-        
+        const response = await apiCall(API_BASE + 'paypal/methods/' + methodId + '/remove/', { method: 'DELETE' });
         if (response && response.ok) {
             loadPaymentMethods();
         } else if (response) {
             const error = await response.json();
-            alert(error.message || 'Failed to remove payment method');
+            alert(error.message || 'Failed to remove');
         }
-    } catch (error) {
-        alert('Failed to remove payment method');
+    } catch (e) {
+        alert('Network error');
     }
 }
 </script>

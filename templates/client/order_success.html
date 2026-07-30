@@ -1,0 +1,60 @@
+{% extends "client_base.html" %}
+{% block title %}Payment Successful — AcademicWrite{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-card {
+        max-width: 480px;
+        margin: 4rem auto;
+        text-align: center;
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+    .success-icon {
+        font-size: 3rem;
+        color: #059669;
+        margin-bottom: 1rem;
+    }
+    .order-number {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .countdown {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="main-inner">
+        <div class="success-card">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1 style="font-size:1.5rem; font-weight:700;">Payment Approved!</h1>
+            <p style="color:#6b7280; margin:1rem 0;">Your order has been placed and is now active.</p>
+            <p style="color:#6b7280; font-size:0.9rem;">Order ID: <span class="order-number">{{ order_id }}</span></p>
+            <div class="countdown">
+                Redirecting to your order in <span id="countdown">5</span> seconds…
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var orderId = "{{ order_id }}";
+    var sec = 5;
+    setInterval(function() {
+        sec--;
+        document.getElementById('countdown').textContent = sec;
+        if (sec <= 0) {
+            window.location.href = '/client/orders/' + orderId + '/';
+        }
+    }, 1000);
+</script>
+{% endblock %}

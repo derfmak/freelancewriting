@@ -154,7 +154,7 @@ class OrderListSerializer(serializers.ModelSerializer):
 
 class OrderCreateSerializer(serializers.ModelSerializer):
     attachments = serializers.ListField(
-        child=serializers.UUIDField(),
+        child=serializers.FileField(),
         required=False,
         write_only=True
     )
@@ -191,6 +191,17 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('Either pages or words must be provided')
         
         return data
+    
+    def create(self, validated_data):
+        attachments_data = validated_data.pop('attachments', [])
+        order = super().create(validated_data)
+        for file in attachments_data:
+            Attachment.objects.create(
+                order=order,
+                file=file,
+                uploaded_by=order.client
+            )
+        return order
 
 
 class OrderHistorySerializer(serializers.ModelSerializer):
