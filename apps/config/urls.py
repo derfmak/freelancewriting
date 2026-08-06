@@ -6,6 +6,13 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from apps.admin_portal.views import admin_order_detail
 from apps.orders.views import order_paypal_success, order_paypal_cancel
+from apps.accounts.views import (
+    client_notifications_list,
+    client_notification_mark_read,
+    client_notifications_mark_all_read,
+    client_notification_delete,
+    client_notifications_unread_count,
+)
 
 app_name = 'config'
 
@@ -105,6 +112,12 @@ urlpatterns = [
     path('api/v1/client/orders/<uuid:order_id>/rate/', views.client_rate_order, name='client-rate-order'),
     
     path('api/v1/admin/counts/', views.admin_counts, name='admin-counts'),
+    
+    path('api/v1/client/notifications/', client_notifications_list, name='client-notifications-list'),
+    path('api/v1/client/notifications/<uuid:notification_id>/read/', client_notification_mark_read, name='client-notification-mark-read'),
+    path('api/v1/client/notifications/mark-all-read/', client_notifications_mark_all_read, name='client-notifications-mark-all-read'),
+    path('api/v1/client/notifications/<uuid:notification_id>/delete/', client_notification_delete, name='client-notification-delete'),
+    path('api/v1/client/notifications/unread-count/', client_notifications_unread_count, name='client-notifications-unread-count'),
 ]
 
 if settings.DEBUG:

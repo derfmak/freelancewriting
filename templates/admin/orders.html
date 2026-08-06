@@ -249,8 +249,6 @@
         .action-btn { padding: 4px 10px; font-size: 0.7rem; }
         .filter-btn { padding: 4px 12px; font-size: 0.7rem; }
     }
-
-    /* New styles for per‑file progress */
     .upload-file-progress {
         margin-top: 8px;
         max-height: 150px;
@@ -302,7 +300,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-3">
             <div class="search-wrapper w-48 sm:w-64">
-                <input type="text" id="searchOrders" class="w-full px-4 py-2 pr-10 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition text-sm" placeholder="Search orders..." value="{{ search }}" autocomplete="off">
+                <input type="text" id="searchOrders" class="w-full px-4 py-2 pr-10 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition text-sm" placeholder="Search orders..." autocomplete="off">
                 <span class="search-icon"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
                 <button id="clearSearch" class="clear-search"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
                 <div id="searchSuggestions" class="search-suggestions"></div>
@@ -499,7 +497,7 @@ function showSuggestions(query) {
     const container = document.getElementById('searchSuggestions');
     if (!allOrders || allOrders.length === 0) { container.classList.remove('active'); return; }
     const results = allOrders.filter(order => {
-        const searchStr = `${order.order_number} ${order.topic} ${order.client_name || ''} ${order.client?.full_name || ''}`.toLowerCase();
+        const searchStr = `${order.order_number} ${order.topic} ${order.client || ''}`.toLowerCase();
         return searchStr.includes(query.toLowerCase());
     }).slice(0, 8);
     if (results.length === 0) {
@@ -579,10 +577,10 @@ function displayOrders(orders) {
         return;
     }
     container.innerHTML = orders.map((order) => {
-        const clientName = order.client_name || order.client?.full_name || order.client?.email || 'N/A';
+        const clientName = order.client || 'N/A';
         const orderNumber = order.order_number || 'N/A';
-        const topic = order.topic || order.title || 'Untitled';
-        const totalPrice = order.total_price || order.total || 0;
+        const topic = order.topic || 'Untitled';
+        const totalPrice = order.total_price || 0;
         const statusColor = getStatusColor(order.status);
         const statusLabel = formatStatus(order.status);
         const urgency = getUrgencyLevel(order.deadline);
@@ -607,7 +605,7 @@ function displayOrders(orders) {
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-3 flex-wrap">
-                            <a href="/admin/orders/${order.id}/" class="text-sm font-medium text-green-600 hover:text-green-700">#${orderNumber}</a>
+                            <a href="/admin-portal/orders/${order.id}/" class="text-sm font-medium text-green-600 hover:text-green-700">#${orderNumber}</a>
                             ${isRequest ? '<span class="request-badge">Request</span>' : ''}
                             <span class="text-xs px-2 py-0.5 rounded-full ${statusColor}">
                                 <span class="status-dot ${order.status}"></span>${statusLabel}
@@ -619,7 +617,7 @@ function displayOrders(orders) {
                         <div class="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-500">
                             <span>${clientName}</span>
                             <span>•</span>
-                            <span>${order.words || order.word_count || 0} words</span>
+                            <span>${order.words || 0} words</span>
                             <span>•</span>
                             <span>${order.academic_level || 'Standard'}</span>
                             ${!isFinalStatus && order.deadline ? `
@@ -656,7 +654,7 @@ function getActionButtons(order) {
     }
     if (order.status === 'in_progress') {
         actions.push(`
-            <a href="/admin/orders/${order.id}/" class="action-btn px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">Workspace</a>
+            <a href="/admin-portal/orders/${order.id}/workspace/" class="action-btn px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">Workspace</a>
             <button onclick="openDeliverDialog('${order.id}')" class="action-btn px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">Deliver</button>
         `);
     }
@@ -664,7 +662,7 @@ function getActionButtons(order) {
         actions.push(`<span class="text-xs text-gray-500">Waiting for client</span>`);
     }
     if (order.status === 'refund_pending') {
-        actions.push(`<a href="/admin/refunds/${order.id}/" class="action-btn px-3 py-1 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors">Review Refund</a>`);
+        actions.push(`<a href="/admin-portal/refunds/${order.id}/" class="action-btn px-3 py-1 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors">Review Refund</a>`);
     }
     if (order.status === 'completed') {
         actions.push(`<span class="text-xs text-green-600 font-medium">${order.rating ? 'Rated ' + order.rating + '/5' : 'Completed'}</span>`);
@@ -920,7 +918,6 @@ function startUpload() {
         return;
     }
 
-    // Reset state
     uploadCanceled = false;
     uploadQueue = [];
     activeUploads = 0;
@@ -929,23 +926,19 @@ function startUpload() {
     fileProgress = {};
     uploadXhrs = [];
 
-    // Build queue
     selectedFiles.forEach((file, idx) => {
         uploadQueue.push({
             index: idx,
             file: file,
-            status: 'waiting', // waiting, uploading, done, error
+            status: 'waiting',
             progress: 0,
             error: null
         });
         fileProgress[idx] = 0;
     });
 
-    // Open progress dialog
     openUploadProgressDialog();
     renderFileProgress();
-
-    // Start processing queue
     processQueue();
 }
 
@@ -961,7 +954,6 @@ function processQueue() {
         uploadSingleFile(item);
     }
 
-    // If queue is empty and no active uploads, finish
     if (uploadQueue.length === 0 && activeUploads === 0) {
         finishUpload();
     }
@@ -970,7 +962,7 @@ function processQueue() {
 function uploadSingleFile(item) {
     const { file, index } = item;
     const formData = new FormData();
-    formData.append('files', file); // field name as expected by backend
+    formData.append('files', file);
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `/api/v1/admin/orders/${selectedOrderId}/deliver/`);
@@ -1006,10 +998,8 @@ function uploadSingleFile(item) {
         completedUploads++;
         updateOverallProgress();
         renderFileProgress();
-        // Remove xhr from list
         const xhrIdx = uploadXhrs.indexOf(xhr);
         if (xhrIdx > -1) uploadXhrs.splice(xhrIdx, 1);
-        // Continue
         processQueue();
     };
 
@@ -1044,7 +1034,6 @@ function uploadSingleFile(item) {
 function updateOverallProgress() {
     let totalProgress = 0;
     let completed = 0;
-    let failed = 0;
     for (const idx in fileProgress) {
         totalProgress += fileProgress[idx];
         if (fileProgress[idx] === 100) completed++;
@@ -1103,7 +1092,6 @@ function finishUpload() {
             loadOrders();
         }, 800);
     } else {
-        // Some errors occurred
         statusEl.textContent = 'Upload completed with errors.';
         showToast('Some files failed to upload. Check the list.', 'warning');
         setTimeout(() => {

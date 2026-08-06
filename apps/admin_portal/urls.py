@@ -7,14 +7,12 @@ urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='admin-dashboard'),
     path('dashboard/stats/', views.dashboard_stats, name='dashboard-stats'),
     path('dashboard/priority/', views.priority_queue, name='priority-queue'),
-    
     path('users/', views.list_users, name='list-users'),
     path('users/<uuid:user_id>/', views.user_detail, name='user-detail'),
     path('users/<uuid:user_id>/suspend/', views.suspend_user, name='suspend-user'),
     path('users/<uuid:user_id>/reactivate/', views.reactivate_user, name='reactivate-user'),
     path('users/<uuid:user_id>/delete/', views.delete_user, name='delete-user'),
     path('users/search/', views.search_users, name='search-users'),
-    
     path('orders/', views.list_orders, name='list-orders'),
     path('orders/<uuid:order_id>/', views.admin_order_detail, name='admin-order-detail'),
     path('orders/<uuid:order_id>/workspace/', views.order_workspace, name='order-workspace'),
@@ -29,47 +27,43 @@ urlpatterns = [
     path('orders/overdue/', views.overdue_orders, name='overdue-orders'),
     path('orders/completed/', views.completed_orders, name='completed-orders'),
     path('orders/search/', views.search_orders, name='search-orders'),
-    
     path('orders/<uuid:order_id>/messages/', views.get_messages, name='get-messages'),
     path('orders/<uuid:order_id>/messages/send/', views.send_message, name='send-message'),
     path('messages/unread/', views.get_unread_count, name='get-unread-count'),
-    
     path('refunds/', views.refund_requests, name='refund-requests'),
     path('refunds/<uuid:order_id>/approve/', views.approve_refund, name='approve-refund'),
     path('refunds/<uuid:order_id>/deny/', views.deny_refund, name='deny-refund'),
-    
     path('transactions/', views.list_transactions, name='list-transactions'),
     path('transactions/<uuid:transaction_id>/', views.transaction_detail, name='transaction-detail'),
     path('wallet/adjust/', views.adjust_wallet, name='adjust-wallet'),
     path('wallet/client/<uuid:user_id>/', views.client_wallet, name='client-wallet'),
-    
     path('settings/', views.list_settings, name='list-settings'),
     path('settings/<uuid:setting_id>/', views.update_setting, name='update-setting'),
     path('settings/create/', views.create_setting, name='create-setting'),
     path('settings/<uuid:setting_id>/delete/', views.delete_setting, name='delete-setting'),
-    
     path('content/', views.list_content, name='list-content'),
     path('content/<uuid:content_id>/', views.update_content, name='update-content'),
     path('content/create/', views.create_content, name='create-content'),
     path('content/<uuid:content_id>/delete/', views.delete_content, name='delete-content'),
-    
     path('samples/', views.admin_samples, name='admin-samples'),
     path('samples/<uuid:sample_id>/toggle/', views.admin_toggle_sample, name='admin-toggle-sample'),
     path('samples/<uuid:sample_id>/delete/', views.admin_delete_sample, name='admin-delete-sample'),
-    
     path('logs/', views.list_logs, name='list-logs'),
     path('logs/export/', views.export_logs, name='export-logs'),
     path('logs/<uuid:log_id>/', views.log_detail, name='log-detail'),
-    
     path('notes/', views.list_notes, name='list-notes'),
     path('notes/create/', views.create_note, name='create-note'),
     path('notes/<uuid:note_id>/', views.update_note, name='update-note'),
     path('notes/<uuid:note_id>/delete/', views.delete_note, name='delete-note'),
-    
     path('analytics/', views.analytics_overview, name='analytics-overview'),
     path('analytics/revenue/', views.revenue_analytics, name='revenue-analytics'),
     path('analytics/orders/', views.order_analytics, name='order-analytics'),
     path('analytics/clients/', views.client_analytics, name='client-analytics'),
-    
     path('counts/', views.get_counts, name='get-counts'),
+
+    path('notifications/', views.list_notifications, name='list-notifications'),
+    path('notifications/<uuid:notification_id>/read/', views.mark_notification_read, name='mark-notification-read'),
+    path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark-all-notifications-read'),
+    path('notifications/<uuid:notification_id>/delete/', views.delete_notification, name='delete-notification'),
+    path('notifications/unread-count/', views.unread_notification_count, name='unread-notification-count'),
 ]

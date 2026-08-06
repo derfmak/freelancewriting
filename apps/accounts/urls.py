@@ -22,4 +22,10 @@ urlpatterns = [
     path('google/', views.google_login, name='google-login'),
     path('google/callback/', views.google_callback, name='google-callback'),
     path('google/signup/', views.google_signup, name='google-signup'),
+
+    path('notifications/', views.client_notifications_list, name='client-notifications-list'),
+    path('notifications/<uuid:notification_id>/read/', views.client_notification_mark_read, name='client-notification-mark-read'),
+    path('notifications/mark-all-read/', views.client_notifications_mark_all_read, name='client-notifications-mark-all-read'),
+    path('notifications/<uuid:notification_id>/delete/', views.client_notification_delete, name='client-notification-delete'),
+    path('notifications/unread-count/', views.client_notifications_unread_count, name='client-notifications-unread-count'),
 ]

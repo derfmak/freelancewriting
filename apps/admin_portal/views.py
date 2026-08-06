@@ -25,7 +25,7 @@ from apps.payments.services import WalletService
 from apps.messaging.models import Conversation, Message
 from apps.admin_portal.models import (
     AdminActionLog, SystemSetting, SiteContent, Blog, 
-    PlatformStats, AdminNote, Sample
+    PlatformStats, AdminNote, Sample, AdminNotification
 )
 
 
@@ -538,15 +538,15 @@ def delete_user(request, user_id):
 def list_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     status_filter = request.GET.get('status')
     search = request.GET.get('search')
-    
+
     orders = Order.objects.all().select_related('client', 'writer').order_by('-created_at')
-    
+
     if status_filter:
         orders = orders.filter(status=status_filter)
-    
+
     if search:
         orders = orders.filter(
             Q(order_number__icontains=search) |
@@ -554,14 +554,14 @@ def list_orders(request):
             Q(client__full_name__icontains=search) |
             Q(topic__icontains=search)
         )
-    
+
     page = int(request.GET.get('page', 1))
     page_size = int(request.GET.get('page_size', 20))
     start = (page - 1) * page_size
     end = start + page_size
-    
+
     paginated_orders = orders[start:end]
-    
+
     return Response({
         'total': orders.count(),
         'page': page,
@@ -578,7 +578,16 @@ def list_orders(request):
             'status': order.status,
             'deadline': order.deadline.isoformat() if order.deadline else None,
             'created_at': order.created_at.isoformat(),
-            'updated_at': order.updated_at.isoformat()
+            'updated_at': order.updated_at.isoformat(),
+            'words': order.words or 0,
+            'academic_level': order.academic_level,
+            'rating': order.rating,
+            'feedback': order.feedback,
+            'cancellation_feedback': order.cancellation_feedback,
+            'declined_reason': order.declined_reason,
+            'completed_at': order.completed_at.isoformat() if order.completed_at else None,
+            'cancelled_at': order.cancelled_at.isoformat() if order.cancelled_at else None,
+            'declined_at': order.declined_at.isoformat() if order.declined_at else None,
         } for order in paginated_orders]
     })
 
@@ -588,7 +597,7 @@ def list_orders(request):
 def pending_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     orders = Order.objects.filter(status='request').select_related('client').order_by('deadline')
     return Response([{
         'id': str(order.id),
@@ -598,7 +607,9 @@ def pending_orders(request):
         'topic': order.topic,
         'total_price': float(order.total_price),
         'deadline': order.deadline.isoformat() if order.deadline else None,
-        'created_at': order.created_at.isoformat()
+        'created_at': order.created_at.isoformat(),
+        'words': order.words or 0,
+        'academic_level': order.academic_level,
     } for order in orders])
 
 
@@ -607,7 +618,7 @@ def pending_orders(request):
 def active_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     orders = Order.objects.filter(status='in_progress').select_related('client').order_by('deadline')
     return Response([{
         'id': str(order.id),
@@ -616,7 +627,9 @@ def active_orders(request):
         'topic': order.topic,
         'total_price': float(order.total_price),
         'deadline': order.deadline.isoformat() if order.deadline else None,
-        'created_at': order.created_at.isoformat()
+        'created_at': order.created_at.isoformat(),
+        'words': order.words or 0,
+        'academic_level': order.academic_level,
     } for order in orders])
 
 
@@ -625,13 +638,13 @@ def active_orders(request):
 def overdue_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     now = timezone.now()
     orders = Order.objects.filter(
         status__in=['request', 'in_progress'],
         deadline__lt=now
     ).select_related('client').order_by('deadline')
-    
+
     return Response([{
         'id': str(order.id),
         'order_number': order.order_number,
@@ -639,7 +652,9 @@ def overdue_orders(request):
         'topic': order.topic,
         'total_price': float(order.total_price),
         'deadline': order.deadline.isoformat() if order.deadline else None,
-        'created_at': order.created_at.isoformat()
+        'created_at': order.created_at.isoformat(),
+        'words': order.words or 0,
+        'academic_level': order.academic_level,
     } for order in orders])
 
 
@@ -648,7 +663,7 @@ def overdue_orders(request):
 def completed_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     orders = Order.objects.filter(status='completed').select_related('client').order_by('-updated_at')
     return Response([{
         'id': str(order.id),
@@ -658,7 +673,9 @@ def completed_orders(request):
         'total_price': float(order.total_price),
         'completed_at': order.completed_at.isoformat() if order.completed_at else None,
         'rating': order.rating,
-        'feedback': order.feedback
+        'feedback': order.feedback,
+        'words': order.words or 0,
+        'academic_level': order.academic_level,
     } for order in orders])
 
 
@@ -667,18 +684,18 @@ def completed_orders(request):
 def search_orders(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     query = request.GET.get('q', '')
     if len(query) < 2:
         return Response({'results': []})
-    
+
     orders = Order.objects.filter(
         Q(order_number__icontains=query) |
         Q(client__email__icontains=query) |
         Q(client__full_name__icontains=query) |
         Q(topic__icontains=query)
     ).select_related('client')[:20]
-    
+
     return Response({
         'results': [{
             'id': str(order.id),
@@ -686,7 +703,13 @@ def search_orders(request):
             'client': order.client.full_name if order.client else None,
             'topic': order.topic,
             'status': order.status,
-            'total_price': float(order.total_price)
+            'total_price': float(order.total_price),
+            'words': order.words or 0,
+            'academic_level': order.academic_level,
+            'rating': order.rating,
+            'feedback': order.feedback,
+            'cancellation_feedback': order.cancellation_feedback,
+            'declined_reason': order.declined_reason,
         } for order in orders]
     })
 
@@ -696,11 +719,11 @@ def search_orders(request):
 def order_workspace(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     order = get_object_or_404(Order, id=order_id)
     history = OrderHistory.objects.filter(order=order).order_by('-created_at')
     transactions = Transaction.objects.filter(order=order)
-    
+
     return Response({
         'order': {
             'id': str(order.id),
@@ -711,7 +734,11 @@ def order_workspace(request, order_id):
             'total_price': float(order.total_price),
             'status': order.status,
             'deadline': order.deadline.isoformat() if order.deadline else None,
-            'created_at': order.created_at.isoformat()
+            'created_at': order.created_at.isoformat(),
+            'words': order.words or 0,
+            'academic_level': order.academic_level,
+            'rating': order.rating,
+            'feedback': order.feedback,
         },
         'history': list(history.values()),
         'transactions': list(transactions.values())
@@ -723,14 +750,14 @@ def order_workspace(request, order_id):
 def admin_accept_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     order = get_object_or_404(Order, id=order_id, status='request')
-    
+
     order.status = 'in_progress'
     order.accepted_at = timezone.now()
     order.started_at = timezone.now()
     order.save()
-    
+
     OrderHistory.objects.create(
         order=order,
         user=request.user,
@@ -738,7 +765,7 @@ def admin_accept_order(request, order_id):
         from_status='request',
         to_status='in_progress'
     )
-    
+
     OrderTimeline.objects.create(
         order=order,
         status='in_progress',
@@ -747,14 +774,14 @@ def admin_accept_order(request, order_id):
         icon='fa-check-circle',
         color='green'
     )
-    
+
     log_admin_action(
         admin=request.user,
         action_type='order_approve',
         request=request,
         target_order=order
     )
-    
+
     return Response({'success': True, 'message': 'Order accepted successfully'})
 
 
@@ -763,30 +790,32 @@ def admin_accept_order(request, order_id):
 def admin_reject_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     order = get_object_or_404(Order, id=order_id, status='request')
     reason = request.data.get('reason', '').strip()
-    
+
     if not reason:
         return Response({'error': 'Reason is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+    payment_completed = Transaction.objects.filter(
+        order=order,
+        type='payment',
+        direction='debit',
+        status='completed'
+    ).exists()
+
     order.status = 'declined'
     order.declined_at = timezone.now()
     order.declined_by = request.user
     order.declined_reason = reason
     order.save()
-    
-    try:
-        WalletService.credit(
-            wallet=order.client.wallet,
-            amount=order.total_price,
-            transaction_type='refund',
-            description=f'Refund for rejected order {order.order_number}',
-            order=order
-        )
-    except:
-        pass
-    
+
+    if payment_completed:
+        try:
+            AdminPaymentService.process_refund(order, order.total_price)
+        except Exception:
+            pass
+
     OrderHistory.objects.create(
         order=order,
         user=request.user,
@@ -795,7 +824,7 @@ def admin_reject_order(request, order_id):
         to_status='declined',
         data={'reason': reason}
     )
-    
+
     OrderTimeline.objects.create(
         order=order,
         status='declined',
@@ -804,7 +833,7 @@ def admin_reject_order(request, order_id):
         icon='fa-times-circle',
         color='red'
     )
-    
+
     log_admin_action(
         admin=request.user,
         action_type='order_reject',
@@ -812,7 +841,7 @@ def admin_reject_order(request, order_id):
         target_order=order,
         details={'reason': reason}
     )
-    
+
     return Response({'success': True, 'message': 'Order rejected successfully'})
 
 
@@ -821,7 +850,7 @@ def admin_reject_order(request, order_id):
 def get_order_status(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     order = get_object_or_404(Order, id=order_id)
     return Response({
         'id': str(order.id),
@@ -975,30 +1004,38 @@ def admin_pullback_file(request, order_id, file_id):
 def admin_cancel_order(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     order = get_object_or_404(Order, id=order_id)
     reason = request.data.get('reason', '').strip()
-    
+
     if order.status in ['completed', 'cancelled']:
         return Response({'error': 'Cannot cancel completed or cancelled order'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     if not reason:
         return Response({'error': 'Cancellation reason is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+    payment_completed = Transaction.objects.filter(
+        order=order,
+        type='payment',
+        direction='debit',
+        status='completed'
+    ).exists()
+
+    from_status = order.status
     order.status = 'cancelled'
     order.cancelled_at = timezone.now()
     order.cancellation_reason = reason
     order.save()
-    
+
     OrderHistory.objects.create(
         order=order,
         user=request.user,
         action='cancel',
-        from_status=order.status,
+        from_status=from_status,
         to_status='cancelled',
         data={'reason': reason}
     )
-    
+
     OrderTimeline.objects.create(
         order=order,
         status='cancelled',
@@ -1007,7 +1044,13 @@ def admin_cancel_order(request, order_id):
         icon='fa-ban',
         color='red'
     )
-    
+
+    if payment_completed:
+        try:
+            AdminPaymentService.process_refund(order, order.total_price)
+        except Exception:
+            pass
+
     log_admin_action(
         admin=request.user,
         action_type='order_cancel',
@@ -1015,7 +1058,7 @@ def admin_cancel_order(request, order_id):
         target_order=order,
         details={'reason': reason}
     )
-    
+
     return Response({'success': True, 'message': 'Order cancelled successfully'})
 
 
@@ -1024,7 +1067,7 @@ def admin_cancel_order(request, order_id):
 def refund_requests(request):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     orders = Order.objects.filter(status='refund_pending').select_related('client').order_by('-updated_at')
     return Response([{
         'id': str(order.id),
@@ -1032,7 +1075,9 @@ def refund_requests(request):
         'client': order.client.full_name if order.client else None,
         'client_email': order.client.email if order.client else None,
         'total_price': float(order.total_price),
-        'created_at': order.created_at.isoformat()
+        'created_at': order.created_at.isoformat(),
+        'words': order.words or 0,
+        'academic_level': order.academic_level,
     } for order in orders])
 
 
@@ -1041,13 +1086,13 @@ def refund_requests(request):
 def approve_refund(request, order_id):
     if not is_admin(request.user):
         return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     order = get_object_or_404(Order, id=order_id, status='refund_pending')
-    
+
     order.status = 'cancelled'
     order.refund_approved_at = timezone.now()
     order.save()
-    
+
     try:
         WalletService.credit(
             wallet=order.client.wallet,
@@ -1058,7 +1103,7 @@ def approve_refund(request, order_id):
         )
     except:
         pass
-    
+
     OrderHistory.objects.create(
         order=order,
         user=request.user,
@@ -1066,16 +1111,15 @@ def approve_refund(request, order_id):
         from_status='refund_pending',
         to_status='cancelled'
     )
-    
+
     log_admin_action(
         admin=request.user,
         action_type='refund_approve',
         request=request,
         target_order=order
     )
-    
-    return Response({'message': 'Refund approved'})
 
+    return Response({'message': 'Refund approved'})
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -1917,3 +1961,89 @@ def admin_delete_sample(request, sample_id):
         return JsonResponse({'success': True, 'message': f'Sample "{title}" deleted.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def list_notifications(request):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    filter_type = request.GET.get('filter')
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 20))
+
+    notifications = AdminNotification.objects.filter(recipient=request.user)
+
+    if filter_type == 'unread':
+        notifications = notifications.filter(is_read=False)
+    elif filter_type == 'read':
+        notifications = notifications.filter(is_read=True)
+
+    paginator = Paginator(notifications, page_size)
+    page_obj = paginator.get_page(page)
+
+    return Response({
+        'count': paginator.count,
+        'page': page,
+        'page_size': page_size,
+        'results': [{
+            'id': str(n.id),
+            'title': n.title,
+            'message': n.message,
+            'type': n.type,
+            'is_read': n.is_read,
+            'link': n.link,
+            'created_at': n.created_at.isoformat()
+        } for n in page_obj]
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def mark_notification_read(request, notification_id):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    notification = get_object_or_404(AdminNotification, id=notification_id, recipient=request.user)
+    notification.is_read = True
+    notification.save()
+    return Response({'success': True, 'message': 'Marked as read'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def mark_all_notifications_read(request):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    updated = AdminNotification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return Response({'success': True, 'message': f'Marked {updated} notifications as read'})
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def delete_notification(request, notification_id):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    notification = get_object_or_404(AdminNotification, id=notification_id, recipient=request.user)
+    notification.delete()
+    return Response({'success': True, 'message': 'Notification deleted'})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def unread_notification_count(request):
+    if not is_admin(request.user):
+        return Response({'error': 'unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    count = AdminNotification.objects.filter(recipient=request.user, is_read=False).count()
+    return Response({'unread_count': count})

@@ -7,6 +7,10 @@ from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
 from apps.accounts.models import User
 from apps.orders.models import Order
 
@@ -228,6 +232,65 @@ class PaymentMethod(models.Model):
         self.verification_code = None
         self.verification_code_created_at = None
         self.save(update_fields=['verification_code', 'verification_code_created_at'])
+
+    def send_verification_email(self):
+        if not self.verification_code:
+            self.generate_verification_code()
+        subject = 'Verify Your PayPal Email - AcademicWrite'
+        context = {
+            'email': self.paypal_email,
+            'code': self.verification_code,
+            'full_name': self.user.full_name,
+            'expiry_minutes': 5,
+        }
+        try:
+            html_message = render_to_string('emails/paypal_verification.html', context)
+            plain_message = strip_tags(html_message)
+            send_mail(
+                subject,
+                plain_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [self.paypal_email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            return True
+        except Exception:
+            return False
+
+    def is_verification_locked(self):
+        if self.verification_locked_until and timezone.now() < self.verification_locked_until:
+            return True
+        return False
+
+    def increment_attempts(self):
+        self.verification_attempts += 1
+        if self.verification_attempts >= 5:
+            self.verification_locked_until = timezone.now() + timedelta(minutes=30)
+        self.save(update_fields=['verification_attempts', 'verification_locked_until'])
+
+    def verify_code(self, code):
+        if self.is_verification_locked():
+            return False, "Too many attempts. Please wait 30 minutes."
+        if not self.verification_code or not self.verification_code_created_at:
+            return False, "No verification code found. Request a new code."
+        if self.is_verification_code_expired():
+            return False, "Verification code expired. Request a new code."
+        if self.verification_code != code:
+            self.increment_attempts()
+            return False, "Invalid verification code."
+        self.paypal_verified = True
+        self.verification_code = None
+        self.verification_code_created_at = None
+        self.verification_attempts = 0
+        self.verification_locked_until = None
+        self.save(update_fields=['paypal_verified', 'verification_code', 'verification_code_created_at', 'verification_attempts', 'verification_locked_until'])
+        return True, "Verification successful."
+
+    def set_as_default(self):
+        PaymentMethod.objects.filter(user=self.user, is_default=True).update(is_default=False)
+        self.is_default = True
+        self.save(update_fields=['is_default'])
 
 
 class PaymentIntent(models.Model):

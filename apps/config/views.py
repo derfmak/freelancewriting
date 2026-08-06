@@ -596,7 +596,48 @@ def admin_order_workspace(request, order_id):
     if request.user.role != 'admin':
         return render(request, 'access_denied.html')
     order = get_object_or_404(Order, id=order_id)
-    context = {'order': order, 'order_id': order_id}
+    now = timezone.now()
+    try:
+        conversation = Conversation.objects.get(order=order)
+        messages = conversation.messages.all().order_by('created_at')[:100]
+    except Conversation.DoesNotExist:
+        conversation = None
+        messages = []
+    timeline = OrderTimeline.objects.filter(order=order).order_by('created_at')
+    delivered_files = []
+    for attachment in order.attachments.filter(delivered_at__isnull=False):
+        time_elapsed = now - attachment.delivered_at
+        can_pull_back = time_elapsed <= timedelta(minutes=10)
+        delivered_files.append({
+            'id': str(attachment.id),
+            'filename': attachment.filename,
+            'file_size': attachment.file_size,
+            'file_url': attachment.file.url,
+            'delivered_at': attachment.delivered_at,
+            'can_pull_back': can_pull_back,
+        })
+    client_online = False
+    try:
+        from apps.orders.models import UserPresence
+        presence = UserPresence.objects.get(user=order.client)
+        client_online = presence.is_online
+    except:
+        pass
+    is_overdue = order.deadline < now
+    time_remaining = order.deadline - now if not is_overdue else None
+    is_late = getattr(order, 'is_late', False)
+    context = {
+        'order': order,
+        'messages': messages,
+        'timeline': timeline,
+        'delivered_files': delivered_files,
+        'client_online': client_online,
+        'now': now,
+        'is_overdue': is_overdue,
+        'time_remaining': time_remaining,
+        'is_late': is_late,
+        'conversation': conversation,
+    }
     return render(request, 'admin/order-workspace.html', context)
 
 
@@ -773,45 +814,79 @@ def admin_dashboard(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def client_cancel_order(request, order_id):
-    try:
-        order = get_object_or_404(Order, id=order_id, client=request.user)
-        
-        if order.status in ['completed', 'cancelled', 'declined']:
-            return Response({'error': 'This order cannot be cancelled'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        reason = request.data.get('reason', 'User requested cancellation')
-        
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+
+    if order.status in ['completed', 'cancelled']:
+        return Response({'error': 'Cannot cancel this order'}, status=status.HTTP_400_BAD_REQUEST)
+
+    payment_completed = Transaction.objects.filter(
+        order=order,
+        type='payment',
+        direction='debit',
+        status='completed'
+    ).exists()
+
+    if order.status == 'request' and not payment_completed:
         order.status = 'cancelled'
         order.cancelled_at = timezone.now()
         order.cancelled_by = request.user
-        order.cancellation_feedback = reason
+        order.cancellation_reason = 'cancelled_by_client'
         order.save()
-        
-        try:
-            WalletService.credit(
-                wallet=order.client.wallet,
-                amount=order.total_price,
-                transaction_type='refund',
-                description=f'Refund for cancelled order {order.order_number}',
-                order=order
-            )
-        except:
-            pass
-        
+
         OrderHistory.objects.create(
             order=order,
             user=request.user,
             action='cancel',
-            from_status=order.status,
+            from_status='request',
             to_status='cancelled',
-            data={'reason': reason}
+            data={'reason': 'cancelled_by_client'}
         )
-        
+
+        OrderTimeline.objects.create(
+            order=order,
+            status='cancelled',
+            title='Order Cancelled',
+            description='Order cancelled by client (no payment)',
+            icon='fa-ban',
+            color='red'
+        )
+
         return Response({'success': True, 'message': 'Order cancelled successfully'})
-    except Order.DoesNotExist:
-        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    order.status = 'cancelled'
+    order.cancelled_at = timezone.now()
+    order.cancelled_by = request.user
+    order.cancellation_reason = 'cancelled_by_client'
+    order.save()
+
+    if payment_completed:
+        try:
+            AdminPaymentService.process_refund(order, order.total_price)
+        except Exception:
+            pass
+
+    OrderHistory.objects.create(
+        order=order,
+        user=request.user,
+        action='cancel',
+        from_status=order.status,
+        to_status='cancelled',
+        data={'reason': 'cancelled_by_client'}
+    )
+
+    OrderTimeline.objects.create(
+        order=order,
+        status='cancelled',
+        title='Order Cancelled',
+        description='Order cancelled by client' + (' – refund initiated' if payment_completed else ''),
+        icon='fa-ban',
+        color='red'
+    )
+
+    return Response({
+        'success': True,
+        'message': 'Order cancelled' + (' and refund processed' if payment_completed else ' successfully')
+    })
 
 
 @api_view(['POST'])

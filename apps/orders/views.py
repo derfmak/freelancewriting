@@ -14,14 +14,14 @@ from .serializers import (
     OrderSerializer, OrderListSerializer, OrderCreateSerializer,
     OrderHistorySerializer, AttachmentSerializer,
     RevisionRequestSerializer, RefundRequestSerializer, RatingSerializer,
-    CancelOrderSerializer, DeclineOrderSerializer, ResubmitOrderSerializer
+    CancelOrderSerializer, DeclineOrderSerializer, ResubmitOrderSerializer,
+    ExtendDeadlineSerializer
 )
 from apps.payments.models import Wallet, Transaction
 from apps.payments.services import PayPalService
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 def log_history(order, user, action, from_status, to_status, data=None):
     OrderHistory.objects.create(
@@ -33,7 +33,6 @@ def log_history(order, user, action, from_status, to_status, data=None):
         data=data or {}
     )
 
-
 def create_timeline(order, status, title, description='', icon='', color='gray'):
     OrderTimeline.objects.create(
         order=order,
@@ -44,22 +43,17 @@ def create_timeline(order, status, title, description='', icon='', color='gray')
         color=color
     )
 
-
 def is_owner(order, user):
     return order.client_id == user.id
-
 
 def is_assigned_writer(order, user):
     return order.writer_id == user.id
 
-
 def sanitize_links(links):
     if not links:
         return []
-
     sanitized = []
     dangerous_protocols = ['javascript:', 'data:', 'vbscript:', 'file:']
-
     for link in links:
         if isinstance(link, dict):
             url = link.get('url', '')
@@ -77,9 +71,7 @@ def sanitize_links(links):
                     break
             link = link.replace('<', '&lt;').replace('>', '&gt;')
             sanitized.append({'url': link, 'title': ''})
-
     return sanitized
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -112,7 +104,6 @@ def price_quote(request):
                     {'error': 'Either words or pages must be provided'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
             if pages:
                 pages = Decimal(str(pages))
                 if not words:
@@ -141,13 +132,10 @@ def price_quote(request):
                 deadline_dt = timezone.datetime.fromisoformat(deadline.replace('Z', '+00:00'))
         else:
             deadline_dt = deadline
-
         if timezone.is_naive(deadline_dt):
             deadline_dt = timezone.make_aware(deadline_dt)
-
         deadline_utc = deadline_dt.astimezone(dt_timezone.utc)
         now_utc = timezone.now()
-
         if deadline_utc < now_utc + timedelta(hours=12):
             return Response(
                 {'error': 'Deadline must be at least 12 hours from now'},
@@ -179,12 +167,9 @@ def price_quote(request):
         'urgency_multiplier': float(price_data['urgency_multiplier']),
         'total_price': float(price_data['total_price'])
     }
-
     if price_data.get('slides'):
         response_data['slides'] = price_data['slides']
-
     return Response(response_data)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -208,13 +193,11 @@ def create_order(request):
         words = data.get('words')
         pages = data.get('pages')
         spacing = data.get('spacing', 'double')
-
         if not words and not pages:
             return Response(
                 {'error': 'Either words or pages must be provided'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         if pages and not words:
             words = Order.pages_to_words(pages, spacing)
         elif words and not pages:
@@ -260,7 +243,8 @@ def create_order(request):
             level_adjusted=price_data['level_adjusted'],
             urgency_multiplier=price_data['urgency_multiplier'],
             total_price=price_data['total_price'],
-            status='request'
+            status='request',
+            auto_cancel_at=data['deadline'] + timedelta(hours=48)
         )
 
         transaction_obj = Transaction.objects.create(
@@ -276,7 +260,6 @@ def create_order(request):
             metadata={}
         )
 
-        # ---------- Create PayPal order (no redirect URL needed for modal) ----------
         return_url = request.build_absolute_uri(f'/client/orders/{order.id}/')
         cancel_url = request.build_absolute_uri(f'/client/orders/new/')
 
@@ -313,13 +296,9 @@ def create_order(request):
         response_data['paypal_order_id'] = paypal_result['payment_id']
         return Response(response_data, status=status.HTTP_201_CREATED)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def capture_order_payment(request, order_id):
-    """
-    Capture the PayPal order after the customer approves the payment in the modal.
-    """
     order = get_object_or_404(Order, id=order_id, client=request.user)
 
     transaction_obj = Transaction.objects.filter(
@@ -359,16 +338,12 @@ def capture_order_payment(request, order_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def order_paypal_success(request, order_id):
-    """
-    Fallback for redirect-based payment (not used with modal, but kept for compatibility).
-    """
     order = get_object_or_404(Order, id=order_id, client=request.user)
 
-    paypal_order_id = request.GET.get('token')   # v2 uses 'token'
+    paypal_order_id = request.GET.get('token')
     if not paypal_order_id:
         return redirect(f'/client/orders/{order_id}/')
 
@@ -393,13 +368,9 @@ def order_paypal_success(request, order_id):
 
     return render(request, 'client/order_success.html', {'order_id': str(order_id)})
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def order_paypal_cancel(request, order_id):
-    """
-    Fallback for redirect-based payment cancellation.
-    """
     order = get_object_or_404(Order, id=order_id, client=request.user)
     transaction_obj = Transaction.objects.filter(
         order=order, type='payment', status='pending'
@@ -408,7 +379,6 @@ def order_paypal_cancel(request, order_id):
         transaction_obj.status = 'cancelled'
         transaction_obj.save()
     return redirect(f'/client/orders/{order_id}/')
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -430,7 +400,6 @@ def my_orders(request):
 
     serializer = OrderListSerializer(orders, many=True)
     return Response(serializer.data)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -458,7 +427,6 @@ def search_orders(request):
 
     return Response(results)
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def assigned_orders(request):
@@ -479,14 +447,12 @@ def assigned_orders(request):
     serializer = OrderListSerializer(orders, many=True)
     return Response(serializer.data)
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def available_orders(request):
     orders = Order.objects.filter(status='request', writer__isnull=True).order_by('deadline')
     serializer = OrderListSerializer(orders, many=True)
     return Response(serializer.data)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -498,7 +464,6 @@ def order_detail(request, order_id):
 
     serializer = OrderSerializer(order)
     return Response(serializer.data)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -522,7 +487,6 @@ def order_timeline(request, order_id):
 
     return Response(data)
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def order_history(request, order_id):
@@ -535,16 +499,23 @@ def order_history(request, order_id):
     serializer = OrderHistorySerializer(history, many=True)
     return Response(serializer.data)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def accept_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, status='request', writer__isnull=True)
 
+    if order.auto_cancel_at and order.auto_cancel_at < timezone.now():
+        return Response(
+            {'error': 'This order has been auto-cancelled due to no response.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     order.writer = request.user
     order.status = 'in_progress'
     order.accepted_at = timezone.now()
     order.started_at = timezone.now()
+    order.auto_cancel_at = None
+    order.is_late = False
     order.save()
 
     log_history(order, request.user, 'accept', 'request', 'in_progress')
@@ -553,7 +524,6 @@ def accept_order(request, order_id):
                    'fa-check-circle', 'blue')
 
     return Response(OrderSerializer(order).data)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -587,7 +557,6 @@ def reject_order(request, order_id):
 
     return Response({'message': 'Order declined and refunded'})
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def cancel_order(request, order_id):
@@ -611,7 +580,7 @@ def cancel_order(request, order_id):
     order.cancellation_feedback = serializer.validated_data.get('feedback', '')
     order.save()
 
-    if order.status in ['awaiting_approval', 'in_progress']:
+    if from_status in ['awaiting_approval', 'in_progress']:
         wallet = order.client.wallet
         Transaction.objects.create(
             user=order.client,
@@ -635,7 +604,6 @@ def cancel_order(request, order_id):
                    'fa-ban', 'red')
 
     return Response({'message': 'Order cancelled and refunded'})
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -687,7 +655,6 @@ def decline_order(request, order_id):
 
     return Response({'message': 'Order declined and refunded'})
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def resubmit_order(request, order_id):
@@ -719,7 +686,6 @@ def resubmit_order(request, order_id):
                    'fa-redo', 'green')
 
     return Response(OrderSerializer(order).data)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -763,7 +729,8 @@ def reorder_order(request, order_id):
         total_price=price_data['total_price'],
         status='request',
         parent_order=order,
-        version=order.version + 1
+        version=order.version + 1,
+        auto_cancel_at=(timezone.now() + timedelta(days=7)) + timedelta(hours=48)
     )
 
     wallet = request.user.wallet
@@ -790,7 +757,6 @@ def reorder_order(request, order_id):
                    'fa-copy', 'green')
 
     return Response(OrderSerializer(new_order).data, status=status.HTTP_201_CREATED)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -855,7 +821,8 @@ def split_order(request, order_id):
             parent_order=order,
             order_group=order_group,
             split_part=i+1,
-            split_total=parts
+            split_total=parts,
+            auto_cancel_at=order.deadline + timedelta(hours=48)
         )
 
         wallet = request.user.wallet
@@ -900,7 +867,6 @@ def split_order(request, order_id):
         'orders': OrderSerializer(split_orders, many=True).data
     })
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_attachment(request, order_id):
@@ -918,7 +884,6 @@ def upload_attachment(request, order_id):
 
     return Response(AttachmentSerializer(attachment).data, status=status.HTTP_201_CREATED)
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_attachments(request, order_id):
@@ -929,7 +894,6 @@ def list_attachments(request, order_id):
 
     serializer = AttachmentSerializer(order.attachments.all().order_by('-uploaded_at'), many=True)
     return Response(serializer.data)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -954,7 +918,6 @@ def deliver_order(request, order_id):
                    'fa-file-check', 'green')
 
     return Response(OrderSerializer(order).data)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -987,7 +950,6 @@ def approve_order(request, order_id):
 
     return Response(OrderSerializer(order).data)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def request_revision(request, order_id):
@@ -1013,7 +975,6 @@ def request_revision(request, order_id):
                    'fa-edit', 'orange')
 
     return Response(OrderSerializer(order).data)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -1043,7 +1004,6 @@ def request_refund(request, order_id):
 
     return Response(OrderSerializer(order).data)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def rate_order(request, order_id):
@@ -1058,7 +1018,6 @@ def rate_order(request, order_id):
     order.save()
 
     return Response(OrderSerializer(order).data)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -1078,7 +1037,6 @@ def update_presence(request):
         'last_seen_at': presence.last_seen_at.isoformat()
     })
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_presence(request, user_id):
@@ -1093,7 +1051,6 @@ def get_presence(request, user_id):
             'is_online': False,
             'last_seen_at': None
         })
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -1123,6 +1080,103 @@ def get_online_status(request, order_id):
         'last_seen_at': None
     })
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def extend_deadline(request, order_id):
+    order = get_object_or_404(Order, id=order_id, client=request.user)
+
+    if order.status != 'request':
+        return Response(
+            {'error': 'Only orders in pending (request) status can have deadline extended.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if order.auto_cancel_at and order.auto_cancel_at < timezone.now():
+        return Response(
+            {'error': 'This order has been auto-cancelled and cannot be extended.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = ExtendDeadlineSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    new_deadline = serializer.validated_data['new_deadline']
+    if new_deadline < timezone.now() + timedelta(hours=12):
+        return Response(
+            {'new_deadline': 'New deadline must be at least 12 hours from now.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    old_deadline = order.deadline
+    order.deadline = new_deadline
+    order.deadline_extended_at = timezone.now()
+    order.deadline_extension_count += 1
+    order.is_late = False
+    order.auto_cancel_at = new_deadline + timedelta(hours=48)
+    order.save()
+
+    log_history(order, request.user, 'extend_deadline', 'request', 'request', {
+        'old_deadline': old_deadline.isoformat(),
+        'new_deadline': new_deadline.isoformat(),
+        'extension_count': order.deadline_extension_count
+    })
+
+    create_timeline(order, 'request', 'Deadline Extended',
+                   f'Deadline extended from {old_deadline.strftime("%Y-%m-%d %H:%M")} to {new_deadline.strftime("%Y-%m-%d %H:%M")}',
+                   'fa-clock', 'blue')
+
+    return Response(OrderSerializer(order).data)
+
+def process_order_deadlines():
+    now = timezone.now()
+
+    late_orders = Order.objects.filter(
+        Q(status='request') | Q(status='in_progress'),
+        deadline__lt=now,
+        is_late=False
+    )
+    for order in late_orders:
+        order.is_late = True
+        order.save()
+        create_timeline(order, order.status, 'Order Late',
+                       f'Deadline {order.deadline.strftime("%Y-%m-%d %H:%M")} has passed.',
+                       'fa-exclamation-triangle', 'red')
+        log_history(order, None, 'mark_late', order.status, order.status,
+                   {'deadline': order.deadline.isoformat()})
+
+    to_cancel = Order.objects.filter(
+        status='request',
+        auto_cancel_at__lte=now,
+        writer__isnull=True
+    )
+    for order in to_cancel:
+        order.status = 'cancelled'
+        order.cancelled_at = now
+        order.cancelled_by = None
+        order.cancellation_reason = 'auto_cancel_no_response'
+        order.cancellation_feedback = 'Auto-cancelled: no writer responded before the grace period.'
+        order.save()
+
+        wallet = order.client.wallet
+        Transaction.objects.create(
+            user=order.client,
+            wallet=wallet,
+            amount=order.total_price,
+            type='refund',
+            direction='credit',
+            status='completed',
+            payment_method='paypal',
+            description=f'Refund for auto-cancelled order {order.order_number}',
+            order=order
+        )
+
+        log_history(order, None, 'auto_cancel', 'request', 'cancelled', {
+            'reason': 'No response after deadline grace period'
+        })
+        create_timeline(order, 'cancelled', 'Order Auto-Cancelled',
+                       'Order auto-cancelled due to no writer response.',
+                       'fa-clock', 'red')
 
 def process_auto_approvals():
     now = timezone.now()

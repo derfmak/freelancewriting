@@ -13,11 +13,13 @@ from django.db import transaction
 from django.conf import settings
 from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
 import logging
 import requests
 import secrets
 import hashlib
-from .models import User, PendingUser, LoginLog, PasswordChangeVerification, SecurityEvent
+from .models import User, PendingUser, LoginLog, PasswordChangeVerification, SecurityEvent, ClientNotification
 from .serializers import (
     RegisterSerializer, OTPVerificationSerializer, ResendOTPSerializer,
     LoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,
@@ -1062,3 +1064,67 @@ def google_signup(request):
     log_security_event('google_signup_success', ip, user_agent, user=user)
 
     return response
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def client_notifications_list(request):
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 20))
+    filter_type = request.GET.get('filter')
+
+    notifications = ClientNotification.objects.filter(user=request.user)
+
+    if filter_type == 'unread':
+        notifications = notifications.filter(is_read=False)
+    elif filter_type == 'read':
+        notifications = notifications.filter(is_read=True)
+
+    paginator = Paginator(notifications, page_size)
+    page_obj = paginator.get_page(page)
+
+    return Response({
+        'count': paginator.count,
+        'page': page,
+        'page_size': page_size,
+        'results': [{
+            'id': str(n.id),
+            'title': n.title,
+            'message': n.message,
+            'type': n.type,
+            'is_read': n.is_read,
+            'link': n.link,
+            'created_at': n.created_at.isoformat()
+        } for n in page_obj]
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def client_notification_mark_read(request, notification_id):
+    notification = get_object_or_404(ClientNotification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return Response({'success': True})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def client_notifications_mark_all_read(request):
+    updated = ClientNotification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return Response({'success': True, 'marked': updated})
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def client_notification_delete(request, notification_id):
+    notification = get_object_or_404(ClientNotification, id=notification_id, user=request.user)
+    notification.delete()
+    return Response({'success': True})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def client_notifications_unread_count(request):
+    count = ClientNotification.objects.filter(user=request.user, is_read=False).count()
+    return Response({'unread_count': count})

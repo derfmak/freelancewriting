@@ -94,6 +94,7 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
     is_verified = serializers.BooleanField(source='paypal_verified', read_only=True)
     verification_required = serializers.SerializerMethodField()
     verification_expired = serializers.SerializerMethodField()
+    verification_locked = serializers.SerializerMethodField()
 
     class Meta:
         model = PaymentMethod
@@ -101,7 +102,7 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
             'id', 'paypal_email', 'paypal_account_type',
             'paypal_verified', 'is_default', 'is_active',
             'is_paypal', 'is_verified',
-            'verification_required', 'verification_expired',
+            'verification_required', 'verification_expired', 'verification_locked',
             'last_used_at',
             'created_at', 'updated_at'
         ]
@@ -118,6 +119,11 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
             return False
         return (timezone.now() - obj.verification_code_created_at).total_seconds() > 300
 
+    def get_verification_locked(self, obj):
+        if obj.verification_locked_until and timezone.now() < obj.verification_locked_until:
+            return True
+        return False
+
 
 class AddPayPalMethodSerializer(serializers.Serializer):
     paypal_email = serializers.EmailField(required=True)
@@ -126,6 +132,19 @@ class AddPayPalMethodSerializer(serializers.Serializer):
         default='personal'
     )
     set_default = serializers.BooleanField(default=False)
+
+    def validate_paypal_email(self, value):
+        from .models import PaymentMethod
+        user = self.context.get('request').user
+        existing = PaymentMethod.objects.filter(user=user, paypal_email=value).first()
+        if existing:
+            if existing.paypal_verified:
+                raise serializers.ValidationError('This PayPal email is already verified.')
+            else:
+                # If unverified but exists, we can re‑send code, so not an error.
+                # We'll allow adding again but we'll use the existing method.
+                pass
+        return value
 
 
 class VerifyPayPalMethodSerializer(serializers.Serializer):

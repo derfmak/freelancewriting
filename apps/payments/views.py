@@ -12,7 +12,6 @@ import logging
 import json
 import random
 from django.http import JsonResponse
-from django.core.mail import send_mail
 from django.conf import settings
 
 from .models import Wallet, Transaction, PaymentMethod, PaymentIntent, Payout, PayPalWebhook
@@ -20,7 +19,7 @@ from .serializers import (
     WalletSerializer, TransactionSerializer, TransactionDetailSerializer,
     PaymentMethodSerializer, PaymentIntentSerializer, PayoutSerializer
 )
-from .services import PayPalService, AdminPaymentService, AdminWalletManager
+from .services import PayPalService, AdminPaymentService, AdminWalletManager, EmailService
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +31,6 @@ def get_or_create_wallet(user):
 
 def generate_verification_code():
     return ''.join(random.choices('0123456789', k=6))
-
-
-def send_verification_email(email, code):
-    subject = 'PayPal Account Verification'
-    message = f'Your verification code is: {code}\n\nThis code expires in 5 minutes.'
-    from_email = settings.DEFAULT_FROM_EMAIL
-    send_mail(subject, message, from_email, [email], fail_silently=False)
 
 
 @api_view(['GET'])
@@ -53,7 +45,6 @@ def get_wallet(request):
 @permission_classes([IsAuthenticated])
 def get_wallet_stats(request):
     wallet = get_or_create_wallet(request.user)
-    
     stats = {
         'balance': float(wallet.balance),
         'total_in': float(wallet.total_in),
@@ -61,7 +52,6 @@ def get_wallet_stats(request):
         'currency': wallet.currency,
         'is_active': wallet.is_active,
     }
-    
     return Response(stats)
 
 
@@ -74,11 +64,11 @@ def get_transactions(request):
     transaction_type = request.GET.get('type')
     if transaction_type:
         transactions = transactions.filter(type=transaction_type)
-    
+
     direction = request.GET.get('direction')
     if direction:
         transactions = transactions.filter(direction=direction)
-    
+
     status_filter = request.GET.get('status')
     if status_filter:
         transactions = transactions.filter(status=status_filter)
@@ -112,12 +102,12 @@ def get_transaction_detail(request, transaction_id):
 @permission_classes([IsAuthenticated])
 def check_paypal_email(request):
     paypal_email = request.data.get('paypal_email', '').strip()
-    
+
     if not paypal_email:
         return Response({'error': 'PayPal email is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     existing = PaymentMethod.objects.filter(user=request.user, paypal_email=paypal_email).first()
-    
+
     if existing:
         return Response({
             'exists': True,
@@ -125,7 +115,7 @@ def check_paypal_email(request):
             'is_pending': not existing.is_active and not existing.paypal_verified,
             'method_id': str(existing.id) if not existing.is_active else None
         })
-    
+
     return Response({
         'exists': False,
         'is_active': False,
@@ -162,10 +152,13 @@ def add_paypal_method(request):
         verification_locked_until=None
     )
 
-    try:
-        send_verification_email(paypal_email, method.verification_code)
-    except Exception as e:
-        logger.error(f"Failed to send verification email: {e}")
+    email_sent = EmailService.send_paypal_verification_code(
+        user=request.user,
+        paypal_email=paypal_email,
+        verification_code=method.verification_code
+    )
+
+    if not email_sent:
         method.delete()
         return Response({
             'error': 'Failed to send verification email. Please check your email address and try again.'
@@ -253,10 +246,13 @@ def resend_verification_code(request):
     method.verification_code_created_at = timezone.now()
     method.save()
 
-    try:
-        send_verification_email(method.paypal_email, new_code)
-    except Exception as e:
-        logger.error(f"Failed to send verification email: {e}")
+    email_sent = EmailService.send_paypal_verification_code(
+        user=request.user,
+        paypal_email=method.paypal_email,
+        verification_code=new_code
+    )
+
+    if not email_sent:
         return Response({'error': 'Failed to send email. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({
@@ -273,7 +269,7 @@ def get_paypal_methods(request):
         user=request.user,
         is_active=True
     ).order_by('-is_default', '-created_at')
-    
+
     results = []
     for m in methods:
         results.append({
@@ -286,7 +282,7 @@ def get_paypal_methods(request):
             'created_at': m.created_at.isoformat(),
             'last_used_at': m.last_used_at.isoformat() if m.last_used_at else None,
         })
-    
+
     return Response(results)
 
 
@@ -330,23 +326,23 @@ def set_default_payment_method(request, method_id):
 def create_paypal_deposit(request):
     try:
         amount = Decimal(str(request.data.get('amount', 0)))
-        
+
         if amount < 5:
             return Response({'error': 'Minimum deposit is $5'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         wallet = get_or_create_wallet(request.user)
-        
+
         method = PaymentMethod.objects.filter(
             user=request.user,
             is_active=True
         ).first()
-        
+
         if not method:
             return Response({
                 'error': 'no_paypal_account',
                 'message': 'Please add and verify a PayPal account first'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         with db_transaction.atomic():
             transaction_obj = Transaction.objects.create(
                 user=request.user,
@@ -358,17 +354,17 @@ def create_paypal_deposit(request):
                 payment_method='paypal',
                 description=f'PayPal deposit of ${amount}',
             )
-            
+
             paypal_service = PayPalService()
             return_url = request.build_absolute_uri('/api/v1/wallet/paypal/deposit/execute/')
             cancel_url = request.build_absolute_uri('/client/wallet/')
-            
+
             paypal_result = paypal_service.create_payment(
                 amount=amount,
                 return_url=return_url,
                 cancel_url=cancel_url
             )
-            
+
             if not paypal_result['success']:
                 transaction_obj.status = 'failed'
                 transaction_obj.metadata['failure_reason'] = paypal_result['error']
@@ -377,7 +373,7 @@ def create_paypal_deposit(request):
                     'error': 'paypal_error',
                     'message': paypal_result['error']
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
+
             PaymentIntent.objects.create(
                 user=request.user,
                 intent_id=paypal_result['payment_id'],
@@ -388,14 +384,14 @@ def create_paypal_deposit(request):
                 cancel_url=cancel_url,
                 metadata={'paypal_payment_id': paypal_result['payment_id']}
             )
-            
+
             return Response({
                 'approval_url': paypal_result['approval_url'],
                 'payment_id': paypal_result['payment_id'],
                 'transaction_id': transaction_obj.transaction_id,
                 'amount': float(amount)
             })
-        
+
     except Exception as e:
         logger.error(f"PayPal deposit creation failed: {str(e)}")
         return Response({
@@ -410,51 +406,51 @@ def execute_paypal_payment(request):
     try:
         payment_id = request.GET.get('paymentId')
         payer_id = request.GET.get('PayerID')
-        
+
         if not payment_id or not payer_id:
             return Response({'error': 'Missing payment parameters'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         payment_intent = get_object_or_404(PaymentIntent, intent_id=payment_id, user=request.user)
         transaction_obj = payment_intent.transaction
         wallet = request.user.wallet
-        
+
         if payment_id.startswith('PAYPAL_TEST_'):
             with db_transaction.atomic():
                 amount = payment_intent.amount
                 transaction_obj.status = 'completed'
                 transaction_obj.completed_at = timezone.now()
                 transaction_obj.save()
-                
+
                 payment_intent.status = 'succeeded'
                 payment_intent.save()
-            
+
             return Response({
                 'success': True,
                 'message': f'${amount} deposited successfully',
                 'balance': float(wallet.balance)
             })
-        
+
         paypal_service = PayPalService()
         paypal_result = paypal_service.execute_payment(payment_id, payer_id)
-        
+
         if not paypal_result['success']:
             transaction_obj.status = 'failed'
             transaction_obj.metadata['failure_reason'] = paypal_result['error']
             transaction_obj.save()
             return Response({'error': paypal_result['error']}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if paypal_result['state'] == 'approved':
             amount = paypal_result['amount']
-            
+
             with db_transaction.atomic():
                 transaction_obj.status = 'completed'
                 transaction_obj.completed_at = timezone.now()
                 transaction_obj.paypal_transaction_id = payment_id
                 transaction_obj.save()
-                
+
                 payment_intent.status = 'succeeded'
                 payment_intent.save()
-            
+
             return Response({
                 'success': True,
                 'message': f'${amount} deposited successfully',
@@ -466,9 +462,9 @@ def execute_paypal_payment(request):
             transaction_obj.save()
             payment_intent.status = 'failed'
             payment_intent.save()
-            
+
             return Response({'error': 'Payment was not approved'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
     except PaymentIntent.DoesNotExist:
         return Response({'error': 'Payment intent not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
@@ -480,25 +476,25 @@ def execute_paypal_payment(request):
 @permission_classes([IsAuthenticated])
 def cancel_paypal_payment(request):
     payment_id = request.data.get('payment_id')
-    
+
     if not payment_id:
         return Response({'error': 'Payment ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     payment_intent = get_object_or_404(PaymentIntent, intent_id=payment_id, user=request.user)
-    
+
     if payment_intent.status in ['succeeded', 'failed']:
         return Response({
             'error': 'cannot_cancel',
             'message': f'Cannot cancel payment with status: {payment_intent.status}'
         }, status=status.HTTP_400_BAD_REQUEST)
-    
+
     payment_intent.status = 'cancelled'
     payment_intent.save()
-    
+
     if payment_intent.transaction:
         payment_intent.transaction.status = 'cancelled'
         payment_intent.transaction.save()
-    
+
     return Response({
         'success': True,
         'message': 'Payment cancelled successfully'
@@ -570,13 +566,13 @@ def request_withdrawal(request):
                 amount=amount,
                 note=f'Withdrawal from wallet'
             )
-            
+
             if payout_result['success']:
                 payout.status = 'processing'
                 payout.paypal_payout_id = payout_result['payout_id']
                 payout.paypal_response = payout_result
                 payout.save()
-                
+
                 transaction_obj.status = 'processing'
                 transaction_obj.paypal_transaction_id = payout_result['payout_id']
                 transaction_obj.save()
@@ -615,16 +611,16 @@ def get_withdrawal_status(request, payout_id):
 @permission_classes([IsAuthenticated])
 def get_payouts(request):
     payouts = Payout.objects.filter(user=request.user).order_by('-created_at')
-    
+
     page = int(request.GET.get('page', 1))
     page_size = int(request.GET.get('page_size', 20))
     start = (page - 1) * page_size
     end = start + page_size
-    
+
     total = payouts.count()
     paginated = payouts[start:end]
     serializer = PayoutSerializer(paginated, many=True)
-    
+
     return Response({
         'total': total,
         'page': page,
@@ -653,18 +649,18 @@ def paypal_webhook(request):
         payload = json.loads(request.body)
         event_type = payload.get('event_type')
         resource = payload.get('resource', {})
-        
+
         webhook = PayPalWebhook.objects.create(
             webhook_id=payload.get('id', ''),
             event_type=event_type,
             resource_id=resource.get('id', ''),
             payload=payload,
         )
-        
+
         if event_type == 'PAYMENT.CAPTURE.COMPLETED':
             payment_id = resource.get('id')
             payment_intent = PaymentIntent.objects.filter(intent_id=payment_id).first()
-            
+
             if payment_intent and payment_intent.status != 'succeeded':
                 with db_transaction.atomic():
                     if payment_intent.transaction:
@@ -672,52 +668,52 @@ def paypal_webhook(request):
                         payment_intent.transaction.completed_at = timezone.now()
                         payment_intent.transaction.paypal_transaction_id = payment_id
                         payment_intent.transaction.save()
-                    
+
                     payment_intent.status = 'succeeded'
                     payment_intent.save()
-        
+
         elif event_type == 'PAYMENT.CAPTURE.DENIED':
             payment_id = resource.get('id')
             payment_intent = PaymentIntent.objects.filter(intent_id=payment_id).first()
-            
+
             if payment_intent:
                 payment_intent.status = 'failed'
                 payment_intent.save()
-                
+
                 if payment_intent.transaction:
                     payment_intent.transaction.status = 'failed'
                     payment_intent.transaction.save()
-        
+
         elif event_type == 'PAYMENT.PAYOUTSBATCH.SUCCESS':
             payout_batch_id = resource.get('payout_batch_id')
             payout = Payout.objects.filter(paypal_payout_id=payout_batch_id).first()
-            
+
             if payout:
                 payout.status = 'completed'
                 payout.completed_at = timezone.now()
                 payout.save()
-                
+
                 if payout.transaction:
                     payout.transaction.status = 'completed'
                     payout.transaction.completed_at = timezone.now()
                     payout.transaction.save()
-        
+
         elif event_type == 'PAYMENT.PAYOUTSBATCH.FAILED':
             payout_batch_id = resource.get('payout_batch_id')
             payout = Payout.objects.filter(paypal_payout_id=payout_batch_id).first()
-            
+
             if payout:
                 payout.status = 'failed'
                 payout.metadata['failure_reason'] = resource.get('errors', {}).get('message', 'Unknown error')
                 payout.save()
-                
+
                 if payout.transaction:
                     payout.transaction.status = 'failed'
                     payout.transaction.save()
-        
+
         webhook.mark_processed()
         return JsonResponse({'success': True})
-        
+
     except Exception as e:
         logger.error(f"PayPal webhook error: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -727,35 +723,35 @@ def paypal_webhook(request):
 @permission_classes([IsAdminUser])
 def get_payment_stats(request):
     total_deposits = Transaction.objects.filter(
-        type='deposit', 
+        type='deposit',
         direction='credit',
         status='completed'
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
+
     total_withdrawals = Transaction.objects.filter(
         type='withdrawal',
         direction='debit',
         status='completed'
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
+
     total_payouts = Transaction.objects.filter(
         type='payout',
         direction='debit',
         status='completed'
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
+
     total_refunds = Transaction.objects.filter(
         type='refund',
         direction='debit',
         status='completed'
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
+
     total_users = Wallet.objects.filter(is_active=True).count()
-    
+
     total_balance = Wallet.objects.aggregate(
         total=Sum('balance')
     )['total'] or Decimal('0.00')
-    
+
     stats = {
         'total_deposits': float(total_deposits),
         'total_withdrawals': float(total_withdrawals),
@@ -765,7 +761,7 @@ def get_payment_stats(request):
         'total_users': total_users,
         'currency': 'USD'
     }
-    
+
     return Response(stats)
 
 
@@ -780,12 +776,12 @@ def admin_financial_summary(request):
 @permission_classes([IsAdminUser])
 def admin_set_paypal_email(request):
     email = request.data.get('paypal_email', '').strip()
-    
+
     if not email:
         return Response({'error': 'PayPal email is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     AdminWalletManager.set_admin_paypal_email(email)
-    
+
     return Response({
         'success': True,
         'message': f'Admin PayPal email set to {email}',
@@ -799,17 +795,17 @@ def admin_process_client_payment(request):
     order_id = request.data.get('order_id')
     amount = Decimal(str(request.data.get('amount', 0)))
     client_id = request.data.get('client_id')
-    
+
     if not order_id or not client_id:
         return Response({'error': 'order_id and client_id are required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     from apps.orders.models import Order
     from apps.accounts.models import User
-    
+
     try:
         order = get_object_or_404(Order, id=order_id)
         client = get_object_or_404(User, id=client_id)
-        
+
         result = AdminPaymentService.process_client_payment(order, client, amount)
         return Response(result)
     except Exception as e:
@@ -823,17 +819,17 @@ def admin_process_writer_payout(request):
     order_id = request.data.get('order_id')
     amount = Decimal(str(request.data.get('amount', 0)))
     writer_id = request.data.get('writer_id')
-    
+
     if not order_id or not writer_id:
         return Response({'error': 'order_id and writer_id are required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     from apps.orders.models import Order
     from apps.accounts.models import User
-    
+
     try:
         order = get_object_or_404(Order, id=order_id)
         writer = get_object_or_404(User, id=writer_id)
-        
+
         result = AdminPaymentService.process_writer_payout(order, writer, amount)
         return Response(result)
     except Exception as e:
@@ -846,15 +842,15 @@ def admin_process_writer_payout(request):
 def admin_process_refund(request):
     order_id = request.data.get('order_id')
     amount = Decimal(str(request.data.get('amount', 0)))
-    
+
     if not order_id:
         return Response({'error': 'order_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     from apps.orders.models import Order
-    
+
     try:
         order = get_object_or_404(Order, id=order_id)
-        
+
         result = AdminPaymentService.process_refund(order, amount)
         return Response(result)
     except Exception as e:
@@ -867,28 +863,28 @@ def admin_process_refund(request):
 def admin_transactions(request):
     admin_wallet = AdminWalletManager.get_admin_wallet()
     transactions = Transaction.objects.filter(wallet=admin_wallet).order_by('-created_at')
-    
+
     transaction_type = request.GET.get('type')
     if transaction_type:
         transactions = transactions.filter(type=transaction_type)
-    
+
     direction = request.GET.get('direction')
     if direction:
         transactions = transactions.filter(direction=direction)
-    
+
     status_filter = request.GET.get('status')
     if status_filter:
         transactions = transactions.filter(status=status_filter)
-    
+
     page = int(request.GET.get('page', 1))
     page_size = int(request.GET.get('page_size', 20))
     start = (page - 1) * page_size
     end = start + page_size
-    
+
     total = transactions.count()
     paginated = transactions[start:end]
     serializer = TransactionSerializer(paginated, many=True)
-    
+
     return Response({
         'total': total,
         'page': page,

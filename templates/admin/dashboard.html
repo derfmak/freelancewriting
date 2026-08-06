@@ -523,7 +523,7 @@
         <div class="bg-white rounded-lg border border-gray-200 p-5 lg:col-span-2">
             <div class="section-header">
                 <h3>Recent Clients</h3>
-                <a href="/admin/users/">View all</a>
+                <a href="/admin-portal/users/">View all</a>
             </div>
             <div class="client-list" id="recentClients">
                 <div class="text-center text-gray-400 text-sm py-6">Loading clients...</div>
@@ -535,16 +535,16 @@
                 <h3>Quick Actions</h3>
             </div>
             <div class="action-grid">
-                <a href="/admin/orders/" class="action-btn">
+                <a href="/admin-portal/orders/" class="action-btn">
                     <i class="fas fa-file-alt"></i> All Orders
                 </a>
-                <a href="/admin/users/" class="action-btn">
+                <a href="/admin-portal/users/" class="action-btn">
                     <i class="fas fa-users"></i> Clients
                 </a>
-                <a href="/admin/finances/" class="action-btn">
+                <a href="/admin-portal/finances/" class="action-btn">
                     <i class="fas fa-dollar-sign"></i> Finances
                 </a>
-                <a href="/admin/messages/" class="action-btn">
+                <a href="/admin-portal/messages/" class="action-btn">
                     <i class="fas fa-envelope"></i> Messages
                 </a>
             </div>
@@ -583,7 +583,6 @@ function getInitials(name) {
 
 async function loadAllData() {
     try {
-        // Load orders
         var ordersResponse = await fetch(API_BASE + '/orders/?page_size=1000', {
             headers: { 'X-CSRFToken': getCsrfToken(), 'Accept': 'application/json' },
             credentials: 'include'
@@ -735,8 +734,8 @@ async function loadPriorityQueue() {
                     </div>
                     <div class="order-client">${item.client_name}</div>
                     <div class="order-actions">
-                        <a href="/admin/orders/${item.id}/">View</a>
-                        <a href="/admin/orders/${item.id}/workspace/">Workspace</a>
+                        <a href="/admin-portal/orders/${item.id}/">View</a>
+                        <a href="/admin-portal/orders/${item.id}/workspace/">Workspace</a>
                     </div>
                 </div>
             `;
@@ -788,7 +787,7 @@ async function loadRecentClients() {
                     <div style="display:flex; align-items:center; gap:0.5rem;">
                         <span class="client-balance ${balance < 0 ? 'negative' : ''}">${formatCurrency(balance)}</span>
                         <span class="client-status ${status}">${statusLabel}</span>
-                        <a href="/admin/users/${client.id}/" class="text-gray-400 hover:text-green-600 transition-colors text-sm">
+                        <a href="/admin-portal/users/${client.id}/" class="text-gray-400 hover:text-green-600 transition-colors text-sm">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </div>

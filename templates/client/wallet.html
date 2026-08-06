@@ -8,47 +8,39 @@
         display: grid;
         gap: 1.5rem;
     }
-
     @media (min-width: 768px) {
         .wallet-grid {
             grid-template-columns: 2fr 1fr;
             gap: 2rem;
         }
     }
-
     .stat-cards {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
         text-align: center;
     }
-
     .stat-label {
         font-size: 0.75rem;
         color: var(--muted);
     }
-
     .stat-value {
         font-size: 2rem;
         font-weight: 700;
         line-height: 1.2;
     }
-
     .stat-value.green { color: var(--green); }
     .stat-value.red { color: var(--red); }
     .stat-value.dark { color: var(--ink); }
-
     .table-wrap {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-
     .table {
         width: 100%;
         font-size: 0.875rem;
         border-collapse: collapse;
     }
-
     .table th {
         padding: 0.75rem 1rem;
         text-align: left;
@@ -60,17 +52,14 @@
         background: var(--surface);
         border-bottom: 1px solid var(--line);
     }
-
     .table td {
         padding: 0.75rem 1rem;
         border-bottom: 1px solid var(--line-light);
         vertical-align: middle;
     }
-
     .table tbody tr:hover {
         background: var(--surface);
     }
-
     .badge {
         display: inline-flex;
         align-items: center;
@@ -80,7 +69,6 @@
         border-radius: 9999px;
         white-space: nowrap;
     }
-
     .badge.deposit { background: var(--green-pale); color: var(--green); }
     .badge.payment { background: #dbeafe; color: #2563eb; }
     .badge.refund { background: #ffedd5; color: #c2410c; }
@@ -90,7 +78,6 @@
     .badge.pending { background: #fef3c7; color: #b45309; }
     .badge.processing { background: #dbeafe; color: #2563eb; }
     .badge.failed { background: #fee2e2; color: #dc2626; }
-
     .payment-method-item {
         display: flex;
         align-items: center;
@@ -101,11 +88,9 @@
         margin-bottom: 0.5rem;
         transition: border-color 0.2s;
     }
-
     .payment-method-item:hover {
         border-color: var(--green-border);
     }
-
     .btn {
         display: inline-flex;
         align-items: center;
@@ -120,46 +105,38 @@
         font-size: 0.8rem;
         text-decoration: none;
     }
-
     .btn-primary {
         background: var(--green);
         color: white;
     }
-
     .btn-primary:hover {
         background: var(--green-dark);
         transform: translateY(-1px);
     }
-
     .btn-outline {
         background: transparent;
         border: 1.5px solid var(--line);
         color: var(--ink-soft);
     }
-
     .btn-outline:hover {
         background: var(--surface);
         border-color: var(--muted);
     }
-
     .btn-danger {
         background: transparent;
         border: 1.5px solid #fecaca;
         color: var(--red);
     }
-
     .btn-danger:hover {
         background: var(--red-pale);
         border-color: var(--red);
     }
-
     .tips-card {
         background: var(--green-pale);
         border: 1px solid var(--green-border);
         border-radius: var(--radius);
         padding: 1.25rem;
     }
-
     .tips-card h3 {
         font-size: 0.95rem;
         font-weight: 700;
@@ -169,26 +146,22 @@
         gap: 0.5rem;
         color: var(--ink);
     }
-
     .tips-card ul {
         list-style: none;
         padding: 0;
         font-size: 0.8rem;
         color: var(--ink-soft);
     }
-
     .tips-card li {
         display: flex;
         align-items: flex-start;
         gap: 0.5rem;
         margin-bottom: 0.4rem;
     }
-
     .tips-card li::before {
         content: "•";
         color: var(--green);
     }
-
     .modal-overlay {
         position: fixed;
         inset: 0;
@@ -202,13 +175,11 @@
         visibility: hidden;
         transition: opacity 0.18s ease, visibility 0s linear 0.18s;
     }
-
     .modal-overlay.open {
         opacity: 1;
         visibility: visible;
         transition: opacity 0.18s ease;
     }
-
     .modal-box {
         background: var(--paper);
         border-radius: var(--radius);
@@ -220,11 +191,9 @@
         transform: translateY(12px) scale(0.98);
         transition: transform 0.18s ease;
     }
-
     .modal-overlay.open .modal-box {
         transform: translateY(0) scale(1);
     }
-
     .modal-head {
         display: flex;
         justify-content: space-between;
@@ -232,13 +201,11 @@
         padding: 1rem 1.25rem;
         border-bottom: 1px solid var(--line-light);
     }
-
     .modal-title {
         font-size: 1.1rem;
         font-weight: 700;
         color: var(--ink);
     }
-
     .modal-close {
         background: none;
         border: none;
@@ -246,19 +213,15 @@
         font-size: 1.1rem;
         cursor: pointer;
     }
-
     .modal-close:hover {
         color: var(--ink);
     }
-
     .modal-body {
         padding: 1.25rem;
     }
-
     .form-group {
         margin-bottom: 1rem;
     }
-
     .form-label {
         display: block;
         font-size: 0.85rem;
@@ -266,7 +229,6 @@
         color: var(--ink-soft);
         margin-bottom: 0.25rem;
     }
-
     .form-input {
         width: 100%;
         padding: 0.6rem 0.75rem;
@@ -276,20 +238,17 @@
         transition: var(--transition);
         background: var(--surface);
     }
-
     .form-input:focus {
         border-color: var(--green);
         box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
         outline: none;
         background: var(--paper);
     }
-
     .verification-digits {
         display: flex;
         justify-content: center;
         gap: 0.5rem;
     }
-
     .digit-input {
         width: 3rem;
         height: 3.5rem;
@@ -300,47 +259,38 @@
         border-radius: var(--radius-sm);
         transition: var(--transition);
     }
-
     .digit-input:focus {
         border-color: var(--green);
         box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
         outline: none;
     }
-
     .digit-input.filled {
         border-color: var(--green-border);
         background: var(--green-pale);
     }
-
     .digit-input.error {
         border-color: var(--red);
         background: var(--red-pale);
     }
-
     .error-text {
         color: var(--red);
         font-size: 0.8rem;
         margin-top: 0.5rem;
         display: none;
     }
-
     .error-text.show { display: block; }
-
     .success-text {
         color: var(--green);
         font-size: 0.8rem;
         margin-top: 0.5rem;
         display: none;
     }
-
     .success-text.show { display: block; }
-
     .attempts-info {
         font-size: 0.8rem;
         color: var(--muted);
         margin-top: 0.25rem;
     }
-
     .hidden { display: none !important; }
 </style>
 {% endblock %}
@@ -352,7 +302,6 @@
 
         <div class="wallet-grid">
             <div>
-                <!-- Balance Stats -->
                 <div class="card">
                     <div class="card-header"><h2 class="card-title">Overview</h2></div>
                     <div class="card-body">
@@ -373,7 +322,6 @@
                     </div>
                 </div>
 
-                <!-- Transactions -->
                 <div class="card" style="margin-top:1.5rem;">
                     <div class="card-header">
                         <h2 class="card-title">Transaction History</h2>
@@ -401,7 +349,6 @@
             </div>
 
             <div>
-                <!-- Payment Methods -->
                 <div class="card">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
                         <h2 class="card-title">Payment Methods</h2>
@@ -419,7 +366,6 @@
                     </div>
                 </div>
 
-                <!-- Tips -->
                 <div class="tips-card" style="margin-top:1.5rem;">
                     <h3><i class="fas fa-lightbulb" style="color:var(--amber);"></i> Quick Tips</h3>
                     <ul>
@@ -433,7 +379,7 @@
     </div>
 </div>
 
-<!-- Payment Method Modal -->
+<!-- Modal -->
 <div class="modal-overlay" id="paymentModal">
     <div class="modal-box">
         <div class="modal-head">
@@ -541,7 +487,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('load-more').addEventListener('click', loadMoreTransactions);
 
-    // Digit input handling
     const digits = document.querySelectorAll('.digit-input');
     const verifyBtn = document.getElementById('verify-code-btn');
     digits.forEach((input, index) => {
@@ -624,22 +569,54 @@ async function sendVerification() {
     }
     const btn = document.getElementById('send-verification-btn');
     btn.disabled = true;
-    btn.textContent = 'Sending...';
+    btn.textContent = 'Checking...';
     document.getElementById('step1-error').classList.remove('show');
+
     try {
-        const response = await apiCall(API_BASE + 'paypal/methods/add/', {
+        // First, check if the email already exists
+        const checkResponse = await apiCall(API_BASE + 'paypal/methods/check/', {
             method: 'POST',
             body: JSON.stringify({ paypal_email: email })
         });
-        if (response && response.ok) {
-            const data = await response.json();
+        if (checkResponse && checkResponse.ok) {
+            const checkData = await checkResponse.json();
+            if (checkData.exists) {
+                if (checkData.is_active) {
+                    document.getElementById('step1-error').textContent = 'This PayPal account is already verified.';
+                    document.getElementById('step1-error').classList.add('show');
+                    btn.disabled = false;
+                    btn.textContent = 'Send Verification Code';
+                    return;
+                }
+                if (checkData.is_pending) {
+                    // Pending verification – go directly to step 2
+                    currentMethodId = checkData.method_id;
+                    document.getElementById('verify-email-display').textContent = email;
+                    document.getElementById('step1').classList.add('hidden');
+                    document.getElementById('step2').classList.remove('hidden');
+                    document.querySelector('.digit-input').focus();
+                    btn.disabled = false;
+                    btn.textContent = 'Send Verification Code';
+                    return;
+                }
+            }
+        }
+
+        // If not exists, create new method
+        btn.textContent = 'Sending...';
+        const addResponse = await apiCall(API_BASE + 'paypal/methods/add/', {
+            method: 'POST',
+            body: JSON.stringify({ paypal_email: email })
+        });
+        if (addResponse && addResponse.ok) {
+            const data = await addResponse.json();
             currentMethodId = data.method_id;
             document.getElementById('verify-email-display').textContent = email;
             document.getElementById('step1').classList.add('hidden');
             document.getElementById('step2').classList.remove('hidden');
             document.querySelector('.digit-input').focus();
-        } else if (response) {
-            const error = await response.json();
+        } else if (addResponse) {
+            const error = await addResponse.json();
             document.getElementById('step1-error').textContent = error.error || 'Failed to send code';
             document.getElementById('step1-error').classList.add('show');
         }
@@ -682,6 +659,11 @@ async function verifyCode() {
                     document.getElementById('step2-error').classList.remove('show');
                     document.getElementById('step2-attempts').style.display = 'none';
                 }, 2000);
+            } else if (error.locked) {
+                document.getElementById('step2-error').textContent = error.error;
+                document.getElementById('step2-error').classList.add('show');
+                document.getElementById('step2-attempts').textContent = 'Account locked until ' + new Date(error.locked_until).toLocaleString();
+                document.getElementById('step2-attempts').style.display = 'block';
             } else {
                 document.getElementById('step2-error').textContent = error.error || 'Verification failed';
                 document.getElementById('step2-error').classList.add('show');

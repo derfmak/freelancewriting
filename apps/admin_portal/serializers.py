@@ -4,7 +4,7 @@ from django.db.models import Sum, Count, Q
 from apps.accounts.models import User
 from apps.orders.models import Order
 from apps.payments.models import Transaction, Wallet
-from .models import AdminActionLog, SystemSetting, SiteContent, Blog, AdminNote, PlatformStats
+from .models import AdminActionLog, SystemSetting, SiteContent, Blog, AdminNote, PlatformStats, AdminNotification
 
 
 class UserAdminSerializer(serializers.ModelSerializer):
@@ -258,3 +258,13 @@ class RefundActionSerializer(serializers.Serializer):
         if value is not None and value <= 0:
             raise serializers.ValidationError('Amount must be greater than zero.')
         return value
+
+
+class AdminNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdminNotification
+        fields = [
+            'id', 'recipient', 'title', 'message', 'type',
+            'link', 'metadata', 'is_read', 'created_at'
+        ]
+        read_only_fields = ['id', 'recipient', 'created_at']

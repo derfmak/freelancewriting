@@ -305,3 +305,34 @@ class SecurityEvent(models.Model):
 
     def __str__(self):
         return f"{self.event_type} - {self.ip_address} - {self.created_at}"
+
+
+class ClientNotification(models.Model):
+    TYPES = (
+        ('order', 'Order'),
+        ('message', 'Message'),
+        ('system', 'System'),
+        ('warning', 'Warning'),
+        ('info', 'Info'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_notifications', db_index=True)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    type = models.CharField(max_length=20, choices=TYPES, default='info')
+    link = models.CharField(max_length=500, blank=True, null=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    is_read = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['user', 'created_at']),
+        ]
+        db_table = 'client_notifications'
+
+    def __str__(self):
+        return f"{self.title} - {self.user.email}"

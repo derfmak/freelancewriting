@@ -520,16 +520,14 @@
 
             <div class="message-input-container">
                 <div class="flex gap-2">
-                    <div class="input-wrapper">
-                        <input type="text"
-                               class="message-input"
-                               id="messageInput"
-                               placeholder="Type a message..."
-                               disabled>
-                        <button class="send-btn" id="sendBtn" disabled>
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
+                    <input type="text"
+                           class="message-input"
+                           id="messageInput"
+                           placeholder="Type a message..."
+                           disabled>
+                    <button class="send-btn" id="sendBtn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -920,7 +918,7 @@ async function selectConversation(conversation) {
 
     document.getElementById('viewOrderLink').classList.remove('hidden');
     if (conversation.order) {
-        document.getElementById('viewOrderLink').href = '/admin/orders/' + conversation.order.id + '/';
+        document.getElementById('viewOrderLink').href = '/admin-portal/orders/' + conversation.order.id + '/';
     }
 
     document.getElementById('messageInput').disabled = false;
@@ -1206,7 +1204,32 @@ function updateConversationPreview(message) {
     conv.last_message_at = message.created_at;
 
     sortConversations();
-    displayConversations(conversations);
+
+    // Instead of full re-render, update the DOM element directly
+    var item = document.querySelector('[data-conversation-id="' + conv.id + '"]');
+    if (item) {
+        // Update last message preview
+        var previewP = item.querySelector('p.text-sm.text-gray-500.truncate');
+        if (previewP) {
+            previewP.textContent = message.content;
+        }
+        // Update time
+        var timeSpan = item.querySelector('.last-message-time');
+        if (timeSpan) {
+            timeSpan.textContent = formatRelativeTime(message.created_at);
+        }
+        // Move item to top of list
+        var container = document.getElementById('conversationsList');
+        if (container && container.firstChild !== item) {
+            container.insertBefore(item, container.firstChild);
+        }
+    } else {
+        // If not found, fallback to full re-render (should rarely happen)
+        displayConversations(conversations);
+    }
+
+    // Keep active class
+    setActiveConversationItem(conv.id);
 }
 
 function handleTypingIndicator(isTyping) {

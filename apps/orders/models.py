@@ -7,7 +7,6 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from apps.accounts.models import User
 
-
 class Attachment(models.Model):
     SCAN_STATUS = [
         ('pending', 'pending'),
@@ -44,7 +43,6 @@ class Attachment(models.Model):
 
     def __str__(self):
         return self.filename
-
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -183,6 +181,11 @@ class Order(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
+    is_late = models.BooleanField(default=False, db_index=True)
+    auto_cancel_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    deadline_extended_at = models.DateTimeField(null=True, blank=True)
+    deadline_extension_count = models.PositiveIntegerField(default=0)
+
     class Meta:
         indexes = [
             models.Index(fields=['client', 'status']),
@@ -196,6 +199,9 @@ class Order(models.Model):
             models.Index(fields=['last_activity_at']),
             models.Index(fields=['order_number', 'topic']),
             models.Index(fields=['client', 'order_number', 'topic']),
+            models.Index(fields=['is_late']),
+            models.Index(fields=['auto_cancel_at']),
+            models.Index(fields=['deadline_extended_at']),
         ]
         db_table = 'orders'
 
@@ -206,23 +212,19 @@ class Order(models.Model):
         year = datetime.now().strftime('%Y')
         month = datetime.now().strftime('%m')
         day = datetime.now().strftime('%d')
-        
         sequence = 1
         last_order = Order.objects.filter(
             order_number__startswith=f'#{year}{month}{day}'
         ).order_by('-order_number').first()
-        
         if last_order:
             try:
                 sequence = int(last_order.order_number[-4:]) + 1
             except ValueError:
                 sequence = 1
-        
         if sequence > 9999:
             sequence = 1
             timestamp = int(datetime.now().timestamp() * 1000) % 10000
             return f'#{year}{month}{day}{timestamp:04d}'
-        
         return f'#{year}{month}{day}{sequence:04d}'
 
     def clean(self):
@@ -232,10 +234,8 @@ class Order(models.Model):
         else:
             if not self.words and not self.pages:
                 raise ValidationError('Either words or pages must be provided')
-        
         if not self.deadline:
             raise ValidationError({'deadline': 'Deadline is required'})
-        
         if self.deadline and self.deadline < timezone.now():
             raise ValidationError({'deadline': 'Deadline cannot be in the past'})
 
@@ -293,7 +293,6 @@ class Order(models.Model):
             level_adjusted = base_price
             urgency_mult = cls.get_urgency_multiplier(deadline)
             total_price = (level_adjusted * urgency_mult).quantize(Decimal('0.01'))
-            
             return {
                 'pages': Decimal('0.00'),
                 'words_per_page': 0,
@@ -306,16 +305,13 @@ class Order(models.Model):
                 'slides': slides,
                 'paper_type': 'presentation'
             }
-        
         data = cls.get_spacing_data(spacing)
         pages = cls.words_to_pages(words, spacing)
-        
         base_price = pages * data['cost_per_page']
         level_mult = cls.get_level_multiplier(academic_level)
         level_adjusted = base_price * level_mult
         urgency_mult = cls.get_urgency_multiplier(deadline)
         total_price = (level_adjusted * urgency_mult).quantize(Decimal('0.01'))
-        
         return {
             'pages': pages.quantize(Decimal('0.01')),
             'words_per_page': data['words_per_page'],
@@ -340,8 +336,12 @@ class Order(models.Model):
             return True
         if self.status == 'awaiting_approval':
             return True
-        if self.status == 'in_progress' and self.deadline < timezone.now():
-            return True
+        if self.status == 'in_progress':
+            if self.is_late or self.deadline < timezone.now():
+                return True
+        if self.status == 'request':
+            if self.auto_cancel_at and self.auto_cancel_at < timezone.now():
+                return True
         return False
 
     def can_edit(self, user):
@@ -379,7 +379,6 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         if not self.order_number:
             self.order_number = self.generate_order_number()
-        
         if self.paper_type == 'presentation':
             if self.slides and not self.words:
                 self.words = self.slides * 50
@@ -399,7 +398,6 @@ class Order(models.Model):
                 self.words = 275
                 self.pages = Decimal('1.00')
             self.slides = None
-        
         if not self.base_price:
             price_data = self.calculate_price(
                 self.academic_level,
@@ -414,10 +412,8 @@ class Order(models.Model):
             self.level_adjusted = price_data['level_adjusted']
             self.urgency_multiplier = price_data['urgency_multiplier']
             self.total_price = price_data['total_price']
-        
         if self.pk and not self.order_group:
             self.order_group = self.id
-        
         super().save(*args, **kwargs)
 
     def get_secure_links(self):
@@ -444,7 +440,6 @@ class Order(models.Model):
                 sanitized_links.append({'url': link, 'title': ''})
         return sanitized_links
 
-
 class OrderHistory(models.Model):
     ACTIONS = [
         ('create', 'create'),
@@ -465,6 +460,9 @@ class OrderHistory(models.Model):
         ('refund_deny', 'refund_deny'),
         ('revise', 'revise'),
         ('update', 'update'),
+        ('extend_deadline', 'extend_deadline'),
+        ('mark_late', 'mark_late'),
+        ('auto_cancel', 'auto_cancel'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -487,7 +485,6 @@ class OrderHistory(models.Model):
     def __str__(self):
         return f"{self.order.order_number} - {self.action}"
 
-
 class OrderTimeline(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='timeline')
@@ -507,7 +504,6 @@ class OrderTimeline(models.Model):
 
     def __str__(self):
         return f"{self.order.order_number} - {self.status}"
-
 
 class UserPresence(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

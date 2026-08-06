@@ -385,8 +385,8 @@ class AdminNote(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.admin.email}"
-    
-    
+
+
 class Sample(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
@@ -407,3 +407,39 @@ class Sample(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class AdminNotification(models.Model):
+    TYPES = (
+        ('order', 'Order'),
+        ('message', 'Message'),
+        ('system', 'System'),
+        ('warning', 'Warning'),
+        ('info', 'Info'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipient = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='notifications',
+        db_index=True
+    )
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    type = models.CharField(max_length=20, choices=TYPES, default='info')
+    link = models.CharField(max_length=500, blank=True, null=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    is_read = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['recipient', 'is_read']),
+            models.Index(fields=['recipient', 'created_at']),
+        ]
+        db_table = 'admin_notifications'
+
+    def __str__(self):
+        return f"{self.title} - {self.recipient.email}"
