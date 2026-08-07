@@ -66,8 +66,8 @@ class UserRegistrationForm(forms.ModelForm):
             'spellcheck': 'false'
         }),
         validators=[RegexValidator(
-            regex=r'^\+?1?\d{9,15}$',
-            message='Enter a valid phone number (e.g., +254700000000)'
+            regex=r'^\+?[1-9]\d{1,14}$',
+            message='Enter a valid international phone number (e.g., +254700000000)'
         )]
     )
     
@@ -204,8 +204,8 @@ class UserProfileForm(forms.ModelForm):
             'spellcheck': 'false'
         }),
         validators=[RegexValidator(
-            regex=r'^\+?1?\d{9,15}$',
-            message='Enter a valid phone number (e.g., +254700000000)'
+            regex=r'^\+?[1-9]\d{1,14}$',
+            message='Enter a valid international phone number (e.g., +254700000000)'
         )]
     )
     

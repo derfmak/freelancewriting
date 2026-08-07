@@ -1,7 +1,7 @@
 {% extends "client_base.html" %}
 {% load static %}
 
-{% block title %}Settings - AcademicWrite{% endblock %}
+{% block title %}Change Password - AcademicWrite{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -9,7 +9,6 @@
         max-width: 640px;
         margin: 0 auto;
     }
-
     .settings-card {
         background: var(--paper);
         border: 1px solid var(--line);
@@ -17,19 +16,16 @@
         padding: 1.5rem;
         transition: all 0.2s ease;
     }
-
     .settings-card:hover {
         border-color: var(--green);
         box-shadow: var(--shadow);
     }
-
     .settings-label {
         font-size: 0.875rem;
         font-weight: 600;
         color: var(--ink);
         margin-bottom: 0.25rem;
     }
-
     .settings-input {
         width: 100%;
         padding: 0.5rem 0.75rem;
@@ -40,13 +36,11 @@
         background: var(--paper);
         color: var(--ink);
     }
-
     .settings-input:focus {
         outline: none;
         border-color: var(--green);
         box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
     }
-
     .settings-btn {
         display: inline-flex;
         align-items: center;
@@ -63,110 +57,23 @@
         gap: 0.5rem;
         width: 100%;
     }
-
     .settings-btn:hover {
         background: var(--green-dark);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
     }
-
     .settings-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
     }
-
     .settings-btn-secondary {
         background: var(--muted);
     }
-
     .settings-btn-secondary:hover {
         background: var(--ink-soft);
         box-shadow: none;
     }
-
-    .theme-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--line-light);
-    }
-
-    .theme-toggle:last-child {
-        border-bottom: none;
-    }
-
-    .theme-toggle-info {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .theme-toggle-info i {
-        font-size: 1.25rem;
-        width: 1.5rem;
-        color: var(--muted);
-    }
-
-    .theme-toggle-info .label {
-        font-weight: 500;
-        color: var(--ink);
-    }
-
-    .theme-toggle-info .description {
-        font-size: 0.75rem;
-        color: var(--muted);
-    }
-
-    .toggle-switch {
-        position: relative;
-        display: inline-block;
-        width: 48px;
-        height: 26px;
-        flex-shrink: 0;
-    }
-
-    .toggle-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .toggle-slider {
-        position: absolute;
-        cursor: pointer;
-        inset: 0;
-        background: #d1d5db;
-        transition: 0.3s ease;
-        border-radius: 34px;
-    }
-
-    .toggle-slider::before {
-        content: '';
-        position: absolute;
-        height: 20px;
-        width: 20px;
-        left: 3px;
-        bottom: 3px;
-        background: white;
-        transition: 0.3s ease;
-        border-radius: 50%;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-
-    .toggle-switch input:checked + .toggle-slider {
-        background: var(--green);
-    }
-
-    .toggle-switch input:checked + .toggle-slider::before {
-        transform: translateX(22px);
-    }
-
-    .toggle-switch input:focus + .toggle-slider {
-        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
-    }
-
     .password-requirements {
         font-size: 0.75rem;
         color: var(--muted);
@@ -174,22 +81,18 @@
         list-style: none;
         padding: 0;
     }
-
     .password-requirements li {
         display: flex;
         align-items: center;
         gap: 0.25rem;
         padding: 0.125rem 0;
     }
-
     .password-requirements li.valid {
         color: var(--green);
     }
-
     .password-requirements li.invalid {
         color: var(--red);
     }
-
     .error-message {
         background: var(--red-pale);
         color: var(--red);
@@ -199,7 +102,6 @@
         border-left: 3px solid var(--red);
         margin-bottom: 0.5rem;
     }
-
     .success-message {
         background: var(--green-pale);
         color: var(--green-dark);
@@ -209,18 +111,15 @@
         border-left: 3px solid var(--green);
         margin-bottom: 0.5rem;
     }
-
     .message-close {
         float: right;
         cursor: pointer;
         opacity: 0.6;
         transition: opacity 0.15s ease;
     }
-
     .message-close:hover {
         opacity: 1;
     }
-
     .code-verification {
         margin-top: 1rem;
         padding: 1rem;
@@ -229,18 +128,15 @@
         border-radius: 0.5rem;
         display: none;
     }
-
     .code-verification.active {
         display: block;
     }
-
     .code-verification .code-inputs {
         display: flex;
         gap: 0.5rem;
         justify-content: center;
         margin: 0.75rem 0;
     }
-
     .code-verification .code-inputs input {
         width: 3rem;
         height: 3.5rem;
@@ -253,30 +149,53 @@
         color: var(--ink);
         transition: border-color 0.15s ease;
     }
-
     .code-verification .code-inputs input:focus {
         outline: none;
         border-color: var(--green);
     }
-
     .code-verification .code-inputs input.error {
         border-color: var(--red);
     }
-
     .code-verification .code-inputs input.success {
         border-color: var(--green);
     }
-
     .code-verification .timer {
         font-size: 0.875rem;
         color: var(--muted);
         text-align: center;
         margin-top: 0.5rem;
     }
-
     .code-verification .timer span {
         font-weight: 700;
         color: var(--green);
+    }
+    .toast {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 500;
+        z-index: 9999;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        transform: translateY(100px);
+        opacity: 0;
+        max-width: 400px;
+    }
+    .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .toast-success {
+        background: var(--green);
+    }
+    .toast-error {
+        background: var(--red);
+    }
+    .toast-info {
+        background: var(--blue);
     }
 </style>
 {% endblock %}
@@ -287,8 +206,8 @@
         <div class="settings-container w-full">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
-                    <p class="text-gray-600 mt-1">Manage your account preferences</p>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Change Password</h1>
+                    <p class="text-gray-600 mt-1">Update your password securely</p>
                 </div>
                 <a href="/client/dashboard/" class="client-btn client-btn-outline text-sm">
                     <i class="fas fa-arrow-left"></i> Back
@@ -306,7 +225,7 @@
                 {% endif %}
             </div>
 
-            <div class="settings-card mb-6">
+            <div class="settings-card">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <i class="fas fa-key text-green-600"></i> Change Password
                 </h2>
@@ -361,41 +280,11 @@
                     </div>
                 </form>
             </div>
-
-            <div class="settings-card">
-                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i class="fas fa-palette text-green-600"></i> Appearance
-                </h2>
-                <div class="theme-toggle">
-                    <div class="theme-toggle-info">
-                        <i class="fas fa-sun"></i>
-                        <div>
-                            <div class="label">Light Mode</div>
-                            <div class="description">Default bright theme</div>
-                        </div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="darkModeToggle" {% if request.COOKIES.theme == 'dark' %}checked{% endif %}>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="theme-toggle">
-                    <div class="theme-toggle-info">
-                        <i class="fas fa-moon"></i>
-                        <div>
-                            <div class="label">Dark Mode</div>
-                            <div class="description">Reduced eye strain in low light</div>
-                        </div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="darkModeToggle2" {% if request.COOKIES.theme == 'dark' %}checked{% endif %}>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
         </div>
     </div>
 </div>
+
+<div id="toast" class="toast"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -409,9 +298,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const codeSuccess = document.getElementById('codeSuccess');
     const timerDisplay = document.getElementById('timerCountdown');
     const resendBtn = document.getElementById('resendCodeBtn');
-    let verificationCode = '';
+    const toast = document.getElementById('toast');
+
+    let verificationId = null;
     let timerInterval = null;
     let timeLeft = 300;
+
+    function getCsrfToken() {
+        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
+    }
+
+    function showToast(message, type) {
+        toast.textContent = message;
+        toast.className = 'toast toast-' + type + ' show';
+        clearTimeout(toast._hideTimeout);
+        toast._hideTimeout = setTimeout(function() {
+            toast.classList.remove('show');
+        }, 5000);
+    }
 
     function validatePassword() {
         const password = newPassword.value;
@@ -519,16 +424,16 @@ document.addEventListener('DOMContentLoaded', function() {
         codeSuccess.style.display = 'none';
 
         try {
-            const response = await fetch('/api/v1/auth/verify-password-change/', {
+            const response = await fetch('/api/v1/auth/verify-password-change-code/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrf-token]')?.content || getCsrfToken()
+                    'X-CSRFToken': getCsrfToken()
                 },
                 credentials: 'include',
                 body: JSON.stringify({
-                    code: code,
-                    email: document.getElementById('userEmail').textContent.trim()
+                    verification_id: verificationId,
+                    code: code
                 })
             });
 
@@ -538,12 +443,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 codeInputs.forEach(inp => inp.classList.add('success'));
                 codeSuccess.textContent = 'Verification successful! Completing password change...';
                 codeSuccess.style.display = 'block';
-                setTimeout(async function() {
-                    await completePasswordChange();
-                }, 1000);
+                setTimeout(function() {
+                    showToast('Password changed successfully! Please login again.', 'success');
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login/?message=Password changed successfully. Please login with your new password.';
+                }, 1500);
             } else {
                 codeInputs.forEach(inp => inp.classList.add('error'));
-                codeError.textContent = data.error || 'Invalid verification code. Please try again.';
+                let errorMsg = data.error || 'Invalid verification code. Please try again.';
+                if (data.code) {
+                    errorMsg = data.code[0] || errorMsg;
+                } else if (data.verification_id) {
+                    errorMsg = data.verification_id[0] || errorMsg;
+                } else if (data.non_field_errors) {
+                    errorMsg = data.non_field_errors[0] || errorMsg;
+                }
+                codeError.textContent = errorMsg;
                 codeError.style.display = 'block';
                 setTimeout(() => {
                     codeInputs.forEach(inp => {
@@ -552,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     codeInputs[0].focus();
                     codeError.style.display = 'none';
-                }, 2000);
+                }, 3000);
             }
         } catch (error) {
             codeError.textContent = 'Network error. Please try again.';
@@ -560,41 +476,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function completePasswordChange() {
-        try {
-            const response = await fetch('/api/v1/auth/change-password/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrf-token]')?.content || getCsrfToken()
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    current_password: currentPassword.value,
-                    new_password: newPassword.value
-                })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                Toast.show('Password changed successfully! Please login again.', 'success');
-                setTimeout(function() {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/?message=Password changed successfully. Please login with your new password.';
-                }, 1500);
-            } else {
-                Toast.show(data.error || 'Failed to change password.', 'error');
-            }
-        } catch (error) {
-            Toast.show('Network error. Please try again.', 'error');
-        }
-    }
-
     changeBtn.addEventListener('click', async function() {
         if (!validatePassword()) {
-            Toast.show('Please meet all password requirements', 'error');
+            showToast('Please meet all password requirements', 'error');
             return;
         }
 
@@ -607,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrf-token]')?.content || getCsrfToken()
+                    'X-CSRFToken': getCsrfToken()
                 },
                 credentials: 'include',
                 body: JSON.stringify({
@@ -619,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (response.ok) {
-                verificationCode = data.code || '';
+                verificationId = data.verification_id;
                 codeVerification.classList.add('active');
                 codeInputs.forEach(inp => {
                     inp.value = '';
@@ -628,64 +512,79 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 codeInputs[0].focus();
                 startTimer();
-                Toast.show('Verification code sent to your email.', 'success');
+                showToast('Verification code sent to your email.', 'success');
                 btn.innerHTML = '<i class="fas fa-save"></i> Update Password';
                 btn.disabled = true;
             } else {
-                Toast.show(data.error || 'Failed to send verification code.', 'error');
+                let errorMsg = data.error || 'Failed to send verification code.';
+                if (data.new_password) {
+                    errorMsg = data.new_password[0] || errorMsg;
+                } else if (data.current_password) {
+                    errorMsg = data.current_password[0] || errorMsg;
+                } else if (data.non_field_errors) {
+                    errorMsg = data.non_field_errors[0] || errorMsg;
+                }
+                showToast(errorMsg, 'error');
                 btn.innerHTML = '<i class="fas fa-save"></i> Update Password';
                 btn.disabled = false;
             }
         } catch (error) {
-            Toast.show('Network error. Please try again.', 'error');
+            showToast('Network error. Please try again.', 'error');
             btn.innerHTML = '<i class="fas fa-save"></i> Update Password';
             btn.disabled = false;
         }
     });
 
-    resendBtn.addEventListener('click', function() {
+    resendBtn.addEventListener('click', async function() {
         this.disabled = true;
         this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        changeBtn.click();
-        setTimeout(() => {
-            this.disabled = false;
-            this.innerHTML = '<i class="fas fa-redo"></i> Resend Code';
-        }, 2000);
-    });
 
-    function getCsrfToken() {
-        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
-        return cookie ? cookie.split('=')[1] : '';
-    }
+        try {
+            const response = await fetch('/api/v1/auth/resend-password-change-code/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    verification_id: verificationId
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                verificationId = data.verification_id;
+                codeInputs.forEach(inp => {
+                    inp.value = '';
+                    inp.classList.remove('error', 'success');
+                    inp.disabled = false;
+                });
+                codeInputs[0].focus();
+                startTimer();
+                showToast('New verification code sent to your email.', 'success');
+            } else {
+                let errorMsg = data.error || 'Failed to resend code.';
+                if (data.verification_id) {
+                    errorMsg = data.verification_id[0] || errorMsg;
+                } else if (data.non_field_errors) {
+                    errorMsg = data.non_field_errors[0] || errorMsg;
+                }
+                showToast(errorMsg, 'error');
+            }
+        } catch (error) {
+            showToast('Network error. Please try again.', 'error');
+        }
+
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-redo"></i> Resend Code';
+    });
 
     setupCodeInputs();
 
-    // Dark mode toggle
-    const darkToggle1 = document.getElementById('darkModeToggle');
-    const darkToggle2 = document.getElementById('darkModeToggle2');
-
-    function syncDarkMode() {
-        const isDark = darkToggle1.checked;
-        darkToggle2.checked = isDark;
-        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-        document.cookie = 'theme=' + (isDark ? 'dark' : 'light') + ';path=/;max-age=31536000';
-    }
-
-    darkToggle1.addEventListener('change', syncDarkMode);
-    darkToggle2.addEventListener('change', function() {
-        darkToggle1.checked = this.checked;
-        syncDarkMode();
-    });
-
-    // Set initial theme
-    const savedTheme = document.cookie.split('; ').find(row => row.startsWith('theme='));
-    if (savedTheme) {
-        const theme = savedTheme.split('=')[1];
-        if (theme === 'dark') {
-            darkToggle1.checked = true;
-            darkToggle2.checked = true;
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
+    if (new URLSearchParams(window.location.search).get('message')) {
+        showToast(new URLSearchParams(window.location.search).get('message'), 'success');
     }
 });
 </script>

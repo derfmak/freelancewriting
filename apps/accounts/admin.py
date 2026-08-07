@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
+from django.utils import timezone
 from .models import User, PendingUser, LoginLog, RateLimit, PasswordChangeVerification
 
 
@@ -15,7 +16,7 @@ class CustomUserAdmin(UserAdmin):
         'role', 'is_suspended', 'email_verified', 'is_active', 
         'is_staff', 'is_superuser', 'phone_verified'
     )
-    search_fields = ('email', 'full_name', 'phone', 'google_id')
+    search_fields = ('email', 'full_name', 'phone', 'google_id', 'apple_id')
     ordering = ('-created_at',)
     
     fieldsets = (
@@ -26,21 +27,18 @@ class CustomUserAdmin(UserAdmin):
         (_('Permissions'), {
             'fields': ('role', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
         }),
-        (_('Verification'), {
-            'fields': ('email_verified', 'otp_secret', 'otp_expires')
-        }),
-        (_('Security'), {
+        (_('Verification & Security'), {
             'fields': (
+                'email_verified',
+                'otp_expires',
+                'password_reset_expires',
                 'is_suspended', 'suspension_reason', 'suspended_until',
                 'failed_login_attempts', 'account_locked_until',
                 'last_login_ip', 'last_login_user_agent'
             )
         }),
-        (_('Password Change'), {
-            'fields': ('password_change_code', 'password_change_code_expires', 'password_change_temp')
-        }),
-        (_('Google OAuth'), {
-            'fields': ('google_id',)
+        (_('Social Accounts'), {
+            'fields': ('google_id', 'apple_id')
         }),
         (_('Account Management'), {
             'fields': ('deletion_requested_at', 'deletion_scheduled_for')
@@ -53,9 +51,8 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = (
         'created_at', 'updated_at', 'last_login', 
         'failed_login_attempts', 'last_login_ip', 'last_login_user_agent',
-        'otp_secret', 'otp_expires', 'password_change_code', 
-        'password_change_code_expires', 'password_change_temp',
-        'google_id', 'picture'
+        'otp_expires', 'password_reset_expires',
+        'google_id', 'apple_id', 'picture', 'email_verified'
     )
     
     add_fieldsets = (
@@ -79,10 +76,16 @@ class CustomUserAdmin(UserAdmin):
     status_badge.short_description = 'Status'
 
     def account_locked(self, obj):
-        if obj.account_locked_until and obj.account_locked_until > obj.updated_at:
+        if obj.account_locked_until and obj.account_locked_until > timezone.now():
             return format_html('<span style="color: #dc2626;">Locked</span>')
         return format_html('<span style="color: #059669;">Unlocked</span>')
     account_locked.short_description = 'Lock Status'
+
+    def otp_active(self, obj):
+        if obj.otp_expires and obj.otp_expires > timezone.now():
+            return format_html('<span style="color: #059669;">Active</span>')
+        return format_html('<span style="color: #9ca3af;">None</span>')
+    otp_active.short_description = 'OTP Status'
 
 
 @admin.register(PendingUser)
@@ -139,10 +142,10 @@ class RateLimitAdmin(admin.ModelAdmin):
 
 @admin.register(PasswordChangeVerification)
 class PasswordChangeVerificationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'code', 'expires_at', 'used', 'created_at')
+    list_display = ('user', 'expires_at', 'used', 'created_at')
     list_filter = ('used', 'created_at', 'expires_at')
-    search_fields = ('user__email', 'code')
-    readonly_fields = ('user', 'code', 'expires_at', 'used', 'created_at')
+    search_fields = ('user__email',)
+    readonly_fields = ('user', 'expires_at', 'used', 'created_at')
     ordering = ('-created_at',)
 
     def has_add_permission(self, request):

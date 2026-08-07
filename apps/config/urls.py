@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
-from apps.admin_portal.views import admin_order_detail
+from apps.admin_portal.views import admin_order_detail, admin_contact_messages, admin_contact_message_read, admin_contact_message_delete
 from apps.orders.views import order_paypal_success, order_paypal_cancel
 from apps.accounts.views import (
     client_notifications_list,
@@ -12,6 +12,7 @@ from apps.accounts.views import (
     client_notifications_mark_all_read,
     client_notification_delete,
     client_notifications_unread_count,
+    profile,
 )
 
 app_name = 'config'
@@ -22,7 +23,6 @@ urlpatterns = [
     path('register/', views.register_page, name='register'),
     path('forgot-password/', views.forgot_password_page, name='forgot-password'),
     path('reset-password/<str:token>/', views.reset_password_page, name='reset-password'),
-    
     path('about/', views.about, name='about'),
     path('api/about/stats/', views.about_stats, name='about-stats'),
     path('services/', views.services, name='services'),
@@ -33,20 +33,18 @@ urlpatterns = [
     path('faq/', views.faq, name='faq'),
     path('contact/', views.contact, name='contact'),
     path('contact/send/', views.contact_message, name='contact-send'),
+    path('contact/submit/', views.contact_message, name='contact-submit'),
     path('terms/', views.terms, name='terms'),
     path('privacy/', views.privacy, name='privacy'),
     path('refund-policy/', views.refund_policy, name='refund-policy'),
     path('guarantees/', views.guarantees, name='guarantees'),
     path('testimonials/', views.testimonials, name='testimonials'),
     path('place-order/', views.place_order, name='place-order'),
-    
     path('blog/', views.blog, name='blog'),
     path('blog/<slug:slug>/', views.blog_detail, name='blog-detail'),
     path('blog/<slug:slug>/share/', views.blog_share, name='blog-share'),
     path('api/blog/search/', views.blog_search_suggestions, name='blog-search-suggestions'),
-    
     path('dashboard/', views.dashboard_redirect, name='dashboard'),
-    
     path('client/dashboard/', views.client_dashboard, name='client-dashboard'),
     path('client/orders/', views.client_orders, name='client-orders'),
     path('client/orders/new/', views.client_new_order, name='client-new-order'),
@@ -61,7 +59,6 @@ urlpatterns = [
     path('client/profile/edit/', views.client_profile_edit, name='client-profile-edit'),
     path('client/settings/', views.client_settings, name='client-settings'),
     path('client/notifications/', views.client_notifications, name='client-notifications'),
-    
     path('admin-portal/dashboard/', views.admin_dashboard_view, name='admin-dashboard'),
     path('admin-portal/orders/', views.admin_orders, name='admin-orders'),
     path('admin-portal/orders/<uuid:order_id>/', admin_order_detail, name='admin-order-detail'),
@@ -71,7 +68,6 @@ urlpatterns = [
     path('admin-portal/finances/', views.admin_finances, name='admin-finances'),
     path('admin-portal/refunds/', views.admin_refunds, name='admin-refunds'),
     path('admin-portal/messages/', views.admin_messages, name='admin-messages'),
-    
     path('admin-portal/blog/', views.admin_blog, name='admin-blog'),
     path('admin-portal/blog/create/', views.admin_create_blog, name='admin-create-blog'),
     path('admin-portal/blog/<uuid:blog_id>/edit/', views.admin_edit_blog, name='admin-edit-blog'),
@@ -79,30 +75,27 @@ urlpatterns = [
     path('admin-portal/blog/<uuid:blog_id>/toggle/', views.admin_toggle_blog_status, name='admin-toggle-blog'),
     path('api/admin/blog/<uuid:blog_id>/detail/', views.admin_blog_detail, name='admin-blog-detail'),
     path('api/admin/blog/search/', views.admin_blog_search_suggestions, name='admin-blog-search-suggestions'),
-    
     path('admin-portal/samples/', views.admin_samples, name='admin-samples'),
     path('admin-portal/samples/<uuid:sample_id>/toggle/', views.admin_toggle_sample, name='admin-toggle-sample'),
     path('admin-portal/samples/<uuid:sample_id>/delete/', views.admin_delete_sample, name='admin-delete-sample'),
-    
     path('admin-portal/content/', views.admin_content, name='admin-content'),
     path('admin-portal/logs/', views.admin_logs, name='admin-logs'),
     path('admin-portal/settings/', views.admin_settings, name='admin-settings'),
     path('admin-portal/profile/', views.admin_profile, name='admin-profile'),
     path('admin-portal/notifications/', views.admin_notifications, name='admin-notifications'),
-    
+    path('admin-portal/contact-messages/', admin_contact_messages, name='admin-contact-messages'),
+    path('admin-portal/contact-messages/<uuid:message_id>/read/', admin_contact_message_read, name='admin-contact-message-read'),
+    path('admin-portal/contact-messages/<uuid:message_id>/delete/', admin_contact_message_delete, name='admin-contact-message-delete'),
     path('django-admin/', admin.site.urls),
-    
     path('accounts/', include('allauth.urls')),
-    
     path('auth/', include('apps.accounts.urls')),
-    
     path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
+    path('api/v1/auth/', include('apps.accounts.urls')),
+    path('api/v1/auth/profile/', profile, name='api-profile'),
     path('api/v1/admin/', include('apps.admin_portal.urls')),
     path('api/v1/messaging/', include('apps.messaging.urls')),
     path('api/v1/orders/', include('apps.orders.urls')),
     path('api/v1/wallet/', include('apps.payments.urls')),
-    
     path('api/v1/client/counts/', views.client_counts, name='client-counts'),
     path('api/v1/client/orders/', views.client_orders_data, name='client-orders-data'),
     path('api/v1/client/orders/<uuid:order_id>/', views.client_order_detail_data, name='client-order-detail-data'),
@@ -110,9 +103,7 @@ urlpatterns = [
     path('api/v1/client/orders/<uuid:order_id>/approve/', views.client_approve_order, name='client-approve-order'),
     path('api/v1/client/orders/<uuid:order_id>/revision/', views.client_request_revision, name='client-request-revision'),
     path('api/v1/client/orders/<uuid:order_id>/rate/', views.client_rate_order, name='client-rate-order'),
-    
     path('api/v1/admin/counts/', views.admin_counts, name='admin-counts'),
-    
     path('api/v1/client/notifications/', client_notifications_list, name='client-notifications-list'),
     path('api/v1/client/notifications/<uuid:notification_id>/read/', client_notification_mark_read, name='client-notification-mark-read'),
     path('api/v1/client/notifications/mark-all-read/', client_notifications_mark_all_read, name='client-notifications-mark-all-read'),

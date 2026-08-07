@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 import logging
 import json
-import random
+import secrets
 from django.http import JsonResponse
 from django.conf import settings
 
@@ -23,6 +23,10 @@ from .services import PayPalService, AdminPaymentService, AdminWalletManager, Em
 
 logger = logging.getLogger(__name__)
 
+VERIFICATION_CODE_TTL_MINUTES = 5
+VERIFICATION_MAX_ATTEMPTS = 3
+VERIFICATION_LOCKOUT_HOURS = 24
+
 
 def get_or_create_wallet(user):
     wallet, created = Wallet.objects.get_or_create(user=user)
@@ -30,7 +34,27 @@ def get_or_create_wallet(user):
 
 
 def generate_verification_code():
-    return ''.join(random.choices('0123456789', k=6))
+    return ''.join(secrets.choice('0123456789') for _ in range(6))
+
+
+def is_locked(method):
+    return bool(method.verification_locked_until and timezone.now() < method.verification_locked_until)
+
+
+def lock_response(method):
+    remaining_seconds = max(0, int((method.verification_locked_until - timezone.now()).total_seconds()))
+    remaining_hours = max(1, remaining_seconds // 3600)
+    return Response({
+        'error': f'Too many failed attempts. Try again in {remaining_hours} hour(s).',
+        'locked': True,
+        'locked_until': method.verification_locked_until.isoformat()
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+
+def is_code_expired(method):
+    if not method.verification_code_created_at:
+        return True
+    return timezone.now() > method.verification_code_created_at + timezone.timedelta(minutes=VERIFICATION_CODE_TTL_MINUTES)
 
 
 @api_view(['GET'])
@@ -112,7 +136,8 @@ def check_paypal_email(request):
         return Response({
             'exists': True,
             'is_active': existing.is_active,
-            'is_pending': not existing.is_active and not existing.paypal_verified,
+            'is_pending': not existing.is_active,
+            'is_locked': is_locked(existing),
             'method_id': str(existing.id) if not existing.is_active else None
         })
 
@@ -120,6 +145,7 @@ def check_paypal_email(request):
         'exists': False,
         'is_active': False,
         'is_pending': False,
+        'is_locked': False,
         'method_id': None
     })
 
@@ -132,25 +158,31 @@ def add_paypal_method(request):
         return Response({'error': 'PayPal email is required'}, status=status.HTTP_400_BAD_REQUEST)
 
     existing = PaymentMethod.objects.filter(user=request.user, paypal_email=paypal_email).first()
-    if existing:
-        if existing.is_active:
-            return Response({'error': 'This PayPal account is already verified'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({
-            'error': 'This PayPal account is pending verification. Please verify or request a new code.',
-            'method_id': str(existing.id)
-        }, status=status.HTTP_400_BAD_REQUEST)
 
-    method = PaymentMethod.objects.create(
-        user=request.user,
-        paypal_email=paypal_email,
-        paypal_account_type=request.data.get('paypal_account_type', 'personal'),
-        paypal_verified=False,
-        is_active=False,
-        verification_code=generate_verification_code(),
-        verification_code_created_at=timezone.now(),
-        verification_attempts=0,
-        verification_locked_until=None
-    )
+    if existing and existing.is_active:
+        return Response({'error': 'This PayPal account is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if existing and is_locked(existing):
+        return lock_response(existing)
+
+    is_new = existing is None
+
+    if is_new:
+        method = PaymentMethod(
+            user=request.user,
+            paypal_email=paypal_email,
+            paypal_account_type=request.data.get('paypal_account_type', 'personal'),
+            paypal_verified=False,
+            is_active=False,
+        )
+    else:
+        method = existing
+        method.verification_attempts = 0
+        method.verification_locked_until = None
+
+    method.verification_code = generate_verification_code()
+    method.verification_code_created_at = timezone.now()
+    method.save()
 
     email_sent = EmailService.send_paypal_verification_code(
         user=request.user,
@@ -159,7 +191,8 @@ def add_paypal_method(request):
     )
 
     if not email_sent:
-        method.delete()
+        if is_new:
+            method.delete()
         return Response({
             'error': 'Failed to send verification email. Please check your email address and try again.'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -168,8 +201,8 @@ def add_paypal_method(request):
         'success': True,
         'message': 'Verification code sent to your PayPal email. Please verify within 5 minutes.',
         'method_id': str(method.id),
-        'expires_in': 300
-    }, status=status.HTTP_201_CREATED)
+        'expires_in': VERIFICATION_CODE_TTL_MINUTES * 60
+    }, status=status.HTTP_201_CREATED if is_new else status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -186,24 +219,27 @@ def verify_paypal_method(request):
     if method.is_active:
         return Response({'error': 'This PayPal account is already verified'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if method.verification_locked_until and timezone.now() < method.verification_locked_until:
-        remaining_hours = (method.verification_locked_until - timezone.now()).seconds // 3600
+    if is_locked(method):
+        return lock_response(method)
+
+    if is_code_expired(method):
         return Response({
-            'error': f'Too many failed attempts. Try again in {remaining_hours} hours.',
-            'locked': True,
-            'locked_until': method.verification_locked_until.isoformat()
+            'error': 'Verification code has expired. Please request a new one.',
+            'expired': True
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    if method.verification_code != code:
+    code_matches = bool(method.verification_code) and secrets.compare_digest(method.verification_code, code)
+
+    if not code_matches:
         method.verification_attempts += 1
-        if method.verification_attempts >= 3:
-            method.verification_locked_until = timezone.now() + timezone.timedelta(hours=24)
+        if method.verification_attempts >= VERIFICATION_MAX_ATTEMPTS:
+            method.verification_locked_until = timezone.now() + timezone.timedelta(hours=VERIFICATION_LOCKOUT_HOURS)
         method.save()
-        remaining_attempts = 3 - method.verification_attempts
+        remaining_attempts = VERIFICATION_MAX_ATTEMPTS - method.verification_attempts
         return Response({
             'error': 'Invalid verification code',
             'remaining_attempts': max(0, remaining_attempts),
-            'locked': method.verification_attempts >= 3
+            'locked': method.verification_attempts >= VERIFICATION_MAX_ATTEMPTS
         }, status=status.HTTP_400_BAD_REQUEST)
 
     method.is_active = True
@@ -239,8 +275,9 @@ def resend_verification_code(request):
     if method.is_active:
         return Response({'error': 'This PayPal account is already verified'}, status=status.HTTP_400_BAD_REQUEST)
 
-    method.verification_attempts = 0
-    method.verification_locked_until = None
+    if is_locked(method):
+        return lock_response(method)
+
     new_code = generate_verification_code()
     method.verification_code = new_code
     method.verification_code_created_at = timezone.now()
@@ -258,7 +295,7 @@ def resend_verification_code(request):
     return Response({
         'success': True,
         'message': 'New verification code sent to your PayPal email',
-        'expires_in': 300
+        'expires_in': VERIFICATION_CODE_TTL_MINUTES * 60
     })
 
 

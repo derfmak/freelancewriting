@@ -4,11 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <meta name="description" content="Professional academic writing services for students worldwide. Get high-quality, plagiarism-free essays, research papers, and dissertations.">
-    <meta name="keywords" content="academic writing, essay writing, research papers, dissertation help, student services">
-    <title>{% block title %}Academic Write - Professional Academic Writing Services{% endblock %}</title>
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    
+    <meta name="description" content="Professional academic writing services for students worldwide. Get high-quality, plagiarism-free essays, research papers, dissertations, and more. 100% original content, delivered on time.">
+    <meta name="keywords" content="academic writing, essay writing, research papers, dissertation help, thesis writing, term papers, coursework help, college essays, university papers, academic assistance, professional writers, custom writing, plagiarism-free, academic support">
+    <meta property="og:title" content="AcademicWrite - Expert Academic Writing Services for Students">
+    <meta property="og:description" content="Get high-quality, plagiarism-free academic papers written by professional writers. Trusted by students worldwide.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AcademicWrite - Expert Academic Writing Services">
+    <meta name="twitter:description" content="Professional academic writing services for students. Get custom essays, research papers, and dissertations.">
+    
+    <title>{% block title %}AcademicWrite - Professional Academic Writing Services for Students{% endblock %}</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -356,52 +369,6 @@
             max-width: 320px;
         }
 
-        .contact-info {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.8rem;
-        }
-
-        .contact-info p {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .contact-info i {
-            color: #fbbf24;
-            width: 1.2rem;
-            font-size: 0.85rem;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 0.6rem;
-            margin-top: 0.8rem;
-        }
-
-        .social-link {
-            color: rgba(255, 255, 255, 0.6);
-            transition: all 0.3s ease;
-            width: 2.2rem;
-            height: 2.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 50%;
-            font-size: 0.85rem;
-            text-decoration: none;
-        }
-
-        .social-link:hover {
-            color: #fbbf24;
-            transform: translateY(-2px);
-            border-color: #fbbf24;
-            background: rgba(251, 191, 36, 0.08);
-        }
-
         .footer-bottom {
             display: flex;
             flex-direction: column;
@@ -521,19 +488,31 @@
             background: #059669;
         }
     </style>
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "AcademicWrite",
+        "description": "Professional academic writing services for students worldwide. We provide high-quality, plagiarism-free essays, research papers, dissertations, and more.",
+        "url": "{{ request.build_absolute_uri }}",
+        "sameAs": []
+    }
+    </script>
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div id="app">
-        <header class="site-header" id="siteHeader">
+        <header class="site-header" id="siteHeader" role="banner">
             <div class="container">
                 <div class="header-content">
-                    <a href="/" class="logo">
+                    <a href="/" class="logo" aria-label="AcademicWrite Home">
                         <span class="logo-icon">AW</span>
                         <span class="logo-text">Academic<span>Write</span></span>
                     </a>
                     
-                    <nav class="desktop-nav">
+                    <nav class="desktop-nav" role="navigation" aria-label="Main navigation">
                         <a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a>
                         <a href="/about/" class="{% if request.path == '/about/' %}active{% endif %}">About</a>
                         <a href="/how-it-works/" class="{% if request.path == '/how-it-works/' %}active{% endif %}">How It Works</a>
@@ -546,7 +525,7 @@
                     <div class="auth-section">
                         <a href="/login/" class="auth-link">Log In</a>
                         <a href="/register/" class="register-link">Sign Up</a>
-                        <button class="mobile-menu-button" id="mobileMenuButton">
+                        <button class="mobile-menu-button" id="mobileMenuButton" aria-label="Toggle navigation menu">
                             <i class="fas fa-bars"></i>
                         </button>
                     </div>
@@ -554,11 +533,11 @@
             </div>
         </header>
 
-        <div class="mobile-menu" id="mobileMenu">
-            <button class="mobile-menu-close" id="closeMobileMenu">
+        <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+            <button class="mobile-menu-close" id="closeMobileMenu" aria-label="Close menu">
                 <i class="fas fa-times"></i>
             </button>
-            <nav class="mobile-nav">
+            <nav class="mobile-nav" role="navigation" aria-label="Mobile navigation">
                 <a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a>
                 <a href="/about/" class="{% if request.path == '/about/' %}active{% endif %}">About</a>
                 <a href="/how-it-works/" class="{% if request.path == '/how-it-works/' %}active{% endif %}">How It Works</a>
@@ -574,7 +553,7 @@
             </div>
         </div>
 
-        <main class="main-content">
+        <main class="main-content" role="main">
             <div class="container">
                 {% if messages %}
                     <div class="mb-6">
@@ -590,7 +569,7 @@
             </div>
         </main>
 
-        <footer class="footer">
+        <footer class="footer" role="contentinfo">
             <div class="container">
                 <div class="footer-grid">
                     <div class="footer-section">
@@ -600,44 +579,42 @@
                             We deliver high-quality, plagiarism-free papers written by expert 
                             writers to help you achieve academic success.
                         </p>
-                        <div class="social-links">
-                            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                        </div>
                     </div>
                     
                     <div class="footer-section">
-                        <h4>Quick Links</h4>
+                        <h4>Our Services</h4>
                         <ul class="footer-links">
-                            <li><a href="/about/">About Us</a></li>
-                            <li><a href="/how-it-works/">How It Works</a></li>
-                            <li><a href="/services/">Our Services</a></li>
-                            <li><a href="/pricing/">Pricing Plans</a></li>
+                            <li><a href="/services/essay-writing/">Essay Writing</a></li>
+                            <li><a href="/services/research-papers/">Research Papers</a></li>
+                            <li><a href="/services/dissertations/">Dissertations</a></li>
+                            <li><a href="/services/thesis-writing/">Thesis Writing</a></li>
+                            <li><a href="/services/term-papers/">Term Papers</a></li>
+                            <li><a href="/services/coursework/">Coursework Help</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h4>Resources</h4>
+                        <ul class="footer-links">
                             <li><a href="/blog/">Blog</a></li>
-                            <li><a href="/contact/">Contact Us</a></li>
+                            <li><a href="/samples/">Writing Samples</a></li>
+                            <li><a href="/testimonials/">Testimonials</a></li>
+                            <li><a href="/faq/">FAQ</a></li>
+                            <li><a href="/guarantees/">Guarantees</a></li>
+                            <li><a href="/place-order/">Place Order</a></li>
                         </ul>
                     </div>
                     
                     <div class="footer-section">
                         <h4>Support</h4>
                         <ul class="footer-links">
-                            <li><a href="/faq/">FAQ</a></li>
-                            <li><a href="/guarantees/">Guarantees</a></li>
-                            <li><a href="/samples/">Writing Samples</a></li>
-                            <li><a href="/testimonials/">Testimonials</a></li>
+                            <li><a href="/about/">About Us</a></li>
+                            <li><a href="/how-it-works/">How It Works</a></li>
+                            <li><a href="/contact/">Contact Us</a></li>
+                            <li><a href="/pricing/">Pricing Plans</a></li>
+                            <li><a href="/refund-policy/">Refund Policy</a></li>
+                            <li><a href="/terms/">Terms of Service</a></li>
                         </ul>
-                    </div>
-                    
-                    <div class="footer-section">
-                        <h4>Contact</h4>
-                        <div class="contact-info">
-                            <p><i class="fas fa-envelope"></i> fredrickwambua@gmail.com</p>
-                            <p><i class="fas fa-phone"></i> +254 740 618 550</p>
-                            <p><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</p>
-                            <p><i class="fas fa-clock"></i> 24/7 Support</p>
-                        </div>
                     </div>
                 </div>
                 
@@ -651,6 +628,8 @@
                         <a href="/privacy/">Privacy</a>
                         <span>|</span>
                         <a href="/refund-policy/">Refund</a>
+                        <span>|</span>
+                        <a href="/sitemap.xml">Sitemap</a>
                     </div>
                 </div>
             </div>

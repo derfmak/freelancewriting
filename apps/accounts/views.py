@@ -19,47 +19,33 @@ import logging
 import requests
 import secrets
 import hashlib
+import json
+import jwt
+
 from .models import User, PendingUser, LoginLog, PasswordChangeVerification, SecurityEvent, ClientNotification
 from .serializers import (
     RegisterSerializer, OTPVerificationSerializer, ResendOTPSerializer,
     LoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,
     ChangePasswordSerializer, UserProfileSerializer, UserSerializer,
     SendPasswordChangeCodeSerializer, VerifyPasswordChangeCodeSerializer,
-    CompletePasswordChangeSerializer
+    CompletePasswordChangeSerializer, ResendPasswordChangeCodeSerializer,
 )
 from .utils import (
     generate_otp, generate_reset_token, generate_password_change_code,
     send_otp_email, send_password_reset_email, send_password_change_code_email,
-    get_client_ip, get_client_user_agent
+    get_client_ip, get_client_user_agent, generate_apple_client_secret,
+    log_security_event,
 )
 from .throttles import (
     RegisterThrottle, LoginThrottle, PasswordResetThrottle,
-    ResendOTPThrottle, VerifyOTPThrottle, SendPasswordChangeCodeThrottle,
+    ResendOTPThrottle, VerifyOTPThrottle,
     VerifyPasswordChangeCodeThrottle, GoogleLoginThrottle
 )
 
 logger = logging.getLogger(__name__)
 
 
-def log_security_event(event_type, ip_address, user_agent, user=None, metadata=None):
-    """Log security events for audit trail without affecting request flow."""
-    try:
-        SecurityEvent.objects.create(
-            event_type=event_type,
-            user=user,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata=metadata or {}
-        )
-    except Exception as e:
-        logger.error(f"Failed to log security event: {str(e)}")
-
-
 def verify_google_token(access_token, id_token, client_id):
-    """
-    Verify Google token authenticity.
-    Checks audience, issuer, and expiry.
-    """
     if id_token:
         try:
             response = requests.get(
@@ -68,19 +54,15 @@ def verify_google_token(access_token, id_token, client_id):
             )
             response.raise_for_status()
             token_info = response.json()
-
             if token_info.get('aud') != client_id:
                 logger.warning(f"Google token audience mismatch: expected {client_id}, got {token_info.get('aud')}")
                 return None
-
             if token_info.get('iss') not in ['accounts.google.com', 'https://accounts.google.com']:
                 logger.warning(f"Google token issuer mismatch: {token_info.get('iss')}")
                 return None
-
             if int(token_info.get('exp', 0)) < timezone.now().timestamp():
                 logger.warning("Google token expired")
                 return None
-
             return token_info
         except Exception as e:
             logger.error(f"Google ID token verification failed: {str(e)}")
@@ -149,10 +131,11 @@ def register(request):
         password=make_password(serializer.validated_data['password']),
         phone=serializer.validated_data.get('phone', ''),
         institution=serializer.validated_data.get('institution', ''),
-        otp_code=otp,
+        otp_code_hash='',
         otp_expires=timezone.now() + timezone.timedelta(minutes=10),
         ip_address=ip
     )
+    pending_user.set_otp(otp)
 
     email_sent = send_otp_email(pending_user.email, otp, pending_user.full_name)
 
@@ -201,12 +184,20 @@ def verify_otp(request):
     ip = get_client_ip(request)
 
     try:
-        pending_user = PendingUser.objects.get(
-            email=email,
-            otp_code=otp,
-            otp_expires__gt=timezone.now()
-        )
+        pending_user = PendingUser.objects.get(email=email)
     except PendingUser.DoesNotExist:
+        log_security_event(
+            'otp_verification_failed',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email}
+        )
+        return Response(
+            {'error': 'No pending registration found'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not pending_user.verify_otp(otp):
         log_security_event(
             'otp_verification_failed',
             ip,
@@ -283,9 +274,7 @@ def resend_otp(request):
         )
 
     new_otp = generate_otp()
-    pending_user.otp_code = new_otp
-    pending_user.otp_expires = timezone.now() + timezone.timedelta(minutes=10)
-    pending_user.save(update_fields=['otp_code', 'otp_expires'])
+    pending_user.set_otp(new_otp)
 
     email_sent = send_otp_email(email, new_otp, pending_user.full_name)
 
@@ -558,11 +547,7 @@ def forgot_password(request):
 
     try:
         user = User.objects.get(email=email)
-        token = generate_reset_token()
-        user.password_reset_token = token
-        user.password_reset_expires = timezone.now() + timezone.timedelta(hours=1)
-        user.save(update_fields=['password_reset_token', 'password_reset_expires'])
-
+        token = user.generate_reset_token()
         email_sent = send_password_reset_email(email, token, user.full_name)
         if not email_sent:
             logger.error(f"Failed to send password reset email to {email}")
@@ -582,23 +567,23 @@ def reset_password(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     token = serializer.validated_data['token']
+    email = request.data.get('email')
     ip = get_client_ip(request)
 
+    if not email:
+        return Response({'error': 'email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-        user = User.objects.get(
-            password_reset_token=token,
-            password_reset_expires__gt=timezone.now()
-        )
+        user = User.objects.get(email=email)
     except User.DoesNotExist:
-        return Response(
-            {'error': 'Invalid or expired reset token.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({'error': 'Invalid or expired reset token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not user.verify_reset_token(token):
+        return Response({'error': 'Invalid or expired reset token.'}, status=status.HTTP_400_BAD_REQUEST)
 
     user.set_password(serializer.validated_data['password'])
-    user.password_reset_token = ''
-    user.password_reset_expires = None
-    user.save(update_fields=['password', 'password_reset_token', 'password_reset_expires'])
+    user.clear_reset_token()
+    user.save(update_fields=['password', 'password_reset_token_hash', 'password_reset_expires'])
 
     log_security_event(
         'password_reset',
@@ -620,14 +605,22 @@ def change_password(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     user = request.user
+    current_password = serializer.validated_data['current_password']
+    new_password = serializer.validated_data['new_password']
 
-    if not user.check_password(serializer.validated_data['current_password']):
+    if not user.check_password(current_password):
         return Response(
             {'current_password': 'Current password is incorrect.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    user.set_password(serializer.validated_data['new_password'])
+    if user.check_password(new_password):
+        return Response(
+            {'new_password': 'New password must be different from current password.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user.set_password(new_password)
     user.save(update_fields=['password'])
 
     log_security_event(
@@ -637,59 +630,83 @@ def change_password(request):
         user=user
     )
 
-    return Response({
-        'message': 'Password changed successfully.'
-    }, status=status.HTTP_200_OK)
+    return Response(
+        {'message': 'Password changed successfully.'},
+        status=status.HTTP_200_OK
+    )
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_password_change_code(request):
-    throttle = SendPasswordChangeCodeThrottle()
-    if not throttle.allow_request(request, None):
+    ip = get_client_ip(request)
+    rate_key = f'password_change_code_rate:{ip}'
+    limit = 3
+    window = 3600
+    count = cache.get(rate_key, 0)
+    if count >= limit:
         return Response(
             {'error': 'Too many attempts. Please try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS
         )
+    cache.set(rate_key, count + 1, window)
 
     serializer = SendPasswordChangeCodeSerializer(data=request.data)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        errors = []
+        for field, msgs in serializer.errors.items():
+            errors.extend(msgs)
+        return Response(
+            {'error': ' '.join(errors) or 'Invalid input.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     user = request.user
+    current_password = serializer.validated_data['current_password']
+    new_password = serializer.validated_data['new_password']
 
-    if not user.check_password(serializer.validated_data['current_password']):
+    if not user.check_password(current_password):
         return Response(
-            {'current_password': 'Current password is incorrect.'},
+            {'error': 'Current password is incorrect.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if user.check_password(serializer.validated_data['new_password']):
+    if user.check_password(new_password):
         return Response(
-            {'new_password': 'New password must be different from current password.'},
+            {'error': 'New password must be different from current password.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    user.set_temp_password(serializer.validated_data['new_password'])
-    code = user.generate_password_change_code()
-
-    PasswordChangeVerification.objects.create(
+    code = generate_password_change_code()
+    verification = PasswordChangeVerification.objects.create(
         user=user,
-        code=code,
-        expires_at=timezone.now() + timezone.timedelta(minutes=5)
+        code_hash='',
+        expires_at=timezone.now() + timezone.timedelta(minutes=5),
+        temp_password_hash=make_password(new_password)
     )
+    verification.set_code(code)
 
     email_sent = send_password_change_code_email(user.email, code, user.full_name)
 
     if not email_sent:
-        user.clear_password_change_code()
-        return Response(
-            {'error': 'Failed to send verification code. Please try again.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        if settings.DEBUG:
+            logger.info(f"Password change code for {user.email}: {code}")
+            return Response({
+                'message': 'Verification code generated (email not sent in DEBUG mode).',
+                'verification_id': str(verification.id),
+                'expires_in': 300,
+                'debug_code': code
+            }, status=status.HTTP_200_OK)
+        else:
+            verification.delete()
+            return Response(
+                {'error': 'Failed to send verification code. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     return Response({
         'message': 'Verification code sent to your email.',
+        'verification_id': str(verification.id),
         'expires_in': 300
     }, status=status.HTTP_200_OK)
 
@@ -697,12 +714,17 @@ def send_password_change_code(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_password_change_code(request):
-    throttle = VerifyPasswordChangeCodeThrottle()
-    if not throttle.allow_request(request, None):
+    ip = get_client_ip(request)
+    rate_key = f'password_change_verify_rate:{ip}'
+    limit = 10
+    window = 3600
+    count = cache.get(rate_key, 0)
+    if count >= limit:
         return Response(
             {'error': 'Too many verification attempts. Please try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS
         )
+    cache.set(rate_key, count + 1, window)
 
     serializer = VerifyPasswordChangeCodeSerializer(data=request.data)
     if not serializer.is_valid():
@@ -710,32 +732,142 @@ def verify_password_change_code(request):
 
     user = request.user
     code = serializer.validated_data['code']
+    verification_id = serializer.validated_data['verification_id']
 
     try:
         verification = PasswordChangeVerification.objects.get(
+            id=verification_id,
             user=user,
-            code=code,
             used=False,
             expires_at__gt=timezone.now()
         )
     except PasswordChangeVerification.DoesNotExist:
         return Response(
-            {'error': 'Invalid or expired verification code.'},
+            {'error': 'Invalid or expired verification session.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if user.apply_temp_password():
-        verification.used = True
-        verification.save()
-        user.clear_password_change_code()
-        return Response({
-            'message': 'Password changed successfully. Please login again.'
-        }, status=status.HTTP_200_OK)
-    else:
+    if not verification.verify_code(code):
         return Response(
-            {'error': 'Failed to apply password change.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {'error': 'Invalid verification code.'},
+            status=status.HTTP_400_BAD_REQUEST
         )
+
+    user.password = verification.temp_password_hash
+    user.save(update_fields=['password'])
+
+    verification.used = True
+    verification.save(update_fields=['used'])
+
+    auth_logout(request)
+
+    try:
+        refresh_token = request.COOKIES.get('refresh_token')
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+    except Exception:
+        pass
+
+    response = Response({
+        'message': 'Password changed successfully. Please log in with your new password.',
+        'redirect': '/login/'
+    }, status=status.HTTP_200_OK)
+
+    response.delete_cookie('access_token')
+    response.delete_cookie('refresh_token')
+
+    log_security_event(
+        'password_changed_via_code',
+        get_client_ip(request),
+        get_client_user_agent(request),
+        user=user
+    )
+
+    return response
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def resend_password_change_code(request):
+    ip = get_client_ip(request)
+    rate_key = f'resend_password_change_code_rate:{ip}'
+    limit = 3
+    window = 3600
+    count = cache.get(rate_key, 0)
+    if count >= limit:
+        return Response(
+            {'error': 'Too many resend attempts. Please try again later.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+    cache.set(rate_key, count + 1, window)
+
+    serializer = ResendPasswordChangeCodeSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+    verification_id = serializer.validated_data.get('verification_id')
+
+    if verification_id:
+        try:
+            verification = PasswordChangeVerification.objects.get(
+                id=verification_id,
+                user=user,
+                used=False,
+                expires_at__gt=timezone.now()
+            )
+        except PasswordChangeVerification.DoesNotExist:
+            return Response(
+                {'error': 'Invalid or expired verification session.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    else:
+        verification = PasswordChangeVerification.objects.filter(
+            user=user,
+            used=False,
+            expires_at__gt=timezone.now()
+        ).order_by('-created_at').first()
+        if not verification:
+            return Response(
+                {'error': 'No pending verification found. Please request a new code.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    verification.delete()
+
+    new_code = generate_password_change_code()
+    new_verification = PasswordChangeVerification.objects.create(
+        user=user,
+        code_hash='',
+        expires_at=timezone.now() + timezone.timedelta(minutes=5),
+        temp_password_hash=verification.temp_password_hash
+    )
+    new_verification.set_code(new_code)
+
+    email_sent = send_password_change_code_email(user.email, new_code, user.full_name)
+
+    if not email_sent:
+        if settings.DEBUG:
+            logger.info(f"Resent password change code for {user.email}: {new_code}")
+            return Response({
+                'message': 'Verification code regenerated (email not sent in DEBUG mode).',
+                'verification_id': str(new_verification.id),
+                'expires_in': 300,
+                'debug_code': new_code
+            }, status=status.HTTP_200_OK)
+        else:
+            new_verification.delete()
+            return Response(
+                {'error': 'Failed to send verification code. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    return Response({
+        'message': 'New verification code sent to your email.',
+        'verification_id': str(new_verification.id),
+        'expires_in': 300
+    }, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -746,20 +878,28 @@ def complete_password_change(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     user = request.user
+    current_password = serializer.validated_data['current_password']
+    new_password = serializer.validated_data['new_password']
 
-    if not user.check_password(serializer.validated_data['current_password']):
+    if not user.check_password(current_password):
         return Response(
             {'current_password': 'Current password is incorrect.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    user.set_password(serializer.validated_data['new_password'])
-    user.save(update_fields=['password'])
-    user.clear_password_change_code()
+    if user.check_password(new_password):
+        return Response(
+            {'new_password': 'New password must be different from current password.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    return Response({
-        'message': 'Password changed successfully.'
-    }, status=status.HTTP_200_OK)
+    user.set_password(new_password)
+    user.save(update_fields=['password'])
+
+    return Response(
+        {'message': 'Password changed successfully.'},
+        status=status.HTTP_200_OK
+    )
 
 
 @api_view(['GET', 'PUT'])
@@ -1062,6 +1202,216 @@ def google_signup(request):
     )
 
     log_security_event('google_signup_success', ip, user_agent, user=user)
+
+    return response
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def apple_login(request):
+    redirect_uri = request.build_absolute_uri('/auth/apple/callback/')
+    client_id = settings.APPLE_CLIENT_ID
+
+    state = secrets.token_urlsafe(32)
+    cache.set(f'apple_oauth_state_{state}', 'nonce', timeout=600)
+
+    auth_url = (
+        'https://appleid.apple.com/auth/authorize'
+        f'?client_id={client_id}'
+        f'&redirect_uri={redirect_uri}'
+        '&response_type=code'
+        '&response_mode=form_post'
+        '&scope=email%20name'
+        f'&state={state}'
+    )
+
+    return redirect(auth_url)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def apple_callback(request):
+    code = request.POST.get('code')
+    state = request.POST.get('state', '')
+    user_data = request.POST.get('user')
+    ip = get_client_ip(request)
+    user_agent = get_client_user_agent(request)
+
+    if not code:
+        log_security_event('apple_callback_no_code', ip, user_agent)
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=apple_auth_failed')
+
+    client_secret = generate_apple_client_secret()
+    token_url = 'https://appleid.apple.com/auth/token'
+    data = {
+        'client_id': settings.APPLE_CLIENT_ID,
+        'client_secret': client_secret,
+        'code': code,
+        'grant_type': 'authorization_code',
+        'redirect_uri': request.build_absolute_uri('/auth/apple/callback/'),
+    }
+
+    try:
+        token_response = requests.post(token_url, data=data, timeout=10)
+        token_response.raise_for_status()
+        tokens = token_response.json()
+        id_token = tokens.get('id_token')
+        access_token = tokens.get('access_token')
+    except Exception as e:
+        logger.error(f"Apple token exchange failed: {str(e)}")
+        log_security_event('apple_token_exchange_failed', ip, user_agent, metadata={'error': str(e)})
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=apple_auth_failed')
+
+    try:
+        decoded = jwt.decode(
+            id_token,
+            options={'verify_signature': False},
+            audience=settings.APPLE_CLIENT_ID,
+            algorithms=['RS256']
+        )
+        apple_user_id = decoded.get('sub')
+        email = decoded.get('email')
+        email_verified = decoded.get('email_verified', False)
+    except Exception as e:
+        logger.error(f"Apple token verification failed: {str(e)}")
+        log_security_event('apple_token_verification_failed', ip, user_agent)
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=apple_auth_failed')
+
+    if not apple_user_id:
+        return redirect(f'{settings.FRONTEND_URL}/login/?error=apple_no_user_id')
+
+    full_name = ''
+    picture = ''
+    if user_data:
+        try:
+            user_info = json.loads(user_data)
+            full_name = user_info.get('name', {}).get('fullName', '')
+            if full_name:
+                full_name = f"{full_name.get('givenName', '')} {full_name.get('familyName', '')}".strip()
+        except json.JSONDecodeError:
+            pass
+
+    user = User.objects.filter(apple_id=apple_user_id).first()
+
+    if user:
+        if user.is_suspended:
+            return redirect(f'{settings.FRONTEND_URL}/login/?error=account_suspended')
+
+        if full_name and not user.full_name:
+            user.full_name = full_name
+            user.save(update_fields=['full_name'])
+
+        django_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        refresh = RefreshToken.for_user(user)
+        response = redirect(f'{settings.FRONTEND_URL}/dashboard/')
+        response.set_cookie('access_token', str(refresh.access_token), max_age=3600, httponly=True, secure=not settings.DEBUG, samesite='Lax', path='/')
+        response.set_cookie('refresh_token', str(refresh), max_age=604800, httponly=True, secure=not settings.DEBUG, samesite='Lax', path='/')
+
+        log_security_event('apple_login_success', ip, user_agent, user=user)
+        return response
+
+    if email:
+        existing_user = User.objects.filter(email=email).first()
+        if existing_user and not existing_user.apple_id:
+            existing_user.apple_id = apple_user_id
+            if full_name and not existing_user.full_name:
+                existing_user.full_name = full_name
+            existing_user.save(update_fields=['apple_id', 'full_name'])
+            django_login(request, existing_user, backend='django.contrib.auth.backends.ModelBackend')
+            refresh = RefreshToken.for_user(existing_user)
+            response = redirect(f'{settings.FRONTEND_URL}/dashboard/')
+            response.set_cookie('access_token', str(refresh.access_token), max_age=3600, httponly=True, secure=not settings.DEBUG, samesite='Lax', path='/')
+            response.set_cookie('refresh_token', str(refresh), max_age=604800, httponly=True, secure=not settings.DEBUG, samesite='Lax', path='/')
+            log_security_event('apple_login_success', ip, user_agent, user=existing_user)
+            return response
+
+    cache_key = f'apple_signup_{apple_user_id}'
+    existing_signup = cache.get(cache_key)
+    if existing_signup:
+        return redirect(f'{settings.FRONTEND_URL}/register/?token={existing_signup}')
+
+    temp_token = secrets.token_urlsafe(32)
+    cache.set(cache_key, temp_token, timeout=600)
+    cache.set(
+        f'apple_signup_{temp_token}',
+        {
+            'email': email,
+            'full_name': full_name,
+            'apple_id': apple_user_id,
+            'email_verified': email_verified,
+        },
+        timeout=600
+    )
+
+    log_security_event('apple_signup_redirect', ip, user_agent, metadata={'email': email})
+    return redirect(f'{settings.FRONTEND_URL}/register/?token={temp_token}')
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def apple_signup(request):
+    temp_token = request.data.get('token')
+    ip = get_client_ip(request)
+    user_agent = get_client_user_agent(request)
+
+    if not temp_token:
+        return Response({'error': 'Invalid signup session', 'redirect': 'login'}, status=status.HTTP_400_BAD_REQUEST)
+
+    apple_data = cache.get(f'apple_signup_{temp_token}')
+
+    if not apple_data:
+        return Response({'error': 'Signup session expired. Please try again.', 'redirect': 'login'}, status=status.HTTP_400_BAD_REQUEST)
+
+    email = apple_data['email']
+    full_name = request.data.get('full_name', apple_data.get('full_name', ''))
+    apple_id = apple_data['apple_id']
+    email_verified = apple_data.get('email_verified', False)
+
+    if User.objects.filter(email=email).exists():
+        cache.delete(f'apple_signup_{temp_token}')
+        cache.delete(f'apple_signup_{apple_id}')
+        return Response({'error': 'An account with this email already exists. Please sign in.', 'redirect': 'login'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=email,
+                full_name=full_name,
+                password=None,
+                apple_id=apple_id,
+                email_verified=email_verified,
+                is_active=True,
+                role='client'
+            )
+
+            cache.delete(f'apple_signup_{temp_token}')
+            cache.delete(f'apple_signup_{apple_id}')
+
+            django_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+    except Exception as e:
+        logger.error(f"Apple signup transaction failed: {str(e)}")
+        log_security_event('apple_signup_rollback', ip, user_agent, metadata={'email': email, 'error': str(e)})
+        return Response({'error': 'Registration failed. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    refresh = RefreshToken.for_user(user)
+    profile_serializer = UserProfileSerializer(user)
+
+    response = Response({
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'user': profile_serializer.data,
+        'access_expires_in': 3600,
+        'refresh_expires_in': 604800
+    }, status=status.HTTP_200_OK)
+
+    response.set_cookie('access_token', str(refresh.access_token), max_age=3600, httponly=True, secure=not settings.DEBUG, samesite='Lax', path='/')
+    response.set_cookie('refresh_token', str(refresh), max_age=604800, httponly=True, secure=not settings.DEBUG, samesite='Lax', path='/')
+
+    log_security_event('apple_signup_success', ip, user_agent, user=user)
 
     return response
 

@@ -115,6 +115,7 @@ class SendPasswordChangeCodeSerializer(serializers.Serializer):
 
 
 class VerifyPasswordChangeCodeSerializer(serializers.Serializer):
+    verification_id = serializers.UUIDField(required=True)
     code = serializers.CharField(min_length=6, max_length=6)
 
     def validate_code(self, value):
@@ -195,3 +196,6 @@ class PendingUserSerializer(serializers.ModelSerializer):
 class GoogleLoginSerializer(serializers.Serializer):
     access_token = serializers.CharField()
     id_token = serializers.CharField(required=False, allow_blank=True)
+    
+class ResendPasswordChangeCodeSerializer(serializers.Serializer):
+    verification_id = serializers.UUIDField(required=False)

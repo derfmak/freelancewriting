@@ -25,7 +25,7 @@ from apps.payments.services import WalletService
 from apps.messaging.models import Conversation, Message
 from apps.admin_portal.models import (
     AdminActionLog, SystemSetting, SiteContent, Blog, 
-    PlatformStats, AdminNote, Sample, AdminNotification
+    PlatformStats, AdminNote, Sample, AdminNotification, ContactMessage
 )
 
 
@@ -1061,7 +1061,27 @@ def admin_cancel_order(request, order_id):
 
     return Response({'success': True, 'message': 'Order cancelled successfully'})
 
+@login_required
+@admin_required
+def admin_contact_messages(request):
+    messages_list = ContactMessage.objects.all().order_by('-created_at')
+    context = {'messages': messages_list}
+    return render(request, 'admin/contact-messages.html', context)
 
+@login_required
+@admin_required
+def admin_contact_message_read(request, message_id):
+    message = get_object_or_404(ContactMessage, id=message_id)
+    message.is_read = True
+    message.save()
+    return JsonResponse({'success': True})
+
+@login_required
+@admin_required
+def admin_contact_message_delete(request, message_id):
+    message = get_object_or_404(ContactMessage, id=message_id)
+    message.delete()
+    return JsonResponse({'success': True})
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def refund_requests(request):

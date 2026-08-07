@@ -1,3 +1,13 @@
 ERROR 2026-07-29 17:34:05,821 views 24572 32620 Google token exchange failed: 400 Client Error: Bad Request for url: https://oauth2.googleapis.com/token
 ERROR 2026-07-30 08:37:43,173 views 50992 28252 Google ID token verification failed: '<' not supported between instances of 'str' and 'float'
 ERROR 2026-07-30 08:40:29,044 views 50992 41844 Google ID token verification failed: '<' not supported between instances of 'str' and 'float'
+ERROR 2026-08-07 13:07:25,270 utils 33424 27884 Failed to send password change code email to toptutor61@gmail.com: emails/password_change_code.html
+ERROR 2026-08-07 13:10:12,987 utils 30876 35952 Failed to send password change code email to toptutor61@gmail.com: emails/password_change_code.html
+INFO 2026-08-07 13:10:12,989 views 30876 35952 Password change code for toptutor61@gmail.com: 968331
+INFO 2026-08-07 13:20:21,700 utils 34360 6252 Password change code email sent to toptutor61@gmail.com
+INFO 2026-08-07 13:28:00,705 utils 34360 3640 Password change code email sent to toptutor61@gmail.com
+INFO 2026-08-07 13:35:05,260 utils 33676 15892 Password change code email sent to toptutor61@gmail.com
+INFO 2026-08-07 13:49:31,390 utils 28772 25340 Password change code email sent to toptutor61@gmail.com
+INFO 2026-08-07 13:53:28,632 utils 35984 9640 Password change code email sent to toptutor61@gmail.com
+DEBUG 2026-08-07 14:54:49,447 middleware 44028 42376 Invalid JWT token: Token is expired
+DEBUG 2026-08-07 14:54:49,454 middleware 44028 44548 Invalid JWT token: Token is expired

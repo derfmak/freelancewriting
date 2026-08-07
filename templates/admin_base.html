@@ -795,6 +795,11 @@
                             <span>Messages</span>
                             <span class="nav-badge" id="messagesBadge">0</span>
                         </a>
+                        <a href="/admin-portal/contact-messages/" class="{% if '/admin-portal/contact-messages/' in request.path %}active{% endif %}">
+                            <i class="fas fa-inbox"></i>
+                            <span>Contact</span>
+                            <span class="nav-badge" id="contactBadge">0</span>
+                        </a>
                         <a href="/admin-portal/blog/" class="{% if '/admin-portal/blog/' in request.path %}active{% endif %}">
                             <i class="fas fa-blog"></i>
                             <span>Blog</span>
@@ -844,6 +849,7 @@
                 <a href="/admin-portal/orders/" class="{% if '/admin-portal/orders/' in request.path %}active{% endif %}"><i class="fas fa-file-alt"></i> Orders<span class="nav-badge" id="ordersBadgeMobile">0</span></a>
                 <a href="/admin-portal/finances/" class="{% if '/admin-portal/finances/' in request.path %}active{% endif %}"><i class="fas fa-dollar-sign"></i> Finances</a>
                 <a href="/admin-portal/messages/" class="{% if '/admin-portal/messages/' in request.path %}active{% endif %}"><i class="fas fa-envelope"></i> Messages<span class="nav-badge" id="messagesBadgeMobile">0</span></a>
+                <a href="/admin-portal/contact-messages/" class="{% if '/admin-portal/contact-messages/' in request.path %}active{% endif %}"><i class="fas fa-inbox"></i> Contact<span class="nav-badge" id="contactBadgeMobile">0</span></a>
                 <a href="/admin-portal/blog/" class="{% if '/admin-portal/blog/' in request.path %}active{% endif %}"><i class="fas fa-blog"></i> Blog</a>
                 <a href="/admin-portal/settings/" class="{% if '/admin-portal/settings/' in request.path %}active{% endif %}"><i class="fas fa-cog"></i> Settings</a>
                 <div class="mobile-divider"></div>
@@ -977,32 +983,37 @@
             var normalized = {
                 pending_orders: counts.pending_orders || 0,
                 unread_messages: counts.unread_messages || 0,
-                notifications: counts.notifications || 0
+                notifications: counts.notifications || 0,
+                contact_messages: counts.contact_messages || 0
             };
             updateAdminBadge('ordersBadge', normalized.pending_orders);
             updateAdminBadge('ordersBadgeMobile', normalized.pending_orders);
             updateAdminBadge('messagesBadge', normalized.unread_messages);
             updateAdminBadge('messagesBadgeMobile', normalized.unread_messages);
             updateAdminBadge('notificationBadge', normalized.notifications);
+            updateAdminBadge('contactBadge', normalized.contact_messages);
+            updateAdminBadge('contactBadgeMobile', normalized.contact_messages);
             writeCachedAdminCounts(normalized);
             return normalized;
         }
 
         window.AdminCounts = {
             set: function(counts) {
-                var current = readCachedAdminCounts() || { pending_orders: 0, unread_messages: 0, notifications: 0 };
+                var current = readCachedAdminCounts() || { pending_orders: 0, unread_messages: 0, notifications: 0, contact_messages: 0 };
                 applyAdminCounts({
                     pending_orders: counts.pending_orders !== undefined ? counts.pending_orders : current.pending_orders,
                     unread_messages: counts.unread_messages !== undefined ? counts.unread_messages : current.unread_messages,
-                    notifications: counts.notifications !== undefined ? counts.notifications : current.notifications
+                    notifications: counts.notifications !== undefined ? counts.notifications : current.notifications,
+                    contact_messages: counts.contact_messages !== undefined ? counts.contact_messages : current.contact_messages
                 });
             },
             adjust: function(deltas) {
-                var current = readCachedAdminCounts() || { pending_orders: 0, unread_messages: 0, notifications: 0 };
+                var current = readCachedAdminCounts() || { pending_orders: 0, unread_messages: 0, notifications: 0, contact_messages: 0 };
                 applyAdminCounts({
                     pending_orders: Math.max(0, current.pending_orders + (deltas.pending_orders || 0)),
                     unread_messages: Math.max(0, current.unread_messages + (deltas.unread_messages || 0)),
-                    notifications: Math.max(0, current.notifications + (deltas.notifications || 0))
+                    notifications: Math.max(0, current.notifications + (deltas.notifications || 0)),
+                    contact_messages: Math.max(0, current.contact_messages + (deltas.contact_messages || 0))
                 });
             },
             refresh: function() {

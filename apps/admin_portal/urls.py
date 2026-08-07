@@ -6,6 +6,9 @@ app_name = 'admin_portal'
 urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='admin-dashboard'),
     path('dashboard/stats/', views.dashboard_stats, name='dashboard-stats'),
+    path('contact-messages/', views.admin_contact_messages, name='admin-contact-messages'),
+    path('contact-messages/<uuid:message_id>/read/', views.admin_contact_message_read, name='admin-contact-message-read'),
+    path('contact-messages/<uuid:message_id>/delete/', views.admin_contact_message_delete, name='admin-contact-message-delete'),
     path('dashboard/priority/', views.priority_queue, name='priority-queue'),
     path('users/', views.list_users, name='list-users'),
     path('users/<uuid:user_id>/', views.user_detail, name='user-detail'),
@@ -60,7 +63,6 @@ urlpatterns = [
     path('analytics/orders/', views.order_analytics, name='order-analytics'),
     path('analytics/clients/', views.client_analytics, name='client-analytics'),
     path('counts/', views.get_counts, name='get-counts'),
-
     path('notifications/', views.list_notifications, name='list-notifications'),
     path('notifications/<uuid:notification_id>/read/', views.mark_notification_read, name='mark-notification-read'),
     path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark-all-notifications-read'),

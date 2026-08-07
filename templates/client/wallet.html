@@ -25,7 +25,7 @@
         color: var(--muted);
     }
     .stat-value {
-        font-size: 2rem;
+        font-size: clamp(1.35rem, 5vw, 2rem);
         font-weight: 700;
         line-height: 1.2;
     }
@@ -82,11 +82,13 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 0.75rem;
         padding: 0.75rem 1rem;
         border: 1px solid var(--line);
         border-radius: var(--radius-sm);
         margin-bottom: 0.5rem;
         transition: border-color 0.2s;
+        flex-wrap: wrap;
     }
     .payment-method-item:hover {
         border-color: var(--green-border);
@@ -112,6 +114,7 @@
     .btn-primary:hover {
         background: var(--green-dark);
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(5,150,105,0.25);
     }
     .btn-outline {
         background: transparent;
@@ -165,31 +168,32 @@
     .modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.4);
+        background: rgba(0,0,0,0.45);
         z-index: 600;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 1.25rem;
+        padding: clamp(0.75rem, 4vw, 1.5rem);
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+        transition: opacity 0.25s ease, visibility 0s linear 0.25s;
     }
     .modal-overlay.open {
         opacity: 1;
         visibility: visible;
-        transition: opacity 0.18s ease;
+        transition: opacity 0.25s ease;
     }
     .modal-box {
         background: var(--paper);
         border-radius: var(--radius);
-        box-shadow: var(--shadow-lg);
-        width: 100%;
-        max-width: 28rem;
-        max-height: 90vh;
-        overflow-y: auto;
-        transform: translateY(12px) scale(0.98);
-        transition: transform 0.18s ease;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+        width: min(94vw, 480px);
+        max-height: min(90vh, 640px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform: translateY(20px) scale(0.97);
+        transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
     }
     .modal-overlay.open .modal-box {
         transform: translateY(0) scale(1);
@@ -198,11 +202,13 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 1.25rem;
+        gap: 0.75rem;
+        padding: clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.5rem);
         border-bottom: 1px solid var(--line-light);
+        flex-shrink: 0;
     }
     .modal-title {
-        font-size: 1.1rem;
+        font-size: clamp(1rem, 4vw, 1.1rem);
         font-weight: 700;
         color: var(--ink);
     }
@@ -210,31 +216,35 @@
         background: none;
         border: none;
         color: var(--muted);
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         cursor: pointer;
+        padding: 0.25rem;
+        transition: color 0.2s;
+        flex-shrink: 0;
     }
     .modal-close:hover {
         color: var(--ink);
     }
     .modal-body {
-        padding: 1.25rem;
+        padding: clamp(1rem, 4vw, 1.5rem);
+        overflow-y: auto;
     }
     .form-group {
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
     }
     .form-label {
         display: block;
         font-size: 0.85rem;
         font-weight: 500;
         color: var(--ink-soft);
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.3rem;
     }
     .form-input {
         width: 100%;
         padding: 0.6rem 0.75rem;
         border: 1.5px solid var(--line);
         border-radius: var(--radius-sm);
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         transition: var(--transition);
         background: var(--surface);
     }
@@ -247,17 +257,20 @@
     .verification-digits {
         display: flex;
         justify-content: center;
-        gap: 0.5rem;
+        gap: clamp(0.3rem, 1.8vw, 0.5rem);
+        flex-wrap: nowrap;
     }
     .digit-input {
-        width: 3rem;
-        height: 3.5rem;
+        width: clamp(2.1rem, 12vw, 3.5rem);
+        height: clamp(2.6rem, 14vw, 4rem);
         text-align: center;
-        font-size: 1.5rem;
+        font-size: clamp(1.1rem, 5vw, 1.5rem);
         font-weight: 700;
         border: 2px solid var(--line);
         border-radius: var(--radius-sm);
         transition: var(--transition);
+        background: var(--paper);
+        flex-shrink: 0;
     }
     .digit-input:focus {
         border-color: var(--green);
@@ -274,14 +287,14 @@
     }
     .error-text {
         color: var(--red);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         margin-top: 0.5rem;
         display: none;
     }
     .error-text.show { display: block; }
     .success-text {
         color: var(--green);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         margin-top: 0.5rem;
         display: none;
     }
@@ -292,6 +305,14 @@
         margin-top: 0.25rem;
     }
     .hidden { display: none !important; }
+
+    @media (min-width: 1024px) {
+        .digit-input {
+            width: 3.5rem;
+            height: 4rem;
+            font-size: 1.75rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -379,7 +400,6 @@
     </div>
 </div>
 
-<!-- Modal -->
 <div class="modal-overlay" id="paymentModal">
     <div class="modal-box">
         <div class="modal-head">
@@ -387,7 +407,6 @@
             <button class="modal-close" id="close-modal"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
-            <!-- Step 1: Email -->
             <div id="step1">
                 <div class="form-group">
                     <label class="form-label">PayPal Email Address</label>
@@ -398,7 +417,6 @@
                 <button class="btn btn-primary" style="width:100%;" id="send-verification-btn">Send Verification Code</button>
             </div>
 
-            <!-- Step 2: Code -->
             <div id="step2" class="hidden">
                 <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:0.75rem;font-size:0.85rem;color:#1d4ed8;margin-bottom:1rem;">
                     <i class="fas fa-info-circle"></i>
@@ -422,7 +440,6 @@
                 </div>
             </div>
 
-            <!-- Step 3: Success -->
             <div id="step3" class="hidden" style="text-align:center;padding:1.5rem 0;">
                 <div style="width:4rem;height:4rem;background:var(--green-pale);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;color:var(--green);margin-bottom:1rem;">
                     <i class="fas fa-check"></i>
@@ -569,41 +586,10 @@ async function sendVerification() {
     }
     const btn = document.getElementById('send-verification-btn');
     btn.disabled = true;
-    btn.textContent = 'Checking...';
+    btn.textContent = 'Sending...';
     document.getElementById('step1-error').classList.remove('show');
 
     try {
-        // First, check if the email already exists
-        const checkResponse = await apiCall(API_BASE + 'paypal/methods/check/', {
-            method: 'POST',
-            body: JSON.stringify({ paypal_email: email })
-        });
-        if (checkResponse && checkResponse.ok) {
-            const checkData = await checkResponse.json();
-            if (checkData.exists) {
-                if (checkData.is_active) {
-                    document.getElementById('step1-error').textContent = 'This PayPal account is already verified.';
-                    document.getElementById('step1-error').classList.add('show');
-                    btn.disabled = false;
-                    btn.textContent = 'Send Verification Code';
-                    return;
-                }
-                if (checkData.is_pending) {
-                    // Pending verification – go directly to step 2
-                    currentMethodId = checkData.method_id;
-                    document.getElementById('verify-email-display').textContent = email;
-                    document.getElementById('step1').classList.add('hidden');
-                    document.getElementById('step2').classList.remove('hidden');
-                    document.querySelector('.digit-input').focus();
-                    btn.disabled = false;
-                    btn.textContent = 'Send Verification Code';
-                    return;
-                }
-            }
-        }
-
-        // If not exists, create new method
-        btn.textContent = 'Sending...';
         const addResponse = await apiCall(API_BASE + 'paypal/methods/add/', {
             method: 'POST',
             body: JSON.stringify({ paypal_email: email })
@@ -614,6 +600,7 @@ async function sendVerification() {
             document.getElementById('verify-email-display').textContent = email;
             document.getElementById('step1').classList.add('hidden');
             document.getElementById('step2').classList.remove('hidden');
+            document.querySelectorAll('.digit-input').forEach(d => { d.value = ''; d.classList.remove('filled', 'error'); });
             document.querySelector('.digit-input').focus();
         } else if (addResponse) {
             const error = await addResponse.json();

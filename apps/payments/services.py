@@ -114,7 +114,7 @@ class PayPalService:
         }
 
     @staticmethod
-    def execute_payment(paypal_order_id):
+    def execute_payment(paypal_order_id, payer_id=None):
         token = PayPalService._access_token()
         headers = {
             'Authorization': f'Bearer {token}',
@@ -138,6 +138,50 @@ class PayPalService:
                 'amount': amount,
             }
         return {'success': False, 'error': 'Payment not completed'}
+
+    @staticmethod
+    def create_payout(email, amount, note=''):
+        token = PayPalService._access_token()
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+        }
+        body = {
+            'sender_batch_header': {
+                'sender_batch_id': f"Payout-{timezone.now().strftime('%Y%m%d%H%M%S')}-{secrets.token_hex(4)}",
+                'email_subject': 'You have a payout!',
+            },
+            'items': [{
+                'recipient_type': 'EMAIL',
+                'amount': {
+                    'value': str(amount),
+                    'currency': 'USD',
+                },
+                'receiver': email,
+                'note': note or 'Payout from AcademicWrite',
+                'sender_item_id': f"item-{secrets.token_hex(6)}",
+            }]
+        }
+
+        resp = requests.post(
+            f"{PayPalService._base_url()}/v1/payments/payouts",
+            json=body,
+            headers=headers,
+            timeout=15,
+        )
+
+        if resp.status_code != 201:
+            logger.error(f"PayPal payout creation failed: {resp.text}")
+            return {
+                'success': False,
+                'error': resp.json().get('message', 'PayPal error'),
+            }
+
+        payout = resp.json()
+        return {
+            'success': True,
+            'payout_id': payout['batch_header']['payout_batch_id'],
+        }
 
 
 class EmailService:
@@ -193,14 +237,34 @@ class EmailService:
     @staticmethod
     def send_paypal_verification_code(user, paypal_email, verification_code):
         subject = 'PayPal Account Verification Code'
-        context = {
-            'user': user,
-            'paypal_email': paypal_email,
-            'verification_code': verification_code,
-            'expires_in_minutes': 5
-        }
-        html_message = render_to_string('emails/paypal_verification.html', context)
-        send_mail(subject, '', settings.DEFAULT_FROM_EMAIL, [paypal_email], html_message=html_message)
+        try:
+            html_message = f"""
+            <html>
+            <body>
+                <p>Hello {user.full_name},</p>
+                <p>You are adding <strong>{paypal_email}</strong> as a PayPal payment method.</p>
+                <p>Your verification code is:</p>
+                <h2 style="background:#f4f4f4; padding:15px; display:inline-block; letter-spacing:2px;">{verification_code}</h2>
+                <p>This code expires in <strong>5</strong> minutes.</p>
+                <p>If you did not request this, please ignore this email.</p>
+                <p>— AcademicWrite Team</p>
+            </body>
+            </html>
+            """
+            plain_message = f"Your PayPal verification code is: {verification_code}. It expires in 5 minutes."
+
+            send_mail(
+                subject,
+                plain_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [paypal_email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send PayPal verification email to {paypal_email}: {e}")
+            return False
 
 
 class IdempotencyService:

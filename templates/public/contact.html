@@ -4,262 +4,78 @@
 
 {% block extra_css %}
 <style>
-.contact-hero {
-    text-align: center;
-    margin-bottom: 2rem;
-}
+    .contact-hero { text-align: center; margin-bottom: 2rem; }
+    .contact-hero h1 { font-size: 2.5rem; font-weight: 700; color: #1e293b; }
+    .contact-hero h1 span { color: #059669; }
+    .contact-hero p { color: #64748b; font-size: 1.1rem; margin-top: 0.5rem; }
 
-.contact-hero h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #1e293b;
-}
+    .contact-section { background: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 2rem; margin-bottom: 2rem; }
+    .contact-section h2 { font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1.5rem; }
 
-.contact-hero h1 span {
-    color: #059669;
-}
+    .contact-grid { display: grid; gap: 2rem; }
+    @media (min-width: 768px) { .contact-grid { grid-template-columns: 1fr 1fr; } }
 
-.contact-hero p {
-    color: #64748b;
-    font-size: 1.1rem;
-    margin-top: 0.5rem;
-}
+    .contact-info-card { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; text-align: center; transition: all 0.3s ease; }
+    .contact-info-card:hover { border-color: #059669; transform: translateY(-2px); }
+    .contact-info-card h3 { font-weight: 600; color: #1e293b; margin-bottom: 0.25rem; }
+    .contact-info-card p { color: #64748b; font-size: 0.9rem; }
 
-.contact-section {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.75rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.contact-section h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 1.5rem;
-}
-
-.contact-grid {
-    display: grid;
-    gap: 2rem;
-}
-
-@media (min-width: 768px) {
-    .contact-grid {
-        grid-template-columns: 1fr 1fr;
+    .contact-form label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
+    .contact-form input, .contact-form select, .contact-form textarea {
+        width: 100%; border: 1px solid #d1d5db; padding: 0.75rem 1rem; border-radius: 0.5rem; outline: none; transition: all 0.2s; background: white; font-size: 0.95rem;
     }
-}
-
-.contact-info-card {
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-
-.contact-info-card:hover {
-    border-color: #059669;
-    transform: translateY(-2px);
-}
-
-.contact-info-card .icon {
-    font-size: 2rem;
-    color: #059669;
-    margin-bottom: 0.75rem;
-}
-
-.contact-info-card h3 {
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-}
-
-.contact-info-card p {
-    color: #64748b;
-    font-size: 0.9rem;
-}
-
-.contact-form label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 0.5rem;
-}
-
-.contact-form input,
-.contact-form select,
-.contact-form textarea {
-    width: 100%;
-    border: 1px solid #d1d5db;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    outline: none;
-    transition: all 0.2s;
-    background: white;
-    font-size: 0.95rem;
-}
-
-.contact-form input:focus,
-.contact-form select:focus,
-.contact-form textarea:focus {
-    border-color: #059669;
-    ring: 2px solid #059669;
-}
-
-.contact-form input.error,
-.contact-form select.error,
-.contact-form textarea.error {
-    border-color: #ef4444;
-    background-color: #fef2f2;
-}
-
-.contact-form textarea {
-    resize: vertical;
-    min-height: 120px;
-}
-
-.contact-form .form-group {
-    margin-bottom: 1rem;
-}
-
-.submit-btn {
-    width: 100%;
-    background: #059669;
-    color: white;
-    font-weight: 600;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1rem;
-}
-
-.submit-btn:hover:not(:disabled) {
-    background: #047857;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-}
-
-.submit-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.required-star {
-    color: #ef4444;
-    margin-left: 0.2rem;
-}
-
-.form-hint {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    margin-top: 0.25rem;
-}
-
-.error-message {
-    font-size: 0.8rem;
-    color: #ef4444;
-    margin-top: 0.25rem;
-    display: none;
-}
-
-.error-message.show {
-    display: block;
-}
-
-.success-message {
-    display: none;
-    background: #f0fdf4;
-    border: 1px solid #86efac;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    text-align: center;
-    color: #059669;
-    animation: fadeIn 0.5s ease;
-}
-
-.success-message.show {
-    display: block;
-}
-
-.success-message i {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
-}
-
-.success-message h3 {
-    font-weight: 700;
-    font-size: 1.2rem;
-    margin-bottom: 0.25rem;
-}
-
-.success-message p {
-    font-size: 0.95rem;
-    opacity: 0.8;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus {
+        border-color: #059669; box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    .contact-form input.error, .contact-form select.error, .contact-form textarea.error {
+        border-color: #ef4444; background-color: #fef2f2;
     }
-}
+    .contact-form textarea { resize: vertical; min-height: 120px; }
+    .contact-form .form-group { margin-bottom: 1rem; }
 
-.progress-bar {
-    width: 100%;
-    height: 4px;
-    background: #e5e7eb;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-    display: none;
-}
+    .submit-btn {
+        width: 100%; background: #059669; color: white; font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; font-size: 1rem;
+    }
+    .submit-btn:hover:not(:disabled) { background: #047857; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-.progress-bar.show {
-    display: block;
-}
+    .required-star { color: #ef4444; margin-left: 0.2rem; }
+    .form-hint { font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem; }
 
-.progress-bar .progress-fill {
-    height: 100%;
-    background: #059669;
-    border-radius: 4px;
-    width: 0%;
-    transition: width 0.1s linear;
-}
+    .error-message { font-size: 0.8rem; color: #ef4444; margin-top: 0.25rem; display: none; }
+    .error-message.show { display: block; }
 
-.image-wrapper {
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    margin-bottom: 2rem;
-}
+    .success-container { display: none; margin-top: 1rem; animation: fadeSlideIn 0.4s ease; }
+    .success-container.show { display: block; }
+    .success-content { padding: 1.25rem; border-left: 4px solid #059669; background: #f0fdf4; border-radius: 0.5rem; }
+    .success-content h3 { font-weight: 700; color: #059669; margin-bottom: 0.25rem; font-size: 1.1rem; }
+    .success-content p { color: #1e293b; opacity: 0.8; font-size: 0.95rem; margin: 0; }
+    .success-content .check-mark { display: inline-block; width: 1.5rem; height: 1.5rem; background: #059669; color: white; border-radius: 50%; text-align: center; line-height: 1.5rem; font-size: 0.8rem; margin-right: 0.5rem; flex-shrink: 0; }
+    .success-content .flex-row { display: flex; align-items: flex-start; gap: 0.75rem; }
 
-.image-wrapper img {
-    width: 100%;
-    height: 12rem;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-out { animation: fadeOut 0.4s ease forwards; }
+    @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-8px); } }
 
-.image-wrapper:hover img {
-    transform: scale(1.02);
-}
+    .progress-bar { width: 100%; height: 4px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin-top: 0.5rem; display: none; }
+    .progress-bar.show { display: block; }
+    .progress-bar .progress-fill { height: 100%; background: #059669; border-radius: 4px; width: 0%; transition: width 0.1s linear; }
+
+    .image-wrapper { border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); margin-bottom: 1.5rem; }
+    .image-wrapper img { width: 100%; height: 12rem; object-fit: cover; transition: transform 0.4s ease; }
+    .image-wrapper:hover img { transform: scale(1.02); }
+
+    @media (max-width: 640px) {
+        .contact-section { padding: 1.25rem; }
+        .contact-hero h1 { font-size: 2rem; }
+        .success-content { padding: 1rem; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    
+
     <section class="contact-hero">
         <h1>Contact <span>Us</span></h1>
         <div class="w-20 h-1 bg-green-600 mx-auto my-4"></div>
@@ -268,26 +84,23 @@
 
     <div class="contact-section">
         <h2>Get in Touch</h2>
-        
+
         <div class="contact-grid">
             <div>
                 <div class="contact-info-card">
-                    <div class="icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <h3>Email</h3>
-                    <p>fredrickwambua129@gmail.com</p>
+                    <h3>Support</h3>
+                    <p>Available 24/7 via this form</p>
                 </div>
 
                 <div class="image-wrapper">
-                    <img src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=800&h=200&fit=crop&crop=center" 
-                         alt="Contact us" 
+                    <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=250&fit=crop&crop=center"
+                         alt="Contact support"
                          loading="lazy">
                 </div>
             </div>
 
             <div>
-                <form class="contact-form" id="contact-form" method="POST" action="/contact/">
+                <form class="contact-form" id="contactForm" novalidate>
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="name">Full Name <span class="required-star">*</span></label>
@@ -318,20 +131,26 @@
                         <div class="error-message" id="message-error">Please enter your message (minimum 10 characters)</div>
                         <p class="form-hint">Please provide as much detail as possible.</p>
                     </div>
-                    
-                    <div class="progress-bar" id="progress-bar">
-                        <div class="progress-fill" id="progress-fill"></div>
+
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
                     </div>
 
-                    <button type="submit" class="submit-btn" id="submit-btn" disabled>
-                        <i class="fas fa-paper-plane"></i> Send Message
+                    <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                        Send Message
                     </button>
                 </form>
 
-                <div class="success-message" id="success-message">
-                    <i class="fas fa-check-circle"></i>
-                    <h3>Message Sent Successfully!</h3>
-                    <p>We'll respond to your inquiry within 2 hours.</p>
+                <div class="success-container" id="successContainer">
+                    <div class="success-content">
+                        <div class="flex-row">
+                            <span class="check-mark">✓</span>
+                            <div>
+                                <h3>Message Sent</h3>
+                                <p id="successMessage">We'll get back to you as soon as possible.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -341,15 +160,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('contact-form');
-    const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('contactForm');
+    const submitBtn = document.getElementById('submitBtn');
     const nameInput = document.getElementById('name');
     const emailInput = document.getElementById('email');
     const subjectInput = document.getElementById('subject');
     const messageInput = document.getElementById('message');
-    const successMessage = document.getElementById('success-message');
-    const progressBar = document.getElementById('progress-bar');
-    const progressFill = document.getElementById('progress-fill');
+    const successContainer = document.getElementById('successContainer');
+    const successMessage = document.getElementById('successMessage');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
 
     const nameError = document.getElementById('name-error');
     const emailError = document.getElementById('email-error');
@@ -357,8 +177,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageError = document.getElementById('message-error');
 
     function validateField(input, errorElement, validator) {
-        const isValid = validator(input.value);
-        if (!isValid && input.value) {
+        const value = input.value;
+        const isValid = validator(value);
+        if (!isValid && value) {
             input.classList.add('error');
             errorElement.classList.add('show');
         } else {
@@ -368,21 +189,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return isValid;
     }
 
-    function validateName(value) {
-        return value.trim().length >= 2;
-    }
-
-    function validateEmail(value) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-    }
-
-    function validateSubject(value) {
-        return value !== '';
-    }
-
-    function validateMessage(value) {
-        return value.trim().length >= 10;
-    }
+    function validateName(value) { return value.trim().length >= 2; }
+    function validateEmail(value) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()); }
+    function validateSubject(value) { return value !== ''; }
+    function validateMessage(value) { return value.trim().length >= 10; }
 
     function validateAll() {
         const isNameValid = validateName(nameInput.value);
@@ -425,80 +235,102 @@ document.addEventListener('DOMContentLoaded', function() {
         validateAll();
     });
 
-    form.addEventListener('submit', async function(e) {
+    validateAll();
+
+    function resetFormAfterSuccess() {
+        setTimeout(function() {
+            successContainer.classList.remove('show');
+            form.reset();
+            document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+            submitBtn.disabled = true;
+            progressBar.classList.remove('show');
+            progressFill.style.width = '0%';
+            submitBtn.innerHTML = 'Send Message';
+            submitBtn.disabled = false;
+            form.style.display = 'block';
+        }, 5000);
+    }
+
+    form.addEventListener('submit', function(e) {
         e.preventDefault();
 
         validateAll();
 
-        if (submitBtn.disabled) {
-            return;
-        }
+        if (submitBtn.disabled) return;
+
+        const data = {
+            name: nameInput.value.trim(),
+            email: emailInput.value.trim(),
+            subject: subjectInput.value,
+            message: messageInput.value.trim()
+        };
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        
+        submitBtn.innerHTML = 'Sending...';
         progressBar.classList.add('show');
         progressFill.style.width = '0%';
 
-        const formData = new FormData(form);
+        let progress = 0;
+        const interval = setInterval(function() {
+            progress += Math.random() * 15 + 5;
+            if (progress > 90) progress = 90;
+            progressFill.style.width = progress + '%';
+        }, 200);
 
-        try {
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 15 + 5;
-                if (progress > 90) {
-                    progress = 90;
-                    clearInterval(interval);
-                }
-                progressFill.style.width = progress + '%';
-            }, 200);
-
-            const response = await fetch('/contact/', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
+        fetch('/contact/submit/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrf-token]')?.content || ''
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
             clearInterval(interval);
             progressFill.style.width = '100%';
 
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            if (response.ok) {
+            if (result.success) {
                 form.style.display = 'none';
-                successMessage.classList.add('show');
-                progressBar.classList.remove('show');
+                successContainer.classList.add('show');
+                successMessage.textContent = result.message || 'We\'ll get back to you as soon as possible.';
+                resetFormAfterSuccess();
             } else {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to send message');
-            }
+                let errorMsg = result.error || 'Something went wrong. Please try again.';
+                if (result.error === 'rate_limited' && result.message) {
+                    errorMsg = result.message;
+                }
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message show';
+                errorDiv.style.cssText = 'background: #fef2f2; color: #dc2626; padding: 0.75rem; border-radius: 0.5rem; margin-top: 0.5rem; text-align: center;';
+                errorDiv.textContent = errorMsg;
+                const existing = form.querySelector('.global-error');
+                if (existing) existing.remove();
+                errorDiv.className = 'error-message show global-error';
+                form.appendChild(errorDiv);
 
-            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Send Message';
                 progressBar.classList.remove('show');
                 progressFill.style.width = '0%';
-            }, 1000);
-
-        } catch (error) {
+            }
+        })
+        .catch(function(err) {
+            clearInterval(interval);
             progressBar.classList.remove('show');
             progressFill.style.width = '0%';
-            
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Send Message';
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message show';
             errorDiv.style.cssText = 'background: #fef2f2; color: #dc2626; padding: 0.75rem; border-radius: 0.5rem; margin-top: 0.5rem; text-align: center;';
-            errorDiv.textContent = error.message || 'Failed to send message. Please try again.';
-            
-            const existingError = form.querySelector('.error-message.global-error');
-            if (existingError) {
-                existingError.remove();
-            }
+            errorDiv.textContent = 'Network error. Please check your connection.';
+            const existing = form.querySelector('.global-error');
+            if (existing) existing.remove();
             errorDiv.className = 'error-message show global-error';
             form.appendChild(errorDiv);
-
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-        }
+        });
     });
 });
 </script>

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from apps.admin_portal.models import Blog, Sample, ContactMessage
 from django.conf import settings
 from django.contrib.auth import login as auth_login, logout as auth_logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
@@ -302,69 +303,67 @@ def blog_share(request, slug):
 def contact_message(request):
     ip = get_client_ip(request)
     rate_key = f"contact_rate:{ip}"
-    
     contact_data = cache.get(rate_key, {'count': 0, 'reset_at': None})
     current_time = timezone.now().timestamp()
-    
+
     if contact_data.get('reset_at') and current_time > contact_data['reset_at']:
         contact_data = {'count': 0, 'reset_at': None}
-    
-    if contact_data['count'] >= 3:
+
+    limit = 10
+    window_seconds = 3600
+
+    if contact_data['count'] >= limit:
+        remaining_time = int(contact_data['reset_at'] - current_time)
         return JsonResponse({
             'success': False,
             'error': 'rate_limited',
-            'message': 'Too many messages. Please wait before sending another message.'
+            'message': 'You have sent too many messages. Please wait before trying again.',
+            'retry_after': remaining_time
         }, status=429)
-    
+
     try:
         data = json.loads(request.body)
         name = data.get('name', '').strip()
         email = data.get('email', '').strip()
         subject = data.get('subject', '').strip()
         message = data.get('message', '').strip()
-        
+
         if not all([name, email, subject, message]):
-            return JsonResponse({
-                'success': False,
-                'error': 'All fields are required.'
-            }, status=400)
-        
+            return JsonResponse({'success': False, 'error': 'All fields are required.'}, status=400)
+
         if len(message) < 10:
+            return JsonResponse({'success': False, 'error': 'Message must be at least 10 characters.'}, status=400)
+
+        email_cache_key = f"contact_message:{hashlib.md5(email.encode()).hexdigest()}"
+        if cache.get(email_cache_key):
             return JsonResponse({
                 'success': False,
-                'error': 'Message must be at least 10 characters.'
-            }, status=400)
-        
-        cache_key = f"contact_message:{hashlib.md5(email.encode()).hexdigest()}"
-        if cache.get(cache_key):
-            return JsonResponse({
-                'success': False,
-                'error': 'You have already sent a message recently. Please wait.'
+                'error': 'You have already sent a message recently. Please wait a few minutes.'
             }, status=429)
-        
-        cache.set(cache_key, True, 600)
-        
+
+        ContactMessage.objects.create(
+            name=name,
+            email=email,
+            subject=subject,
+            message=message
+        )
+
+        cache.set(email_cache_key, True, 600)
+
         if contact_data['count'] == 0:
-            contact_data['reset_at'] = current_time + 300
+            contact_data['reset_at'] = current_time + window_seconds
         contact_data['count'] += 1
-        cache.set(rate_key, contact_data, 300)
-        
+        cache.set(rate_key, contact_data, window_seconds)
+
         return JsonResponse({
             'success': True,
-            'message': 'Your message has been sent. We\'ll respond within 2 hours.'
+            'message': 'Your message has been sent. We\'ll get back to you soon.'
         })
+
     except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': 'Invalid request format.'
-        }, status=400)
+        return JsonResponse({'success': False, 'error': 'Invalid request format.'}, status=400)
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': 'An error occurred. Please try again.'
-        }, status=500)
-
-
+        return JsonResponse({'success': False, 'error': 'An error occurred. Please try again.'}, status=500)
 def forgot_password(request):
     return render(request, 'public/forgot-password.html')
 

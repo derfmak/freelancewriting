@@ -17,6 +17,7 @@ urlpatterns = [
     path('deletion/request/', views.request_deletion, name='request-deletion'),
     path('deletion/cancel/', views.cancel_deletion, name='cancel-deletion'),
     path('send-password-change-code/', views.send_password_change_code, name='send-password-change-code'),
+    path('resend-password-change-code/', views.resend_password_change_code, name='resend-password-change-code'),
     path('verify-password-change-code/', views.verify_password_change_code, name='verify-password-change-code'),
     path('complete-password-change/', views.complete_password_change, name='complete-password-change'),
     path('google/', views.google_login, name='google-login'),

@@ -1,0 +1,72 @@
+{% extends "client_base.html" %}
+{% load static %}
+
+{% block title %}My Profile - AcademicWrite{% endblock %}
+
+{% block content %}
+<div class="client-container">
+    <div class="py-6 flex-1 flex flex-col">
+        <div class="max-w-3xl mx-auto w-full">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">My Profile</h1>
+                    <p class="text-gray-600 mt-1">Your account information</p>
+                </div>
+                <a href="/client/dashboard/" class="client-btn client-btn-outline text-sm">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="p-6 sm:p-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-2xl font-bold">
+                            {{ user.full_name|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">{{ user.full_name }}</h2>
+                            <span class="text-sm text-gray-500">Client since {{ user.date_joined|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Full Name</label>
+                            <p class="mt-1 text-gray-900 font-medium">{{ user.full_name }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Email Address</label>
+                            <p class="mt-1 text-gray-900 font-medium">{{ user.email }}</p>
+                            {% if user.email_verified %}
+                                <span class="inline-flex items-center text-xs text-green-600 mt-0.5">
+                                    <i class="fas fa-check-circle mr-1"></i> Verified
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center text-xs text-yellow-600 mt-0.5">
+                                    <i class="fas fa-exclamation-circle mr-1"></i> Not verified
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Phone Number</label>
+                            <p class="mt-1 text-gray-900 font-medium">{{ user.phone|default:"Not provided" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Institution</label>
+                            <p class="mt-1 text-gray-900 font-medium">{{ user.institution|default:"Not provided" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Account Created</label>
+                            <p class="mt-1 text-gray-900 font-medium">{{ user.created_at|date:"F d, Y" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Last Login</label>
+                            <p class="mt-1 text-gray-900 font-medium">{{ user.last_login|date:"F d, Y H:i"|default:"Never" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

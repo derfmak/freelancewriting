@@ -1,6 +1,7 @@
 import uuid
 import secrets
-import random
+import hashlib
+import hmac
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import RegexValidator
@@ -11,54 +12,52 @@ from .managers import UserManager
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    
+
     ROLE_CHOICES = [
         ('client', 'Client'),
         ('admin', 'Admin'),
     ]
-    
+
     username = None
     email = models.EmailField(unique=True, db_index=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='client', db_index=True)
-    
+
     full_name = models.CharField(max_length=100)
-    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$')
+    phone_regex = RegexValidator(regex=r'^\+?[1-9]\d{1,14}$')
     phone = models.CharField(validators=[phone_regex], max_length=17, blank=True)
     phone_verified = models.BooleanField(default=False)
     email_verified = models.BooleanField(default=False, db_index=True)
-    
+
     institution = models.CharField(max_length=100, blank=True)
-    
-    otp_secret = models.CharField(max_length=100, blank=True)
+
+    otp_secret_hash = models.CharField(max_length=64, blank=True)
     otp_expires = models.DateTimeField(null=True, blank=True)
-    password_reset_token = models.CharField(max_length=100, blank=True, db_index=True)
+
+    password_reset_token_hash = models.CharField(max_length=64, blank=True, db_index=True)
     password_reset_expires = models.DateTimeField(null=True, blank=True)
-    
-    password_change_code = models.CharField(max_length=6, blank=True, db_index=True)
-    password_change_code_expires = models.DateTimeField(null=True, blank=True)
-    password_change_temp = models.CharField(max_length=128, blank=True)
-    
+
     is_suspended = models.BooleanField(default=False, db_index=True)
     suspension_reason = models.TextField(blank=True)
     suspended_until = models.DateTimeField(null=True, blank=True)
-    
+
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
     last_login_user_agent = models.TextField(blank=True)
     failed_login_attempts = models.IntegerField(default=0)
     last_failed_login = models.DateTimeField(null=True, blank=True)
     account_locked_until = models.DateTimeField(null=True, blank=True)
-    
+
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     deletion_scheduled_for = models.DateTimeField(null=True, blank=True)
-    
-    google_id = models.CharField(max_length=100, blank=True, db_index=True)
+
+    google_id = models.CharField(max_length=100, unique=True, null=True, blank=True, db_index=True)
+    apple_id = models.CharField(max_length=255, unique=True, null=True, blank=True, db_index=True)
     picture = models.URLField(max_length=500, blank=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     objects = UserManager()
-    
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['full_name']
 
@@ -66,88 +65,78 @@ class User(AbstractUser):
         indexes = [
             models.Index(fields=['email', 'role']),
             models.Index(fields=['is_suspended', 'email_verified']),
-            models.Index(fields=['password_reset_token']),
-            models.Index(fields=['password_change_code']),
+            models.Index(fields=['password_reset_token_hash']),
             models.Index(fields=['deletion_scheduled_for']),
             models.Index(fields=['created_at']),
             models.Index(fields=['last_login']),
             models.Index(fields=['google_id']),
+            models.Index(fields=['apple_id']),
         ]
         db_table = 'users'
-        
+
     def __str__(self):
         return f"{self.email}"
-        
+
+    def _hash_value(self, value):
+        return hashlib.sha256(value.encode()).hexdigest()
+
+    def _verify_hash(self, plain, hashed):
+        return hmac.compare_digest(self._hash_value(plain), hashed)
+
     def lock_account(self, minutes=30):
         self.account_locked_until = timezone.now() + timezone.timedelta(minutes=minutes)
         self.save(update_fields=['account_locked_until'])
-        
+
     def increment_failed_login(self):
         self.failed_login_attempts += 1
         self.last_failed_login = timezone.now()
         if self.failed_login_attempts >= 5:
             self.lock_account()
         self.save(update_fields=['failed_login_attempts', 'last_failed_login', 'account_locked_until'])
-        
+
     def reset_failed_login(self):
         self.failed_login_attempts = 0
         self.account_locked_until = None
         self.save(update_fields=['failed_login_attempts', 'account_locked_until'])
-    
+
     def generate_otp(self):
-        otp = ''.join(str(random.randint(0, 9)) for _ in range(6))
-        self.otp_secret = otp
+        otp = ''.join(secrets.choice('0123456789') for _ in range(6))
+        self.otp_secret_hash = self._hash_value(otp)
         self.otp_expires = timezone.now() + timezone.timedelta(minutes=10)
-        self.save(update_fields=['otp_secret', 'otp_expires'])
+        self.save(update_fields=['otp_secret_hash', 'otp_expires'])
         return otp
-    
+
     def verify_otp(self, otp):
-        if not self.otp_secret or not self.otp_expires:
+        if not self.otp_secret_hash or not self.otp_expires:
             return False
         if timezone.now() > self.otp_expires:
             return False
-        if self.otp_secret != otp:
+        if not self._verify_hash(otp, self.otp_secret_hash):
             return False
-        self.otp_secret = ''
+        self.otp_secret_hash = ''
         self.otp_expires = None
         self.email_verified = True
-        self.save(update_fields=['otp_secret', 'otp_expires', 'email_verified'])
+        self.save(update_fields=['otp_secret_hash', 'otp_expires', 'email_verified'])
         return True
-    
-    def generate_password_change_code(self):
-        code = ''.join(str(random.randint(0, 9)) for _ in range(6))
-        self.password_change_code = code
-        self.password_change_code_expires = timezone.now() + timezone.timedelta(minutes=5)
-        self.save(update_fields=['password_change_code', 'password_change_code_expires'])
-        return code
-    
-    def verify_password_change_code(self, code):
-        if not self.password_change_code or not self.password_change_code_expires:
+
+    def generate_reset_token(self):
+        token = secrets.token_urlsafe(32)
+        self.password_reset_token_hash = self._hash_value(token)
+        self.password_reset_expires = timezone.now() + timezone.timedelta(hours=1)
+        self.save(update_fields=['password_reset_token_hash', 'password_reset_expires'])
+        return token
+
+    def verify_reset_token(self, token):
+        if not self.password_reset_token_hash or not self.password_reset_expires:
             return False
-        if timezone.now() > self.password_change_code_expires:
+        if timezone.now() > self.password_reset_expires:
             return False
-        if self.password_change_code != code:
-            return False
-        return True
-    
-    def clear_password_change_code(self):
-        self.password_change_code = ''
-        self.password_change_code_expires = None
-        self.password_change_temp = ''
-        self.save(update_fields=['password_change_code', 'password_change_code_expires', 'password_change_temp'])
-    
-    def set_temp_password(self, password):
-        from django.contrib.auth.hashers import make_password
-        self.password_change_temp = make_password(password)
-        self.save(update_fields=['password_change_temp'])
-    
-    def apply_temp_password(self):
-        if self.password_change_temp:
-            self.password = self.password_change_temp
-            self.password_change_temp = ''
-            self.save(update_fields=['password', 'password_change_temp'])
-            return True
-        return False
+        return self._verify_hash(token, self.password_reset_token_hash)
+
+    def clear_reset_token(self):
+        self.password_reset_token_hash = ''
+        self.password_reset_expires = None
+        self.save(update_fields=['password_reset_token_hash', 'password_reset_expires'])
 
 
 class PendingUser(models.Model):
@@ -157,22 +146,40 @@ class PendingUser(models.Model):
     password = models.CharField(max_length=128)
     phone = models.CharField(max_length=17, blank=True)
     institution = models.CharField(max_length=100, blank=True)
-    otp_code = models.CharField(max_length=6)
+    otp_code_hash = models.CharField(max_length=64)
     otp_expires = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
-    
+
     class Meta:
         db_table = 'pending_users'
         indexes = [
             models.Index(fields=['email']),
-            models.Index(fields=['otp_code']),
+            models.Index(fields=['otp_code_hash']),
             models.Index(fields=['created_at']),
         ]
-    
+
+    def _hash_value(self, value):
+        return hashlib.sha256(value.encode()).hexdigest()
+
+    def _verify_hash(self, plain, hashed):
+        return hmac.compare_digest(self._hash_value(plain), hashed)
+
+    def set_otp(self, otp):
+        self.otp_code_hash = self._hash_value(otp)
+        self.otp_expires = timezone.now() + timezone.timedelta(minutes=10)
+        self.save(update_fields=['otp_code_hash', 'otp_expires'])
+
+    def verify_otp(self, otp):
+        if not self.otp_code_hash or not self.otp_expires:
+            return False
+        if timezone.now() > self.otp_expires:
+            return False
+        return self._verify_hash(otp, self.otp_code_hash)
+
     def is_expired(self):
         return timezone.now() > self.otp_expires
-    
+
     def __str__(self):
         return f"{self.email}"
 
@@ -185,7 +192,7 @@ class LoginLog(models.Model):
     user_agent = models.TextField(blank=True)
     success = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    
+
     class Meta:
         db_table = 'login_logs'
         indexes = [
@@ -194,7 +201,7 @@ class LoginLog(models.Model):
             models.Index(fields=['success']),
         ]
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"{self.email} - {self.success} - {self.created_at}"
 
@@ -205,59 +212,77 @@ class RateLimit(models.Model):
     count = models.IntegerField(default=0)
     window_start = models.DateTimeField(auto_now_add=True, db_index=True)
     window_end = models.DateTimeField()
-    
+
     class Meta:
         db_table = 'rate_limits'
         indexes = [
             models.Index(fields=['key', 'window_end']),
         ]
-    
+
     @classmethod
     def is_allowed(cls, key, limit, window_seconds):
-        now = timezone.now()
-        window_start = now - timezone.timedelta(seconds=window_seconds)
-        
+        from django.core.cache import cache
+        cache_key = f'rate_limit_{key}'
+
         try:
-            record = cls.objects.get(key=key)
-        except cls.DoesNotExist:
-            cls.objects.create(key=key, count=1, window_end=now + timezone.timedelta(seconds=window_seconds))
+            current = cache.get(cache_key, 0)
+            if current >= limit:
+                return False
+
+            new_count = cache.incr(cache_key)
+            if new_count == 1:
+                cache.expire(cache_key, window_seconds)
             return True
-        
-        if record.window_end < now:
-            record.count = 1
-            record.window_end = now + timezone.timedelta(seconds=window_seconds)
-            record.save()
+        except ValueError:
+            cache.set(cache_key, 1, window_seconds)
             return True
-        
-        if record.count >= limit:
-            return False
-        
-        record.count += 1
-        record.save()
-        return True
 
 
 class PasswordChangeVerification(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_verifications')
-    code = models.CharField(max_length=6)
+    code_hash = models.CharField(max_length=64, default='')
+    temp_password_hash = models.CharField(max_length=128, blank=True, null=True)
     expires_at = models.DateTimeField()
     used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         db_table = 'password_change_verifications'
         indexes = [
             models.Index(fields=['user', 'created_at']),
-            models.Index(fields=['code']),
+            models.Index(fields=['code_hash']),
             models.Index(fields=['expires_at']),
         ]
-    
+
+    def _hash_value(self, value):
+        return hashlib.sha256(value.encode()).hexdigest()
+
+    def _verify_hash(self, plain, hashed):
+        return hmac.compare_digest(self._hash_value(plain), hashed)
+
+    def set_code(self, code):
+        self.code_hash = self._hash_value(code)
+        self.expires_at = timezone.now() + timezone.timedelta(minutes=5)
+        self.used = False
+        self.save(update_fields=['code_hash', 'expires_at', 'used'])
+
+    def verify_code(self, code):
+        if self.used:
+            return False
+        if timezone.now() > self.expires_at:
+            return False
+        if not self._verify_hash(code, self.code_hash):
+            return False
+        self.used = True
+        self.save(update_fields=['used'])
+        return True
+
     def is_expired(self):
         return timezone.now() > self.expires_at
-    
+
     def __str__(self):
-        return f"{self.user.email} - {self.code}"
+        return f"{self.user.email} - {self.created_at}"
 
 
 class SecurityEvent(models.Model):
@@ -282,6 +307,13 @@ class SecurityEvent(models.Model):
         ('google_signup_redirect', 'Google Signup Redirect'),
         ('google_signup_success', 'Google Signup Success'),
         ('google_signup_rollback', 'Google Signup Rollback'),
+        ('apple_callback_no_code', 'Apple Callback No Code'),
+        ('apple_token_exchange_failed', 'Apple Token Exchange Failed'),
+        ('apple_token_verification_failed', 'Apple Token Verification Failed'),
+        ('apple_login_success', 'Apple Login Success'),
+        ('apple_signup_redirect', 'Apple Signup Redirect'),
+        ('apple_signup_success', 'Apple Signup Success'),
+        ('apple_signup_rollback', 'Apple Signup Rollback'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
