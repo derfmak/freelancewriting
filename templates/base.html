@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ request.build_absolute_uri }}">
-    
+
     <meta name="description" content="Professional academic writing services for students worldwide. Get high-quality, plagiarism-free essays, research papers, dissertations, and more. 100% original content, delivered on time.">
     <meta name="keywords" content="academic writing, essay writing, research papers, dissertation help, thesis writing, term papers, coursework help, college essays, university papers, academic assistance, professional writers, custom writing, plagiarism-free, academic support">
     <meta property="og:title" content="AcademicWrite - Expert Academic Writing Services for Students">
@@ -16,15 +16,15 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="AcademicWrite - Expert Academic Writing Services">
     <meta name="twitter:description" content="Professional academic writing services for students. Get custom essays, research papers, and dissertations.">
-    
+
     <title>{% block title %}AcademicWrite - Professional Academic Writing Services for Students{% endblock %}</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+
     <style>
         * {
             margin: 0;
@@ -482,7 +482,7 @@
             .container {
                 padding: 0 1rem;
             }
-            
+
             .header-content {
                 height: 3.5rem;
             }
@@ -509,7 +509,7 @@
             background: #059669;
         }
     </style>
-    
+
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -520,7 +520,7 @@
         "sameAs": []
     }
     </script>
-    
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -532,7 +532,7 @@
                         <span class="logo-icon">AW</span>
                         <span class="logo-text">Academic<span>Write</span></span>
                     </a>
-                    
+
                     <nav class="desktop-nav" role="navigation" aria-label="Main navigation">
                         <a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a>
                         <a href="/about/" class="{% if request.path == '/about/' %}active{% endif %}">About</a>
@@ -567,7 +567,7 @@
                 <a href="/blog/" class="{% if request.path == '/blog/' %}active{% endif %}">Blog</a>
                 <a href="/contact/" class="{% if request.path == '/contact/' %}active{% endif %}">Contact</a>
             </nav>
-            
+
             <div class="mt-8 pt-6 border-t border-gray-200">
                 <a href="/login/" class="block text-center py-3 text-gray-700 font-medium border border-gray-200 mb-2">Log In</a>
                 <a href="/register/" class="block text-center bg-green-600 text-white py-3 font-medium hover:bg-green-700">Sign Up</a>
@@ -585,76 +585,76 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                
+
                 {% block content %}{% endblock %}
             </div>
         </main>
 
         <footer class="footer" role="contentinfo">
-    <div class="container">
-        <div class="footer-grid">
-            <div class="footer-section">
-                <h4>AcademicWrite</h4>
-                <p class="footer-about-text">
-                    Professional academic writing services for students worldwide. 
-                    We deliver high-quality, plagiarism-free papers written by expert 
-                    writers to help you achieve academic success.
-                </p>
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-section">
+                        <h4>AcademicWrite</h4>
+                        <p class="footer-about-text">
+                            Professional academic writing services for students worldwide.
+                            We deliver high-quality, plagiarism-free papers written by expert
+                            writers to help you achieve academic success.
+                        </p>
+                    </div>
+
+                    <div class="footer-section">
+                        <h4>Our Services</h4>
+                        <ul class="footer-links">
+                            <li><a href="/services/">Essay Writing</a></li>
+                            <li><a href="/services/">Research Papers</a></li>
+                            <li><a href="/services/">Dissertations</a></li>
+                            <li><a href="/services/">Thesis Writing</a></li>
+                            <li><a href="/services/">Term Papers</a></li>
+                            <li><a href="/services/">Coursework Help</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-section">
+                        <h4>Resources</h4>
+                        <ul class="footer-links">
+                            <li><a href="/blog/">Blog</a></li>
+                            <li><a href="/samples/">Writing Samples</a></li>
+                            <li><a href="/testimonials/">Testimonials</a></li>
+                            <li><a href="/faq/">FAQ</a></li>
+                            <li><a href="/guarantees/">Guarantees</a></li>
+                            <li><a href="/place-order/">Place Order</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-section">
+                        <h4>Support</h4>
+                        <ul class="footer-links">
+                            <li><a href="/about/">About Us</a></li>
+                            <li><a href="/how-it-works/">How It Works</a></li>
+                            <li><a href="/contact/">Contact Us</a></li>
+                            <li><a href="/pricing/">Pricing Plans</a></li>
+                            <li><a href="/refund-policy/">Refund Policy</a></li>
+                            <li><a href="/terms/">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <div class="copyright">
+                        &copy; 2026 AcademicWrite. All rights reserved.
+                    </div>
+                    <div class="footer-legal">
+                        <a href="/terms/">Terms</a>
+                        <span>|</span>
+                        <a href="/privacy/">Privacy</a>
+                        <span>|</span>
+                        <a href="/refund-policy/">Refund</a>
+                        <span>|</span>
+                        <a href="/sitemap.xml">Sitemap</a>
+                    </div>
+                </div>
             </div>
-            
-            <div class="footer-section">
-                <h4>Our Services</h4>
-                <ul class="footer-links">
-                    <li><a href="/services/">Essay Writing</a></li>
-                    <li><a href="/services/">Research Papers</a></li>
-                    <li><a href="/services/">Dissertations</a></li>
-                    <li><a href="/services/">Thesis Writing</a></li>
-                    <li><a href="/services/">Term Papers</a></li>
-                    <li><a href="/services/">Coursework Help</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h4>Resources</h4>
-                <ul class="footer-links">
-                    <li><a href="/blog/">Blog</a></li>
-                    <li><a href="/samples/">Writing Samples</a></li>
-                    <li><a href="/testimonials/">Testimonials</a></li>
-                    <li><a href="/faq/">FAQ</a></li>
-                    <li><a href="/guarantees/">Guarantees</a></li>
-                    <li><a href="/place-order/">Place Order</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h4>Support</h4>
-                <ul class="footer-links">
-                    <li><a href="/about/">About Us</a></li>
-                    <li><a href="/how-it-works/">How It Works</a></li>
-                    <li><a href="/contact/">Contact Us</a></li>
-                    <li><a href="/pricing/">Pricing Plans</a></li>
-                    <li><a href="/refund-policy/">Refund Policy</a></li>
-                    <li><a href="/terms/">Terms of Service</a></li>
-                </ul>
-            </div>
-        </div>
-        
-        <div class="footer-bottom">
-            <div class="copyright">
-                &copy; 2026 AcademicWrite. All rights reserved.
-            </div>
-            <div class="footer-legal">
-                <a href="/terms/">Terms</a>
-                <span>|</span>
-                <a href="/privacy/">Privacy</a>
-                <span>|</span>
-                <a href="/refund-policy/">Refund</a>
-                <span>|</span>
-                <a href="/sitemap.xml">Sitemap</a>
-            </div>
-        </div>
-    </div>
-</footer>
+        </footer>
 
         <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay">
             <div class="bg-white max-w-md w-full mx-4 p-6" id="modalContent"></div>
@@ -675,7 +675,7 @@
             var button = document.getElementById('mobileMenuButton');
             var menu = document.getElementById('mobileMenu');
             var closeBtn = document.getElementById('closeMobileMenu');
-            
+
             if (button && menu) {
                 button.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -687,7 +687,7 @@
                     }
                     document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
                 });
-                
+
                 if (closeBtn) {
                     closeBtn.addEventListener('click', function() {
                         menu.classList.remove('open');
@@ -699,7 +699,7 @@
                         document.body.style.overflow = '';
                     });
                 }
-                
+
                 document.addEventListener('click', function(e) {
                     if (!menu.contains(e.target) && !button.contains(e.target)) {
                         menu.classList.remove('open');
@@ -773,7 +773,7 @@
             }
         });
     </script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

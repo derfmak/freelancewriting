@@ -10,51 +10,78 @@
         10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
         20%, 40%, 60%, 80% { transform: translateX(6px); }
     }
-
     @keyframes slideDown {
         from { opacity: 0; transform: translateY(-8px); }
         to { opacity: 1; transform: translateY(0); }
     }
-
     @keyframes spin {
         to { transform: rotate(360deg); }
+    }
+    @keyframes popIn {
+        0% { transform: scale(0.3); opacity: 0; }
+        60% { transform: scale(1.1); opacity: 1; }
+        80% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+    }
+    @keyframes drawCheck {
+        0% { stroke-dashoffset: 60; }
+        100% { stroke-dashoffset: 0; }
+    }
+    @keyframes fillGreen {
+        0% { fill: transparent; }
+        100% { fill: #059669; }
+    }
+    @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+        50% { box-shadow: 0 0 20px 6px rgba(5, 150, 105, 0.15); }
+    }
+    @keyframes errorGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 0 20px 4px rgba(239, 68, 68, 0.15); }
+    }
+    @keyframes floatUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes confettiFall {
+        0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
     }
 
     .register-container {
         max-width: 560px;
         margin: 0 auto;
+        position: relative;
     }
-
     .register-card {
         background: white;
         border-radius: 1rem;
         padding: 2rem;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
         border: 1px solid #e5e7eb;
+        transition: box-shadow 0.3s ease;
     }
-
+    .register-card.error-shake {
+        animation: shake 0.5s ease, errorGlow 1.5s ease;
+        border-color: #ef4444;
+    }
     .register-title {
         font-size: 1.75rem;
         font-weight: 700;
         color: #1e293b;
     }
-
     .register-title span { color: #059669; }
-
     .register-subtitle {
         color: #6b7280;
         font-size: 0.9rem;
     }
-
     .divider-line {
         width: 2.5rem;
         height: 2px;
         background: #059669;
         margin: 0.5rem auto 0.5rem;
     }
-
     .form-group { margin-bottom: 1.25rem; }
-
     .form-label {
         display: block;
         font-size: 0.8rem;
@@ -62,7 +89,6 @@
         color: #374151;
         margin-bottom: 0.4rem;
     }
-
     .form-input {
         width: 100%;
         padding: 0.6rem 0.8rem;
@@ -73,32 +99,25 @@
         background: #fafbfc;
         outline: none;
     }
-
     .form-input:focus {
-        outline: none;
         border-color: #059669;
         box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
         background: white;
     }
-
     .form-input.error {
         border-color: #ef4444;
         background: #fef2f2;
         animation: shake 0.5s ease;
     }
-
     .form-input.success {
         border-color: #059669;
         background: #f0fdf4;
     }
-
     .form-input:disabled {
         background: #f1f5f9;
         color: #64748b;
     }
-
     .password-wrapper { position: relative; }
-
     .password-toggle {
         position: absolute;
         right: 0.8rem;
@@ -111,19 +130,17 @@
         padding: 0.2rem;
         transition: color 0.3s ease;
     }
-
     .password-toggle:hover { color: #059669; }
-
     .error-message {
         display: none;
         color: #ef4444;
         font-size: 0.75rem;
         margin-top: 0.3rem;
         animation: slideDown 0.3s ease;
+        align-items: center;
+        gap: 0.35rem;
     }
-
-    .error-message.show { display: block; }
-
+    .error-message.show { display: flex; }
     .register-btn {
         width: 100%;
         padding: 0.7rem;
@@ -139,24 +156,20 @@
         overflow: hidden;
         opacity: 0.6;
     }
-
     .register-btn.active {
         background: #059669;
         cursor: pointer;
         opacity: 1;
     }
-
     .register-btn.active:hover {
         background: #047857;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
     }
-
     .register-btn .btn-text { position: relative; z-index: 2; }
     .register-btn .btn-loader { display: none; position: relative; z-index: 2; }
     .register-btn.loading .btn-text { display: none; }
     .register-btn.loading .btn-loader { display: inline-block; }
-
     .spinner {
         display: inline-block;
         width: 1.2rem;
@@ -166,7 +179,6 @@
         border-top-color: white;
         animation: spin 0.6s linear infinite;
     }
-
     .checkbox-label {
         display: flex;
         align-items: flex-start;
@@ -175,7 +187,6 @@
         font-size: 0.8rem;
         color: #6b7280;
     }
-
     .checkbox-label input[type="checkbox"] {
         width: 1rem;
         height: 1rem;
@@ -184,16 +195,13 @@
         margin-top: 0.15rem;
         flex-shrink: 0;
     }
-
     .login-link {
         color: #059669;
         text-decoration: none;
         font-weight: 600;
         transition: color 0.3s ease;
     }
-
     .login-link:hover { color: #047857; text-decoration: underline; }
-
     .field-requirements {
         font-size: 0.7rem;
         color: #9ca3af;
@@ -202,18 +210,15 @@
         grid-template-columns: 1fr 1fr;
         gap: 0.2rem 1rem;
     }
-
     .field-requirements .req { display: flex; align-items: center; gap: 0.3rem; }
     .field-requirements .req i { font-size: 0.4rem; }
     .field-requirements .req.met { color: #059669; }
     .field-requirements .req.unmet { color: #9ca3af; }
-
     .social-buttons {
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
     }
-
     .btn-social {
         width: 100%;
         padding: 0.7rem;
@@ -231,45 +236,35 @@
         transition: all 0.3s ease;
         text-decoration: none;
     }
-
     .btn-social:hover {
         background: #f8fafc;
         border-color: #d1d5db;
         transform: translateY(-1px);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
-
     .btn-social svg {
         width: 20px;
         height: 20px;
         flex-shrink: 0;
     }
-
-    .btn-social.apple svg {
-        fill: #1e293b;
-    }
-
     .divider {
         display: flex;
         align-items: center;
         gap: 1rem;
         margin: 1.5rem 0;
     }
-
     .divider::before, .divider::after {
         content: '';
         flex: 1;
         height: 1px;
         background: #e5e7eb;
     }
-
     .divider span {
         color: #9ca3af;
         font-size: 0.8rem;
         font-weight: 500;
         white-space: nowrap;
     }
-
     .toast-notification {
         position: fixed;
         top: 1.5rem;
@@ -279,7 +274,6 @@
         max-width: 400px;
         width: 100%;
     }
-
     .toast-content {
         background: white;
         border-radius: 0.75rem;
@@ -290,13 +284,11 @@
         align-items: center;
         gap: 0.75rem;
     }
-
     .toast-content.error { border-left-color: #ef4444; }
     .toast-content.success { border-left-color: #059669; }
     .toast-icon { font-size: 1.2rem; flex-shrink: 0; }
     .toast-icon.success { color: #059669; }
     .toast-icon.error { color: #ef4444; }
-
     .toast-message {
         font-size: 0.85rem;
         color: #1e293b;
@@ -304,7 +296,6 @@
         word-break: break-word;
         flex: 1;
     }
-
     .toast-close {
         background: none;
         border: none;
@@ -315,8 +306,106 @@
         transition: color 0.3s ease;
         flex-shrink: 0;
     }
-
     .toast-close:hover { color: #1e293b; }
+
+    /* ---- Success Overlay ---- */
+    .success-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 3000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        flex-direction: column;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    .success-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+    .success-card {
+        background: white;
+        border-radius: 1.25rem;
+        padding: 3rem 2.5rem;
+        box-shadow: 0 24px 64px rgba(5,150,105,0.15), 0 8px 24px rgba(0,0,0,0.08);
+        text-align: center;
+        max-width: 360px;
+        width: 90%;
+        border: 1px solid #d1fae5;
+        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    .success-checkmark {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.25rem;
+        position: relative;
+    }
+    .success-checkmark svg {
+        width: 100%;
+        height: 100%;
+    }
+    .success-checkmark circle {
+        fill: #ecfdf5;
+        stroke: #059669;
+        stroke-width: 2;
+    }
+    .success-checkmark path {
+        fill: none;
+        stroke: #059669;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 60;
+        stroke-dashoffset: 60;
+    }
+    .success-overlay.show .success-checkmark path {
+        animation: drawCheck 0.5s 0.3s ease forwards;
+    }
+    .success-overlay.show .success-checkmark circle {
+        animation: fillGreen 0.4s 0.8s ease forwards;
+    }
+    .success-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        animation: floatUp 0.5s 0.5s ease both;
+    }
+    .success-subtitle {
+        color: #6b7280;
+        font-size: 0.9rem;
+        animation: floatUp 0.5s 0.65s ease both;
+    }
+    .success-dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 1.5rem;
+        animation: floatUp 0.5s 0.8s ease both;
+    }
+    .success-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d1fae5;
+        animation: pulse 1.2s infinite;
+    }
+    .success-dot:nth-child(2) { animation-delay: 0.15s; background: #6ee7b7; }
+    .success-dot:nth-child(3) { animation-delay: 0.3s; background: #059669; }
+
+    /* ---- Confetti ---- */
+    .confetti-piece {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        top: -10px;
+        z-index: 3001;
+        pointer-events: none;
+    }
 
     .verify-modal {
         position: fixed;
@@ -328,9 +417,7 @@
         z-index: 50;
         padding: 1rem;
     }
-
     .verify-modal.show { display: flex; }
-
     .verify-card {
         background: white;
         border-radius: 1rem;
@@ -339,27 +426,23 @@
         width: 100%;
         border: 1px solid #e5e7eb;
     }
-
     .verify-title {
         font-size: 1.25rem;
         font-weight: 700;
         color: #1e293b;
         margin-bottom: 0.5rem;
     }
-
     .verify-subtitle {
         color: #6b7280;
         font-size: 0.85rem;
         margin-bottom: 1.25rem;
     }
-
     .otp-boxes {
         display: flex;
         gap: 0.5rem;
         justify-content: center;
         margin-bottom: 1rem;
     }
-
     .otp-box {
         width: 3.2rem;
         height: 3.8rem;
@@ -373,24 +456,20 @@
         background: #fafbfc;
         color: #1e293b;
     }
-
     .otp-box:focus {
         border-color: #059669;
         box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
         background: white;
     }
-
     .otp-box.error { border-color: #ef4444; background: #fef2f2; animation: shake 0.5s ease; }
     .otp-box.success { border-color: #059669; background: #f0fdf4; }
     .otp-box.filled { border-color: #059669; background: #f0fdf4; }
-
     .verify-actions {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-top: 1.25rem;
     }
-
     .resend-btn {
         background: none;
         border: none;
@@ -400,10 +479,8 @@
         cursor: pointer;
         transition: color 0.3s ease;
     }
-
     .resend-btn:hover { color: #047857; text-decoration: underline; }
     .resend-btn:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
-
     .verify-btn {
         padding: 0.5rem 1.5rem;
         background: #059669;
@@ -414,10 +491,8 @@
         cursor: pointer;
         transition: all 0.3s ease;
     }
-
     .verify-btn:hover { background: #047857; }
     .verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
     .verify-cancel {
         padding: 0.5rem 1.5rem;
         background: transparent;
@@ -428,9 +503,7 @@
         cursor: pointer;
         transition: all 0.3s ease;
     }
-
     .verify-cancel:hover { background: #f8fafc; }
-
     .verify-error {
         color: #ef4444;
         font-size: 0.8rem;
@@ -438,9 +511,7 @@
         display: none;
         text-align: center;
     }
-
     .verify-error.show { display: block; animation: slideDown 0.3s ease; }
-
     .verify-success {
         color: #059669;
         font-size: 0.8rem;
@@ -448,9 +519,7 @@
         display: none;
         text-align: center;
     }
-
     .verify-success.show { display: block; animation: slideDown 0.3s ease; }
-
     .resend-timer { font-size: 0.8rem; color: #6b7280; }
 
     .error-message-box {
@@ -463,12 +532,9 @@
         margin-bottom: 1rem;
         display: none;
     }
-
     .error-message-box.show { display: block; }
-
     .error-message-box a { color: #059669; font-weight: 600; text-decoration: none; }
     .error-message-box a:hover { text-decoration: underline; }
-
     .success-message-box {
         background: #ecfdf5;
         color: #059669;
@@ -478,7 +544,6 @@
         border-left: 4px solid #059669;
         margin-bottom: 1rem;
     }
-
     .dialog-overlay {
         position: fixed;
         inset: 0;
@@ -489,9 +554,7 @@
         z-index: 1001;
         padding: 1rem;
     }
-
     .dialog-overlay.show { display: flex; }
-
     .dialog-box {
         background: white;
         border-radius: 1rem;
@@ -501,20 +564,17 @@
         box-shadow: 0 20px 60px rgba(0,0,0,0.2);
         text-align: center;
     }
-
     .dialog-box h3 {
         font-size: 1.25rem;
         font-weight: 700;
         color: #1e293b;
         margin-bottom: 0.5rem;
     }
-
     .dialog-box p {
         color: #6b7280;
         font-size: 0.95rem;
         margin-bottom: 1.5rem;
     }
-
     .dialog-box .btn {
         display: inline-block;
         padding: 0.6rem 1.5rem;
@@ -525,23 +585,19 @@
         transition: all 0.2s ease;
         margin: 0 0.25rem;
     }
-
     .dialog-box .btn-primary {
         background: #059669;
         color: white;
     }
-
     .dialog-box .btn-primary:hover {
         background: #047857;
         transform: translateY(-1px);
     }
-
     .dialog-box .btn-outline {
         background: transparent;
         border: 1.5px solid #d1d5db;
         color: #4b5563;
     }
-
     .dialog-box .btn-outline:hover {
         background: #f3f4f6;
     }
@@ -554,13 +610,14 @@
         .verify-cancel, .verify-btn { width: 100%; }
         .otp-box { width: 2.6rem; height: 3.2rem; font-size: 1.4rem; }
         .otp-boxes { gap: 0.3rem; }
+        .success-card { padding: 2rem 1.5rem; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="register-container">
-    <div class="register-card">
+    <div class="register-card" id="registerCard">
         <div class="text-center">
             <h1 class="register-title" id="formTitle">Create Your <span>Account</span></h1>
             <div class="divider-line"></div>
@@ -589,12 +646,12 @@
             <div class="form-group">
                 <label for="fullName" class="form-label">Full Name</label>
                 <input type="text" id="fullName" class="form-input" placeholder="John Doe" required autocomplete="name" spellcheck="false">
-                <div class="error-message" id="nameError">Full name is required</div>
+                <div class="error-message" id="nameError"><i class="fas fa-exclamation-circle"></i> Full name is required</div>
             </div>
             <div class="form-group">
                 <label for="email" class="form-label">Email Address</label>
                 <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email" spellcheck="false">
-                <div class="error-message" id="emailError">Please enter a valid email address</div>
+                <div class="error-message" id="emailError"><i class="fas fa-exclamation-circle"></i> Please enter a valid email address</div>
             </div>
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
@@ -602,7 +659,7 @@
                     <input type="password" id="password" class="form-input" placeholder="Create a strong password" required autocomplete="new-password" spellcheck="false">
                     <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
                 </div>
-                <div class="error-message" id="passwordError">Password does not meet requirements</div>
+                <div class="error-message" id="passwordError"><i class="fas fa-exclamation-circle"></i> Password does not meet requirements</div>
                 <div class="field-requirements" id="passwordReqs">
                     <span class="req unmet" id="reqLength"><i class="fas fa-circle"></i> Min 8 characters</span>
                     <span class="req unmet" id="reqUppercase"><i class="fas fa-circle"></i> One uppercase</span>
@@ -617,7 +674,7 @@
                     <input type="password" id="passwordConfirm" class="form-input" placeholder="Confirm your password" required autocomplete="new-password" spellcheck="false">
                     <button type="button" class="password-toggle" id="toggleConfirmPassword" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
                 </div>
-                <div class="error-message" id="confirmError">Passwords do not match</div>
+                <div class="error-message" id="confirmError"><i class="fas fa-exclamation-circle"></i> Passwords do not match</div>
                 <div class="field-requirements">
                     <span class="req unmet" id="reqMatch"><i class="fas fa-circle"></i> Passwords match</span>
                 </div>
@@ -670,13 +727,6 @@
                     </svg>
                     Sign up with Google
                 </a>
-
-                <a href="/auth/apple/" class="btn-social apple">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.04-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.052 2.106-.988 3.958-.988 1.852 0 2.391.988 3.958.988 1.584.052 2.779-1.585 3.792-3.039 1.042-1.495 1.47-2.946 1.534-3.028-.117-.065-2.962-1.117-2.992-4.43-.03-2.846 2.312-4.193 2.417-4.261-1.325-1.949-3.378-2.169-4.101-2.169zM15.182 4.834c.883-1.064 1.463-2.531 1.299-3.998-.539.026-1.885.354-2.722 1.194-.83.832-1.364 2.12-1.248 3.391.638.052 1.807-.329 2.671-1.587z"/>
-                    </svg>
-                    Sign up with Apple
-                </a>
             </div>
         </div>
 
@@ -696,6 +746,26 @@
     </div>
 </div>
 
+<!-- Success Overlay -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-card">
+        <div class="success-checkmark">
+            <svg viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="36" />
+                <path d="M24 42 L34 52 L56 30" />
+            </svg>
+        </div>
+        <div class="success-title">Account Created!</div>
+        <div class="success-subtitle">Redirecting you to your dashboard...</div>
+        <div class="success-dots">
+            <div class="success-dot"></div>
+            <div class="success-dot"></div>
+            <div class="success-dot"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Verification Modal -->
 <div class="verify-modal" id="verifyModal">
     <div class="verify-card">
         <h3 class="verify-title">Verify Your Email</h3>
@@ -775,6 +845,43 @@ function showToast(message, type) {
     setTimeout(function() { container.style.display = 'none'; }, 5000);
 }
 
+/* ---- Confetti & Animation Engine ---- */
+function spawnConfetti() {
+    var colors = ['#059669', '#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b'];
+    var count = 60;
+    for (var i = 0; i < count; i++) {
+        var el = document.createElement('div');
+        el.className = 'confetti-piece';
+        var bg = colors[Math.floor(Math.random() * colors.length)];
+        var left = Math.random() * 100 + 'vw';
+        var size = Math.random() * 8 + 6 + 'px';
+        var duration = Math.random() * 2 + 2 + 's';
+        var delay = Math.random() * 0.5 + 's';
+        var rotation = Math.random() * 360 + 'deg';
+        el.style.cssText = 'background:' + bg + ';left:' + left + ';width:' + size + ';height:' + size +
+            ';border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') +
+            ';animation:confettiFall ' + duration + ' ' + delay + ' linear forwards;transform:rotate(' + rotation + ');';
+        document.body.appendChild(el);
+        setTimeout(function(el){ return function(){ el.remove(); }; }(el), 5000);
+    }
+}
+
+function showSuccessAnimation(message, redirectUrl) {
+    spawnConfetti();
+    document.getElementById('successOverlay').classList.add('show');
+    setTimeout(function() {
+        window.location.href = redirectUrl || '/dashboard/';
+    }, 1800);
+}
+
+function triggerErrorShake() {
+    var card = document.getElementById('registerCard');
+    card.classList.remove('error-shake');
+    void card.offsetWidth;
+    card.classList.add('error-shake');
+    setTimeout(function() { card.classList.remove('error-shake'); }, 1500);
+}
+
 function setupSocialSignup(token, provider) {
     var normalForm = document.getElementById('normalRegisterForm');
     var normalDivider = document.getElementById('normalDivider');
@@ -795,21 +902,14 @@ function setupSocialSignup(token, provider) {
     var fullNameInput = document.getElementById('socialFullName');
     var submitBtn = document.getElementById('socialSubmitBtn');
     var termsCheckbox = document.getElementById('socialTerms');
-    var btnText = submitBtn.querySelector('.btn-text');
-    var btnLoader = submitBtn.querySelector('.btn-loader');
 
     async function fetchSocialData() {
         try {
             var response = await fetch('/auth/social-data/?token=' + encodeURIComponent(token) + '&provider=' + provider);
             if (response.ok) {
                 var data = await response.json();
-                if (data.email) {
-                    emailInput.value = data.email;
-                    emailInput.disabled = true;
-                }
-                if (data.full_name) {
-                    fullNameInput.value = data.full_name;
-                }
+                if (data.email) { emailInput.value = data.email; emailInput.disabled = true; }
+                if (data.full_name) { fullNameInput.value = data.full_name; }
             } else {
                 showToast('Failed to load account data. Please try again.', 'error');
             }
@@ -826,12 +926,10 @@ function setupSocialSignup(token, provider) {
 
     socialForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-
         if (!termsCheckbox.checked) {
             showDialog('Terms Required', 'You must agree to the Terms of Service and Privacy Policy to continue.', 'OK');
             return;
         }
-
         var fullName = fullNameInput.value.trim();
         var providerVal = document.getElementById('socialProvider').value;
         if (!fullName) { showError('Please enter your full name.'); return; }
@@ -858,16 +956,14 @@ function setupSocialSignup(token, provider) {
                     localStorage.setItem('refresh_token', data.refresh);
                     if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
                 }
-                showToast('Account created! Redirecting...', 'success');
-                setTimeout(function() { window.location.href = '/dashboard/'; }, 1000);
+                showSuccessAnimation('Account created! Redirecting...', '/dashboard/');
             } else {
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
+                triggerErrorShake();
                 if (data.redirect === 'login' || response.status === 409) {
                     var redirectUrl = '/login/';
-                    if (emailInput.value) {
-                        redirectUrl += '?email=' + encodeURIComponent(emailInput.value);
-                    }
+                    if (emailInput.value) redirectUrl += '?email=' + encodeURIComponent(emailInput.value);
                     showDialog('Account Exists', data.error || 'An account with this email already exists.', 'Sign In', function() {
                         window.location.href = redirectUrl;
                     });
@@ -879,6 +975,7 @@ function setupSocialSignup(token, provider) {
             showDialog('Network Error', 'Please check your connection and try again.', 'OK');
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
+            triggerErrorShake();
         }
     });
 }
@@ -931,7 +1028,7 @@ function setupNormalRegister() {
 
     function showError(input, errorEl, message) {
         input.classList.add('error'); input.classList.remove('success');
-        errorEl.textContent = message || errorEl.textContent;
+        if (message) errorEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
         errorEl.classList.add('show');
     }
 
@@ -1060,16 +1157,16 @@ function setupNormalRegister() {
             } else if (response.status === 409) {
                 registerBtn.classList.remove('loading');
                 registerBtn.disabled = false;
+                triggerErrorShake();
                 var redirectUrl = '/login/';
-                if (email.value) {
-                    redirectUrl += '?email=' + encodeURIComponent(email.value.trim());
-                }
+                if (email.value) redirectUrl += '?email=' + encodeURIComponent(email.value.trim());
                 showDialog('Account Already Exists', data.error || 'An account with this email already exists. Please sign in.', 'Sign In', function() {
                     window.location.href = redirectUrl;
                 });
             } else {
                 registerBtn.classList.remove('loading');
                 registerBtn.disabled = false;
+                triggerErrorShake();
                 var errorMessage = 'Registration failed.';
                 if (data.email) { errorMessage = Array.isArray(data.email) ? data.email[0] : data.email; showError(email, emailError, errorMessage); }
                 else if (data.full_name) { errorMessage = Array.isArray(data.full_name) ? data.full_name[0] : data.full_name; showError(fullName, nameError, errorMessage); }
@@ -1081,6 +1178,7 @@ function setupNormalRegister() {
         } catch (error) {
             registerBtn.classList.remove('loading');
             registerBtn.disabled = false;
+            triggerErrorShake();
             showDialog('Network Error', 'Please check your connection and try again.', 'OK');
         }
         registerBtn.classList.remove('loading');
@@ -1134,12 +1232,9 @@ function startResendTimer() {
             } else {
                 this.classList.remove('filled');
             }
-            // Clear any previous error/success messages
             document.getElementById('verifyError').classList.remove('show');
             document.getElementById('verifySuccess').classList.remove('show');
             updateVerifyButton();
-            
-            // Auto-verify when all boxes are filled
             if (getOTP().length === 6) {
                 document.getElementById('verifySubmit').click();
             }
@@ -1213,8 +1308,7 @@ document.getElementById('verifySubmit').addEventListener('click', async function
             successEl.textContent = 'Email verified successfully!';
             successEl.classList.add('show');
             errorEl.classList.remove('show');
-            showToast('Email verified successfully! Redirecting to login...', 'success');
-            setTimeout(function() { window.location.href = '/login/'; }, 1500);
+            showSuccessAnimation('Email verified! Redirecting...', '/login/');
         } else {
             document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.add('error'); });
             errorEl.textContent = data.error || 'Invalid verification code';

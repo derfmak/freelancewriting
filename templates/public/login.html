@@ -5,7 +5,6 @@
 
 {% block extra_css %}
 <style>
-    /* --- All existing styles remain exactly the same up to the modal --- */
     @keyframes shake {
         0%, 100% { transform: translateX(0); }
         10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
@@ -18,10 +17,41 @@
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
+    @keyframes popIn {
+        0% { transform: scale(0.3); opacity: 0; }
+        60% { transform: scale(1.1); opacity: 1; }
+        80% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+    }
+    @keyframes drawCheck {
+        0% { stroke-dashoffset: 60; }
+        100% { stroke-dashoffset: 0; }
+    }
+    @keyframes fillGreen {
+        0% { fill: transparent; }
+        100% { fill: #059669; }
+    }
+    @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+        50% { box-shadow: 0 0 20px 6px rgba(5, 150, 105, 0.15); }
+    }
+    @keyframes errorGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 0 20px 4px rgba(239, 68, 68, 0.15); }
+    }
+    @keyframes floatUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes confettiFall {
+        0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
 
     .login-container {
         max-width: 420px;
         margin: 0 auto;
+        position: relative;
     }
     .login-card {
         background: white;
@@ -29,6 +59,12 @@
         padding: 2rem;
         box-shadow: 0 4px 24px rgba(0,0,0,0.04);
         border: 1px solid #e5e7eb;
+        transition: box-shadow 0.3s ease;
+    }
+    .login-card.error-shake {
+        animation: shake 0.5s ease;
+        border-color: #ef4444;
+        animation: shake 0.5s ease, errorGlow 1.5s ease;
     }
     .login-title {
         font-size: 1.75rem;
@@ -98,8 +134,10 @@
         font-size: 0.75rem;
         margin-top: 0.3rem;
         animation: slideDown 0.3s ease;
+        align-items: center;
+        gap: 0.35rem;
     }
-    .error-message.show { display: block; }
+    .error-message.show { display: flex; }
     .login-btn {
         width: 100%;
         padding: 0.7rem;
@@ -199,7 +237,6 @@
         height: 20px;
         flex-shrink: 0;
     }
-    .btn-social.apple svg { fill: #1e293b; }
     .divider {
         display: flex;
         align-items: center;
@@ -226,6 +263,7 @@
         font-size: 0.85rem;
         border-left: 4px solid #dc2626;
         margin-bottom: 1rem;
+        animation: slideDown 0.3s ease;
     }
     .error-message-box a {
         color: #059669;
@@ -241,7 +279,109 @@
         font-size: 0.85rem;
         border-left: 4px solid #059669;
         margin-bottom: 1rem;
+        animation: slideDown 0.3s ease;
     }
+
+    /* ---- Success Overlay ---- */
+    .success-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 3000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        flex-direction: column;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    .success-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+    .success-card {
+        background: white;
+        border-radius: 1.25rem;
+        padding: 3rem 2.5rem;
+        box-shadow: 0 24px 64px rgba(5,150,105,0.15), 0 8px 24px rgba(0,0,0,0.08);
+        text-align: center;
+        max-width: 360px;
+        width: 90%;
+        border: 1px solid #d1fae5;
+        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    .success-checkmark {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.25rem;
+        position: relative;
+    }
+    .success-checkmark svg {
+        width: 100%;
+        height: 100%;
+    }
+    .success-checkmark circle {
+        fill: #ecfdf5;
+        stroke: #059669;
+        stroke-width: 2;
+    }
+    .success-checkmark path {
+        fill: none;
+        stroke: #059669;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 60;
+        stroke-dashoffset: 60;
+    }
+    .success-overlay.show .success-checkmark path {
+        animation: drawCheck 0.5s 0.3s ease forwards;
+    }
+    .success-overlay.show .success-checkmark circle {
+        animation: fillGreen 0.4s 0.8s ease forwards;
+    }
+    .success-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        animation: floatUp 0.5s 0.5s ease both;
+    }
+    .success-subtitle {
+        color: #6b7280;
+        font-size: 0.9rem;
+        animation: floatUp 0.5s 0.65s ease both;
+    }
+    .success-dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 1.5rem;
+        animation: floatUp 0.5s 0.8s ease both;
+    }
+    .success-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d1fae5;
+        animation: pulse 1.2s infinite;
+    }
+    .success-dot:nth-child(2) { animation-delay: 0.15s; background: #6ee7b7; }
+    .success-dot:nth-child(3) { animation-delay: 0.3s; background: #059669; }
+
+    /* ---- Confetti ---- */
+    .confetti-piece {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        top: -10px;
+        z-index: 3001;
+        pointer-events: none;
+    }
+
+    /* ---- Toast ---- */
     .toast-notification {
         position: fixed;
         top: 1.5rem;
@@ -283,7 +423,7 @@
     }
     .toast-close:hover { color: #1e293b; }
 
-    /* --- Verification Modal --- */
+    /* ---- Modal ---- */
     .modal-overlay {
         position: fixed;
         inset: 0;
@@ -329,7 +469,6 @@
     }
     .modal-box .modal-close:hover { color: #1e293b; }
 
-    /* OTP boxes */
     .otp-boxes {
         display: flex;
         gap: 0.5rem;
@@ -447,14 +586,14 @@
             gap: 0.75rem;
         }
         .modal-box .btn-verify { width: 100%; }
+        .success-card { padding: 2rem 1.5rem; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- The entire login page content is exactly the same as before -->
 <div class="login-container">
-    <div class="login-card">
+    <div class="login-card" id="loginCard">
         <div class="text-center">
             <h1 class="login-title">Welcome <span>Back</span></h1>
             <div class="divider-line"></div>
@@ -475,7 +614,7 @@
             <div class="form-group">
                 <label for="email" class="form-label">Email Address</label>
                 <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email" spellcheck="false">
-                <div class="error-message" id="emailError">Please enter a valid email address</div>
+                <div class="error-message" id="emailError"><i class="fas fa-exclamation-circle"></i> Please enter a valid email address</div>
             </div>
 
             <div class="form-group">
@@ -486,7 +625,7 @@
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
-                <div class="error-message" id="passwordError">Password must be at least 6 characters</div>
+                <div class="error-message" id="passwordError"><i class="fas fa-exclamation-circle"></i> Password must be at least 6 characters</div>
             </div>
 
             <div class="flex items-center justify-between mb-6">
@@ -508,7 +647,7 @@
         </div>
 
         <div class="social-buttons">
-            <a href="/auth/google/" class="btn-social">
+            <a href="{% url 'accounts:google-login' %}" class="btn-social">
                 <svg viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -516,12 +655,6 @@
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
                 Sign in with Google
-            </a>
-            <a href="/auth/apple/" class="btn-social apple">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.04-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.052 2.106-.988 3.958-.988 1.852 0 2.391.988 3.958.988 1.584.052 2.779-1.585 3.792-3.039 1.042-1.495 1.47-2.946 1.534-3.028-.117-.065-2.962-1.117-2.992-4.43-.03-2.846 2.312-4.193 2.417-4.261-1.325-1.949-3.378-2.169-4.101-2.169zM15.182 4.834c.883-1.064 1.463-2.531 1.299-3.998-.539.026-1.885.354-2.722 1.194-.83.832-1.364 2.12-1.248 3.391.638.052 1.807-.329 2.671-1.587z"/>
-                </svg>
-                Sign in with Apple
             </a>
         </div>
 
@@ -547,7 +680,26 @@
     </div>
 </div>
 
-<!-- Verification Modal with 6 boxes -->
+<!-- Success Overlay -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-card">
+        <div class="success-checkmark">
+            <svg viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="36" />
+                <path d="M24 42 L34 52 L56 30" />
+            </svg>
+        </div>
+        <div class="success-title">Welcome Back!</div>
+        <div class="success-subtitle">Redirecting you to your dashboard...</div>
+        <div class="success-dots">
+            <div class="success-dot"></div>
+            <div class="success-dot"></div>
+            <div class="success-dot"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Verification Modal -->
 <div class="modal-overlay" id="verificationModal">
     <div class="modal-box">
         <button class="modal-close" id="modalClose">&times;</button>
@@ -579,7 +731,6 @@
 
 <div id="toastContainer" class="toast-notification" style="display:none;"></div>
 
-<!-- Dialog for missing account -->
 <div class="modal-overlay" id="dialogOverlay">
     <div class="modal-box" style="text-align:center;">
         <h3 id="dialogTitle">Attention</h3>
@@ -600,11 +751,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailError = document.getElementById('emailError');
     const passwordError = document.getElementById('passwordError');
     const loginBtn = document.getElementById('loginBtn');
+    const loginCard = document.getElementById('loginCard');
     const togglePassword = document.getElementById('togglePassword');
     const rememberCheck = document.getElementById('remember');
     const urlErrorBox = document.getElementById('urlErrorBox');
+    const successOverlay = document.getElementById('successOverlay');
 
-    // Verification modal elements
     const modal = document.getElementById('verificationModal');
     const modalEmailDisplay = document.getElementById('modalEmailDisplay');
     const otpBoxes = document.querySelectorAll('.otp-box');
@@ -622,7 +774,51 @@ document.addEventListener('DOMContentLoaded', function() {
     let timerInterval = null;
     let resendTimeout = 60;
 
-    // ----- Utility functions -----
+    /* ---- Confetti Engine ---- */
+    function spawnConfetti() {
+        const colors = ['#059669', '#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b'];
+        const count = 60;
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti-piece';
+            const bg = colors[Math.floor(Math.random() * colors.length)];
+            const left = Math.random() * 100 + 'vw';
+            const size = Math.random() * 8 + 6 + 'px';
+            const duration = Math.random() * 2 + 2 + 's';
+            const delay = Math.random() * 0.5 + 's';
+            const rotation = Math.random() * 360 + 'deg';
+
+            el.style.cssText = `
+                background: ${bg};
+                left: ${left};
+                width: ${size};
+                height: ${size};
+                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                animation: confettiFall ${duration} ${delay} linear forwards;
+                transform: rotate(${rotation});
+            `;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 5000);
+        }
+    }
+
+    /* ---- Success Animation ---- */
+    function showSuccessAnimation(message, redirectUrl) {
+        spawnConfetti();
+        successOverlay.classList.add('show');
+        setTimeout(() => {
+            window.location.href = redirectUrl || '/dashboard/';
+        }, 1800);
+    }
+
+    /* ---- Error Animation ---- */
+    function triggerErrorShake() {
+        loginCard.classList.remove('error-shake');
+        void loginCard.offsetWidth; // force reflow
+        loginCard.classList.add('error-shake');
+        setTimeout(() => loginCard.classList.remove('error-shake'), 1500);
+    }
+
     function showToast(message, type) {
         const container = document.getElementById('toastContainer');
         const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
@@ -674,7 +870,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showError(input, errorEl, message) {
         input.classList.add('error');
-        errorEl.textContent = message || errorEl.textContent;
+        if (message) errorEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
         errorEl.classList.add('show');
     }
 
@@ -683,7 +879,6 @@ document.addEventListener('DOMContentLoaded', function() {
         errorEl.classList.remove('show');
     }
 
-    // ----- OTP helpers -----
     function getOTP() {
         let otp = '';
         otpBoxes.forEach(function(box) { otp += box.value; });
@@ -692,11 +887,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function setOTPBoxesError(hasError) {
         otpBoxes.forEach(function(box) {
-            if (hasError) {
-                box.classList.add('error');
-            } else {
-                box.classList.remove('error');
-            }
+            if (hasError) box.classList.add('error');
+            else box.classList.remove('error');
         });
     }
 
@@ -715,39 +907,26 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateVerifyButton() {
         const filled = Array.from(otpBoxes).every(function(box) { return box.value.length === 1; });
         verifyBtn.disabled = !filled;
-        if (filled) {
-            verifyBtn.textContent = 'Verify';
-        }
+        if (filled) verifyBtn.textContent = 'Verify';
     }
 
     function focusNext(index) {
-        if (index < otpBoxes.length - 1) {
-            otpBoxes[index + 1].focus();
-        }
+        if (index < otpBoxes.length - 1) otpBoxes[index + 1].focus();
     }
 
     function focusPrev(index) {
-        if (index > 0) {
-            otpBoxes[index - 1].focus();
-        }
+        if (index > 0) otpBoxes[index - 1].focus();
     }
 
-    // OTP box events
     otpBoxes.forEach(function(box, index) {
         box.addEventListener('input', function() {
-            // Keep only digits
             this.value = this.value.replace(/\D/g, '');
-            if (this.value.length > 1) {
-                this.value = this.value.slice(0, 1);
-            }
+            if (this.value.length > 1) this.value = this.value.slice(0, 1);
             if (this.value.length === 1) {
                 this.classList.add('filled');
                 this.classList.remove('error');
-                // Auto-advance to next
                 focusNext(index);
-                // Check if all filled
                 updateVerifyButton();
-                // If all boxes filled, auto-verify
                 if (index === otpBoxes.length - 1 && getOTP().length === 6) {
                     otpError.classList.remove('show');
                     otpSuccess.classList.remove('show');
@@ -757,30 +936,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.remove('filled');
                 updateVerifyButton();
             }
-            // Clear any previous error state
             setOTPBoxesError(false);
             otpError.classList.remove('show');
             otpSuccess.classList.remove('show');
         });
 
         box.addEventListener('keydown', function(e) {
-            if (e.key === 'Backspace' && !this.value && index > 0) {
-                focusPrev(index);
-            }
-            if (e.key === 'ArrowLeft' && index > 0) {
-                e.preventDefault();
-                focusPrev(index);
-            }
-            if (e.key === 'ArrowRight' && index < otpBoxes.length - 1) {
-                e.preventDefault();
-                focusNext(index);
-            }
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (!verifyBtn.disabled) {
-                    verifyBtn.click();
-                }
-            }
+            if (e.key === 'Backspace' && !this.value && index > 0) focusPrev(index);
+            if (e.key === 'ArrowLeft' && index > 0) { e.preventDefault(); focusPrev(index); }
+            if (e.key === 'ArrowRight' && index < otpBoxes.length - 1) { e.preventDefault(); focusNext(index); }
+            if (e.key === 'Enter') { e.preventDefault(); if (!verifyBtn.disabled) verifyBtn.click(); }
         });
 
         box.addEventListener('paste', function(e) {
@@ -789,26 +954,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const digits = paste.replace(/\D/g, '').slice(0, 6);
             if (digits) {
                 digits.split('').forEach(function(digit, i) {
-                    if (i < otpBoxes.length) {
-                        otpBoxes[i].value = digit;
-                        otpBoxes[i].classList.add('filled');
-                    }
+                    if (i < otpBoxes.length) { otpBoxes[i].value = digit; otpBoxes[i].classList.add('filled'); }
                 });
                 const lastIndex = Math.min(digits.length, otpBoxes.length) - 1;
-                if (lastIndex >= 0 && lastIndex < otpBoxes.length - 1) {
-                    otpBoxes[lastIndex + 1].focus();
-                } else if (lastIndex === otpBoxes.length - 1) {
-                    otpBoxes[lastIndex].focus();
-                }
+                if (lastIndex >= 0 && lastIndex < otpBoxes.length - 1) otpBoxes[lastIndex + 1].focus();
+                else if (lastIndex === otpBoxes.length - 1) otpBoxes[lastIndex].focus();
                 updateVerifyButton();
-                if (getOTP().length === 6) {
-                    verifyBtn.click();
-                }
+                if (getOTP().length === 6) verifyBtn.click();
             }
         });
     });
 
-    // ----- OTP modal functions -----
     function openVerificationModal(emailAddress) {
         modalEmailDisplay.textContent = emailAddress;
         clearOTPBoxes();
@@ -830,10 +986,7 @@ document.addEventListener('DOMContentLoaded', function() {
         timerInterval = setInterval(function() {
             resendTimeout -= 1;
             timerDisplay.textContent = resendTimeout;
-            if (resendTimeout <= 0) {
-                clearInterval(timerInterval);
-                resendBtn.disabled = false;
-            }
+            if (resendTimeout <= 0) { clearInterval(timerInterval); resendBtn.disabled = false; }
         }, 1000);
     }
 
@@ -842,69 +995,37 @@ document.addEventListener('DOMContentLoaded', function() {
         resendBtn.disabled = false;
     }
 
-    // ----- Email / password validation (unchanged) -----
     email.addEventListener('blur', function() {
         emailTouched = true;
         const value = this.value.trim();
-        if (!value) {
-            isEmailValid = false;
-            emailValidated = true;
-            showError(this, emailError, 'Email is required');
-        } else if (!validateEmail(value)) {
-            isEmailValid = false;
-            emailValidated = true;
-            showError(this, emailError, 'Please enter a valid email address');
-        } else {
-            isEmailValid = true;
-            emailValidated = true;
-            clearError(this, emailError);
-        }
+        if (!value) { isEmailValid = false; emailValidated = true; showError(this, emailError, 'Email is required'); }
+        else if (!validateEmail(value)) { isEmailValid = false; emailValidated = true; showError(this, emailError, 'Please enter a valid email address'); }
+        else { isEmailValid = true; emailValidated = true; clearError(this, emailError); }
         updateButtonState();
     });
 
     email.addEventListener('input', function() {
         if (!emailTouched || !emailValidated) return;
         const value = this.value.trim();
-        if (value && !validateEmail(value)) {
-            isEmailValid = false;
-            showError(this, emailError, 'Please enter a valid email address');
-        } else if (value && validateEmail(value)) {
-            isEmailValid = true;
-            clearError(this, emailError);
-        } else {
-            isEmailValid = false;
-            showError(this, emailError, 'Email is required');
-        }
+        if (value && !validateEmail(value)) { isEmailValid = false; showError(this, emailError, 'Please enter a valid email address'); }
+        else if (value && validateEmail(value)) { isEmailValid = true; clearError(this, emailError); }
+        else { isEmailValid = false; showError(this, emailError, 'Email is required'); }
         updateButtonState();
     });
 
     password.addEventListener('blur', function() {
         const value = this.value;
-        if (!value) {
-            isPasswordValid = false;
-            showError(this, passwordError, 'Password is required');
-        } else if (value.length < 6) {
-            isPasswordValid = false;
-            showError(this, passwordError, 'Password must be at least 6 characters');
-        } else {
-            isPasswordValid = true;
-            clearError(this, passwordError);
-        }
+        if (!value) { isPasswordValid = false; showError(this, passwordError, 'Password is required'); }
+        else if (value.length < 6) { isPasswordValid = false; showError(this, passwordError, 'Password must be at least 6 characters'); }
+        else { isPasswordValid = true; clearError(this, passwordError); }
         updateButtonState();
     });
 
     password.addEventListener('input', function() {
         const value = this.value;
-        if (value && value.length < 6) {
-            isPasswordValid = false;
-            showError(this, passwordError, 'Password must be at least 6 characters');
-        } else if (value && value.length >= 6) {
-            isPasswordValid = true;
-            clearError(this, passwordError);
-        } else {
-            isPasswordValid = false;
-            clearError(this, passwordError);
-        }
+        if (value && value.length < 6) { isPasswordValid = false; showError(this, passwordError, 'Password must be at least 6 characters'); }
+        else if (value && value.length >= 6) { isPasswordValid = true; clearError(this, passwordError); }
+        else { isPasswordValid = false; clearError(this, passwordError); }
         updateButtonState();
     });
 
@@ -912,16 +1033,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const icon = this.querySelector('i');
         if (password.type === 'password') {
             password.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
+            icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
         } else {
             password.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
+            icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
         }
     });
 
-    // ----- Login form submission (unchanged) -----
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         if (!isEmailValid || !isPasswordValid) return;
@@ -951,13 +1069,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     localStorage.setItem('refresh_token', data.refresh);
                     if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
                 }
-                if (rememberCheck.checked) {
-                    localStorage.setItem('saved_email', email.value.trim());
-                } else {
-                    localStorage.removeItem('saved_email');
-                }
-                showToast('Login successful! Redirecting...', 'success');
-                setTimeout(() => { window.location.href = '/dashboard/'; }, 1000);
+                if (rememberCheck.checked) localStorage.setItem('saved_email', email.value.trim());
+                else localStorage.removeItem('saved_email');
+
+                // SUCCESS: show animation instead of toast
+                showSuccessAnimation('Login successful! Redirecting...', '/dashboard/');
                 return;
             }
 
@@ -977,21 +1093,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (response.status === 401) {
                 resetButton();
+                triggerErrorShake();
                 showToast(data.error || data.detail || 'Invalid credentials. Please try again.', 'error');
                 return;
             }
 
             resetButton();
+            triggerErrorShake();
             showToast(data.error || data.detail || 'An error occurred. Please try again.', 'error');
 
         } catch (error) {
             console.error('Login error:', error);
             resetButton();
+            triggerErrorShake();
             showToast('Network error. Please check your connection.', 'error');
         }
     });
 
-    // ----- Verification modal actions -----
     modalClose.addEventListener('click', closeVerificationModal);
 
     verifyBtn.addEventListener('click', async function() {
@@ -1032,9 +1150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setOTPBoxesError(true);
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify';
-                setTimeout(function() {
-                    setOTPBoxesError(false);
-                }, 3000);
+                setTimeout(function() { setOTPBoxesError(false); }, 3000);
             }
         } catch (error) {
             otpError.textContent = 'Network error. Please try again.';
@@ -1042,9 +1158,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setOTPBoxesError(true);
             verifyBtn.disabled = false;
             verifyBtn.textContent = 'Verify';
-            setTimeout(function() {
-                setOTPBoxesError(false);
-            }, 3000);
+            setTimeout(function() { setOTPBoxesError(false); }, 3000);
         }
     });
 
@@ -1060,9 +1174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({
-                    email: modalEmailDisplay.textContent
-                })
+                body: JSON.stringify({ email: modalEmailDisplay.textContent })
             });
 
             const data = await response.json();
@@ -1082,34 +1194,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ----- Restore saved email (unchanged) -----
     const savedEmail = localStorage.getItem('saved_email');
     if (savedEmail) {
         email.value = savedEmail;
         rememberCheck.checked = true;
         emailTouched = true;
         emailValidated = true;
-        if (validateEmail(savedEmail)) {
-            isEmailValid = true;
-            updateButtonState();
-        }
+        if (validateEmail(savedEmail)) { isEmailValid = true; updateButtonState(); }
     }
 
     rememberCheck.addEventListener('change', function() {
-        if (this.checked && email.value.trim()) {
-            localStorage.setItem('saved_email', email.value.trim());
-        } else {
-            localStorage.removeItem('saved_email');
-        }
+        if (this.checked && email.value.trim()) localStorage.setItem('saved_email', email.value.trim());
+        else localStorage.removeItem('saved_email');
     });
 
     email.addEventListener('change', function() {
-        if (rememberCheck.checked && this.value.trim()) {
-            localStorage.setItem('saved_email', this.value.trim());
-        }
+        if (rememberCheck.checked && this.value.trim()) localStorage.setItem('saved_email', this.value.trim());
     });
 
-    // ----- Handle URL params (unchanged) -----
     const urlParams = new URLSearchParams(window.location.search);
     const emailParam = urlParams.get('email');
     const urlError = urlParams.get('error');
@@ -1118,36 +1220,28 @@ document.addEventListener('DOMContentLoaded', function() {
         email.value = emailParam;
         emailTouched = true;
         emailValidated = true;
-        if (validateEmail(emailParam)) {
-            isEmailValid = true;
-            updateButtonState();
-        }
+        if (validateEmail(emailParam)) { isEmailValid = true; updateButtonState(); }
     }
 
     if (urlError) {
         const errorMessages = {
             'google_auth_failed': 'Google authentication failed. Please try again.',
             'google_no_email': 'Google did not provide an email address.',
-            'apple_auth_failed': 'Apple authentication failed. Please try again.',
-            'apple_no_user_id': 'Apple did not provide a user ID.',
             'account_suspended': 'Your account has been suspended.'
         };
         urlErrorBox.textContent = errorMessages[urlError] || 'An error occurred. Please try again.';
         urlErrorBox.style.display = 'block';
+        triggerErrorShake();
     }
 
     const requireVerification = urlParams.get('require_verification');
     const verifyEmail = urlParams.get('email');
     if (requireVerification === 'true' && verifyEmail) {
-        setTimeout(function() {
-            openVerificationModal(verifyEmail);
-        }, 500);
+        setTimeout(function() { openVerificationModal(verifyEmail); }, 500);
     }
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal.classList.contains('show')) {
-            closeVerificationModal();
-        }
+        if (e.key === 'Escape' && modal.classList.contains('show')) closeVerificationModal();
     });
 
     updateButtonState();
