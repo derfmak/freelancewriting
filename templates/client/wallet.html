@@ -4,144 +4,290 @@
 
 {% block extra_css %}
 <style>
+    .wallet-page h1,
+    .wallet-page h2,
+    .wallet-page h3,
+    .wallet-page h4 {
+        font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        letter-spacing: normal;
+    }
+
+    .wallet-page-head {
+        margin-bottom: 1.5rem;
+    }
+
+    .wallet-page-head h1 {
+        font-size: clamp(1.4rem, 4vw, 1.75rem);
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+    .wallet-page-sub {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.25rem;
+    }
+
+    .card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-xs);
+    }
+
+    .card-header {
+        padding: 1.1rem 1.25rem;
+        border-bottom: 1px solid var(--line-light);
+    }
+
+    .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .card-footer {
+        padding: 0.9rem 1.25rem;
+        border-top: 1px solid var(--line-light);
+    }
+
     .wallet-grid {
         display: grid;
         gap: 1.5rem;
+        min-width: 0;
     }
+
+    .wallet-grid > * {
+        min-width: 0;
+    }
+
     @media (min-width: 768px) {
         .wallet-grid {
             grid-template-columns: 2fr 1fr;
-            gap: 2rem;
+            gap: 1.5rem;
         }
     }
+
     .stat-cards {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
         text-align: center;
+        min-width: 0;
     }
+
+    .stat-cards > div {
+        min-width: 0;
+    }
+
     .stat-label {
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         color: var(--muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
     }
+
     .stat-value {
-        font-size: clamp(1.35rem, 5vw, 2rem);
-        font-weight: 700;
+        font-size: clamp(1.1rem, 5vw, 1.8rem);
+        font-weight: 800;
         line-height: 1.2;
+        margin-top: 0.25rem;
+        overflow-wrap: break-word;
     }
+
     .stat-value.green { color: var(--green); }
     .stat-value.red { color: var(--red); }
     .stat-value.dark { color: var(--ink); }
+
     .table-wrap {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        max-width: 100%;
     }
+
     .table {
         width: 100%;
-        font-size: 0.875rem;
+        min-width: 480px;
+        font-size: 0.85rem;
         border-collapse: collapse;
     }
+
     .table th {
-        padding: 0.75rem 1rem;
+        padding: 0.7rem 1.25rem;
         text-align: left;
         font-weight: 600;
         color: var(--muted);
         text-transform: uppercase;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         letter-spacing: 0.05em;
         background: var(--surface);
         border-bottom: 1px solid var(--line);
+        white-space: nowrap;
     }
+
     .table td {
-        padding: 0.75rem 1rem;
+        padding: 0.75rem 1.25rem;
         border-bottom: 1px solid var(--line-light);
         vertical-align: middle;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        color: var(--ink-soft);
     }
+
     .table tbody tr:hover {
         background: var(--surface);
     }
+
     .badge {
         display: inline-flex;
         align-items: center;
-        padding: 0.25rem 0.75rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        border-radius: 9999px;
+        padding: 0.25rem 0.7rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        border-radius: var(--radius-full);
         white-space: nowrap;
     }
-    .badge.deposit { background: var(--green-pale); color: var(--green); }
-    .badge.payment { background: #dbeafe; color: #2563eb; }
+
+    .badge.deposit { background: var(--green-pale); color: var(--green-dark); }
+    .badge.payment { background: #dbeafe; color: #1d4ed8; }
     .badge.refund { background: #ffedd5; color: #c2410c; }
-    .badge.withdrawal { background: #ede9fe; color: #7c3aed; }
+    .badge.withdrawal { background: #ede9fe; color: #6d28d9; }
     .badge.payout { background: #e0e7ff; color: #4338ca; }
-    .badge.completed { background: var(--green-pale); color: var(--green); }
+    .badge.completed { background: var(--green-pale); color: var(--green-dark); }
     .badge.pending { background: #fef3c7; color: #b45309; }
-    .badge.processing { background: #dbeafe; color: #2563eb; }
-    .badge.failed { background: #fee2e2; color: #dc2626; }
+    .badge.processing { background: #dbeafe; color: #1d4ed8; }
+    .badge.failed { background: var(--red-pale); color: #b91c1c; }
+
     .payment-method-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 0.75rem;
-        padding: 0.75rem 1rem;
+        padding: 0.85rem 1rem;
         border: 1px solid var(--line);
         border-radius: var(--radius-sm);
         margin-bottom: 0.5rem;
-        transition: border-color 0.2s;
+        transition: var(--transition);
         flex-wrap: wrap;
+        min-width: 0;
     }
+
     .payment-method-item:hover {
         border-color: var(--green-border);
+        background: var(--green-pale);
     }
+
+    .payment-method-item .method-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .payment-method-item .method-text {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .payment-method-item .method-email {
+        font-weight: 600;
+        color: var(--ink);
+        font-size: 0.85rem;
+        overflow-wrap: anywhere;
+        word-break: break-all;
+    }
+
+    .payment-method-item .method-meta {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 0.1rem;
+    }
+
+    .payment-method-item .method-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
     .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
+        padding: 0.55rem 1.1rem;
+        font-weight: 700;
+        font-size: 0.8rem;
         border-radius: var(--radius-sm);
         transition: var(--transition);
         cursor: pointer;
         border: none;
-        font-size: 0.8rem;
         text-decoration: none;
     }
+
     .btn-primary {
-        background: var(--green);
+        background: linear-gradient(145deg, var(--green), var(--green-dark));
         color: white;
+        box-shadow: 0 2px 10px rgba(5,150,105,0.25);
     }
+
     .btn-primary:hover {
-        background: var(--green-dark);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(5,150,105,0.25);
+        box-shadow: 0 6px 18px rgba(5,150,105,0.3);
     }
+
+    .btn-primary:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
     .btn-outline {
         background: transparent;
         border: 1.5px solid var(--line);
         color: var(--ink-soft);
     }
+
     .btn-outline:hover {
         background: var(--surface);
         border-color: var(--muted);
     }
+
     .btn-danger {
         background: transparent;
         border: 1.5px solid #fecaca;
         color: var(--red);
     }
+
     .btn-danger:hover {
         background: var(--red-pale);
         border-color: var(--red);
     }
+
     .tips-card {
         background: var(--green-pale);
         border: 1px solid var(--green-border);
         border-radius: var(--radius);
         padding: 1.25rem;
     }
+
     .tips-card h3 {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 700;
         margin-bottom: 0.75rem;
         display: flex;
@@ -149,120 +295,100 @@
         gap: 0.5rem;
         color: var(--ink);
     }
+
     .tips-card ul {
         list-style: none;
         padding: 0;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         color: var(--ink-soft);
     }
+
     .tips-card li {
         display: flex;
         align-items: flex-start;
         gap: 0.5rem;
         margin-bottom: 0.4rem;
     }
+
     .tips-card li::before {
         content: "•";
         color: var(--green);
+        font-weight: 700;
     }
-    .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.45);
-        z-index: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: clamp(0.75rem, 4vw, 1.5rem);
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.25s ease, visibility 0s linear 0.25s;
-    }
-    .modal-overlay.open {
-        opacity: 1;
-        visibility: visible;
-        transition: opacity 0.25s ease;
-    }
-    .modal-box {
-        background: var(--paper);
-        border-radius: var(--radius);
-        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
-        width: min(94vw, 480px);
-        max-height: min(90vh, 640px);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transform: translateY(20px) scale(0.97);
-        transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
-    }
-    .modal-overlay.open .modal-box {
-        transform: translateY(0) scale(1);
-    }
-    .modal-head {
+
+    .wallet-modal-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 0.75rem;
-        padding: clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.5rem);
+        padding: 1.1rem 1.25rem;
         border-bottom: 1px solid var(--line-light);
-        flex-shrink: 0;
     }
-    .modal-title {
-        font-size: clamp(1rem, 4vw, 1.1rem);
+
+    .wallet-modal-title {
+        font-size: 1.05rem;
         font-weight: 700;
         color: var(--ink);
+        font-family: 'Manrope', system-ui, sans-serif;
     }
-    .modal-close {
+
+    .wallet-modal-close {
         background: none;
         border: none;
         color: var(--muted);
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         cursor: pointer;
         padding: 0.25rem;
-        transition: color 0.2s;
+        transition: var(--transition);
         flex-shrink: 0;
     }
-    .modal-close:hover {
-        color: var(--ink);
+
+    .wallet-modal-close:hover { color: var(--ink); }
+
+    .wallet-modal-body {
+        padding: 1.25rem;
     }
-    .modal-body {
-        padding: clamp(1rem, 4vw, 1.5rem);
-        overflow-y: auto;
-    }
+
     .form-group {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.1rem;
     }
+
     .form-label {
         display: block;
-        font-size: 0.85rem;
-        font-weight: 500;
+        font-size: 0.8rem;
+        font-weight: 600;
         color: var(--ink-soft);
         margin-bottom: 0.3rem;
     }
+
     .form-input {
         width: 100%;
         padding: 0.6rem 0.75rem;
         border: 1.5px solid var(--line);
         border-radius: var(--radius-sm);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         transition: var(--transition);
         background: var(--surface);
+        font-family: 'Manrope', system-ui, sans-serif;
     }
+
     .form-input:focus {
         border-color: var(--green);
-        box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+        box-shadow: 0 0 0 3px var(--green-glow);
         outline: none;
         background: var(--paper);
     }
+
     .verification-digits {
         display: flex;
         justify-content: center;
         gap: clamp(0.3rem, 1.8vw, 0.5rem);
         flex-wrap: nowrap;
     }
+
     .digit-input {
-        width: clamp(2.1rem, 12vw, 3.5rem);
-        height: clamp(2.6rem, 14vw, 4rem);
+        width: clamp(2.1rem, 12vw, 3.4rem);
+        height: clamp(2.6rem, 14vw, 3.9rem);
         text-align: center;
         font-size: clamp(1.1rem, 5vw, 1.5rem);
         font-weight: 700;
@@ -271,182 +397,141 @@
         transition: var(--transition);
         background: var(--paper);
         flex-shrink: 0;
+        font-family: 'Manrope', system-ui, sans-serif;
     }
+
     .digit-input:focus {
         border-color: var(--green);
-        box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+        box-shadow: 0 0 0 3px var(--green-glow);
         outline: none;
     }
+
     .digit-input.filled {
         border-color: var(--green-border);
         background: var(--green-pale);
     }
+
     .digit-input.error {
         border-color: var(--red);
         background: var(--red-pale);
     }
+
     .error-text {
         color: var(--red);
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         margin-top: 0.5rem;
         display: none;
     }
     .error-text.show { display: block; }
+
     .success-text {
         color: var(--green);
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         margin-top: 0.5rem;
         display: none;
     }
     .success-text.show { display: block; }
+
     .attempts-info {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         color: var(--muted);
         margin-top: 0.25rem;
     }
+
     .hidden { display: none !important; }
 
     @media (min-width: 1024px) {
         .digit-input {
-            width: 3.5rem;
-            height: 4rem;
-            font-size: 1.75rem;
+            width: 3.4rem;
+            height: 3.9rem;
+            font-size: 1.6rem;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="main-inner">
-        <h1 style="font-size:1.75rem;font-weight:700;margin-bottom:1.5rem;">My Wallet</h1>
+<div class="wallet-page">
+    <div class="wallet-page-head">
+        <h1>My Wallet</h1>
+        <p class="wallet-page-sub">Track your balance, transaction history, and saved PayPal accounts</p>
+    </div>
 
-        <div class="wallet-grid">
-            <div>
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">Overview</h2></div>
-                    <div class="card-body">
-                        <div class="stat-cards">
-                            <div>
-                                <div class="stat-label">Total Spent</div>
-                                <div class="stat-value green" id="total-in">$0.00</div>
-                            </div>
-                            <div>
-                                <div class="stat-label">Total Refunded</div>
-                                <div class="stat-value red" id="total-out">$0.00</div>
-                            </div>
-                            <div>
-                                <div class="stat-label">Net Spent</div>
-                                <div class="stat-value dark" id="balance">$0.00</div>
-                            </div>
+    <div class="wallet-grid">
+        <div>
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Overview</h2></div>
+                <div class="card-body">
+                    <div class="stat-cards">
+                        <div>
+                            <div class="stat-label">Total Spent</div>
+                            <div class="stat-value green" id="total-in">$0.00</div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top:1.5rem;">
-                    <div class="card-header">
-                        <h2 class="card-title">Transaction History</h2>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Description</th>
-                                    <th>Type</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactions-list">
-                                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Loading transactions...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="card-footer" style="text-align:center;">
-                        <button class="btn btn-outline" id="load-more" style="display:none;">Load More</button>
+                        <div>
+                            <div class="stat-label">Total Refunded</div>
+                            <div class="stat-value red" id="total-out">$0.00</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Net Spent</div>
+                            <div class="stat-value dark" id="balance">$0.00</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div>
-                <div class="card">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="card" style="margin-top:1.5rem;">
+                <div class="card-header">
+                    <h2 class="card-title">Transaction History</h2>
+                </div>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-list">
+                            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Loading transactions...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer" style="text-align:center;">
+                    <button class="btn btn-outline" id="load-more" style="display:none;">Load More</button>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-row">
                         <h2 class="card-title">Payment Methods</h2>
-                        <button class="btn btn-primary" id="add-payment-method-btn" style="font-size:0.75rem;padding:0.4rem 0.8rem;">
+                        <button class="btn btn-primary" id="add-payment-method-btn" style="font-size:0.75rem;padding:0.45rem 0.8rem;">
                             <i class="fas fa-plus"></i> Add
                         </button>
                     </div>
-                    <div class="card-body">
-                        <div id="no-payment-methods" class="text-center" style="padding:2rem 0;">
-                            <i class="fab fa-paypal" style="font-size:2.5rem;color:var(--line);margin-bottom:0.5rem;"></i>
-                            <p style="color:var(--muted);margin-bottom:1rem;">No PayPal accounts saved</p>
-                            <button class="btn btn-primary" id="add-first-payment-method">Add PayPal Account</button>
-                        </div>
-                        <div id="payment-methods-list" class="hidden"></div>
+                </div>
+                <div class="card-body">
+                    <div id="no-payment-methods" style="text-align:center;padding:2rem 0;">
+                        <i class="fab fa-paypal" style="font-size:2.5rem;color:var(--line);margin-bottom:0.5rem;"></i>
+                        <p style="color:var(--muted);margin-bottom:1rem;">No PayPal accounts saved</p>
+                        <button class="btn btn-primary" id="add-first-payment-method">Add PayPal Account</button>
                     </div>
-                </div>
-
-                <div class="tips-card" style="margin-top:1.5rem;">
-                    <h3><i class="fas fa-lightbulb" style="color:var(--amber);"></i> Quick Tips</h3>
-                    <ul>
-                        <li>Track your spending on orders</li>
-                        <li>Refunds are processed to your PayPal account</li>
-                        <li>View complete order history in your dashboard</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="paymentModal">
-    <div class="modal-box">
-        <div class="modal-head">
-            <h3 class="modal-title" id="modal-title">Add Payment Method</h3>
-            <button class="modal-close" id="close-modal"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div id="step1">
-                <div class="form-group">
-                    <label class="form-label">PayPal Email Address</label>
-                    <input type="email" class="form-input" id="paypal-email-input" placeholder="your-email@example.com">
-                    <p style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">We'll send a verification code to this email</p>
-                </div>
-                <div class="error-text" id="step1-error"></div>
-                <button class="btn btn-primary" style="width:100%;" id="send-verification-btn">Send Verification Code</button>
-            </div>
-
-            <div id="step2" class="hidden">
-                <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:0.75rem;font-size:0.85rem;color:#1d4ed8;margin-bottom:1rem;">
-                    <i class="fas fa-info-circle"></i>
-                    A verification code has been sent to <span id="verify-email-display" class="font-medium"></span>.
-                    Enter the 6-digit code below.
-                </div>
-                <div class="verification-digits">
-                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
-                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
-                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
-                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
-                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
-                    <input type="text" class="digit-input" maxlength="1" inputmode="numeric">
-                </div>
-                <div class="error-text" id="step2-error"></div>
-                <div class="success-text" id="step2-success"></div>
-                <div class="attempts-info" id="step2-attempts" style="display:none;"></div>
-                <div style="display:flex;gap:0.75rem;margin-top:1rem;">
-                    <button class="btn btn-outline" style="flex:1;" id="resend-code-btn">Resend Code</button>
-                    <button class="btn btn-primary" style="flex:1;opacity:0.5;pointer-events:none;" id="verify-code-btn" disabled>Verify</button>
+                    <div id="payment-methods-list" class="hidden"></div>
                 </div>
             </div>
 
-            <div id="step3" class="hidden" style="text-align:center;padding:1.5rem 0;">
-                <div style="width:4rem;height:4rem;background:var(--green-pale);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;color:var(--green);margin-bottom:1rem;">
-                    <i class="fas fa-check"></i>
-                </div>
-                <h4 style="font-weight:700;margin-bottom:0.5rem;">PayPal Account Added!</h4>
-                <p style="color:var(--muted);margin-bottom:1.5rem;">Your PayPal account has been successfully verified.</p>
-                <button class="btn btn-primary" id="done-btn">Done</button>
+            <div class="tips-card" style="margin-top:1.5rem;">
+                <h3><i class="fas fa-lightbulb" style="color:var(--amber);"></i> Quick Tips</h3>
+                <ul>
+                    <li>Track your spending on orders</li>
+                    <li>Refunds are processed to your PayPal account</li>
+                    <li>View complete order history in your dashboard</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -461,6 +546,35 @@ let hasMore = true;
 let currentMethodId = null;
 
 const API_BASE = '/api/v1/wallet/';
+
+function logClientError(context, error) {
+    const payload = {
+        context: context,
+        message: error && error.message ? error.message : String(error),
+        stack: error && error.stack ? error.stack : null,
+        url: window.location.href,
+        timestamp: new Date().toISOString()
+    };
+
+    console.error('[wallet]', context, payload);
+
+    try {
+        fetch('/api/v1/client/log-error/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            keepalive: true
+        }).catch(function() {});
+    } catch (e) {}
+}
+
+window.addEventListener('error', function(event) {
+    logClientError('window.onerror', event.error || event.message);
+});
+
+window.addEventListener('unhandledrejection', function(event) {
+    logClientError('unhandledrejection', event.reason);
+});
 
 function getAuthHeaders() {
     const token = localStorage.getItem('access_token');
@@ -488,24 +602,105 @@ async function apiCall(url, options = {}) {
     return response;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    loadWalletData();
-    loadTransactions();
-    loadPaymentMethods();
+function showConfirm(title, message, confirmText, cancelText, onConfirm) {
+    const cancelBtnHtml = cancelText
+        ? '<button type="button" class="btn btn-outline" id="walletConfirmCancel">' + cancelText + '</button>'
+        : '';
 
-    document.getElementById('add-payment-method-btn').addEventListener('click', showAddModal);
-    document.getElementById('add-first-payment-method').addEventListener('click', showAddModal);
-    document.getElementById('close-modal').addEventListener('click', closeModal);
-    document.getElementById('send-verification-btn').addEventListener('click', sendVerification);
-    document.getElementById('resend-code-btn').addEventListener('click', resendCode);
-    document.getElementById('done-btn').addEventListener('click', function() {
-        closeModal();
+    const html =
+        '<div class="wallet-modal-head">' +
+            '<h3 class="wallet-modal-title">' + title + '</h3>' +
+            '<button type="button" class="wallet-modal-close" id="walletConfirmClose"><i class="fas fa-times"></i></button>' +
+        '</div>' +
+        '<div class="wallet-modal-body">' +
+            '<p style="margin-bottom:1rem;overflow-wrap:break-word;color:var(--ink-soft);font-size:0.9rem;">' + message + '</p>' +
+            '<div style="display:flex;gap:0.75rem;justify-content:flex-end;flex-wrap:wrap;">' +
+                cancelBtnHtml +
+                '<button type="button" class="btn btn-primary" id="walletConfirmOk">' + confirmText + '</button>' +
+            '</div>' +
+        '</div>';
+
+    window.Modal.show(html);
+
+    const okBtn = document.getElementById('walletConfirmOk');
+    const closeBtn = document.getElementById('walletConfirmClose');
+    const cancelBtn = document.getElementById('walletConfirmCancel');
+
+    if (okBtn) {
+        okBtn.addEventListener('click', function() {
+            window.Modal.hide();
+            if (typeof onConfirm === 'function') onConfirm();
+        });
+    }
+    if (closeBtn) closeBtn.addEventListener('click', function() { window.Modal.hide(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', function() { window.Modal.hide(); });
+}
+
+function openAddPaymentModal() {
+    const html =
+        '<div class="wallet-modal-head">' +
+            '<h3 class="wallet-modal-title">Add Payment Method</h3>' +
+            '<button type="button" class="wallet-modal-close" id="walletModalClose"><i class="fas fa-times"></i></button>' +
+        '</div>' +
+        '<div class="wallet-modal-body">' +
+            '<div id="walletStep1">' +
+                '<div class="form-group">' +
+                    '<label class="form-label">PayPal Email Address</label>' +
+                    '<input type="email" class="form-input" id="paypalEmailInput" placeholder="your-email@example.com">' +
+                    '<p style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">We\'ll send a verification code to this email</p>' +
+                '</div>' +
+                '<div class="error-text" id="step1Error"></div>' +
+                '<button type="button" class="btn btn-primary" style="width:100%;" id="sendVerificationBtn">Send Verification Code</button>' +
+            '</div>' +
+            '<div id="walletStep2" class="hidden">' +
+                '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:0.75rem;font-size:0.85rem;color:#1d4ed8;margin-bottom:1rem;">' +
+                    '<i class="fas fa-info-circle"></i> A verification code has been sent to <span id="verifyEmailDisplay" style="font-weight:600;"></span>. Enter the 6-digit code below.' +
+                '</div>' +
+                '<div class="verification-digits">' +
+                    '<input type="text" class="digit-input" maxlength="1" inputmode="numeric">' +
+                    '<input type="text" class="digit-input" maxlength="1" inputmode="numeric">' +
+                    '<input type="text" class="digit-input" maxlength="1" inputmode="numeric">' +
+                    '<input type="text" class="digit-input" maxlength="1" inputmode="numeric">' +
+                    '<input type="text" class="digit-input" maxlength="1" inputmode="numeric">' +
+                    '<input type="text" class="digit-input" maxlength="1" inputmode="numeric">' +
+                '</div>' +
+                '<div class="error-text" id="step2Error"></div>' +
+                '<div class="success-text" id="step2Success"></div>' +
+                '<div class="attempts-info hidden" id="step2Attempts"></div>' +
+                '<div style="display:flex;gap:0.75rem;margin-top:1rem;">' +
+                    '<button type="button" class="btn btn-outline" style="flex:1;" id="resendCodeBtn">Resend Code</button>' +
+                    '<button type="button" class="btn btn-primary" style="flex:1;" id="verifyCodeBtn" disabled>Verify</button>' +
+                '</div>' +
+            '</div>' +
+            '<div id="walletStep3" class="hidden" style="text-align:center;padding:1.5rem 0;">' +
+                '<div style="width:4rem;height:4rem;background:var(--green-pale);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;color:var(--green);margin:0 auto 1rem;">' +
+                    '<i class="fas fa-check"></i>' +
+                '</div>' +
+                '<h4 style="font-weight:700;margin-bottom:0.5rem;">PayPal Account Added!</h4>' +
+                '<p style="color:var(--muted);margin-bottom:1.5rem;">Your PayPal account has been successfully verified.</p>' +
+                '<button type="button" class="btn btn-primary" id="walletDoneBtn">Done</button>' +
+            '</div>' +
+        '</div>';
+
+    window.Modal.show(html);
+    wireAddPaymentModal();
+}
+
+function wireAddPaymentModal() {
+    document.getElementById('walletModalClose').addEventListener('click', function() {
+        window.Modal.hide();
+    });
+    document.getElementById('sendVerificationBtn').addEventListener('click', sendVerification);
+    document.getElementById('resendCodeBtn').addEventListener('click', resendCode);
+    document.getElementById('verifyCodeBtn').addEventListener('click', verifyCode);
+    document.getElementById('walletDoneBtn').addEventListener('click', function() {
+        window.Modal.hide();
         loadPaymentMethods();
     });
-    document.getElementById('load-more').addEventListener('click', loadMoreTransactions);
 
-    const digits = document.querySelectorAll('.digit-input');
-    const verifyBtn = document.getElementById('verify-code-btn');
+    const digits = document.querySelectorAll('#walletStep2 .digit-input');
+    const verifyBtn = document.getElementById('verifyCodeBtn');
+
     digits.forEach((input, index) => {
         input.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '');
@@ -516,17 +711,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.remove('filled');
             }
             const code = Array.from(digits).map(d => d.value).join('');
-            if (code.length === 6) {
-                verifyBtn.disabled = false;
-                verifyBtn.style.opacity = '1';
-                verifyBtn.style.pointerEvents = 'auto';
-            } else {
-                verifyBtn.disabled = true;
-                verifyBtn.style.opacity = '0.5';
-                verifyBtn.style.pointerEvents = 'none';
-            }
-            document.getElementById('step2-error').classList.remove('show');
-            document.getElementById('step2-success').classList.remove('show');
+            verifyBtn.disabled = code.length !== 6;
+            document.getElementById('step2Error').classList.remove('show');
+            document.getElementById('step2Success').classList.remove('show');
         });
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Backspace' && !this.value && index > 0) {
@@ -545,49 +732,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 if (paste.length < 6) digits[paste.length].focus();
                 const code = Array.from(digits).map(d => d.value).join('');
-                if (code.length === 6) {
-                    verifyBtn.disabled = false;
-                    verifyBtn.style.opacity = '1';
-                    verifyBtn.style.pointerEvents = 'auto';
-                }
+                verifyBtn.disabled = code.length !== 6;
             }
         });
     });
-    verifyBtn.addEventListener('click', verifyCode);
-});
-
-function showAddModal() {
-    document.getElementById('step1').classList.remove('hidden');
-    document.getElementById('step2').classList.add('hidden');
-    document.getElementById('step3').classList.add('hidden');
-    document.getElementById('paypal-email-input').value = '';
-    document.getElementById('step1-error').classList.remove('show');
-    document.getElementById('step2-error').classList.remove('show');
-    document.getElementById('step2-success').classList.remove('show');
-    document.getElementById('step2-attempts').style.display = 'none';
-    document.getElementById('modal-title').textContent = 'Add Payment Method';
-    document.querySelectorAll('.digit-input').forEach(d => { d.value = ''; d.classList.remove('filled', 'error'); });
-    document.getElementById('verify-code-btn').disabled = true;
-    document.getElementById('verify-code-btn').style.opacity = '0.5';
-    document.getElementById('verify-code-btn').style.pointerEvents = 'none';
-    document.getElementById('paymentModal').classList.add('open');
-}
-
-function closeModal() {
-    document.getElementById('paymentModal').classList.remove('open');
 }
 
 async function sendVerification() {
-    const email = document.getElementById('paypal-email-input').value.trim();
+    const email = document.getElementById('paypalEmailInput').value.trim();
     if (!email || !email.includes('@')) {
-        document.getElementById('step1-error').textContent = 'Please enter a valid email';
-        document.getElementById('step1-error').classList.add('show');
+        document.getElementById('step1Error').textContent = 'Please enter a valid email';
+        document.getElementById('step1Error').classList.add('show');
         return;
     }
-    const btn = document.getElementById('send-verification-btn');
+    const btn = document.getElementById('sendVerificationBtn');
     btn.disabled = true;
     btn.textContent = 'Sending...';
-    document.getElementById('step1-error').classList.remove('show');
+    document.getElementById('step1Error').classList.remove('show');
 
     try {
         const addResponse = await apiCall(API_BASE + 'paypal/methods/add/', {
@@ -597,75 +758,84 @@ async function sendVerification() {
         if (addResponse && addResponse.ok) {
             const data = await addResponse.json();
             currentMethodId = data.method_id;
-            document.getElementById('verify-email-display').textContent = email;
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.remove('hidden');
-            document.querySelectorAll('.digit-input').forEach(d => { d.value = ''; d.classList.remove('filled', 'error'); });
-            document.querySelector('.digit-input').focus();
+            document.getElementById('verifyEmailDisplay').textContent = email;
+            document.getElementById('walletStep1').classList.add('hidden');
+            document.getElementById('walletStep2').classList.remove('hidden');
+            document.querySelectorAll('#walletStep2 .digit-input').forEach(d => { d.value = ''; d.classList.remove('filled', 'error'); });
+            document.querySelector('#walletStep2 .digit-input').focus();
         } else if (addResponse) {
             const error = await addResponse.json();
-            document.getElementById('step1-error').textContent = error.error || 'Failed to send code';
-            document.getElementById('step1-error').classList.add('show');
+            const message = error.error || 'Failed to send code';
+            document.getElementById('step1Error').textContent = message;
+            document.getElementById('step1Error').classList.add('show');
+            window.Toast.show(message, 'error');
         }
     } catch (e) {
-        document.getElementById('step1-error').textContent = 'Network error';
-        document.getElementById('step1-error').classList.add('show');
+        document.getElementById('step1Error').textContent = 'Network error';
+        document.getElementById('step1Error').classList.add('show');
+        window.Toast.show('Network error while sending verification code', 'error');
+        logClientError('send_verification', e);
     }
     btn.disabled = false;
     btn.textContent = 'Send Verification Code';
 }
 
 async function verifyCode() {
-    const digits = document.querySelectorAll('.digit-input');
+    const digits = document.querySelectorAll('#walletStep2 .digit-input');
     const code = Array.from(digits).map(d => d.value).join('');
     if (code.length !== 6) return;
-    const btn = document.getElementById('verify-code-btn');
+    const btn = document.getElementById('verifyCodeBtn');
     btn.disabled = true;
     btn.textContent = 'Verifying...';
-    document.getElementById('step2-error').classList.remove('show');
-    document.getElementById('step2-success').classList.remove('show');
-    document.getElementById('step2-attempts').style.display = 'none';
+    document.getElementById('step2Error').classList.remove('show');
+    document.getElementById('step2Success').classList.remove('show');
+    document.getElementById('step2Attempts').classList.add('hidden');
+
     try {
         const response = await apiCall(API_BASE + 'paypal/methods/verify/', {
             method: 'POST',
             body: JSON.stringify({ method_id: currentMethodId, code })
         });
         if (response && response.ok) {
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step3').classList.remove('hidden');
+            document.getElementById('walletStep2').classList.add('hidden');
+            document.getElementById('walletStep3').classList.remove('hidden');
+            window.Toast.show('PayPal account added successfully', 'success');
         } else if (response) {
             const error = await response.json();
             if (error.remaining_attempts !== undefined) {
-                document.getElementById('step2-error').textContent = error.error;
-                document.getElementById('step2-error').classList.add('show');
-                document.getElementById('step2-attempts').textContent = 'Attempts remaining: ' + error.remaining_attempts;
-                document.getElementById('step2-attempts').style.display = 'block';
+                document.getElementById('step2Error').textContent = error.error;
+                document.getElementById('step2Error').classList.add('show');
+                document.getElementById('step2Attempts').textContent = 'Attempts remaining: ' + error.remaining_attempts;
+                document.getElementById('step2Attempts').classList.remove('hidden');
                 digits.forEach(d => { d.value = ''; d.classList.add('error'); });
                 setTimeout(() => {
                     digits.forEach(d => d.classList.remove('error'));
-                    document.getElementById('step2-error').classList.remove('show');
-                    document.getElementById('step2-attempts').style.display = 'none';
+                    document.getElementById('step2Error').classList.remove('show');
+                    document.getElementById('step2Attempts').classList.add('hidden');
                 }, 2000);
             } else if (error.locked) {
-                document.getElementById('step2-error').textContent = error.error;
-                document.getElementById('step2-error').classList.add('show');
-                document.getElementById('step2-attempts').textContent = 'Account locked until ' + new Date(error.locked_until).toLocaleString();
-                document.getElementById('step2-attempts').style.display = 'block';
+                document.getElementById('step2Error').textContent = error.error;
+                document.getElementById('step2Error').classList.add('show');
+                document.getElementById('step2Attempts').textContent = 'Account locked until ' + new Date(error.locked_until).toLocaleString();
+                document.getElementById('step2Attempts').classList.remove('hidden');
+                window.Toast.show('Too many failed attempts. This account is temporarily locked.', 'error');
             } else {
-                document.getElementById('step2-error').textContent = error.error || 'Verification failed';
-                document.getElementById('step2-error').classList.add('show');
+                document.getElementById('step2Error').textContent = error.error || 'Verification failed';
+                document.getElementById('step2Error').classList.add('show');
             }
         }
     } catch (e) {
-        document.getElementById('step2-error').textContent = 'Network error';
-        document.getElementById('step2-error').classList.add('show');
+        document.getElementById('step2Error').textContent = 'Network error';
+        document.getElementById('step2Error').classList.add('show');
+        window.Toast.show('Network error while verifying code', 'error');
+        logClientError('verify_code', e);
     }
     btn.disabled = false;
     btn.textContent = 'Verify';
 }
 
 async function resendCode() {
-    const btn = document.getElementById('resend-code-btn');
+    const btn = document.getElementById('resendCodeBtn');
     btn.disabled = true;
     btn.textContent = 'Sending...';
     try {
@@ -674,18 +844,22 @@ async function resendCode() {
             body: JSON.stringify({ method_id: currentMethodId })
         });
         if (response && response.ok) {
-            document.getElementById('step2-success').textContent = 'New code sent';
-            document.getElementById('step2-success').classList.add('show');
-            document.querySelectorAll('.digit-input').forEach(d => { d.value = ''; d.classList.remove('filled', 'error'); });
-            document.querySelector('.digit-input').focus();
+            document.getElementById('step2Success').textContent = 'New code sent';
+            document.getElementById('step2Success').classList.add('show');
+            document.querySelectorAll('#walletStep2 .digit-input').forEach(d => { d.value = ''; d.classList.remove('filled', 'error'); });
+            document.querySelector('#walletStep2 .digit-input').focus();
         } else if (response) {
             const error = await response.json();
-            document.getElementById('step2-error').textContent = error.error || 'Failed to resend';
-            document.getElementById('step2-error').classList.add('show');
+            const message = error.error || 'Failed to resend';
+            document.getElementById('step2Error').textContent = message;
+            document.getElementById('step2Error').classList.add('show');
+            window.Toast.show(message, 'error');
         }
     } catch (e) {
-        document.getElementById('step2-error').textContent = 'Network error';
-        document.getElementById('step2-error').classList.add('show');
+        document.getElementById('step2Error').textContent = 'Network error';
+        document.getElementById('step2Error').classList.add('show');
+        window.Toast.show('Network error while resending code', 'error');
+        logClientError('resend_code', e);
     }
     btn.disabled = false;
     btn.textContent = 'Resend Code';
@@ -698,7 +872,9 @@ async function loadWalletData() {
             walletData = await response.json();
             displayWalletData();
         }
-    } catch (e) {}
+    } catch (e) {
+        logClientError('load_wallet_data', e);
+    }
 }
 
 function displayWalletData() {
@@ -718,7 +894,9 @@ async function loadTransactions(page = 1) {
         hasMore = !!data.next;
         displayTransactions();
         document.getElementById('load-more').style.display = hasMore ? 'inline-block' : 'none';
-    } catch (e) {}
+    } catch (e) {
+        logClientError('load_transactions', e);
+    }
 }
 
 function displayTransactions() {
@@ -729,10 +907,10 @@ function displayTransactions() {
     }
     tbody.innerHTML = transactions.map(t => `
         <tr>
-            <td style="color:var(--muted);">${new Date(t.created_at).toLocaleDateString()}</td>
-            <td style="color:var(--ink-soft);">${t.description || t.type}</td>
+            <td style="white-space:nowrap;">${new Date(t.created_at).toLocaleDateString()}</td>
+            <td>${t.description || t.type}</td>
             <td><span class="badge ${t.type}">${t.type}</span></td>
-            <td style="font-weight:600;color:${t.direction === 'credit' ? 'var(--green)' : 'var(--red)'};">
+            <td style="font-weight:700;white-space:nowrap;color:${t.direction === 'credit' ? 'var(--green)' : 'var(--red)'};">
                 ${t.direction === 'credit' ? '+' : '-'}$${Math.abs(parseFloat(t.amount)).toFixed(2)}
             </td>
             <td><span class="badge ${t.status}">${t.status}</span></td>
@@ -747,7 +925,9 @@ async function loadPaymentMethods() {
             paymentMethods = await response.json();
             displayPaymentMethods();
         }
-    } catch (e) {}
+    } catch (e) {
+        logClientError('load_payment_methods', e);
+    }
 }
 
 function displayPaymentMethods() {
@@ -762,16 +942,16 @@ function displayPaymentMethods() {
     list.classList.remove('hidden');
     list.innerHTML = paymentMethods.map(m => `
         <div class="payment-method-item">
-            <div style="display:flex;align-items:center;gap:0.75rem;">
-                <i class="fab fa-paypal" style="font-size:1.5rem;color:#3b82f6;"></i>
-                <div>
-                    <div style="font-weight:500;">${m.paypal_email}</div>
-                    <div style="font-size:0.75rem;color:var(--muted);">${m.paypal_account_type} ${m.is_default ? '· Default' : ''}</div>
+            <div class="method-info">
+                <i class="fab fa-paypal" style="font-size:1.4rem;color:#2563eb;flex-shrink:0;"></i>
+                <div class="method-text">
+                    <div class="method-email">${m.paypal_email}</div>
+                    <div class="method-meta">${m.paypal_account_type} ${m.is_default ? '· Default' : ''}</div>
                 </div>
             </div>
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-                ${m.is_default ? '<span class="badge" style="background:var(--green-pale);color:var(--green);">Default</span>' : ''}
-                <button class="btn btn-danger" style="padding:0.25rem 0.5rem;font-size:0.75rem;" data-id="${m.id}" onclick="deletePaymentMethod('${m.id}')">
+            <div class="method-actions">
+                ${m.is_default ? '<span class="badge" style="background:var(--green-pale);color:var(--green-dark);">Default</span>' : ''}
+                <button class="btn btn-danger" style="padding:0.3rem 0.55rem;font-size:0.75rem;" data-id="${m.id}" onclick="deletePaymentMethod('${m.id}')">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -784,19 +964,58 @@ function loadMoreTransactions() {
     loadTransactions(currentPage);
 }
 
-async function deletePaymentMethod(methodId) {
-    if (!confirm('Remove this PayPal account?')) return;
-    try {
-        const response = await apiCall(API_BASE + 'paypal/methods/' + methodId + '/remove/', { method: 'DELETE' });
-        if (response && response.ok) {
-            loadPaymentMethods();
-        } else if (response) {
-            const error = await response.json();
-            alert(error.message || 'Failed to remove');
-        }
-    } catch (e) {
-        alert('Network error');
+window.deletePaymentMethod = function(methodId) {
+    const method = paymentMethods.find(m => m.id === methodId);
+    if (!method) return;
+
+    if (paymentMethods.length === 1) {
+        window.Toast.show('You cannot remove your only payment method. Add another PayPal account first.', 'error');
+        return;
     }
-}
+
+    if (method.is_default && paymentMethods.length > 1) {
+        window.Toast.show('You cannot remove your default payment method. Set another account as default first.', 'error');
+        return;
+    }
+
+    showConfirm(
+        'Remove PayPal Account',
+        'Are you sure you want to remove "' + method.paypal_email + '"?',
+        'Remove',
+        'Cancel',
+        async function() {
+            try {
+                const response = await apiCall(API_BASE + 'payment-methods/' + methodId + '/remove/', {
+                    method: 'DELETE'
+                });
+                if (response && response.ok) {
+                    window.Toast.show('PayPal account removed successfully', 'success');
+                    loadPaymentMethods();
+                } else if (response) {
+                    let error = {};
+                    try { error = await response.json(); } catch (e) {}
+                    const message = error.error || 'Failed to remove PayPal account';
+                    window.Toast.show(message, 'error');
+                    logClientError('remove_payment_method', new Error(message));
+                } else {
+                    window.Toast.show('Failed to remove PayPal account', 'error');
+                }
+            } catch (e) {
+                window.Toast.show('Network error while removing PayPal account', 'error');
+                logClientError('remove_payment_method', e);
+            }
+        }
+    );
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadWalletData();
+    loadTransactions();
+    loadPaymentMethods();
+
+    document.getElementById('add-payment-method-btn').addEventListener('click', openAddPaymentModal);
+    document.getElementById('add-first-payment-method').addEventListener('click', openAddPaymentModal);
+    document.getElementById('load-more').addEventListener('click', loadMoreTransactions);
+});
 </script>
 {% endblock %}

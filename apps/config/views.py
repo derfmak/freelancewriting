@@ -297,7 +297,6 @@ def blog_share(request, slug):
             'error': str(e)
         }, status=500)
 
-
 @require_POST
 @csrf_exempt
 def contact_message(request):
@@ -468,7 +467,40 @@ def reset_password_page(request, token=None):
         return redirect('client-dashboard')
     return render(request, 'public/reset-password.html', {'token': token})
 
+from django.http import HttpResponse
+from django.urls import reverse
+from django.utils import timezone
+from apps.admin_portal.models import Blog
 
+
+def sitemap_xml(request):
+    now = timezone.now().date().isoformat()
+
+    static_pages = [
+        '/', '/about/', '/services/', '/how-it-works/',
+        '/pricing/', '/blog/', '/contact/', '/terms/',
+        '/privacy/', '/refund-policy/', '/guarantees/',
+        '/testimonials/', '/samples/', '/faq/', '/place-order/'
+    ]
+
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+
+    for page in static_pages:
+        xml += f'  <url>\n    <loc>{request.build_absolute_uri(page)}</loc>\n    <lastmod>{now}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
+
+    for post in Blog.objects.filter(published_at__lte=timezone.now()).order_by('-published_at'):
+        url = reverse('blog-detail', kwargs={'slug': post.slug})
+        xml += f'  <url>\n    <loc>{request.build_absolute_uri(url)}</loc>\n    <lastmod>{post.updated_at.date().isoformat()}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n'
+
+    xml += '</urlset>'
+    return HttpResponse(xml, content_type='application/xml')
+
+
+def robots_txt(request):
+    return HttpResponse(
+        "User-agent: *\nAllow: /\nSitemap: " + request.build_absolute_uri('/sitemap.xml'),
+        content_type='text/plain'
+    )
 @login_required
 def dashboard_redirect(request):
     if request.user.role == 'admin':

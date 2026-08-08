@@ -155,6 +155,8 @@
         padding: 12px 14px;
         background: var(--surface);
         border-radius: var(--radius-sm);
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
     .file-item + .file-item { margin-top: 8px; }
@@ -163,6 +165,8 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        flex: 1;
+        min-width: 120px;
     }
 
     .file-icon {
@@ -173,6 +177,7 @@
     .file-name {
         font-size: 13px;
         font-weight: 500;
+        word-break: break-word;
     }
 
     .file-size {
@@ -185,6 +190,7 @@
         font-weight: 600;
         color: var(--green);
         text-decoration: none;
+        white-space: nowrap;
     }
 
     .file-download:hover { color: var(--green-dark); }
@@ -221,6 +227,8 @@
         font-size: 10px;
         color: var(--muted);
         font-weight: 500;
+        flex-wrap: wrap;
+        gap: 4px;
     }
 
     .price-row {
@@ -229,6 +237,8 @@
         font-size: 13px;
         padding: 4px 0;
         color: var(--muted);
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
     .price-row.total {
@@ -296,14 +306,16 @@
     .action-row {
         display: flex;
         gap: 10px;
+        flex-wrap: wrap;
     }
 
-    .action-row .btn { flex: 1; }
+    .action-row .btn { flex: 1; min-width: 120px; }
 
     .star-rating {
         display: flex;
         justify-content: center;
         gap: 6px;
+        flex-wrap: wrap;
     }
 
     .star-btn {
@@ -336,6 +348,7 @@
         display: flex;
         gap: 2px;
         font-size: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .stars-display .star { color: #fbbf24; }
@@ -430,11 +443,39 @@
         display: flex;
         gap: 10px;
         padding: 0 20px 20px;
+        flex-wrap: wrap;
     }
 
-    .modal-footer .btn { flex: 1; }
+    .modal-footer .btn { flex: 1; min-width: 100px; }
 
     .text-muted { color: var(--muted); font-size: 13px; }
+
+    .spinner-sm {
+        width: 30px;
+        height: 30px;
+        border: 3px solid var(--line);
+        border-top-color: var(--green);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .order-updated {
+        animation: flash 1s ease;
+    }
+
+    @keyframes flash {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    @media (max-width: 480px) {
+        .page-title { font-size: 1.25rem; }
+        .file-item { flex-direction: column; align-items: stretch; }
+        .file-info { min-width: auto; }
+        .file-download { align-self: flex-end; }
+    }
 </style>
 {% endblock %}
 
@@ -465,6 +506,7 @@
 <script>
 var orderId = window.location.pathname.split('/').filter(Boolean).pop();
 var orderData = null;
+var refreshTimer = null;
 
 function getToken() { return localStorage.getItem('access_token'); }
 function getHeaders() {
@@ -516,10 +558,12 @@ document.addEventListener('keydown', function(e) {
 function apiToast(message, type) {
     if (window.Toast) {
         window.Toast.show(message, type);
+    } else {
+        alert(message);
     }
 }
 
-async function loadOrder() {
+async function loadOrder(keepScroll) {
     try {
         var token = getToken();
         if (!token) {
@@ -530,14 +574,18 @@ async function loadOrder() {
         var response = await fetch('/api/v1/client/orders/' + orderId + '/', { headers: getHeaders() });
         if (!response.ok) throw new Error(response.status === 404 ? 'Order not found' : 'Failed to load order');
 
-        orderData = await response.json();
-        renderOrder(orderData);
+        var data = await response.json();
+        orderData = data;
+        renderOrder(orderData, keepScroll);
     } catch (e) {
         document.getElementById('order-content').innerHTML = '<div style="text-align:center;padding:48px;"><p style="color:var(--red);">' + e.message + '</p><a href="/client/orders/" style="color:var(--green);font-weight:600;">Back to Orders</a></div>';
     }
 }
 
-function renderOrder(order) {
+function renderOrder(order, keepScroll) {
+    var container = document.getElementById('order-content');
+    var previousHtml = container.innerHTML;
+
     document.getElementById('order-number').textContent = order.order_number || 'N/A';
     document.getElementById('order-status-badge').innerHTML = '<span class="badge ' + getStatusClass(order.status) + '">' + getStatusLabel(order.status) + '</span>';
 
@@ -632,9 +680,21 @@ function renderOrder(order) {
 
     html += '</div></div>';
 
-    document.getElementById('order-content').innerHTML = html;
+    container.innerHTML = html;
 
     if (canRate) setupStarRating();
+
+    if (keepScroll) {
+        // Preserve scroll position (default)
+    } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Highlight updated content
+    if (!keepScroll && previousHtml && container.innerHTML !== previousHtml) {
+        container.classList.add('order-updated');
+        setTimeout(function() { container.classList.remove('order-updated'); }, 1000);
+    }
 }
 
 function setupStarRating() {
@@ -653,9 +713,6 @@ function setupStarRating() {
             submitBtn.disabled = false;
         });
     });
-
-    window._selectedRating = 0;
-    window._getSelectedRating = function() { return selectedRating; };
 }
 
 function formatTimeRemaining(timestamp) {
@@ -672,7 +729,7 @@ async function approveOrder() {
         var d = await r.json();
         if (!r.ok) throw new Error(d.error || 'Failed');
         apiToast('Order approved successfully!', 'success');
-        setTimeout(function() { location.reload(); }, 1500);
+        setTimeout(function() { loadOrder(true); }, 1500);
     } catch (e) { apiToast(e.message, 'error'); }
 }
 
@@ -691,7 +748,7 @@ function showRevisionModal() {
             if (!r.ok) throw new Error(d.error || 'Failed');
             closeModal();
             apiToast('Revision requested successfully', 'success');
-            setTimeout(function() { location.reload(); }, 1500);
+            setTimeout(function() { loadOrder(true); }, 1500);
         } catch (e) { apiToast(e.message, 'error'); }
     });
 }
@@ -729,10 +786,28 @@ async function submitRating() {
         var d = await r.json();
         if (!r.ok) throw new Error(d.error || 'Failed');
         apiToast('Thank you for your feedback!', 'success');
-        setTimeout(function() { location.reload(); }, 1500);
+        setTimeout(function() { loadOrder(true); }, 1500);
     } catch (e) { apiToast(e.message, 'error'); }
 }
 
-document.addEventListener('DOMContentLoaded', loadOrder);
+function startAutoRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(function() {
+        if (!document.hidden) {
+            loadOrder(true);
+        }
+    }, 15000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadOrder();
+    startAutoRefresh();
+
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            loadOrder(true);
+        }
+    });
+});
 </script>
 {% endblock %}

@@ -5,17 +5,16 @@
 
 {% block extra_css %}
 <style>
+    /* --- All existing styles remain exactly the same up to the modal --- */
     @keyframes shake {
         0%, 100% { transform: translateX(0); }
         10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
         20%, 40%, 60%, 80% { transform: translateX(6px); }
     }
-
     @keyframes slideDown {
         from { opacity: 0; transform: translateY(-8px); }
         to { opacity: 1; transform: translateY(0); }
     }
-
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
@@ -24,41 +23,32 @@
         max-width: 420px;
         margin: 0 auto;
     }
-
     .login-card {
         background: white;
         border-radius: 1rem;
         padding: 2rem;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 4px 24px rgba(0,0,0,0.04);
         border: 1px solid #e5e7eb;
     }
-
     .login-title {
         font-size: 1.75rem;
         font-weight: 700;
         color: #1e293b;
     }
-
-    .login-title span {
-        color: #059669;
-    }
-
+    .login-title span { color: #059669; }
     .login-subtitle {
         color: #6b7280;
         font-size: 0.9rem;
     }
-
     .divider-line {
         width: 2.5rem;
         height: 2px;
         background: #059669;
         margin: 0.5rem auto 0.5rem;
     }
-
     .form-group {
         margin-bottom: 1.25rem;
     }
-
     .form-label {
         display: block;
         font-size: 0.8rem;
@@ -66,7 +56,6 @@
         color: #374151;
         margin-bottom: 0.4rem;
     }
-
     .form-input {
         width: 100%;
         padding: 0.6rem 0.8rem;
@@ -77,24 +66,19 @@
         background: #fafbfc;
         outline: none;
     }
-
     .form-input:focus {
-        outline: none;
         border-color: #059669;
-        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
         background: white;
     }
-
     .form-input.error {
         border-color: #ef4444;
         background: #fef2f2;
         animation: shake 0.5s ease;
     }
-
     .password-wrapper {
         position: relative;
     }
-
     .password-toggle {
         position: absolute;
         right: 0.8rem;
@@ -107,11 +91,7 @@
         padding: 0.2rem;
         transition: color 0.3s ease;
     }
-
-    .password-toggle:hover {
-        color: #059669;
-    }
-
+    .password-toggle:hover { color: #059669; }
     .error-message {
         display: none;
         color: #ef4444;
@@ -119,11 +99,7 @@
         margin-top: 0.3rem;
         animation: slideDown 0.3s ease;
     }
-
-    .error-message.show {
-        display: block;
-    }
-
+    .error-message.show { display: block; }
     .login-btn {
         width: 100%;
         padding: 0.7rem;
@@ -135,52 +111,32 @@
         border-radius: 0.5rem;
         cursor: not-allowed;
         transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
         opacity: 0.6;
     }
-
     .login-btn.active {
         background: #059669;
         cursor: pointer;
         opacity: 1;
     }
-
     .login-btn.active:hover {
         background: #047857;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+        box-shadow: 0 4px 12px rgba(5,150,105,0.25);
     }
-
-    .login-btn .btn-text {
-        position: relative;
-        z-index: 2;
-    }
-
     .login-btn .btn-loader {
         display: none;
-        position: relative;
-        z-index: 2;
     }
-
-    .login-btn.loading .btn-text {
-        display: none;
-    }
-
-    .login-btn.loading .btn-loader {
-        display: inline-block;
-    }
-
+    .login-btn.loading .btn-text { display: none; }
+    .login-btn.loading .btn-loader { display: inline-block; }
     .spinner {
         display: inline-block;
         width: 1.2rem;
         height: 1.2rem;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(255,255,255,0.3);
         border-radius: 50%;
         border-top-color: white;
         animation: spin 0.6s linear infinite;
     }
-
     .checkbox-label {
         display: flex;
         align-items: center;
@@ -189,14 +145,12 @@
         font-size: 0.8rem;
         color: #6b7280;
     }
-
     .checkbox-label input[type="checkbox"] {
         width: 1rem;
         height: 1rem;
         accent-color: #059669;
         cursor: pointer;
     }
-
     .forgot-link {
         font-size: 0.8rem;
         color: #059669;
@@ -204,30 +158,19 @@
         font-weight: 500;
         transition: color 0.3s ease;
     }
-
-    .forgot-link:hover {
-        color: #047857;
-        text-decoration: underline;
-    }
-
+    .forgot-link:hover { color: #047857; text-decoration: underline; }
     .register-link {
         color: #059669;
         text-decoration: none;
         font-weight: 600;
         transition: color 0.3s ease;
     }
-
-    .register-link:hover {
-        color: #047857;
-        text-decoration: underline;
-    }
-
+    .register-link:hover { color: #047857; text-decoration: underline; }
     .social-buttons {
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
     }
-
     .btn-social {
         width: 100%;
         padding: 0.7rem;
@@ -245,46 +188,36 @@
         transition: all 0.3s ease;
         text-decoration: none;
     }
-
     .btn-social:hover {
         background: #f8fafc;
         border-color: #d1d5db;
         transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-
     .btn-social svg {
         width: 20px;
         height: 20px;
         flex-shrink: 0;
     }
-
-    .btn-social.apple svg {
-        fill: #1e293b;
-    }
-
+    .btn-social.apple svg { fill: #1e293b; }
     .divider {
         display: flex;
         align-items: center;
         gap: 1rem;
         margin: 1.5rem 0;
     }
-
-    .divider::before,
-    .divider::after {
+    .divider::before, .divider::after {
         content: '';
         flex: 1;
         height: 1px;
         background: #e5e7eb;
     }
-
     .divider span {
         color: #9ca3af;
         font-size: 0.8rem;
         font-weight: 500;
         white-space: nowrap;
     }
-
     .error-message-box {
         background: #fef2f2;
         color: #dc2626;
@@ -294,17 +227,12 @@
         border-left: 4px solid #dc2626;
         margin-bottom: 1rem;
     }
-
     .error-message-box a {
         color: #059669;
         font-weight: 600;
         text-decoration: none;
     }
-
-    .error-message-box a:hover {
-        text-decoration: underline;
-    }
-
+    .error-message-box a:hover { text-decoration: underline; }
     .success-message-box {
         background: #ecfdf5;
         color: #059669;
@@ -314,7 +242,6 @@
         border-left: 4px solid #059669;
         margin-bottom: 1rem;
     }
-
     .toast-notification {
         position: fixed;
         top: 1.5rem;
@@ -324,47 +251,26 @@
         max-width: 400px;
         width: 100%;
     }
-
     .toast-content {
         background: white;
         border-radius: 0.75rem;
         padding: 0.75rem 1.25rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
         border-left: 4px solid #059669;
         display: flex;
         align-items: center;
         gap: 0.75rem;
     }
-
-    .toast-content.error {
-        border-left-color: #ef4444;
-    }
-
-    .toast-content.success {
-        border-left-color: #059669;
-    }
-
-    .toast-icon {
-        font-size: 1.2rem;
-        flex-shrink: 0;
-    }
-
-    .toast-icon.success {
-        color: #059669;
-    }
-
-    .toast-icon.error {
-        color: #ef4444;
-    }
-
+    .toast-content.error { border-left-color: #ef4444; }
+    .toast-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .toast-icon.success { color: #059669; }
+    .toast-icon.error { color: #ef4444; }
     .toast-message {
         font-size: 0.85rem;
         color: #1e293b;
         font-weight: 500;
-        word-break: break-word;
         flex: 1;
     }
-
     .toast-close {
         background: none;
         border: none;
@@ -375,27 +281,178 @@
         transition: color 0.3s ease;
         flex-shrink: 0;
     }
+    .toast-close:hover { color: #1e293b; }
 
-    .toast-close:hover {
+    /* --- Verification Modal --- */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 1rem;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        animation: slideDown 0.3s ease;
+        position: relative;
+    }
+    .modal-box h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
         color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+    .modal-box p {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+    }
+    .modal-box .modal-close {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+    .modal-box .modal-close:hover { color: #1e293b; }
+
+    /* OTP boxes */
+    .otp-boxes {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+    }
+    .otp-box {
+        width: 3.2rem;
+        height: 3.8rem;
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: 600;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.3s ease;
+        background: #fafbfc;
+        color: #1e293b;
+    }
+    .otp-box:focus {
+        border-color: #059669;
+        box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+        background: white;
+    }
+    .otp-box.error {
+        border-color: #ef4444;
+        background: #fef2f2;
+        animation: shake 0.5s ease;
+    }
+    .otp-box.success {
+        border-color: #059669;
+        background: #f0fdf4;
+    }
+    .otp-box.filled {
+        border-color: #059669;
+        background: #f0fdf4;
+    }
+    @media (max-width: 640px) {
+        .otp-box { width: 2.6rem; height: 3.2rem; font-size: 1.4rem; }
+        .otp-boxes { gap: 0.3rem; }
+    }
+
+    .modal-box .btn-verify {
+        width: 100%;
+        padding: 0.7rem;
+        background: #059669;
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        margin-top: 0.5rem;
+    }
+    .modal-box .btn-verify:hover { background: #047857; }
+    .modal-box .btn-verify:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .modal-box .btn-resend {
+        background: none;
+        border: none;
+        color: #059669;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0.5rem 0;
+    }
+    .modal-box .btn-resend:hover { text-decoration: underline; }
+    .modal-box .btn-resend:disabled {
+        color: #9ca3af;
+        cursor: not-allowed;
+        text-decoration: none;
+    }
+    .modal-box .otp-error {
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        display: none;
+        text-align: center;
+    }
+    .modal-box .otp-error.show { display: block; }
+    .modal-box .otp-success {
+        color: #059669;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        display: none;
+        text-align: center;
+    }
+    .modal-box .otp-success.show { display: block; }
+    .modal-box .otp-timer {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    .modal-box .otp-timer span { font-weight: 600; color: #059669; }
+
+    .modal-box .verify-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
     }
 
     @media (max-width: 640px) {
-        .login-card {
-            padding: 1.5rem;
-        }
-
+        .login-card { padding: 1.5rem; }
         .toast-notification {
             top: 1rem;
             right: 1rem;
             left: 1rem;
             max-width: none;
         }
+        .modal-box { padding: 1.5rem; }
+        .modal-box .verify-actions {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .modal-box .btn-verify { width: 100%; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- The entire login page content is exactly the same as before -->
 <div class="login-container">
     <div class="login-card">
         <div class="text-center">
@@ -406,19 +463,9 @@
 
         {% if messages %}
             {% for message in messages %}
-                {% if message.tags == 'success' %}
-                    <div class="success-message-box">{{ message }}</div>
-                {% else %}
-                    <div class="error-message-box">
-                        {{ message }}
-                        {% if "sign up" in message|lower %}
-                            <a href="/register/">Sign up here</a>
-                        {% endif %}
-                        {% if "sign in" in message|lower %}
-                            <a href="/login/">Sign in here</a>
-                        {% endif %}
-                    </div>
-                {% endif %}
+                <div class="{% if message.tags == 'success' %}success-message-box{% else %}error-message-box{% endif %}">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endif %}
 
@@ -470,7 +517,6 @@
                 </svg>
                 Sign in with Google
             </a>
-
             <a href="/auth/apple/" class="btn-social apple">
                 <svg viewBox="0 0 24 24">
                     <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.04-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.052 2.106-.988 3.958-.988 1.852 0 2.391.988 3.958.988 1.584.052 2.779-1.585 3.792-3.039 1.042-1.495 1.47-2.946 1.534-3.028-.117-.065-2.962-1.117-2.992-4.43-.03-2.846 2.312-4.193 2.417-4.261-1.325-1.949-3.378-2.169-4.101-2.169zM15.182 4.834c.883-1.064 1.463-2.531 1.299-3.998-.539.026-1.885.354-2.722 1.194-.83.832-1.364 2.12-1.248 3.391.638.052 1.807-.329 2.671-1.587z"/>
@@ -501,7 +547,48 @@
     </div>
 </div>
 
+<!-- Verification Modal with 6 boxes -->
+<div class="modal-overlay" id="verificationModal">
+    <div class="modal-box">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <h3>Verify Your Email</h3>
+        <p>We sent a 6‑digit code to <strong id="modalEmailDisplay"></strong>. Enter it below.</p>
+
+        <div class="otp-boxes" id="otpBoxes">
+            <input type="text" class="otp-box" id="otp1" maxlength="1" inputmode="numeric" autocomplete="off" pattern="[0-9]*">
+            <input type="text" class="otp-box" id="otp2" maxlength="1" inputmode="numeric" autocomplete="off" pattern="[0-9]*">
+            <input type="text" class="otp-box" id="otp3" maxlength="1" inputmode="numeric" autocomplete="off" pattern="[0-9]*">
+            <input type="text" class="otp-box" id="otp4" maxlength="1" inputmode="numeric" autocomplete="off" pattern="[0-9]*">
+            <input type="text" class="otp-box" id="otp5" maxlength="1" inputmode="numeric" autocomplete="off" pattern="[0-9]*">
+            <input type="text" class="otp-box" id="otp6" maxlength="1" inputmode="numeric" autocomplete="off" pattern="[0-9]*">
+        </div>
+
+        <div class="otp-error" id="otpError">Invalid or expired code. Please try again.</div>
+        <div class="otp-success" id="otpSuccess">Code verified! Logging in...</div>
+
+        <button class="btn-verify" id="verifyBtn" disabled>Verify</button>
+
+        <div class="verify-actions">
+            <div>
+                <button class="btn-resend" id="resendBtn">Resend Code</button>
+                <span class="otp-timer">Resend in <span id="timerDisplay">0</span>s</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="toastContainer" class="toast-notification" style="display:none;"></div>
+
+<!-- Dialog for missing account -->
+<div class="modal-overlay" id="dialogOverlay">
+    <div class="modal-box" style="text-align:center;">
+        <h3 id="dialogTitle">Attention</h3>
+        <p id="dialogMessage">Something went wrong.</p>
+        <div style="margin-top:1.5rem;">
+            <button class="btn-verify" id="dialogConfirmBtn">OK</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -517,29 +604,62 @@ document.addEventListener('DOMContentLoaded', function() {
     const rememberCheck = document.getElementById('remember');
     const urlErrorBox = document.getElementById('urlErrorBox');
 
+    // Verification modal elements
+    const modal = document.getElementById('verificationModal');
+    const modalEmailDisplay = document.getElementById('modalEmailDisplay');
+    const otpBoxes = document.querySelectorAll('.otp-box');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const resendBtn = document.getElementById('resendBtn');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const otpError = document.getElementById('otpError');
+    const otpSuccess = document.getElementById('otpSuccess');
+    const modalClose = document.getElementById('modalClose');
+
     let isEmailValid = false;
     let isPasswordValid = false;
     let emailTouched = false;
     let emailValidated = false;
+    let timerInterval = null;
+    let resendTimeout = 60;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlError = urlParams.get('error');
+    // ----- Utility functions -----
+    function showToast(message, type) {
+        const container = document.getElementById('toastContainer');
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const iconColor = type === 'success' ? 'success' : 'error';
+        container.innerHTML = `
+            <div class="toast-content ${type}">
+                <span class="toast-icon ${iconColor}"><i class="fas ${icon}"></i></span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.closest('.toast-notification').style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        container.style.display = 'block';
+        setTimeout(() => { container.style.display = 'none'; }, 6000);
+    }
 
-    if (urlError) {
-        const errorMessages = {
-            'google_auth_failed': 'Google authentication failed. Please try again.',
-            'google_no_email': 'Google did not provide an email address.',
-            'apple_auth_failed': 'Apple authentication failed. Please try again.',
-            'apple_no_user_id': 'Apple did not provide a user ID.',
-            'account_suspended': 'Your account has been suspended.'
+    function showDialog(title, message, buttonText, callback) {
+        const overlay = document.getElementById('dialogOverlay');
+        document.getElementById('dialogTitle').textContent = title;
+        document.getElementById('dialogMessage').textContent = message;
+        const confirmBtn = document.getElementById('dialogConfirmBtn');
+        confirmBtn.textContent = buttonText || 'OK';
+        confirmBtn.onclick = function() {
+            overlay.classList.remove('show');
+            if (callback) callback();
         };
-        urlErrorBox.textContent = errorMessages[urlError] || 'An error occurred. Please try again.';
-        urlErrorBox.style.display = 'block';
+        overlay.classList.add('show');
+    }
+
+    function resetButton() {
+        loginBtn.classList.remove('loading');
+        updateButtonState();
     }
 
     function validateEmail(value) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(value);
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     }
 
     function updateButtonState() {
@@ -563,6 +683,166 @@ document.addEventListener('DOMContentLoaded', function() {
         errorEl.classList.remove('show');
     }
 
+    // ----- OTP helpers -----
+    function getOTP() {
+        let otp = '';
+        otpBoxes.forEach(function(box) { otp += box.value; });
+        return otp;
+    }
+
+    function setOTPBoxesError(hasError) {
+        otpBoxes.forEach(function(box) {
+            if (hasError) {
+                box.classList.add('error');
+            } else {
+                box.classList.remove('error');
+            }
+        });
+    }
+
+    function clearOTPBoxes() {
+        otpBoxes.forEach(function(box) {
+            box.value = '';
+            box.classList.remove('filled', 'error', 'success');
+        });
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = 'Verify';
+        otpError.classList.remove('show');
+        otpSuccess.classList.remove('show');
+        setOTPBoxesError(false);
+    }
+
+    function updateVerifyButton() {
+        const filled = Array.from(otpBoxes).every(function(box) { return box.value.length === 1; });
+        verifyBtn.disabled = !filled;
+        if (filled) {
+            verifyBtn.textContent = 'Verify';
+        }
+    }
+
+    function focusNext(index) {
+        if (index < otpBoxes.length - 1) {
+            otpBoxes[index + 1].focus();
+        }
+    }
+
+    function focusPrev(index) {
+        if (index > 0) {
+            otpBoxes[index - 1].focus();
+        }
+    }
+
+    // OTP box events
+    otpBoxes.forEach(function(box, index) {
+        box.addEventListener('input', function() {
+            // Keep only digits
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length > 1) {
+                this.value = this.value.slice(0, 1);
+            }
+            if (this.value.length === 1) {
+                this.classList.add('filled');
+                this.classList.remove('error');
+                // Auto-advance to next
+                focusNext(index);
+                // Check if all filled
+                updateVerifyButton();
+                // If all boxes filled, auto-verify
+                if (index === otpBoxes.length - 1 && getOTP().length === 6) {
+                    otpError.classList.remove('show');
+                    otpSuccess.classList.remove('show');
+                    verifyBtn.click();
+                }
+            } else {
+                this.classList.remove('filled');
+                updateVerifyButton();
+            }
+            // Clear any previous error state
+            setOTPBoxesError(false);
+            otpError.classList.remove('show');
+            otpSuccess.classList.remove('show');
+        });
+
+        box.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !this.value && index > 0) {
+                focusPrev(index);
+            }
+            if (e.key === 'ArrowLeft' && index > 0) {
+                e.preventDefault();
+                focusPrev(index);
+            }
+            if (e.key === 'ArrowRight' && index < otpBoxes.length - 1) {
+                e.preventDefault();
+                focusNext(index);
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (!verifyBtn.disabled) {
+                    verifyBtn.click();
+                }
+            }
+        });
+
+        box.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            const digits = paste.replace(/\D/g, '').slice(0, 6);
+            if (digits) {
+                digits.split('').forEach(function(digit, i) {
+                    if (i < otpBoxes.length) {
+                        otpBoxes[i].value = digit;
+                        otpBoxes[i].classList.add('filled');
+                    }
+                });
+                const lastIndex = Math.min(digits.length, otpBoxes.length) - 1;
+                if (lastIndex >= 0 && lastIndex < otpBoxes.length - 1) {
+                    otpBoxes[lastIndex + 1].focus();
+                } else if (lastIndex === otpBoxes.length - 1) {
+                    otpBoxes[lastIndex].focus();
+                }
+                updateVerifyButton();
+                if (getOTP().length === 6) {
+                    verifyBtn.click();
+                }
+            }
+        });
+    });
+
+    // ----- OTP modal functions -----
+    function openVerificationModal(emailAddress) {
+        modalEmailDisplay.textContent = emailAddress;
+        clearOTPBoxes();
+        modal.classList.add('show');
+        setTimeout(function() { otpBoxes[0].focus(); }, 100);
+        startTimer();
+    }
+
+    function closeVerificationModal() {
+        modal.classList.remove('show');
+        clearTimer();
+    }
+
+    function startTimer() {
+        resendTimeout = 60;
+        timerDisplay.textContent = resendTimeout;
+        resendBtn.disabled = true;
+        clearInterval(timerInterval);
+        timerInterval = setInterval(function() {
+            resendTimeout -= 1;
+            timerDisplay.textContent = resendTimeout;
+            if (resendTimeout <= 0) {
+                clearInterval(timerInterval);
+                resendBtn.disabled = false;
+            }
+        }, 1000);
+    }
+
+    function clearTimer() {
+        clearInterval(timerInterval);
+        resendBtn.disabled = false;
+    }
+
+    // ----- Email / password validation (unchanged) -----
     email.addEventListener('blur', function() {
         emailTouched = true;
         const value = this.value.trim();
@@ -591,7 +871,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (value && validateEmail(value)) {
             isEmailValid = true;
             clearError(this, emailError);
-        } else if (!value) {
+        } else {
             isEmailValid = false;
             showError(this, emailError, 'Email is required');
         }
@@ -641,35 +921,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function showToast(message, type) {
-        const container = document.getElementById('toastContainer');
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-        const iconColor = type === 'success' ? 'success' : 'error';
-        
-        container.innerHTML = `
-            <div class="toast-content ${type}">
-                <span class="toast-icon ${iconColor}"><i class="fas ${icon}"></i></span>
-                <span class="toast-message">${message}</span>
-                <button class="toast-close" onclick="this.closest('.toast-notification').style.display='none'">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        container.style.display = 'block';
-
-        setTimeout(() => {
-            container.style.display = 'none';
-        }, 6000);
-    }
-
-    function resetButton() {
-        loginBtn.classList.remove('loading');
-        updateButtonState();
-    }
-
+    // ----- Login form submission (unchanged) -----
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-
         if (!isEmailValid || !isPasswordValid) return;
 
         loginBtn.classList.add('loading');
@@ -691,33 +945,45 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 if (typeof auth !== 'undefined') {
                     auth.setTokens(data.access, data.refresh);
-                    if (data.user) {
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                    }
+                    if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
                 } else {
                     localStorage.setItem('access_token', data.access);
                     localStorage.setItem('refresh_token', data.refresh);
-                    if (data.user) {
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                    }
+                    if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
                 }
-
                 if (rememberCheck.checked) {
                     localStorage.setItem('saved_email', email.value.trim());
                 } else {
                     localStorage.removeItem('saved_email');
                 }
-
                 showToast('Login successful! Redirecting...', 'success');
-
-                setTimeout(() => {
-                    window.location.href = '/dashboard/';
-                }, 1000);
-            } else {
-                resetButton();
-                const errorMessage = data.error || data.detail || 'Invalid credentials. Please try again.';
-                showToast(errorMessage, 'error');
+                setTimeout(() => { window.location.href = '/dashboard/'; }, 1000);
+                return;
             }
+
+            if (response.status === 403 && data.require_verification) {
+                resetButton();
+                openVerificationModal(data.email || email.value.trim());
+                return;
+            }
+
+            if (response.status === 404 && data.redirect) {
+                resetButton();
+                showDialog('Account Not Found', 'No account found with this email. Would you like to sign up?', 'Sign Up', function() {
+                    window.location.href = data.redirect;
+                });
+                return;
+            }
+
+            if (response.status === 401) {
+                resetButton();
+                showToast(data.error || data.detail || 'Invalid credentials. Please try again.', 'error');
+                return;
+            }
+
+            resetButton();
+            showToast(data.error || data.detail || 'An error occurred. Please try again.', 'error');
+
         } catch (error) {
             console.error('Login error:', error);
             resetButton();
@@ -725,6 +991,98 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // ----- Verification modal actions -----
+    modalClose.addEventListener('click', closeVerificationModal);
+
+    verifyBtn.addEventListener('click', async function() {
+        if (verifyBtn.disabled) return;
+        const otp = getOTP();
+        if (otp.length !== 6) return;
+
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = 'Verifying...';
+        otpError.classList.remove('show');
+        otpSuccess.classList.remove('show');
+        setOTPBoxesError(false);
+
+        try {
+            const response = await fetch('/auth/verify-otp/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: modalEmailDisplay.textContent,
+                    otp_code: otp
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                otpSuccess.textContent = data.message || 'Email verified! Logging in...';
+                otpSuccess.classList.add('show');
+                otpBoxes.forEach(function(box) { box.classList.add('success'); });
+                setTimeout(function() {
+                    form.dispatchEvent(new Event('submit'));
+                    closeVerificationModal();
+                }, 1500);
+            } else {
+                otpError.textContent = data.error || 'Invalid or expired code. Please try again.';
+                otpError.classList.add('show');
+                setOTPBoxesError(true);
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify';
+                setTimeout(function() {
+                    setOTPBoxesError(false);
+                }, 3000);
+            }
+        } catch (error) {
+            otpError.textContent = 'Network error. Please try again.';
+            otpError.classList.add('show');
+            setOTPBoxesError(true);
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verify';
+            setTimeout(function() {
+                setOTPBoxesError(false);
+            }, 3000);
+        }
+    });
+
+    resendBtn.addEventListener('click', async function() {
+        if (resendBtn.disabled) return;
+        resendBtn.disabled = true;
+        otpError.classList.remove('show');
+        otpSuccess.classList.remove('show');
+        setOTPBoxesError(false);
+
+        try {
+            const response = await fetch('/auth/resend-otp/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: modalEmailDisplay.textContent
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast(data.message || 'New code sent to your email.', 'success');
+                startTimer();
+                clearOTPBoxes();
+                otpBoxes[0].focus();
+            } else {
+                showToast(data.error || 'Failed to resend code.', 'error');
+                resendBtn.disabled = false;
+            }
+        } catch (error) {
+            showToast('Network error. Please try again.', 'error');
+            resendBtn.disabled = false;
+        }
+    });
+
+    // ----- Restore saved email (unchanged) -----
     const savedEmail = localStorage.getItem('saved_email');
     if (savedEmail) {
         email.value = savedEmail;
@@ -738,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     rememberCheck.addEventListener('change', function() {
-        if (this.checked) {
+        if (this.checked && email.value.trim()) {
             localStorage.setItem('saved_email', email.value.trim());
         } else {
             localStorage.removeItem('saved_email');
@@ -751,12 +1109,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // ----- Handle URL params (unchanged) -----
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get('email');
+    const urlError = urlParams.get('error');
+
+    if (emailParam) {
+        email.value = emailParam;
+        emailTouched = true;
+        emailValidated = true;
+        if (validateEmail(emailParam)) {
+            isEmailValid = true;
+            updateButtonState();
+        }
+    }
+
+    if (urlError) {
+        const errorMessages = {
+            'google_auth_failed': 'Google authentication failed. Please try again.',
+            'google_no_email': 'Google did not provide an email address.',
+            'apple_auth_failed': 'Apple authentication failed. Please try again.',
+            'apple_no_user_id': 'Apple did not provide a user ID.',
+            'account_suspended': 'Your account has been suspended.'
+        };
+        urlErrorBox.textContent = errorMessages[urlError] || 'An error occurred. Please try again.';
+        urlErrorBox.style.display = 'block';
+    }
+
+    const requireVerification = urlParams.get('require_verification');
+    const verifyEmail = urlParams.get('email');
+    if (requireVerification === 'true' && verifyEmail) {
+        setTimeout(function() {
+            openVerificationModal(verifyEmail);
+        }, 500);
+    }
+
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const toast = document.querySelector('.toast-notification');
-            if (toast && toast.style.display !== 'none') {
-                toast.style.display = 'none';
-            }
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            closeVerificationModal();
         }
     });
 

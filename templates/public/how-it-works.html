@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}How It Works - Professional Academic Writing Services{% endblock %}
+{% block title %}How It Works – Simple Steps to Get Your Academic Paper{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -99,12 +99,21 @@
     line-height: 1.7;
 }
 
-.step-image {
+.image-wrapper {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.image-wrapper img {
     width: 100%;
     height: 200px;
     object-fit: cover;
-    border-radius: 0.75rem;
-    background: #f1f5f9;
+    transition: transform 0.4s ease;
+}
+
+.image-wrapper:hover img {
+    transform: scale(1.02);
 }
 
 .step-tag {
@@ -119,21 +128,52 @@
     margin-bottom: 0.5rem;
 }
 
-.payment-icons {
+.payment-text {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.3rem 1rem;
+    border-radius: 9999px;
+    margin-top: 0.5rem;
+}
+
+.step-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .step-grid {
+        grid-template-columns: auto 1fr;
+        align-items: start;
+    }
+    
+    .step-grid-reverse {
+        grid-template-columns: 1fr auto;
+    }
+}
+
+@media (max-width: 767px) {
+    .step-grid {
+        text-align: center;
+    }
+    
+    .step-number {
+        margin: 0 auto;
+    }
+    
+    .step-tags {
+        justify-content: center;
+    }
+}
+
+.step-tags {
     display: flex;
-    gap: 1rem;
     flex-wrap: wrap;
-}
-
-.payment-icons i {
-    font-size: 2rem;
-    color: #94a3b8;
-    transition: all 0.3s ease;
-}
-
-.payment-icons i:hover {
-    color: #059669;
-    transform: translateY(-2px);
+    gap: 0.5rem;
+    margin-top: 0.75rem;
 }
 
 .cta-section {
@@ -174,79 +214,6 @@
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
     background: #f8fafc;
 }
-
-.image-wrapper {
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-}
-
-.image-wrapper img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
-.image-wrapper:hover img {
-    transform: scale(1.02);
-}
-
-.step-grid {
-    display: grid;
-    gap: 2rem;
-}
-
-@media (min-width: 768px) {
-    .step-grid {
-        grid-template-columns: auto 1fr;
-        align-items: start;
-    }
-    
-    .step-grid-reverse {
-        grid-template-columns: 1fr auto;
-    }
-}
-
-@media (max-width: 767px) {
-    .step-grid {
-        text-align: center;
-    }
-    
-    .step-number {
-        margin: 0 auto;
-    }
-    
-    .payment-icons {
-        justify-content: center;
-    }
-    
-    .step-tags {
-        justify-content: center;
-    }
-}
-
-.step-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-}
-
-.feature-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 0.3rem 0.8rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.feature-badge i {
-    font-size: 0.7rem;
-}
 </style>
 {% endblock %}
 
@@ -255,9 +222,6 @@
 
     <section class="how-hero">
         <div class="container text-center">
-            <span class="feature-badge">
-                <i class="fas fa-rocket"></i> Simple Process
-            </span>
             <h1>How It <span style="color: #fbbf24;">Works</span></h1>
             <p>Get your academic paper in four simple steps</p>
         </div>
@@ -303,15 +267,9 @@
                         <div class="step-tags">
                             <span class="step-tag">Secure Escrow</span>
                             <span class="step-tag">Instant Receipt</span>
-                            <span class="step-tag">Multiple Methods</span>
+                            <span class="step-tag">PayPal Accepted</span>
                         </div>
-                        <div class="payment-icons mt-3">
-                            <i class="fab fa-cc-visa"></i>
-                            <i class="fab fa-cc-mastercard"></i>
-                            <i class="fab fa-cc-amex"></i>
-                            <i class="fab fa-cc-paypal"></i>
-                            <i class="fab fa-cc-stripe"></i>
-                        </div>
+                        <span class="payment-text"><i class="fas fa-lock mr-1"></i> Payment via PayPal</span>
                     </div>
                     <div class="step-number">2</div>
                 </div>

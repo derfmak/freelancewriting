@@ -3,12 +3,12 @@ from rest_framework.throttling import SimpleRateThrottle
 
 class RegisterThrottle(SimpleRateThrottle):
     scope = 'register'
-    
+
     def get_cache_key(self, request, view):
         ident = self.get_ident(request)
         email = request.data.get('email', '')
         return f'register_{ident}_{email}'
-    
+
     def allow_request(self, request, view):
         if not self.get_ident(request):
             return True
@@ -17,7 +17,7 @@ class RegisterThrottle(SimpleRateThrottle):
 
 class LoginThrottle(SimpleRateThrottle):
     scope = 'login'
-    
+
     def get_cache_key(self, request, view):
         ident = self.get_ident(request)
         email = request.data.get('email', '').lower().strip()
@@ -26,7 +26,7 @@ class LoginThrottle(SimpleRateThrottle):
 
 class PasswordResetThrottle(SimpleRateThrottle):
     scope = 'password_reset'
-    
+
     def get_cache_key(self, request, view):
         ident = self.get_ident(request)
         email = request.data.get('email', '').lower().strip()
@@ -35,7 +35,7 @@ class PasswordResetThrottle(SimpleRateThrottle):
 
 class ResendOTPThrottle(SimpleRateThrottle):
     scope = 'resend_otp'
-    
+
     def get_cache_key(self, request, view):
         ident = self.get_ident(request)
         email = request.data.get('email', '').lower().strip()
@@ -44,7 +44,7 @@ class ResendOTPThrottle(SimpleRateThrottle):
 
 class VerifyOTPThrottle(SimpleRateThrottle):
     scope = 'verify_otp'
-    
+
     def get_cache_key(self, request, view):
         ident = self.get_ident(request)
         email = request.data.get('email', '').lower().strip()
@@ -53,7 +53,7 @@ class VerifyOTPThrottle(SimpleRateThrottle):
 
 class ProfileUpdateThrottle(SimpleRateThrottle):
     scope = 'profile_update'
-    
+
     def get_cache_key(self, request, view):
         if not request.user.is_authenticated:
             return None
@@ -62,7 +62,7 @@ class ProfileUpdateThrottle(SimpleRateThrottle):
 
 class ChangePasswordThrottle(SimpleRateThrottle):
     scope = 'change_password'
-    
+
     def get_cache_key(self, request, view):
         if not request.user.is_authenticated:
             return None
@@ -71,7 +71,7 @@ class ChangePasswordThrottle(SimpleRateThrottle):
 
 class DeletionRequestThrottle(SimpleRateThrottle):
     scope = 'deletion_request'
-    
+
     def get_cache_key(self, request, view):
         if not request.user.is_authenticated:
             return None
@@ -80,7 +80,7 @@ class DeletionRequestThrottle(SimpleRateThrottle):
 
 class SendPasswordChangeCodeThrottle(SimpleRateThrottle):
     scope = 'send_password_change_code'
-    
+
     def get_cache_key(self, request, view):
         if not request.user.is_authenticated:
             return None
@@ -89,7 +89,7 @@ class SendPasswordChangeCodeThrottle(SimpleRateThrottle):
 
 class VerifyPasswordChangeCodeThrottle(SimpleRateThrottle):
     scope = 'verify_password_change_code'
-    
+
     def get_cache_key(self, request, view):
         if not request.user.is_authenticated:
             return None
@@ -98,7 +98,7 @@ class VerifyPasswordChangeCodeThrottle(SimpleRateThrottle):
 
 class GoogleLoginThrottle(SimpleRateThrottle):
     scope = 'google_login'
-    
+
     def get_cache_key(self, request, view):
         ident = self.get_ident(request)
         return f'google_login_{ident}'

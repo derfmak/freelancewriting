@@ -19,6 +19,9 @@
     
     <title>{% block title %}AcademicWrite - Professional Academic Writing Services for Students{% endblock %}</title>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
@@ -30,11 +33,32 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f8fafc;
             color: #1e293b;
             line-height: 1.6;
         }
+
+        h1, h2, h3, h4, h5, h6,
+        .logo,
+        .logo-text,
+        .site-header .auth-link,
+        .site-header .register-link,
+        .footer-section h4,
+        .footer-links a,
+        .copyright,
+        .footer-legal a,
+        .mobile-nav a,
+        .mobile-menu-close {
+            font-family: 'Times New Roman', Times, serif;
+            letter-spacing: -0.01em;
+        }
+
+        h1 { font-size: clamp(2rem, 4.5vw, 2.8rem); line-height: 1.2; }
+        h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+        h3 { font-size: clamp(1.1rem, 2vw, 1.4rem); }
+        h4 { font-size: 1rem; }
+        h5, h6 { font-size: 0.9rem; }
 
         .container {
             max-width: 1400px;
@@ -417,9 +441,6 @@
             background: white;
         }
 
-        h1 { font-size: 2rem; font-weight: 700; }
-        h2 { font-size: 1.5rem; font-weight: 700; }
-        h3 { font-size: 1.1rem; font-weight: 600; }
         p { font-size: 0.85rem; }
 
         .btn {
@@ -570,70 +591,70 @@
         </main>
 
         <footer class="footer" role="contentinfo">
-            <div class="container">
-                <div class="footer-grid">
-                    <div class="footer-section">
-                        <h4>AcademicWrite</h4>
-                        <p class="footer-about-text">
-                            Professional academic writing services for students worldwide. 
-                            We deliver high-quality, plagiarism-free papers written by expert 
-                            writers to help you achieve academic success.
-                        </p>
-                    </div>
-                    
-                    <div class="footer-section">
-                        <h4>Our Services</h4>
-                        <ul class="footer-links">
-                            <li><a href="/services/essay-writing/">Essay Writing</a></li>
-                            <li><a href="/services/research-papers/">Research Papers</a></li>
-                            <li><a href="/services/dissertations/">Dissertations</a></li>
-                            <li><a href="/services/thesis-writing/">Thesis Writing</a></li>
-                            <li><a href="/services/term-papers/">Term Papers</a></li>
-                            <li><a href="/services/coursework/">Coursework Help</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-section">
-                        <h4>Resources</h4>
-                        <ul class="footer-links">
-                            <li><a href="/blog/">Blog</a></li>
-                            <li><a href="/samples/">Writing Samples</a></li>
-                            <li><a href="/testimonials/">Testimonials</a></li>
-                            <li><a href="/faq/">FAQ</a></li>
-                            <li><a href="/guarantees/">Guarantees</a></li>
-                            <li><a href="/place-order/">Place Order</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-section">
-                        <h4>Support</h4>
-                        <ul class="footer-links">
-                            <li><a href="/about/">About Us</a></li>
-                            <li><a href="/how-it-works/">How It Works</a></li>
-                            <li><a href="/contact/">Contact Us</a></li>
-                            <li><a href="/pricing/">Pricing Plans</a></li>
-                            <li><a href="/refund-policy/">Refund Policy</a></li>
-                            <li><a href="/terms/">Terms of Service</a></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="footer-bottom">
-                    <div class="copyright">
-                        &copy; 2026 AcademicWrite. All rights reserved.
-                    </div>
-                    <div class="footer-legal">
-                        <a href="/terms/">Terms</a>
-                        <span>|</span>
-                        <a href="/privacy/">Privacy</a>
-                        <span>|</span>
-                        <a href="/refund-policy/">Refund</a>
-                        <span>|</span>
-                        <a href="/sitemap.xml">Sitemap</a>
-                    </div>
-                </div>
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h4>AcademicWrite</h4>
+                <p class="footer-about-text">
+                    Professional academic writing services for students worldwide. 
+                    We deliver high-quality, plagiarism-free papers written by expert 
+                    writers to help you achieve academic success.
+                </p>
             </div>
-        </footer>
+            
+            <div class="footer-section">
+                <h4>Our Services</h4>
+                <ul class="footer-links">
+                    <li><a href="/services/">Essay Writing</a></li>
+                    <li><a href="/services/">Research Papers</a></li>
+                    <li><a href="/services/">Dissertations</a></li>
+                    <li><a href="/services/">Thesis Writing</a></li>
+                    <li><a href="/services/">Term Papers</a></li>
+                    <li><a href="/services/">Coursework Help</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul class="footer-links">
+                    <li><a href="/blog/">Blog</a></li>
+                    <li><a href="/samples/">Writing Samples</a></li>
+                    <li><a href="/testimonials/">Testimonials</a></li>
+                    <li><a href="/faq/">FAQ</a></li>
+                    <li><a href="/guarantees/">Guarantees</a></li>
+                    <li><a href="/place-order/">Place Order</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="/about/">About Us</a></li>
+                    <li><a href="/how-it-works/">How It Works</a></li>
+                    <li><a href="/contact/">Contact Us</a></li>
+                    <li><a href="/pricing/">Pricing Plans</a></li>
+                    <li><a href="/refund-policy/">Refund Policy</a></li>
+                    <li><a href="/terms/">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="copyright">
+                &copy; 2026 AcademicWrite. All rights reserved.
+            </div>
+            <div class="footer-legal">
+                <a href="/terms/">Terms</a>
+                <span>|</span>
+                <a href="/privacy/">Privacy</a>
+                <span>|</span>
+                <a href="/refund-policy/">Refund</a>
+                <span>|</span>
+                <a href="/sitemap.xml">Sitemap</a>
+            </div>
+        </div>
+    </div>
+</footer>
 
         <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="modalOverlay">
             <div class="bg-white max-w-md w-full mx-4 p-6" id="modalContent"></div>

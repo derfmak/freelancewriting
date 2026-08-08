@@ -23,7 +23,9 @@ urlpatterns = [
     path('google/', views.google_login, name='google-login'),
     path('google/callback/', views.google_callback, name='google-callback'),
     path('google/signup/', views.google_signup, name='google-signup'),
-
+    path('apple/', views.apple_login, name='apple-login'),
+    path('apple/callback/', views.apple_callback, name='apple-callback'),
+    path('apple/signup/', views.apple_signup, name='apple-signup'),
     path('notifications/', views.client_notifications_list, name='client-notifications-list'),
     path('notifications/<uuid:notification_id>/read/', views.client_notification_mark_read, name='client-notification-mark-read'),
     path('notifications/mark-all-read/', views.client_notifications_mark_all_read, name='client-notifications-mark-all-read'),

@@ -10,7 +10,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=optional" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -47,6 +47,7 @@
             --transition-bounce: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        /* ---- reset ---- */
         *, *::before, *::after {
             margin: 0;
             padding: 0;
@@ -60,7 +61,7 @@
         }
 
         body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             font-size: 14px;
             line-height: 1.6;
             color: var(--ink);
@@ -71,96 +72,149 @@
             text-rendering: optimizeLegibility;
             font-feature-settings: 'cv11', 'ss01';
             overflow-x: hidden;
-            padding-top: var(--nav-h);
         }
 
-        button, input, select, textarea { font-family: inherit; }
+        /* ---- typography – scoped to layout ---- */
+        .aw-layout h1, .aw-layout h2, .aw-layout h3,
+        .aw-layout h4, .aw-layout h5, .aw-layout h6,
+        .aw-logo,
+        .aw-logo-text,
+        .aw-nav-link,
+        .aw-footer-link-item,
+        .aw-footer-copy,
+        .aw-drawer-user-name,
+        .aw-drawer-user-role,
+        .aw-modal-title,
+        .aw-access-denied-card h1 {
+            font-family: 'Times New Roman', Times, serif;
+            letter-spacing: -0.01em;
+        }
+
+        .aw-layout h1 { font-size: clamp(1.8rem, 4.5vw, 2.8rem); line-height: 1.2; }
+        .aw-layout h2 { font-size: clamp(1.4rem, 3vw, 2rem); }
+        .aw-layout h3 { font-size: clamp(1.1rem, 2vw, 1.4rem); }
+        .aw-layout h4 { font-size: 1rem; }
+        .aw-layout h5, .aw-layout h6 { font-size: 0.9rem; }
+
+        button, input, select, textarea {
+            font-family: 'Manrope', system-ui, sans-serif;
+        }
+
         a { color: inherit; text-decoration: none; }
         img { display: block; max-width: 100%; }
 
-        .container {
-            max-width: 1280px;
+        /* ---- layout containers ---- */
+        .aw-container {
+            max-width: 1400px;
             margin: 0 auto;
             padding: 0 28px;
         }
 
         @media (max-width: 640px) {
-            .container { padding: 0 16px; }
+            .aw-container { padding: 0 16px; }
         }
 
-        #page-wrapper {
+        .aw-layout {
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            contain: layout style;
-            animation: pageFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+            animation: awPageFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
         }
 
-        @keyframes pageFadeIn {
+        @keyframes awPageFadeIn {
             from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .site-nav {
-            position: sticky;
+        /* ---- nav ---- */
+        .aw-nav {
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
+            z-index: 50;
+            width: 100%;
             height: var(--nav-h);
             background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
-            box-shadow: 0 2px 20px rgba(4, 120, 87, 0.25);
-            z-index: 300;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-            will-change: transform;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-        }
-
-        .nav-inner {
+            box-shadow: 0 2px 16px rgba(5, 150, 105, 0.25);
             display: flex;
             align-items: center;
+        }
+
+        .aw-nav .aw-nav-link {
+            font-family: 'Times New Roman', Times, serif;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .aw-nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             height: 100%;
+            width: 100%;
             gap: 0;
         }
 
-        .nav-logo {
+        .aw-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: white;
+            font-weight: 700;
+            font-size: 1.15rem;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .aw-logo:hover { opacity: 0.85; }
+
+        .aw-logo-icon {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.18);
-            border: 1.5px solid rgba(255,255,255,0.3);
-            border-radius: var(--radius-sm);
-            font-size: 12px;
+            width: 2.6rem;
+            height: 2.6rem;
+            background: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
             font-weight: 800;
-            letter-spacing: -0.02em;
-            color: white;
-            flex-shrink: 0;
-            transition: var(--transition-bounce);
-            margin-right: 0;
+            letter-spacing: 0.05em;
+            color: #059669;
+            border: 2px solid white;
+            transition: all 0.3s ease;
         }
 
-        .nav-logo:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.05) rotate(-1deg);
+        .aw-logo:hover .aw-logo-icon {
+            background: #fbbf24;
+            transform: scale(1.05);
         }
 
-        .nav-links {
-            display: flex;
+        .aw-logo-text {
+            display: none;
+        }
+
+        .aw-logo-text span { color: #fbbf24; }
+
+        @media (min-width: 640px) {
+            .aw-logo-text { display: inline; }
+        }
+
+        .aw-nav-links {
+            display: none;
             align-items: center;
-            justify-content: space-around;
-            height: 100%;
+            gap: 0.25rem;
             flex: 1;
-            gap: 2px;
+            justify-content: center;
             margin: 0 12px;
         }
 
-        @media (max-width: 1023px) {
-            .nav-links { display: none; }
+        @media (min-width: 1024px) {
+            .aw-nav-links { display: flex; }
         }
 
-        .nav-link {
+        .aw-nav-link {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -175,7 +229,7 @@
             transition: var(--transition);
         }
 
-        .nav-link i {
+        .aw-nav-link i {
             font-size: 14px;
             width: 16px;
             text-align: center;
@@ -184,22 +238,20 @@
             transition: var(--transition);
         }
 
-        .nav-link:hover {
+        .aw-nav-link:hover {
             color: white;
             background: rgba(255,255,255,0.15);
         }
+        .aw-nav-link:hover i { color: white; }
 
-        .nav-link:hover i { color: white; }
-
-        .nav-link.active {
+        .aw-nav-link.active {
             color: white;
             background: rgba(255,255,255,0.2);
             font-weight: 600;
         }
+        .aw-nav-link.active i { color: white; }
 
-        .nav-link.active i { color: white; }
-
-        .nav-link.active::after {
+        .aw-nav-link.active::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -211,7 +263,7 @@
             border-radius: 2px;
         }
 
-        .nav-badge {
+        .aw-nav-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -232,22 +284,22 @@
             transform: scale(0.6);
             transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             pointer-events: none;
+            font-family: 'Manrope', sans-serif;
         }
 
-        .nav-badge.visible {
+        .aw-nav-badge.visible {
             opacity: 1;
             transform: scale(1);
         }
 
-        .nav-right {
+        .aw-nav-right {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-left: auto;
             flex-shrink: 0;
         }
 
-        .bell-btn {
+        .aw-bell-btn {
             position: relative;
             display: flex;
             align-items: center;
@@ -262,12 +314,12 @@
             transition: var(--transition);
         }
 
-        .bell-btn:hover {
+        .aw-bell-btn:hover {
             background: rgba(255,255,255,0.25);
             transform: translateY(-1px) scale(1.04);
         }
 
-        .bell-badge {
+        .aw-bell-badge {
             position: absolute;
             top: -4px;
             right: -4px;
@@ -287,13 +339,14 @@
             opacity: 0;
             transform: scale(0.6);
             transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Manrope', sans-serif;
         }
 
-        .bell-badge.visible { opacity: 1; transform: scale(1); }
+        .aw-bell-badge.visible { opacity: 1; transform: scale(1); }
 
-        .user-menu { position: relative; }
+        .aw-user-menu { position: relative; }
 
-        .user-trigger {
+        .aw-user-trigger {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -305,12 +358,12 @@
             transition: var(--transition);
         }
 
-        .user-trigger:hover {
+        .aw-user-trigger:hover {
             background: rgba(255,255,255,0.25);
             transform: translateY(-1px);
         }
 
-        .user-avatar {
+        .aw-user-avatar {
             width: 30px;
             height: 30px;
             border-radius: 50%;
@@ -327,19 +380,19 @@
             flex-shrink: 0;
         }
 
-        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .aw-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        .user-info {
+        .aw-user-info {
             display: none;
             flex-direction: column;
             min-width: 0;
         }
 
         @media (min-width: 768px) {
-            .user-info { display: flex; }
+            .aw-user-info { display: flex; }
         }
 
-        .user-name {
+        .aw-user-name {
             font-size: 12px;
             font-weight: 600;
             color: white;
@@ -350,22 +403,22 @@
             line-height: 1.3;
         }
 
-        .user-role {
+        .aw-user-role {
             font-size: 10px;
             color: rgba(255,255,255,0.6);
             line-height: 1.2;
         }
 
-        .user-trigger .chevron {
+        .aw-user-trigger .aw-chevron {
             font-size: 10px;
             color: rgba(255,255,255,0.6);
             transition: transform 0.25s ease;
             flex-shrink: 0;
         }
 
-        .user-trigger.open .chevron { transform: rotate(180deg); }
+        .aw-user-trigger.open .aw-chevron { transform: rotate(180deg); }
 
-        .dropdown {
+        .aw-dropdown {
             position: absolute;
             top: calc(100% + 8px);
             right: 0;
@@ -383,14 +436,14 @@
             z-index: 400;
         }
 
-        .dropdown.open {
+        .aw-dropdown.open {
             opacity: 1;
             visibility: visible;
             transform: translateY(0) scale(1);
             transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .dropdown-item {
+        .aw-dropdown-item {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -406,7 +459,7 @@
             text-align: left;
         }
 
-        .dropdown-item i {
+        .aw-dropdown-item i {
             width: 16px;
             text-align: center;
             font-size: 14px;
@@ -415,30 +468,27 @@
             transition: var(--transition);
         }
 
-        .dropdown-item:hover {
+        .aw-dropdown-item:hover {
             background: var(--green-pale);
             color: var(--green-dark);
         }
+        .aw-dropdown-item:hover i { color: var(--green); }
 
-        .dropdown-item:hover i { color: var(--green); }
-
-        .dropdown-divider {
+        .aw-dropdown-divider {
             height: 1px;
             background: var(--line);
             margin: 4px 0;
         }
 
-        .dropdown-item.logout { color: var(--red); }
-        .dropdown-item.logout i { color: var(--red); }
-
-        .dropdown-item.logout:hover {
+        .aw-dropdown-item.logout { color: var(--red); }
+        .aw-dropdown-item.logout i { color: var(--red); }
+        .aw-dropdown-item.logout:hover {
             background: var(--red-pale);
             color: #b91c1c;
         }
+        .aw-dropdown-item.logout:hover i { color: #b91c1c; }
 
-        .dropdown-item.logout:hover i { color: #b91c1c; }
-
-        .hamburger {
+        .aw-hamburger {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -452,33 +502,34 @@
             transition: var(--transition);
         }
 
-        .hamburger:hover {
-            background: rgba(255,255,255,0.25);
-        }
+        .aw-hamburger:hover { background: rgba(255,255,255,0.25); }
 
         @media (min-width: 1024px) {
-            .hamburger { display: none; }
+            .aw-hamburger { display: none; }
         }
 
-        .drawer-overlay {
+        /* ---- drawer ---- */
+        .aw-drawer-overlay {
             position: fixed;
             inset: 0;
             background: rgba(15, 23, 42, 0.45);
             z-index: 250;
             opacity: 0;
             visibility: hidden;
+            pointer-events: none;
             transition: opacity 0.25s ease, visibility 0s linear 0.25s;
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
         }
 
-        .drawer-overlay.open {
+        .aw-drawer-overlay.open {
             opacity: 1;
             visibility: visible;
+            pointer-events: auto;
             transition: opacity 0.25s ease;
         }
 
-        .drawer {
+        .aw-drawer {
             position: fixed;
             top: 0;
             left: 0;
@@ -496,9 +547,9 @@
             box-shadow: var(--shadow-xl);
         }
 
-        .drawer.open { transform: translateX(0); }
+        .aw-drawer.open { transform: translateX(0); }
 
-        .drawer-head {
+        .aw-drawer-head {
             display: flex;
             align-items: center;
             gap: 14px;
@@ -509,7 +560,7 @@
             overflow: hidden;
         }
 
-        .drawer-head::after {
+        .aw-drawer-head::after {
             content: '';
             position: absolute;
             top: -50%;
@@ -521,7 +572,7 @@
             pointer-events: none;
         }
 
-        .drawer-avatar {
+        .aw-drawer-avatar {
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -539,9 +590,9 @@
             z-index: 1;
         }
 
-        .drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .aw-drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        .drawer-user-name {
+        .aw-drawer-user-name {
             font-size: 15px;
             font-weight: 700;
             color: white;
@@ -549,7 +600,7 @@
             z-index: 1;
         }
 
-        .drawer-user-role {
+        .aw-drawer-user-role {
             font-size: 11px;
             color: rgba(255,255,255,0.7);
             margin-top: 1px;
@@ -557,12 +608,12 @@
             z-index: 1;
         }
 
-        .drawer-body {
+        .aw-drawer-body {
             padding: 12px 10px;
             flex: 1;
         }
 
-        .drawer-link {
+        .aw-drawer-link {
             display: flex;
             align-items: center;
             gap: 14px;
@@ -575,7 +626,7 @@
             position: relative;
         }
 
-        .drawer-link i {
+        .aw-drawer-link i {
             width: 18px;
             text-align: center;
             font-size: 15px;
@@ -584,22 +635,20 @@
             transition: var(--transition);
         }
 
-        .drawer-link:hover {
+        .aw-drawer-link:hover {
             background: var(--green-pale);
             color: var(--green-dark);
         }
+        .aw-drawer-link:hover i { color: var(--green); }
 
-        .drawer-link:hover i { color: var(--green); }
-
-        .drawer-link.active {
+        .aw-drawer-link.active {
             background: var(--green-pale);
             color: var(--green-dark);
             font-weight: 600;
         }
+        .aw-drawer-link.active i { color: var(--green); }
 
-        .drawer-link.active i { color: var(--green); }
-
-        .drawer-link.active::before {
+        .aw-drawer-link.active::before {
             content: '';
             position: absolute;
             left: 0;
@@ -610,7 +659,7 @@
             border-radius: 0 3px 3px 0;
         }
 
-        .drawer-badge {
+        .aw-drawer-badge {
             margin-left: auto;
             min-width: 20px;
             height: 20px;
@@ -626,23 +675,24 @@
             justify-content: center;
             opacity: 0;
             transition: opacity 0.2s ease;
+            font-family: 'Manrope', sans-serif;
         }
 
-        .drawer-badge.visible { opacity: 1; }
+        .aw-drawer-badge.visible { opacity: 1; }
 
-        .drawer-sep {
+        .aw-drawer-sep {
             height: 1px;
             background: var(--line);
             margin: 8px 0;
         }
 
-        .drawer-footer {
+        .aw-drawer-footer {
             padding: 12px 10px;
             border-top: 1px solid var(--line);
             flex-shrink: 0;
         }
 
-        .drawer-logout {
+        .aw-drawer-logout {
             display: flex;
             align-items: center;
             gap: 14px;
@@ -659,24 +709,25 @@
             text-align: left;
         }
 
-        .drawer-logout i { font-size: 15px; width: 18px; text-align: center; }
-        .drawer-logout:hover { background: var(--red-pale); }
+        .aw-drawer-logout i { font-size: 15px; width: 18px; text-align: center; }
+        .aw-drawer-logout:hover { background: var(--red-pale); }
 
-        .main-content {
+        /* ---- main ---- */
+        .aw-main {
             flex: 1;
             background: var(--surface);
-            contain: content;
+            padding-top: var(--nav-h);
         }
 
-        .main-inner { padding: 32px 0 56px; }
+        .aw-main-inner { padding: 32px 0 56px; }
 
         @media (max-width: 640px) {
-            .main-inner { padding: 20px 0 40px; }
+            .aw-main-inner { padding: 20px 0 40px; }
         }
 
-        .page-messages { margin-bottom: 20px; }
+        .aw-page-messages { margin-bottom: 20px; }
 
-        .page-message {
+        .aw-page-message {
             padding: 13px 18px;
             border-radius: var(--radius-sm);
             font-size: 13px;
@@ -686,31 +737,32 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+            animation: awSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
         }
 
-        @keyframes slideIn {
+        @keyframes awSlideIn {
             from { opacity: 0; transform: translateY(-6px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .page-message:last-child { margin-bottom: 0; }
-        .page-message.success { background: var(--green-pale); color: var(--green-dark); border-color: var(--green); }
-        .page-message.error   { background: var(--red-pale);   color: #b91c1c;           border-color: var(--red);   }
-        .page-message.info    { background: #eff6ff;            color: #1d4ed8;           border-color: #3b82f6;      }
-        .page-message.warning { background: #fffbeb;            color: #92400e;           border-color: var(--amber); }
+        .aw-page-message:last-child { margin-bottom: 0; }
+        .aw-page-message.success { background: var(--green-pale); color: var(--green-dark); border-color: var(--green); }
+        .aw-page-message.error   { background: var(--red-pale);   color: #b91c1c;           border-color: var(--red);   }
+        .aw-page-message.info    { background: #eff6ff;            color: #1d4ed8;           border-color: #3b82f6;      }
+        .aw-page-message.warning { background: #fffbeb;            color: #92400e;           border-color: var(--amber); }
 
-        .page-message i { font-size: 14px; flex-shrink: 0; }
+        .aw-page-message i { font-size: 14px; flex-shrink: 0; }
 
-        .site-footer {
+        /* ---- footer ---- */
+        .aw-footer {
             background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
             border-top: 1px solid rgba(255,255,255,0.12);
             margin-top: auto;
         }
 
-        .footer-inner { padding: 28px 0 22px; text-align: center; }
+        .aw-footer-inner { padding: 28px 0 22px; text-align: center; }
 
-        .footer-links {
+        .aw-footer-links {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -719,7 +771,7 @@
             margin-bottom: 18px;
         }
 
-        .footer-link-item {
+        .aw-footer-link-item {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -731,28 +783,28 @@
             transition: var(--transition);
         }
 
-        .footer-link-item i {
+        .aw-footer-link-item i {
             color: var(--amber);
             font-size: 13px;
             transition: var(--transition);
         }
 
-        .footer-link-item:hover {
+        .aw-footer-link-item:hover {
             background: rgba(255,255,255,0.12);
             color: white;
             transform: translateY(-2px);
         }
+        .aw-footer-link-item:hover i { color: white; }
 
-        .footer-link-item:hover i { color: white; }
-
-        .footer-copy {
+        .aw-footer-copy {
             font-size: 12px;
             color: rgba(255,255,255,0.5);
             padding-top: 16px;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
-        .toast-stack {
+        /* ---- toasts ---- */
+        .aw-toast-stack {
             position: fixed;
             top: calc(var(--nav-h) + 16px);
             right: 20px;
@@ -765,7 +817,7 @@
             width: calc(100vw - 40px);
         }
 
-        .toast {
+        .aw-toast {
             background: var(--paper);
             border: 1px solid var(--line);
             border-radius: var(--radius);
@@ -778,24 +830,24 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
         }
 
-        .toast.entering {
+        .aw-toast.entering {
             transform: translateX(calc(100% + 24px));
             opacity: 0;
         }
 
-        .toast.exiting {
+        .aw-toast.exiting {
             transform: translateX(calc(100% + 24px));
             opacity: 0;
         }
 
-        .toast-body {
+        .aw-toast-body {
             display: flex;
             align-items: flex-start;
             gap: 12px;
             padding: 14px 16px;
         }
 
-        .toast-icon {
+        .aw-toast-icon {
             width: 22px;
             height: 22px;
             border-radius: 50%;
@@ -808,12 +860,12 @@
             margin-top: 1px;
         }
 
-        .toast.success .toast-icon { background: var(--green-pale); color: var(--green); }
-        .toast.error   .toast-icon { background: var(--red-pale);   color: var(--red);   }
-        .toast.info    .toast-icon { background: #eff6ff;            color: #3b82f6;      }
-        .toast.warning .toast-icon { background: #fffbeb;            color: #d97706;      }
+        .aw-toast.success .aw-toast-icon { background: var(--green-pale); color: var(--green); }
+        .aw-toast.error   .aw-toast-icon { background: var(--red-pale);   color: var(--red);   }
+        .aw-toast.info    .aw-toast-icon { background: #eff6ff;            color: #3b82f6;      }
+        .aw-toast.warning .aw-toast-icon { background: #fffbeb;            color: #d97706;      }
 
-        .toast-text {
+        .aw-toast-text {
             flex: 1;
             font-size: 13px;
             font-weight: 500;
@@ -821,13 +873,13 @@
             line-height: 1.5;
         }
 
-        .toast-bar { height: 3px; width: 100%; }
-        .toast.success .toast-bar { background: var(--green); }
-        .toast.error   .toast-bar { background: var(--red); }
-        .toast.info    .toast-bar { background: #3b82f6; }
-        .toast.warning .toast-bar { background: var(--amber); }
+        .aw-toast-bar { height: 3px; width: 100%; }
+        .aw-toast.success .aw-toast-bar { background: var(--green); }
+        .aw-toast.error   .aw-toast-bar { background: var(--red); }
+        .aw-toast.info    .aw-toast-bar { background: #3b82f6; }
+        .aw-toast.warning .aw-toast-bar { background: var(--amber); }
 
-        .toast-bar-fill {
+        .aw-toast-bar-fill {
             height: 100%;
             background: rgba(0,0,0,0.08);
             transform: scaleX(1);
@@ -835,9 +887,10 @@
             transition: transform 5s linear;
         }
 
-        .toast-bar-fill.depleting { transform: scaleX(0); }
+        .aw-toast-bar-fill.depleting { transform: scaleX(0); }
 
-        .modal-wrap {
+        /* ---- modal ---- */
+        .aw-modal-wrap {
             position: fixed;
             inset: 0;
             background: rgba(15, 23, 42, 0.5);
@@ -848,18 +901,20 @@
             padding: 20px;
             opacity: 0;
             visibility: hidden;
+            pointer-events: none;
             transition: opacity 0.2s ease, visibility 0s linear 0.2s;
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
         }
 
-        .modal-wrap.open {
+        .aw-modal-wrap.open {
             opacity: 1;
             visibility: visible;
+            pointer-events: auto;
             transition: opacity 0.2s ease;
         }
 
-        .modal-box {
+        .aw-modal-box {
             background: var(--paper);
             border-radius: var(--radius);
             box-shadow: var(--shadow-xl);
@@ -871,9 +926,10 @@
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .modal-wrap.open .modal-box { transform: translateY(0) scale(1); }
+        .aw-modal-wrap.open .aw-modal-box { transform: translateY(0) scale(1); }
 
-        .loading-overlay {
+        /* ---- loading ---- */
+        .aw-loading-overlay {
             position: fixed;
             inset: 0;
             background: rgba(248,250,252,0.8);
@@ -883,30 +939,33 @@
             justify-content: center;
             opacity: 0;
             visibility: hidden;
+            pointer-events: none;
             transition: opacity 0.2s ease, visibility 0s linear 0.2s;
             backdrop-filter: blur(2px);
             -webkit-backdrop-filter: blur(2px);
         }
 
-        .loading-overlay.open {
+        .aw-loading-overlay.open {
             opacity: 1;
             visibility: visible;
+            pointer-events: auto;
             transition: opacity 0.2s ease;
         }
 
-        .spinner {
+        .aw-spinner {
             width: 40px;
             height: 40px;
             border: 3px solid var(--line);
             border-top-color: var(--green);
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+            animation: awSpin 0.7s linear infinite;
             box-shadow: 0 0 20px rgba(5, 150, 105, 0.1);
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes awSpin { to { transform: rotate(360deg); } }
 
-        .access-denied {
+        /* ---- access denied ---- */
+        .aw-access-denied {
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -915,7 +974,7 @@
             padding: 20px;
         }
 
-        .access-denied-card {
+        .aw-access-denied-card {
             background: var(--paper);
             border: 1px solid var(--line);
             border-radius: var(--radius);
@@ -926,7 +985,7 @@
             box-shadow: var(--shadow);
         }
 
-        .access-denied-icon {
+        .aw-access-denied-icon {
             width: 72px;
             height: 72px;
             border-radius: 50%;
@@ -939,20 +998,20 @@
             color: var(--red);
         }
 
-        .access-denied-card h1 {
+        .aw-access-denied-card h1 {
             font-size: 22px;
             font-weight: 800;
             color: var(--ink);
             margin-bottom: 8px;
         }
 
-        .access-denied-card p {
+        .aw-access-denied-card p {
             font-size: 14px;
             color: var(--muted);
             margin-bottom: 24px;
         }
 
-        .btn-primary {
+        .aw-btn-primary {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -969,137 +1028,13 @@
             box-shadow: 0 2px 12px rgba(5, 150, 105, 0.3);
         }
 
-        .btn-primary:hover {
+        .aw-btn-primary:hover {
             transform: translateY(-2px) scale(1.02);
             box-shadow: 0 6px 24px rgba(5, 150, 105, 0.35);
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .flex-1 { flex: 1 1 0%; }
-        .flex-wrap { flex-wrap: wrap; }
-        .hidden { display: none !important; }
-        .block { display: block; }
-        .inline-block { display: inline-block; }
-        .relative { position: relative; }
-        .absolute { position: absolute; }
-        .fixed { position: fixed; }
-        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-        .top-0 { top: 0; }
-        .right-0 { right: 0; }
-        .z-50 { z-index: 50; }
-        .items-center { align-items: center; }
-        .items-start { align-items: flex-start; }
-        .justify-center { justify-content: center; }
-        .justify-between { justify-content: space-between; }
-        .gap-2 { gap: 0.5rem; }
-        .gap-3 { gap: 0.75rem; }
-        .gap-4 { gap: 1rem; }
-        .gap-6 { gap: 1.5rem; }
-        .w-80 { width: 20rem; }
-        .w-full { width: 100%; }
-        .h-full { height: 100%; }
-        .min-w-0 { min-width: 0; }
-        .flex-shrink-0 { flex-shrink: 0; }
-        .overflow-hidden { overflow: hidden; }
-        .overflow-y-auto { overflow-y: auto; }
-        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .rounded { border-radius: 0.25rem; }
-        .rounded-lg { border-radius: 0.5rem; }
-        .rounded-full { border-radius: 9999px; }
-        .border { border: 1px solid #e5e7eb; }
-        .border-b { border-bottom: 1px solid #e5e7eb; }
-        .border-t { border-top: 1px solid #e5e7eb; }
-        .border-r { border-right: 1px solid #e5e7eb; }
-        .border-gray-100 { border-color: #f3f4f6; }
-        .border-gray-200 { border-color: #e5e7eb; }
-        .border-gray-300 { border-color: #d1d5db; }
-        .p-3 { padding: 0.75rem; }
-        .p-4 { padding: 1rem; }
-        .p-6 { padding: 1.5rem; }
-        .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-        .px-4 { padding-left: 1rem; padding-right: 1rem; }
-        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-        .pt-1 { padding-top: 0.25rem; }
-        .mt-0\.5 { margin-top: 0.125rem; }
-        .mt-1 { margin-top: 0.25rem; }
-        .mt-2 { margin-top: 0.5rem; }
-        .mt-4 { margin-top: 1rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-        .mb-3 { margin-bottom: 0.75rem; }
-        .mb-4 { margin-bottom: 1rem; }
-        .ml-1 { margin-left: 0.25rem; }
-        .ml-2 { margin-left: 0.5rem; }
-        .mr-1 { margin-right: 0.25rem; }
-        .mr-2 { margin-right: 0.5rem; }
-        .space-y-2 > * + * { margin-top: 0.5rem; }
-        .text-center { text-align: center; }
-        .text-left { text-align: left; }
-        .text-xs { font-size: 0.75rem; }
-        .text-sm { font-size: 0.875rem; }
-        .text-lg { font-size: 1.125rem; }
-        .text-xl { font-size: 1.25rem; }
-        .text-2xl { font-size: 1.5rem; }
-        .text-3xl { font-size: 1.875rem; }
-        .text-4xl { font-size: 2.25rem; }
-        .font-medium { font-weight: 500; }
-        .font-semibold { font-weight: 600; }
-        .font-bold { font-weight: 700; }
-        .text-white { color: #ffffff; }
-        .text-gray-300 { color: #d1d5db; }
-        .text-gray-400 { color: #9ca3af; }
-        .text-gray-500 { color: #6b7280; }
-        .text-gray-600 { color: #4b5563; }
-        .text-gray-700 { color: #374151; }
-        .text-gray-800 { color: #1f2937; }
-        .text-gray-900 { color: #111827; }
-        .text-green-600 { color: #059669; }
-        .text-green-700 { color: #047857; }
-        .text-red-500 { color: #ef4444; }
-        .text-red-600 { color: #dc2626; }
-        .text-red-700 { color: #b91c1c; }
-        .text-yellow-700 { color: #b45309; }
-        .text-blue-700 { color: #1d4ed8; }
-        .text-purple-700 { color: #6d28d9; }
-        .bg-white { background-color: #ffffff; }
-        .bg-black { background-color: #000000; }
-        .bg-gray-50 { background-color: #f9fafb; }
-        .bg-gray-100 { background-color: #f3f4f6; }
-        .bg-green-50 { background-color: #ecfdf5; }
-        .bg-green-100 { background-color: #d1fae5; }
-        .bg-green-600 { background-color: #059669; }
-        .bg-green-700 { background-color: #047857; }
-        .bg-red-100 { background-color: #fee2e2; }
-        .bg-red-50 { background-color: #fef2f2; }
-        .bg-yellow-100 { background-color: #fef3c7; }
-        .bg-blue-100 { background-color: #dbeafe; }
-        .bg-purple-100 { background-color: #ede9fe; }
-        .bg-opacity-50 { --tw-bg-opacity: 0.5; }
-        .transition { transition: all 0.15s ease; }
-        .transition-colors { transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
-        .hover\:bg-gray-50:hover { background-color: #f9fafb; }
-        .hover\:bg-green-700:hover { background-color: #047857; }
-        .hover\:text-green-600:hover { color: #059669; }
-        .hover\:text-green-700:hover { color: #047857; }
-        .hover\:text-gray-700:hover { color: #374151; }
-        .hover\:underline:hover { text-decoration: underline; }
-        .focus\:border-green-600:focus { border-color: #059669; }
-        .focus\:ring-1:focus { --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color); --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color); box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); }
-        .focus\:ring-green-600:focus { --tw-ring-color: #059669; }
-        .outline-none { outline: 2px solid transparent; outline-offset: 2px; }
-        .h-\[calc\(100vh-120px\)\] { height: calc(100vh - 120px); }
-
-        .pagination {
+        /* ---- pagination ---- */
+        .aw-pagination {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1108,14 +1043,14 @@
             flex-wrap: wrap;
         }
 
-        .pagination .step-links {
+        .aw-pagination .step-links {
             display: flex;
             align-items: center;
             gap: 4px;
             flex-wrap: wrap;
         }
 
-        .pagination a, .pagination .current {
+        .aw-pagination a, .aw-pagination .current {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -1131,27 +1066,27 @@
             border: 1px solid var(--line);
         }
 
-        .pagination a:hover {
+        .aw-pagination a:hover {
             background: var(--green-pale);
             border-color: var(--green);
             color: var(--green-dark);
             transform: translateY(-1px);
         }
 
-        .pagination .current {
+        .aw-pagination .current {
             background: var(--green);
             color: white;
             border-color: var(--green);
             font-weight: 600;
         }
 
-        .pagination .disabled {
+        .aw-pagination .disabled {
             opacity: 0.4;
             pointer-events: none;
         }
 
         @media (max-width: 640px) {
-            .pagination a, .pagination .current {
+            .aw-pagination a, .aw-pagination .current {
                 min-width: 32px;
                 height: 32px;
                 font-size: 12px;
@@ -1159,105 +1094,117 @@
             }
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ---- responsiveness tweaks ---- */
         @media (max-width: 480px) {
-            .nav-link { padding: 0 10px; font-size: 12px; }
-            .nav-link i { font-size: 12px; width: 14px; }
-            .user-name { max-width: 70px; font-size: 11px; }
-            .footer-link-item { font-size: 12px; padding: 4px 10px; }
+            .aw-nav-link { padding: 0 10px; font-size: 12px; }
+            .aw-nav-link i { font-size: 12px; width: 14px; }
+            .aw-user-name { max-width: 70px; font-size: 11px; }
+            .aw-footer-link-item { font-size: 12px; padding: 4px 10px; }
         }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-<div id="page-wrapper">
+
+<div class="aw-layout" id="awLayout">
 
 {% if user.is_authenticated and user.role == 'client' %}
 
-    <nav class="site-nav" role="navigation" aria-label="Main navigation">
-        <div class="container">
-            <div class="nav-inner">
+    <nav class="aw-nav" role="navigation" aria-label="Main navigation">
+        <div class="aw-container">
+            <div class="aw-nav-inner">
 
-                <a href="/client/dashboard/" class="nav-logo" aria-label="AcademicWrite home">AW</a>
+                <a href="/client/dashboard/" class="aw-logo" aria-label="AcademicWrite Home">
+                    <span class="aw-logo-icon">AW</span>
+                    <span class="aw-logo-text">Academic<span>Write</span></span>
+                </a>
 
-                <div class="nav-links" role="menubar">
+                <div class="aw-nav-links" role="menubar">
                     <a href="/client/dashboard/"
-                       class="nav-link {% if request.path == '/client/dashboard/' %}active{% endif %}"
+                       class="aw-nav-link {% if request.path == '/client/dashboard/' %}active{% endif %}"
                        role="menuitem">
                         <i class="fas fa-th-large" aria-hidden="true"></i>
                         Dashboard
                     </a>
                     <a href="/client/orders/"
-                       class="nav-link {% if request.path == '/client/orders/' %}active{% endif %}"
+                       class="aw-nav-link {% if request.path == '/client/orders/' %}active{% endif %}"
                        role="menuitem"
                        style="position:relative;">
                         <i class="fas fa-file-alt" aria-hidden="true"></i>
                         My Orders
-                        <span class="nav-badge" id="navBadgeOrders" aria-label="active orders"></span>
+                        <span class="aw-nav-badge" id="navBadgeOrders" aria-label="active orders"></span>
                     </a>
                     <a href="/client/orders/new/"
-                       class="nav-link {% if request.path == '/client/orders/new/' %}active{% endif %}"
+                       class="aw-nav-link {% if request.path == '/client/orders/new/' %}active{% endif %}"
                        role="menuitem">
                         <i class="fas fa-plus" aria-hidden="true"></i>
                         New Order
                     </a>
                     <a href="/client/wallet/"
-                       class="nav-link {% if request.path == '/client/wallet/' %}active{% endif %}"
+                       class="aw-nav-link {% if request.path == '/client/wallet/' %}active{% endif %}"
                        role="menuitem">
                         <i class="fas fa-wallet" aria-hidden="true"></i>
                         Wallet
                     </a>
                     <a href="/client/messages/"
-                       class="nav-link {% if request.path == '/client/messages/' %}active{% endif %}"
+                       class="aw-nav-link {% if request.path == '/client/messages/' %}active{% endif %}"
                        role="menuitem"
                        style="position:relative;">
                         <i class="fas fa-envelope" aria-hidden="true"></i>
                         Messages
-                        <span class="nav-badge" id="navBadgeMessages" aria-label="unread messages"></span>
+                        <span class="aw-nav-badge" id="navBadgeMessages" aria-label="unread messages"></span>
                     </a>
                 </div>
 
-                <div class="nav-right">
-                    <button class="bell-btn" id="bellBtn" aria-label="View notifications">
+                <div class="aw-nav-right">
+                    <button class="aw-bell-btn" id="bellBtn" aria-label="View notifications">
                         <i class="fas fa-bell" style="font-size:15px;" aria-hidden="true"></i>
-                        <span class="bell-badge" id="bellBadge" aria-label="notifications"></span>
+                        <span class="aw-bell-badge" id="bellBadge" aria-label="notifications"></span>
                     </button>
 
-                    <div class="user-menu">
-                        <div class="user-trigger" id="userTrigger" role="button" tabindex="0"
+                    <div class="aw-user-menu">
+                        <div class="aw-user-trigger" id="userTrigger" role="button" tabindex="0"
                              aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
-                            <div class="user-avatar">
+                            <div class="aw-user-avatar">
                                 {% if user.profile_image %}
                                     <img src="{{ user.profile_image.url }}" alt="">
                                 {% else %}
                                     {{ user.full_name|first|upper }}
                                 {% endif %}
                             </div>
-                            <div class="user-info">
-                                <span class="user-name">{{ user.full_name|default:user.email|truncatechars:16 }}</span>
-                                <span class="user-role">Client</span>
+                            <div class="aw-user-info">
+                                <span class="aw-user-name">{{ user.full_name|default:user.email|truncatechars:16 }}</span>
+                                <span class="aw-user-role">Client</span>
                             </div>
-                            <i class="fas fa-chevron-down chevron" aria-hidden="true"></i>
+                            <i class="fas fa-chevron-down aw-chevron" aria-hidden="true"></i>
                         </div>
 
-                        <div class="dropdown" id="userDropdown" role="menu" aria-label="Account options">
-                            <a href="/client/profile/" class="dropdown-item" role="menuitem">
+                        <div class="aw-dropdown" id="userDropdown" role="menu" aria-label="Account options">
+                            <a href="/client/profile/" class="aw-dropdown-item" role="menuitem">
                                 <i class="fas fa-user" aria-hidden="true"></i>
                                 Profile
                             </a>
-                            <a href="/client/settings/" class="dropdown-item" role="menuitem">
+                            <a href="/client/settings/" class="aw-dropdown-item" role="menuitem">
                                 <i class="fas fa-cog" aria-hidden="true"></i>
                                 Settings
                             </a>
-                            <div class="dropdown-divider" role="separator"></div>
-                            <div class="dropdown-item logout" id="logoutBtn" role="menuitem" tabindex="0">
+                            <div class="aw-dropdown-divider" role="separator"></div>
+                            <div class="aw-dropdown-item logout" id="logoutBtn" role="menuitem" tabindex="0">
                                 <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                                 Sign out
                             </div>
                         </div>
                     </div>
 
-                    <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+                    <button class="aw-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
                         <i class="fas fa-bars" style="font-size:15px;" aria-hidden="true"></i>
                     </button>
                 </div>
@@ -1266,10 +1213,10 @@
         </div>
     </nav>
 
-    <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
-    <div class="drawer" id="drawer" role="navigation" aria-label="Mobile navigation">
-        <div class="drawer-head">
-            <div class="drawer-avatar">
+    <div class="aw-drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
+    <div class="aw-drawer" id="drawer" role="navigation" aria-label="Mobile navigation">
+        <div class="aw-drawer-head">
+            <div class="aw-drawer-avatar">
                 {% if user.profile_image %}
                     <img src="{{ user.profile_image.url }}" alt="">
                 {% else %}
@@ -1277,64 +1224,64 @@
                 {% endif %}
             </div>
             <div>
-                <div class="drawer-user-name">{{ user.full_name|default:user.email }}</div>
-                <div class="drawer-user-role">Client Account</div>
+                <div class="aw-drawer-user-name">{{ user.full_name|default:user.email }}</div>
+                <div class="aw-drawer-user-role">Client Account</div>
             </div>
         </div>
-        <div class="drawer-body">
+        <div class="aw-drawer-body">
             <a href="/client/dashboard/"
-               class="drawer-link {% if request.path == '/client/dashboard/' %}active{% endif %}">
+               class="aw-drawer-link {% if request.path == '/client/dashboard/' %}active{% endif %}">
                 <i class="fas fa-th-large" aria-hidden="true"></i>
                 Dashboard
             </a>
             <a href="/client/orders/"
-               class="drawer-link {% if request.path == '/client/orders/' %}active{% endif %}">
+               class="aw-drawer-link {% if request.path == '/client/orders/' %}active{% endif %}">
                 <i class="fas fa-file-alt" aria-hidden="true"></i>
                 My Orders
-                <span class="drawer-badge" id="drawerBadgeOrders"></span>
+                <span class="aw-drawer-badge" id="drawerBadgeOrders"></span>
             </a>
             <a href="/client/orders/new/"
-               class="drawer-link {% if request.path == '/client/orders/new/' %}active{% endif %}">
+               class="aw-drawer-link {% if request.path == '/client/orders/new/' %}active{% endif %}">
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 New Order
             </a>
             <a href="/client/wallet/"
-               class="drawer-link {% if request.path == '/client/wallet/' %}active{% endif %}">
+               class="aw-drawer-link {% if request.path == '/client/wallet/' %}active{% endif %}">
                 <i class="fas fa-wallet" aria-hidden="true"></i>
                 Wallet
             </a>
             <a href="/client/messages/"
-               class="drawer-link {% if request.path == '/client/messages/' %}active{% endif %}">
+               class="aw-drawer-link {% if request.path == '/client/messages/' %}active{% endif %}">
                 <i class="fas fa-envelope" aria-hidden="true"></i>
                 Messages
-                <span class="drawer-badge" id="drawerBadgeMessages"></span>
+                <span class="aw-drawer-badge" id="drawerBadgeMessages"></span>
             </a>
-            <div class="drawer-sep" role="separator"></div>
-            <a href="/client/profile/" class="drawer-link">
+            <div class="aw-drawer-sep" role="separator"></div>
+            <a href="/client/profile/" class="aw-drawer-link">
                 <i class="fas fa-user" aria-hidden="true"></i>
                 Profile
             </a>
-            <a href="/client/settings/" class="drawer-link">
+            <a href="/client/settings/" class="aw-drawer-link">
                 <i class="fas fa-cog" aria-hidden="true"></i>
                 Settings
             </a>
         </div>
-        <div class="drawer-footer">
-            <div class="drawer-logout" id="drawerLogout" role="button" tabindex="0">
+        <div class="aw-drawer-footer">
+            <div class="aw-drawer-logout" id="drawerLogout" role="button" tabindex="0">
                 <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                 Sign out
             </div>
         </div>
     </div>
 
-    <main class="main-content" id="mainContent">
-        <div class="container">
-            <div class="main-inner">
+    <main class="aw-main" id="mainContent">
+        <div class="aw-container">
+            <div class="aw-main-inner">
 
                 {% if messages %}
-                <div class="page-messages" role="alert" aria-live="polite">
+                <div class="aw-page-messages" role="alert" aria-live="polite">
                     {% for message in messages %}
-                    <div class="page-message {{ message.tags }}">
+                    <div class="aw-page-message {{ message.tags }}">
                         <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}" aria-hidden="true"></i>
                         {{ message }}
                     </div>
@@ -1348,46 +1295,46 @@
         </div>
     </main>
 
-    <footer class="site-footer" role="contentinfo">
-        <div class="container">
-            <div class="footer-inner">
-                <div class="footer-links">
-                    <a href="/client/dashboard/" class="footer-link-item">
+    <footer class="aw-footer" role="contentinfo">
+        <div class="aw-container">
+            <div class="aw-footer-inner">
+                <div class="aw-footer-links">
+                    <a href="/client/dashboard/" class="aw-footer-link-item">
                         <i class="fas fa-th-large" aria-hidden="true"></i>
                         Dashboard
                     </a>
-                    <a href="/client/orders/" class="footer-link-item">
+                    <a href="/client/orders/" class="aw-footer-link-item">
                         <i class="fas fa-file-alt" aria-hidden="true"></i>
                         My Orders
                     </a>
-                    <a href="/client/orders/new/" class="footer-link-item">
+                    <a href="/client/orders/new/" class="aw-footer-link-item">
                         <i class="fas fa-plus" aria-hidden="true"></i>
                         New Order
                     </a>
-                    <a href="/client/wallet/" class="footer-link-item">
+                    <a href="/client/wallet/" class="aw-footer-link-item">
                         <i class="fas fa-wallet" aria-hidden="true"></i>
                         Wallet
                     </a>
-                    <a href="/client/messages/" class="footer-link-item">
+                    <a href="/client/messages/" class="aw-footer-link-item">
                         <i class="fas fa-envelope" aria-hidden="true"></i>
                         Messages
                     </a>
                 </div>
-                <div class="footer-copy">&copy; 2026 AcademicWrite. All rights reserved.</div>
+                <div class="aw-footer-copy">&copy; 2026 AcademicWrite. All rights reserved.</div>
             </div>
         </div>
     </footer>
 
 {% else %}
 
-    <div class="access-denied">
-        <div class="access-denied-card">
-            <div class="access-denied-icon">
+    <div class="aw-access-denied">
+        <div class="aw-access-denied-card">
+            <div class="aw-access-denied-icon">
                 <i class="fas fa-lock" aria-hidden="true"></i>
             </div>
             <h1>Access Restricted</h1>
             <p>You must be logged in as a client to access this portal.</p>
-            <a href="/login/" class="btn-primary">Go to Login</a>
+            <a href="/login/" class="aw-btn-primary">Go to Login</a>
         </div>
     </div>
 
@@ -1395,14 +1342,14 @@
 
 </div>
 
-<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
+<div class="aw-toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
 
-<div class="modal-wrap" id="modalWrap" role="dialog" aria-modal="true" aria-label="Dialog">
-    <div class="modal-box" id="modalBox"></div>
+<div class="aw-modal-wrap" id="modalWrap" role="dialog" aria-modal="true" aria-label="Dialog">
+    <div class="aw-modal-box" id="modalBox"></div>
 </div>
 
-<div class="loading-overlay" id="loadingOverlay" aria-busy="true" aria-label="Loading">
-    <div class="spinner" role="status"></div>
+<div class="aw-loading-overlay" id="loadingOverlay" aria-busy="true" aria-label="Loading">
+    <div class="aw-spinner" role="status"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -1482,20 +1429,20 @@
             var icons = { success: 'check-circle', error: 'exclamation-circle', info: 'info-circle', warning: 'exclamation-triangle' };
 
             var el = document.createElement('div');
-            el.className = 'toast ' + type + ' entering';
+            el.className = 'aw-toast ' + type + ' entering';
             el.innerHTML =
-                '<div class="toast-body">' +
-                    '<div class="toast-icon"><i class="fas fa-' + (icons[type] || 'info-circle') + '"></i></div>' +
-                    '<div class="toast-text">' + message + '</div>' +
+                '<div class="aw-toast-body">' +
+                    '<div class="aw-toast-icon"><i class="fas fa-' + (icons[type] || 'info-circle') + '"></i></div>' +
+                    '<div class="aw-toast-text">' + message + '</div>' +
                 '</div>' +
-                '<div class="toast-bar"><div class="toast-bar-fill"></div></div>';
+                '<div class="aw-toast-bar"><div class="aw-toast-bar-fill"></div></div>';
 
             stack.appendChild(el);
 
             requestAnimationFrame(function () {
                 requestAnimationFrame(function () {
                     el.classList.remove('entering');
-                    var fill = el.querySelector('.toast-bar-fill');
+                    var fill = el.querySelector('.aw-toast-bar-fill');
                     if (fill) {
                         setTimeout(function () { fill.classList.add('depleting'); }, 50);
                     }

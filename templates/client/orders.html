@@ -175,6 +175,7 @@
         width: 100%;
         font-size: 13px;
         border-collapse: collapse;
+        table-layout: fixed;
     }
     .table thead {
         background: var(--surface);
@@ -194,6 +195,7 @@
         padding: 12px 14px;
         border-bottom: 1px solid var(--line-light);
         vertical-align: middle;
+        word-break: break-word;
     }
     .table tbody tr {
         transition: background 0.12s ease;
@@ -223,7 +225,6 @@
     .badge.cancelled { background: #fee2e2; color: #dc2626; }
     .badge.declined { background: #fee2e2; color: #dc2626; }
 
-    /* Deadline urgency badges */
     .deadline-tag {
         display: inline-flex;
         align-items: center;
@@ -319,6 +320,7 @@
     .pagination-btns {
         display: flex;
         gap: 4px;
+        flex-wrap: wrap;
     }
     .page-btn {
         padding: 7px 13px;
@@ -349,14 +351,41 @@
         padding: 40px 16px !important;
         color: var(--muted);
     }
-    @media (max-width: 640px) {
+
+    .col-order { width: 12%; }
+    .col-topic { width: 20%; }
+    .col-status { width: 13%; }
+    .col-pages { width: 8%; }
+    .col-deadline { width: 18%; }
+    .col-total { width: 10%; }
+    .col-progress { width: 12%; }
+    .col-actions { width: 7%; }
+
+    @media (max-width: 768px) {
+        .col-topic { width: 15%; }
+        .col-pages { width: 10%; }
+        .col-deadline { width: 20%; }
+        .col-progress { width: 15%; }
         .table { font-size: 12px; }
         .table th, .table td { padding: 8px 10px; }
-        .hide-mobile { display: none; }
+        .hide-tablet { display: none; }
         .deadline-tag { font-size: 8px; padding: 1px 6px; }
     }
-    @media (max-width: 768px) {
-        .hide-tablet { display: none; }
+
+    @media (max-width: 640px) {
+        .table { font-size: 11px; }
+        .table th, .table td { padding: 6px 8px; }
+        .hide-mobile { display: none; }
+        .col-order { width: 15%; }
+        .col-status { width: 18%; }
+        .col-deadline { width: 25%; }
+        .col-total { width: 12%; }
+        .col-actions { width: 10%; }
+        .time-remaining { font-size: 10px; }
+        .progress-label { font-size: 9px; width: 24px; }
+        .progress-wrap { min-width: 60px; }
+        .badge { font-size: 9px; padding: 2px 6px; }
+        .table-link { font-size: 11px; }
     }
 </style>
 {% endblock %}
@@ -395,14 +424,14 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>Order</th>
-                    <th class="hide-mobile">Topic</th>
-                    <th>Status</th>
-                    <th class="hide-tablet">Pages</th>
-                    <th>Deadline</th>
-                    <th>Total</th>
-                    <th class="hide-mobile">Progress</th>
-                    <th></th>
+                    <th class="col-order">Order</th>
+                    <th class="col-topic hide-mobile">Topic</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-pages hide-tablet">Pages</th>
+                    <th class="col-deadline">Deadline</th>
+                    <th class="col-total">Total</th>
+                    <th class="col-progress hide-mobile">Progress</th>
+                    <th class="col-actions"></th>
                 </tr>
             </thead>
             <tbody id="ordersList">
@@ -426,6 +455,7 @@ var totalPages = 1;
 var debounceTimer = null;
 var suggestionsTimer = null;
 var updateTimer = null;
+var refreshTimer = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     var statusFilters = document.getElementById('statusFilters');
@@ -505,9 +535,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     loadOrders();
 
-    // Start timer update every 30 seconds
     if (updateTimer) clearInterval(updateTimer);
     updateTimer = setInterval(updateDeadlineDisplay, 30000);
+
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(function() {
+        if (!document.hidden) {
+            loadOrders();
+        }
+    }, 15000);
+
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            loadOrders();
+        }
+    });
 });
 
 function getStatusClass(status) {
@@ -543,10 +585,8 @@ function getDeadlineInfo(deadline) {
     var deadlineMs = new Date(deadline).getTime();
     var diff = deadlineMs - now;
     var isOverdue = diff < 0;
-    var isLate = diff < 0; // we can use the model's is_late if available
     var hours = Math.floor(Math.abs(diff) / (60 * 60 * 1000));
     var minutes = Math.floor((Math.abs(diff) % (60 * 60 * 1000)) / (60 * 1000));
-    var seconds = Math.floor((Math.abs(diff) % (60 * 1000)) / 1000);
 
     var timeText = '';
     var tagClass = 'safe';
@@ -592,7 +632,6 @@ function renderDeadlineCell(deadline, isFinalStatus) {
 }
 
 function updateDeadlineDisplay() {
-    // Update all .deadline-time elements
     document.querySelectorAll('.deadline-time').forEach(function(el) {
         var deadline = el.dataset.deadline;
         var isFinal = el.dataset.final === 'true';
@@ -638,25 +677,24 @@ async function loadOrders() {
             var deadlineHtml = renderDeadlineCell(order.deadline, isFinalStatus);
 
             return '<tr>' +
-                '<td><a href="/client/orders/' + order.id + '/" class="table-link">' + (order.order_number || 'N/A') + '</a></td>' +
-                '<td class="hide-mobile" style="color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (order.topic || '-') + '</td>' +
-                '<td><span class="badge ' + getStatusClass(order.status) + '">' + getStatusLabel(order.status) + '</span></td>' +
-                '<td class="hide-tablet" style="color:var(--muted);">' + (order.pages || 0) + '</td>' +
-                '<td><span class="deadline-time" data-deadline="' + (order.deadline || '') + '" data-final="' + isFinalStatus + '">' + (isFinalStatus ? formatDate(order.deadline) : '') + '</span>' +
+                '<td class="col-order"><a href="/client/orders/' + order.id + '/" class="table-link">' + (order.order_number || 'N/A') + '</a></td>' +
+                '<td class="col-topic hide-mobile" style="color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (order.topic || '-') + '</td>' +
+                '<td class="col-status"><span class="badge ' + getStatusClass(order.status) + '">' + getStatusLabel(order.status) + '</span></td>' +
+                '<td class="col-pages hide-tablet" style="color:var(--muted);">' + (order.pages || 0) + '</td>' +
+                '<td class="col-deadline"><span class="deadline-time" data-deadline="' + (order.deadline || '') + '" data-final="' + isFinalStatus + '">' + (isFinalStatus ? formatDate(order.deadline) : '') + '</span>' +
                     (order.deadline && !isFinalStatus ? ' <span class="deadline-tag safe">' + getDeadlineInfo(order.deadline).label + '</span>' : '') +
                 '</td>' +
-                '<td style="font-weight:600;color:var(--green);">' + formatCurrency(order.total_price) + '</td>' +
-                '<td class="hide-mobile">' +
+                '<td class="col-total" style="font-weight:600;color:var(--green);">' + formatCurrency(order.total_price) + '</td>' +
+                '<td class="col-progress hide-mobile">' +
                     '<div class="progress-wrap">' +
                         '<div class="progress-bar"><div class="progress-fill' + (isCancelled ? ' cancelled' : '') + (isDone ? ' done' : '') + '" style="width:' + progress + '%"></div></div>' +
                         '<span class="progress-label">' + progress + '%</span>' +
                     '</div>' +
                 '</td>' +
-                '<td><a href="/client/orders/' + order.id + '/" style="color:var(--green);font-weight:600;font-size:12px;text-decoration:none;">View</a></td>' +
+                '<td class="col-actions"><a href="/client/orders/' + order.id + '/" style="color:var(--green);font-weight:600;font-size:12px;text-decoration:none;">View</a></td>' +
             '</tr>';
         }).join('');
 
-        // Update time display immediately
         updateDeadlineDisplay();
 
         totalPages = Math.ceil((data.total || orders.length) / (data.page_size || orders.length)) || 1;

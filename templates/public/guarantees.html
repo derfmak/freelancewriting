@@ -1,67 +1,89 @@
 {% extends "base.html" %}
 
-{% block title %}Our Guarantees - Academic Writing Platform{% endblock %}
+{% block title %}Our Guarantees – Originality, On‑Time Delivery & Free Revisions{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto py-8">
-    <div class="bg-white rounded-lg shadow-sm p-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-6">Our Guarantees</h1>
-        
+<div class="max-w-4xl mx-auto py-8 px-4">
+    <div class="bg-white rounded-lg shadow-sm p-6 md:p-8">
+
+        <h1 class="text-3xl font-bold text-gray-900 mb-3">Our Guarantees</h1>
+        <p class="text-gray-600 mb-6 text-sm">
+            We stand behind every paper we deliver. These are the promises we make to every client.
+        </p>
+
         <div class="grid md:grid-cols-2 gap-6 mb-8">
-            <div class="border rounded-lg p-6">
-                <div class="text-4xl text-blue-600 mb-4">
+            <div class="border rounded-lg p-6 transition hover:shadow-md">
+                <div class="text-4xl text-green-600 mb-4">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <h3 class="text-xl font-semibold mb-3">100% Original Content</h3>
-                <p class="text-gray-600">Every paper is written from scratch and checked for plagiarism using advanced software. We provide a plagiarism report upon request.</p>
+                <p class="text-gray-600 text-sm">Every paper is written from scratch and checked for plagiarism using advanced software. We provide a plagiarism report upon request.</p>
             </div>
-            
-            <div class="border rounded-lg p-6">
-                <div class="text-4xl text-blue-600 mb-4">
+
+            <div class="border rounded-lg p-6 transition hover:shadow-md">
+                <div class="text-4xl text-green-600 mb-4">
                     <i class="fas fa-clock"></i>
                 </div>
-                <h3 class="text-xl font-semibold mb-3">On-Time Delivery</h3>
-                <p class="text-gray-600">We guarantee timely delivery of your papers. If we miss your deadline, you may be eligible for a refund.</p>
+                <h3 class="text-xl font-semibold mb-3">On‑Time Delivery</h3>
+                <p class="text-gray-600 text-sm">We guarantee timely delivery of your papers. If we miss your deadline, you may be eligible for a refund.</p>
             </div>
-            
-            <div class="border rounded-lg p-6">
-                <div class="text-4xl text-blue-600 mb-4">
-                    <i class="fas fa-redo-alt"></i>
+
+            <div class="border rounded-lg p-6 transition hover:shadow-md">
+                <div class="text-4xl text-green-600 mb-4">
+                    <i class="fas fa-undo-alt"></i>
                 </div>
                 <h3 class="text-xl font-semibold mb-3">Free Revisions</h3>
-                <p class="text-gray-600">Unlimited revisions until you're completely satisfied with the final paper. No additional charges.</p>
+                <p class="text-gray-600 text-sm">Unlimited revisions until you're completely satisfied with the final paper. No additional charges.</p>
             </div>
-            
-            <div class="border rounded-lg p-6">
-                <div class="text-4xl text-blue-600 mb-4">
+
+            <div class="border rounded-lg p-6 transition hover:shadow-md">
+                <div class="text-4xl text-green-600 mb-4">
                     <i class="fas fa-lock"></i>
                 </div>
                 <h3 class="text-xl font-semibold mb-3">Confidentiality</h3>
-                <p class="text-gray-600">Your personal information and order details are kept strictly confidential. We never share your data.</p>
+                <p class="text-gray-600 text-sm">Your personal information and order details are kept strictly confidential. We never share your data.</p>
             </div>
-            
-            <div class="border rounded-lg p-6">
-                <div class="text-4xl text-blue-600 mb-4">
-                    <i class="fas fa-star"></i>
+
+            <div class="border rounded-lg p-6 transition hover:shadow-md">
+                <div class="text-4xl text-green-600 mb-4">
+                    <i class="fas fa-user-tie"></i>
                 </div>
                 <h3 class="text-xl font-semibold mb-3">Qualified Writers</h3>
-                <p class="text-gray-600">All papers are written by experts with advanced degrees in their respective fields.</p>
+                <p class="text-gray-600 text-sm">All papers are written by experts with advanced degrees in their respective fields.</p>
             </div>
-            
-            <div class="border rounded-lg p-6">
-                <div class="text-4xl text-blue-600 mb-4">
+
+            <div class="border rounded-lg p-6 transition hover:shadow-md">
+                <div class="text-4xl text-green-600 mb-4">
                     <i class="fas fa-headset"></i>
                 </div>
                 <h3 class="text-xl font-semibold mb-3">24/7 Support</h3>
-                <p class="text-gray-600">Our support team is available around the clock to assist you with any questions or concerns.</p>
+                <p class="text-gray-600 text-sm">Our support team is available around the clock to assist you with any questions or concerns.</p>
             </div>
         </div>
-        
-        <div class="bg-blue-50 p-6 rounded-lg">
-            <h2 class="text-2xl font-bold mb-4">Money-Back Guarantee</h2>
-            <p class="text-gray-700 mb-4">If you're not satisfied with the quality of your paper, we offer a full refund under our refund policy. Your satisfaction is our top priority.</p>
-            <a href="/refund-policy/" class="text-blue-600 hover:underline">Read our full refund policy →</a>
+
+        <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">Money‑Back Guarantee</h2>
+            <p class="text-gray-700 mb-4 text-sm">
+                If you're not satisfied with the quality of your paper, we offer a full refund under our refund policy. 
+                Your satisfaction is our top priority.
+            </p>
+            <div class="flex flex-wrap gap-3">
+                <a href="/refund-policy/" class="inline-block bg-green-600 text-white px-5 py-2 rounded font-medium hover:bg-green-700 transition">
+                    Read Refund Policy
+                </a>
+                <a href="/contact/" class="inline-block border border-green-600 text-green-600 px-5 py-2 rounded font-medium hover:bg-green-50 transition">
+                    Contact Support
+                </a>
+            </div>
         </div>
+
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>
+                Ready to place an order? <a href="/place-order/" class="text-green-600 hover:underline">Get started now</a> or 
+                <a href="/pricing/" class="text-green-600 hover:underline">view our pricing</a>.
+            </p>
+        </div>
+
     </div>
 </div>
 {% endblock %}

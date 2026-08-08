@@ -479,6 +479,73 @@
         margin-bottom: 1rem;
     }
 
+    .dialog-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1001;
+        padding: 1rem;
+    }
+
+    .dialog-overlay.show { display: flex; }
+
+    .dialog-box {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        text-align: center;
+    }
+
+    .dialog-box h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .dialog-box p {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .dialog-box .btn {
+        display: inline-block;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0 0.25rem;
+    }
+
+    .dialog-box .btn-primary {
+        background: #059669;
+        color: white;
+    }
+
+    .dialog-box .btn-primary:hover {
+        background: #047857;
+        transform: translateY(-1px);
+    }
+
+    .dialog-box .btn-outline {
+        background: transparent;
+        border: 1.5px solid #d1d5db;
+        color: #4b5563;
+    }
+
+    .dialog-box .btn-outline:hover {
+        background: #f3f4f6;
+    }
+
     @media (max-width: 640px) {
         .register-card { padding: 1.5rem; }
         .field-requirements { grid-template-columns: 1fr; }
@@ -497,7 +564,7 @@
         <div class="text-center">
             <h1 class="register-title" id="formTitle">Create Your <span>Account</span></h1>
             <div class="divider-line"></div>
-            <p class="register-subtitle" id="formSubtitle">Join thousands of satisfied students</p>
+            <p class="register-subtitle" id="formSubtitle">Join thousands of satisfied clients</p>
         </div>
 
         {% if messages %}
@@ -556,14 +623,6 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="phone" class="form-label">Phone Number <span class="text-gray-400 text-xs">(Optional)</span></label>
-                <input type="tel" id="phone" class="form-input" placeholder="+254 700 000 000" autocomplete="tel" spellcheck="false">
-            </div>
-            <div class="form-group">
-                <label for="institution" class="form-label">Institution <span class="text-gray-400 text-xs">(Optional)</span></label>
-                <input type="text" id="institution" class="form-input" placeholder="Your school or university" spellcheck="false">
-            </div>
-            <div class="form-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="terms">
                     <span>I agree to the <a href="/terms/" class="text-green-600 hover:text-green-700">Terms of Service</a> and <a href="/privacy/" class="text-green-600 hover:text-green-700">Privacy Policy</a></span>
@@ -584,6 +643,12 @@
             <div class="form-group">
                 <label for="socialFullName" class="form-label">Full Name</label>
                 <input type="text" id="socialFullName" class="form-input" placeholder="Enter your full name" required autocomplete="name" spellcheck="false">
+            </div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="socialTerms">
+                    <span>I agree to the <a href="/terms/" class="text-green-600 hover:text-green-700">Terms of Service</a> and <a href="/privacy/" class="text-green-600 hover:text-green-700">Privacy Policy</a></span>
+                </label>
             </div>
             <button type="submit" class="register-btn active" id="socialSubmitBtn">
                 <span class="btn-text">Create Account</span>
@@ -658,6 +723,16 @@
     </div>
 </div>
 
+<div class="dialog-overlay" id="dialogOverlay">
+    <div class="dialog-box" id="dialogBox">
+        <h3 id="dialogTitle">Attention</h3>
+        <p id="dialogMessage">Something went wrong.</p>
+        <div id="dialogActions">
+            <button class="btn btn-primary" id="dialogConfirmBtn">OK</button>
+        </div>
+    </div>
+</div>
+
 <div id="toastContainer" class="toast-notification" style="display:none;"></div>
 {% endblock %}
 
@@ -674,6 +749,19 @@ document.addEventListener('DOMContentLoaded', function() {
         setupNormalRegister();
     }
 });
+
+function showDialog(title, message, buttonText, callback) {
+    var overlay = document.getElementById('dialogOverlay');
+    document.getElementById('dialogTitle').textContent = title;
+    document.getElementById('dialogMessage').textContent = message;
+    var confirmBtn = document.getElementById('dialogConfirmBtn');
+    confirmBtn.textContent = buttonText || 'OK';
+    confirmBtn.onclick = function() {
+        overlay.classList.remove('show');
+        if (callback) callback();
+    };
+    overlay.classList.add('show');
+}
 
 function showToast(message, type) {
     var container = document.getElementById('toastContainer');
@@ -706,12 +794,10 @@ function setupSocialSignup(token, provider) {
     var emailInput = document.getElementById('socialEmail');
     var fullNameInput = document.getElementById('socialFullName');
     var submitBtn = document.getElementById('socialSubmitBtn');
+    var termsCheckbox = document.getElementById('socialTerms');
     var btnText = submitBtn.querySelector('.btn-text');
     var btnLoader = submitBtn.querySelector('.btn-loader');
 
-    // Fetch user data from server using the token (will be stored in cache)
-    // We'll need to get the pre-filled data from the server.
-    // Since the cache is on server, we'll make a call to get the data.
     async function fetchSocialData() {
         try {
             var response = await fetch('/auth/social-data/?token=' + encodeURIComponent(token) + '&provider=' + provider);
@@ -740,6 +826,12 @@ function setupSocialSignup(token, provider) {
 
     socialForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+
+        if (!termsCheckbox.checked) {
+            showDialog('Terms Required', 'You must agree to the Terms of Service and Privacy Policy to continue.', 'OK');
+            return;
+        }
+
         var fullName = fullNameInput.value.trim();
         var providerVal = document.getElementById('socialProvider').value;
         if (!fullName) { showError('Please enter your full name.'); return; }
@@ -771,15 +863,20 @@ function setupSocialSignup(token, provider) {
             } else {
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
-                if (data.redirect === 'login') {
-                    showToast(data.error + ' Redirecting to sign in...', 'error');
-                    setTimeout(function() { window.location.href = '/login/'; }, 1500);
+                if (data.redirect === 'login' || response.status === 409) {
+                    var redirectUrl = '/login/';
+                    if (emailInput.value) {
+                        redirectUrl += '?email=' + encodeURIComponent(emailInput.value);
+                    }
+                    showDialog('Account Exists', data.error || 'An account with this email already exists.', 'Sign In', function() {
+                        window.location.href = redirectUrl;
+                    });
                 } else {
-                    showError(data.error || 'Registration failed.');
+                    showDialog('Registration Failed', data.error || 'Registration failed. Please try again.', 'OK');
                 }
             }
         } catch (error) {
-            showError('Network error. Please check your connection.');
+            showDialog('Network Error', 'Please check your connection and try again.', 'OK');
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
         }
@@ -952,24 +1049,39 @@ function setupNormalRegister() {
                     full_name: fullName.value.trim(),
                     email: email.value.trim(),
                     password: password.value,
-                    phone: document.getElementById('phone').value.trim(),
-                    institution: document.getElementById('institution').value.trim()
+                    password_confirm: passwordConfirm.value
                 })
             });
             var data = await response.json();
+
             if (response.ok) {
                 showToast('Verification code sent! Please check your email.', 'success');
                 showVerifyModal(email.value.trim());
+            } else if (response.status === 409) {
+                registerBtn.classList.remove('loading');
+                registerBtn.disabled = false;
+                var redirectUrl = '/login/';
+                if (email.value) {
+                    redirectUrl += '?email=' + encodeURIComponent(email.value.trim());
+                }
+                showDialog('Account Already Exists', data.error || 'An account with this email already exists. Please sign in.', 'Sign In', function() {
+                    window.location.href = redirectUrl;
+                });
             } else {
+                registerBtn.classList.remove('loading');
+                registerBtn.disabled = false;
                 var errorMessage = 'Registration failed.';
                 if (data.email) { errorMessage = Array.isArray(data.email) ? data.email[0] : data.email; showError(email, emailError, errorMessage); }
                 else if (data.full_name) { errorMessage = Array.isArray(data.full_name) ? data.full_name[0] : data.full_name; showError(fullName, nameError, errorMessage); }
                 else if (data.password) { errorMessage = Array.isArray(data.password) ? data.password[0] : data.password; showError(password, passwordError, errorMessage); }
+                else if (data.password_confirm) { errorMessage = Array.isArray(data.password_confirm) ? data.password_confirm[0] : data.password_confirm; showError(passwordConfirm, confirmError, errorMessage); }
                 else if (data.error) { errorMessage = data.error; }
-                showToast(errorMessage, 'error');
+                showDialog('Registration Error', errorMessage, 'OK');
             }
         } catch (error) {
-            showToast('Network error. Please check your connection.', 'error');
+            registerBtn.classList.remove('loading');
+            registerBtn.disabled = false;
+            showDialog('Network Error', 'Please check your connection and try again.', 'OK');
         }
         registerBtn.classList.remove('loading');
         updateButtonState();
@@ -985,7 +1097,10 @@ function showVerifyModal(userEmail) {
     var modal = document.getElementById('verifyModal');
     document.getElementById('verifyEmail').textContent = userEmail;
     modal.classList.add('show');
-    document.querySelectorAll('.otp-box').forEach(function(box) { box.value = ''; });
+    document.querySelectorAll('.otp-box').forEach(function(box) {
+        box.value = '';
+        box.classList.remove('filled', 'error', 'success');
+    });
     document.getElementById('verifyError').classList.remove('show');
     document.getElementById('verifySuccess').classList.remove('show');
     document.getElementById('verifySubmit').disabled = true;
@@ -1012,11 +1127,22 @@ function startResendTimer() {
     otpBoxes.forEach(function(box, index) {
         box.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '');
-            if (this.value.length === 1) { this.classList.add('filled'); if (index < 5) otpBoxes[index + 1].focus(); }
-            else { this.classList.remove('filled'); }
-            updateVerifyButton();
+            if (this.value.length === 1) {
+                this.classList.add('filled');
+                this.classList.remove('error');
+                if (index < 5) otpBoxes[index + 1].focus();
+            } else {
+                this.classList.remove('filled');
+            }
+            // Clear any previous error/success messages
             document.getElementById('verifyError').classList.remove('show');
             document.getElementById('verifySuccess').classList.remove('show');
+            updateVerifyButton();
+            
+            // Auto-verify when all boxes are filled
+            if (getOTP().length === 6) {
+                document.getElementById('verifySubmit').click();
+            }
         });
         box.addEventListener('keydown', function(e) {
             if (e.key === 'Backspace' && !this.value && index > 0) otpBoxes[index - 1].focus();
@@ -1029,69 +1155,130 @@ function startResendTimer() {
             var paste = (e.clipboardData || window.clipboardData).getData('text');
             var digits = paste.replace(/\D/g, '').slice(0, 6);
             if (digits) {
-                digits.split('').forEach(function(digit, i) { if (i < 6 && otpBoxes[i]) { otpBoxes[i].value = digit; otpBoxes[i].classList.add('filled'); } });
-                if (digits.length < 6) otpBoxes[digits.length].focus(); else otpBoxes[5].focus();
+                digits.split('').forEach(function(digit, i) {
+                    if (i < 6 && otpBoxes[i]) {
+                        otpBoxes[i].value = digit;
+                        otpBoxes[i].classList.add('filled');
+                    }
+                });
+                if (digits.length < 6) {
+                    otpBoxes[digits.length].focus();
+                } else {
+                    otpBoxes[5].focus();
+                }
                 updateVerifyButton();
+                if (getOTP().length === 6) {
+                    document.getElementById('verifySubmit').click();
+                }
             }
         });
     });
 })();
 
-function getOTP() { var otp = ''; document.querySelectorAll('.otp-box').forEach(function(box) { otp += box.value; }); return otp; }
+function getOTP() {
+    var otp = '';
+    document.querySelectorAll('.otp-box').forEach(function(box) { otp += box.value; });
+    return otp;
+}
 
-function updateVerifyButton() { document.getElementById('verifySubmit').disabled = getOTP().length !== 6; }
+function updateVerifyButton() {
+    document.getElementById('verifySubmit').disabled = getOTP().length !== 6;
+}
 
 document.getElementById('verifySubmit').addEventListener('click', async function() {
     var code = getOTP();
     var userEmail = document.getElementById('verifyEmail').textContent;
     var errorEl = document.getElementById('verifyError');
     var successEl = document.getElementById('verifySuccess');
-    if (code.length !== 6) { errorEl.textContent = 'Please enter a valid 6-digit code'; errorEl.classList.add('show'); document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.add('error'); }); return; }
-    this.disabled = true; this.textContent = 'Verifying...';
+    if (code.length !== 6) {
+        errorEl.textContent = 'Please enter a valid 6-digit code';
+        errorEl.classList.add('show');
+        document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.add('error'); });
+        return;
+    }
+    this.disabled = true;
+    this.textContent = 'Verifying...';
     try {
-        var response = await fetch('/auth/verify-otp/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail, otp_code: code }) });
+        var response = await fetch('/auth/verify-otp/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail, otp_code: code })
+        });
         var data = await response.json();
         if (response.ok) {
-            document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.remove('error'); b.classList.add('success'); });
-            successEl.textContent = 'Email verified successfully!'; successEl.classList.add('show'); errorEl.classList.remove('show');
+            document.querySelectorAll('.otp-box').forEach(function(b) {
+                b.classList.remove('error');
+                b.classList.add('success');
+            });
+            successEl.textContent = 'Email verified successfully!';
+            successEl.classList.add('show');
+            errorEl.classList.remove('show');
             showToast('Email verified successfully! Redirecting to login...', 'success');
             setTimeout(function() { window.location.href = '/login/'; }, 1500);
         } else {
             document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.add('error'); });
-            errorEl.textContent = data.error || 'Invalid verification code'; errorEl.classList.add('show'); successEl.classList.remove('show');
-            this.disabled = false; this.textContent = 'Verify';
-            setTimeout(function() { document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.remove('error'); }); }, 3000);
+            errorEl.textContent = data.error || 'Invalid verification code';
+            errorEl.classList.add('show');
+            successEl.classList.remove('show');
+            this.disabled = false;
+            this.textContent = 'Verify';
+            setTimeout(function() {
+                document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.remove('error'); });
+            }, 3000);
         }
     } catch (error) {
         document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.add('error'); });
-        errorEl.textContent = 'Network error. Please try again.'; errorEl.classList.add('show');
-        this.disabled = false; this.textContent = 'Verify';
-        setTimeout(function() { document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.remove('error'); }); }, 3000);
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.add('show');
+        this.disabled = false;
+        this.textContent = 'Verify';
+        setTimeout(function() {
+            document.querySelectorAll('.otp-box').forEach(function(b) { b.classList.remove('error'); });
+        }, 3000);
     }
 });
 
-document.getElementById('verifyCancel').addEventListener('click', function() { document.getElementById('verifyModal').classList.remove('show'); });
+document.getElementById('verifyCancel').addEventListener('click', function() {
+    document.getElementById('verifyModal').classList.remove('show');
+});
 
 document.getElementById('resendCode').addEventListener('click', async function() {
     var userEmail = document.getElementById('verifyEmail').textContent;
-    this.disabled = true; this.textContent = 'Sending...';
+    this.disabled = true;
+    this.textContent = 'Sending...';
     try {
-        var response = await fetch('/auth/resend-otp/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail }) });
+        var response = await fetch('/auth/resend-otp/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail })
+        });
         var data = await response.json();
         if (response.ok) {
             showToast('Verification code resent successfully!', 'success');
             document.getElementById('verifyError').classList.remove('show');
             document.getElementById('verifySuccess').classList.remove('show');
-            document.querySelectorAll('.otp-box').forEach(function(b) { b.value = ''; b.classList.remove('filled', 'error', 'success'); });
+            document.querySelectorAll('.otp-box').forEach(function(b) {
+                b.value = '';
+                b.classList.remove('filled', 'error', 'success');
+            });
             document.getElementById('otp1').focus();
             startResendTimer();
-        } else { showToast(data.error || 'Failed to resend code', 'error'); this.disabled = false; }
-    } catch (error) { showToast('Network error. Please try again.', 'error'); this.disabled = false; }
+        } else {
+            showToast(data.error || 'Failed to resend code', 'error');
+            this.disabled = false;
+        }
+    } catch (error) {
+        showToast('Network error. Please try again.', 'error');
+        this.disabled = false;
+    }
     this.textContent = 'Resend Code';
 });
 
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') { var toast = document.querySelector('.toast-notification'); if (toast && toast.style.display !== 'none') toast.style.display = 'none'; }
+    if (e.key === 'Escape') {
+        var toast = document.querySelector('.toast-notification');
+        if (toast && toast.style.display !== 'none') toast.style.display = 'none';
+    }
 });
 </script>
 {% endblock %}

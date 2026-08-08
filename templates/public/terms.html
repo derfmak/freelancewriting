@@ -1,72 +1,128 @@
-
 {% extends "base.html" %}
 
 {% block title %}Terms of Service - Academic Writing Platform{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 py-8">
-    <div class="bg-white border border-gray-200 p-8">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">Terms of <span class="text-green-600">Service</span></h1>
-            <div class="w-20 h-1 bg-green-600 mx-auto mb-6"></div>
-            <p class="text-gray-500 text-sm">Last updated: March 10, 2026</p>
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
+        <!-- Header with image -->
+        <div class="relative h-48 bg-gradient-to-r from-green-700 to-green-500 flex items-center justify-center">
+            <div class="absolute inset-0 bg-black opacity-30"></div>
+            <div class="relative z-10 text-center text-white px-4">
+                <h1 class="text-4xl font-bold tracking-tight">Terms of <span class="text-yellow-300">Service</span></h1>
+                <p class="text-sm text-white/80 mt-1">Last updated: March 10, 2026</p>
+            </div>
         </div>
-        
-        <div class="space-y-5">
-            <div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">1. Acceptance of Terms</h2>
-                <p class="text-gray-600 text-sm">By accessing our platform, you agree to be bound by these Terms of Service.</p>
-            </div>
-            
-            <div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">2. Service Description</h2>
-                <p class="text-gray-600 text-sm">We connect students with academic writing services and facilitate paper creation based on requirements.</p>
-            </div>
-            
-            <div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">3. User Accounts</h2>
-                <p class="text-gray-600 text-sm mb-1">You agree to:</p>
-                <ul class="text-gray-600 text-sm list-disc pl-5 space-y-1">
-                    <li>Provide accurate information</li>
-                    <li>Maintain account security</li>
-                    <li>Accept responsibility for account activity</li>
-                </ul>
-            </div>
-            
-            <div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">4. Payment Terms</h2>
-                <p class="text-gray-600 text-sm">Payments are processed securely. Refunds are subject to our refund policy.</p>
-            </div>
-            
-            <div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">5. User Conduct</h2>
-                <p class="text-gray-600 text-sm mb-1">You agree not to:</p>
-                <ul class="text-gray-600 text-sm list-disc pl-5 space-y-1">
-                    <li>Violate laws or regulations</li>
-                    <li>Submit false information</li>
-                    <li>Use the service for illegal purposes</li>
-                </ul>
-            </div>
-            
-            <div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">6. Termination</h2>
-                <p class="text-gray-600 text-sm">We reserve the right to suspend or terminate accounts for violations of these terms.</p>
-            </div>
-            
-            <div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">7. Disclaimer</h2>
-                <p class="text-gray-600 text-sm">The service is provided "as is" without warranties of any kind.</p>
-            </div>
-            
-            <div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">8. Contact</h2>
-                <p class="text-gray-600 text-sm">For questions: fredrickwambua@gmail.com</p>
+
+        <div class="p-8 md:p-10">
+            <div class="prose prose-green max-w-none">
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    Welcome to AcademicWrite. We provide professional academic writing services to help students and clients achieve their educational goals.
+                    By using our platform, you agree to the following terms and conditions.
+                </p>
+
+                <div class="space-y-6 mt-8">
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">1. Acceptance of Terms</h2>
+                        <p class="text-gray-600 text-sm">By accessing or using our services, you agree to be bound by these Terms of Service and our <a href="/privacy/" class="text-green-600 hover:underline">Privacy Policy</a>.</p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">2. Our Services</h2>
+                        <p class="text-gray-600 text-sm">
+                            AcademicWrite connects clients with experienced academic writers. We help with essays, research papers, dissertations, and more.
+                            Our goal is to deliver high-quality, original work that meets your specific requirements.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">3. Client Accounts</h2>
+                        <p class="text-gray-600 text-sm mb-2">As a client, you agree to:</p>
+                        <ul class="list-disc pl-6 text-gray-600 text-sm space-y-1">
+                            <li>Provide accurate and complete registration information</li>
+                            <li>Maintain the confidentiality of your account credentials</li>
+                            <li>Accept full responsibility for all activities under your account</li>
+                            <li>Notify us immediately of any unauthorized use</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">4. Payment & Billing</h2>
+                        <p class="text-gray-600 text-sm">
+                            All payments are processed securely. Prices are quoted per order and may vary based on complexity, deadline, and academic level.
+                            Refunds are governed by our <a href="/refund-policy/" class="text-green-600 hover:underline">Refund Policy</a>.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">5. Client Conduct</h2>
+                        <p class="text-gray-600 text-sm mb-2">You agree not to:</p>
+                        <ul class="list-disc pl-6 text-gray-600 text-sm space-y-1">
+                            <li>Submit false or misleading information</li>
+                            <li>Use the service for any illegal or unethical purpose</li>
+                            <li>Interfere with the platform's operation or security</li>
+                            <li>Attempt to reverse‑engineer or copy any part of the service</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">6. Intellectual Property</h2>
+                        <p class="text-gray-600 text-sm">
+                            All content provided through the service (excluding client materials) is owned by AcademicWrite.
+                            You may not reproduce, distribute, or create derivative works without explicit permission.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">7. Disclaimer of Warranties</h2>
+                        <p class="text-gray-600 text-sm">
+                            The service is provided "as is" without warranties of any kind, either express or implied.
+                            We do not guarantee that the service will be uninterrupted, secure, or error‑free.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">8. Limitation of Liability</h2>
+                        <p class="text-gray-600 text-sm">
+                            In no event shall AcademicWrite be liable for any indirect, incidental, special, or consequential damages arising out of or in connection with your use of the service.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">9. Termination</h2>
+                        <p class="text-gray-600 text-sm">
+                            We reserve the right to suspend or terminate your account at any time, with or without cause, if we believe you have violated these terms.
+                            You may also terminate your account by contacting us.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">10. Contact Us</h2>
+                        <p class="text-gray-600 text-sm">
+                            If you have any questions about these Terms, please 
+                            <a href="/contact/" class="text-green-600 hover:underline font-medium">reach out via our contact form</a>.
+                            We're happy to assist you.
+                        </p>
+                    </section>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p class="text-xs text-gray-400">
+                        By continuing to use AcademicWrite, you acknowledge that you have read, understood, and agreed to these Terms of Service.
+                    </p>
+                    <div class="mt-4">
+                        <a href="/" class="inline-block bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-green-700 transition duration-200">Back to Home</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="bg-gray-100 w-full h-40 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 mt-8">
-        <span class="text-lg">Image Placeholder - Terms</span>
+    <!-- Decorative section with a real image (optional – remove if not wanted) -->
+    <div class="mt-8 rounded-xl overflow-hidden shadow-md">
+        <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1200&h=300&fit=crop&crop=center" 
+             alt="Legal documents and gavel" 
+             class="w-full h-40 object-cover">
     </div>
 </div>
 {% endblock %}

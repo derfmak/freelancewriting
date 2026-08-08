@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <p>Hello {{ full_name }},</p>
+    <p>Thank you for registering with AcademicWrite. To verify your email address, please use the following One-Time Password (OTP):</p>
+    <h2 style="background:#f4f4f4; padding:15px; display:inline-block; letter-spacing:2px;">{{ otp }}</h2>
+    <p>This OTP is valid for <strong>{{ expiry_minutes }}</strong> minutes.</p>
+    <p>If you did not request this, please ignore this email.</p>
+    <p>Regards,<br>AcademicWrite Team</p>
+</body>
+</html>

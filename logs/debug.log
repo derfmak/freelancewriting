@@ -11,3 +11,19 @@ INFO 2026-08-07 13:49:31,390 utils 28772 25340 Password change code email sent t
 INFO 2026-08-07 13:53:28,632 utils 35984 9640 Password change code email sent to toptutor61@gmail.com
 DEBUG 2026-08-07 14:54:49,447 middleware 44028 42376 Invalid JWT token: Token is expired
 DEBUG 2026-08-07 14:54:49,454 middleware 44028 44548 Invalid JWT token: Token is expired
+DEBUG 2026-08-08 09:19:11,231 middleware 28444 23816 Invalid JWT token: Token is expired
+DEBUG 2026-08-08 09:19:11,254 middleware 28444 45284 Invalid JWT token: Token is expired
+DEBUG 2026-08-08 09:19:12,462 middleware 28444 37552 Invalid JWT token: Token is expired
+ERROR 2026-08-08 12:10:55,794 utils 53828 42028 Failed to send OTP email to jonecoops@gmail.com: emails/otp_verification.html
+INFO 2026-08-08 12:14:13,254 utils 9104 53924 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 12:33:36,755 utils 30736 39568 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 12:45:57,718 utils 39664 49788 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 12:58:24,740 utils 47748 47604 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 13:11:50,696 utils 30640 33868 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 13:26:16,475 utils 3348 20512 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 13:52:45,608 utils 19496 51844 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 14:02:26,075 utils 46984 5356 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 14:08:28,693 utils 38624 41600 OTP email sent to jonecoops@gmail.com
+INFO 2026-08-08 14:10:13,825 utils 20268 38384 OTP email sent to jonecoops@gmail.com
+DEBUG 2026-08-08 15:11:48,358 middleware 20268 49496 Invalid JWT token: Token is expired
+DEBUG 2026-08-08 15:11:48,358 middleware 20268 49100 Invalid JWT token: Token is expired

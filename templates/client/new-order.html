@@ -8,868 +8,1060 @@
     .form-card {
         max-width: 640px;
         margin: 0 auto;
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 1rem;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
         padding: 2rem;
     }
+
     .form-section {
         margin-bottom: 1.5rem;
     }
+
     .form-section h3 {
         font-size: 1rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--ink);
         margin-bottom: 0.75rem;
         padding-bottom: 0.5rem;
-        border-bottom: 2px solid #ecfdf5;
+        border-bottom: 2px solid var(--green-pale);
     }
+
     .price-breakdown {
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.75rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
         padding: 1.25rem;
     }
+
     .price-row {
         display: flex;
         justify-content: space-between;
         padding: 0.3rem 0;
         font-size: 0.85rem;
     }
-    .price-row .label { color: #64748b; }
-    .price-row .value { font-weight: 500; color: #1e293b; }
+
+    .price-row .label {
+        color: var(--muted);
+    }
+
+    .price-row .value {
+        font-weight: 500;
+        color: var(--ink);
+    }
+
     .price-total {
-        border-top: 2px solid #e5e7eb;
+        border-top: 2px solid var(--line);
         padding-top: 0.75rem;
         margin-top: 0.5rem;
     }
-    .price-total .label { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
-    .price-total .value { font-weight: 700; color: #059669; font-size: 1.2rem; }
-    .drop-zone {
-        border: 2px dashed #d1d5db;
-        border-radius: 0.75rem;
-        padding: 1.5rem;
+
+    .price-total .label {
+        font-weight: 700;
+        color: var(--ink);
+        font-size: 0.95rem;
+    }
+
+    .price-total .value {
+        font-weight: 700;
+        color: var(--green);
+        font-size: 1.2rem;
+    }
+
+    .upload-zone {
+        border: 2px dashed var(--green-border);
+        border-radius: var(--radius);
+        padding: 2.5rem 1.5rem;
         text-align: center;
+        background: var(--green-pale);
         transition: all 0.3s ease;
         cursor: pointer;
+        position: relative;
     }
-    .drop-zone:hover { border-color: #059669; background: #f0fdf4; }
-    .drop-zone.dragover { border-color: #059669; background: #ecfdf5; }
+
+    .upload-zone:hover {
+        border-color: var(--green);
+        background: #d1fae5;
+    }
+
+    .upload-zone.dragover {
+        border-color: var(--green);
+        background: #a7f3d0;
+        box-shadow: 0 0 0 4px rgba(5,150,105,0.15);
+    }
+
+    .upload-zone .upload-icon {
+        font-size: 3rem;
+        color: var(--green);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-zone .upload-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--ink);
+        margin: 0 0 0.25rem;
+    }
+
+    .upload-zone .upload-subtitle {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin: 0 0 1rem;
+    }
+
+    .upload-zone .upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.5rem;
+        background: var(--green);
+        color: white;
+        border: none;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(5,150,105,0.2);
+    }
+
+    .upload-zone .upload-btn:hover {
+        background: var(--green-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(5,150,105,0.3);
+    }
+
+    .upload-zone .upload-btn:active {
+        transform: translateY(0);
+    }
+
+    .upload-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+
+    .file-list {
+        margin-top: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
     .file-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.6rem 0.8rem;
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-    .file-item .file-info { display: flex; align-items: center; gap: 0.5rem; }
-    .file-item .file-info .name { font-size: 0.8rem; font-weight: 500; color: #1f2937; }
-    .file-item .file-info .size { font-size: 0.7rem; color: #6b7280; }
-    .file-item .status-badge {
-        font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 9999px; font-weight: 500;
-    }
-    .file-item .status-badge.scanning { background: #fef3c7; color: #d97706; }
-    .file-item .status-badge.verified { background: #d1fae5; color: #059669; }
-    .file-item .remove-btn { color: #ef4444; background: none; border: none; cursor: pointer; padding: 0.2rem; }
-    .file-item .remove-btn:hover { color: #dc2626; }
-    .add-link-btn { color: #059669; font-weight: 500; cursor: pointer; background: none; border: none; font-size: 0.8rem; }
-    .add-link-btn:hover { color: #047857; }
-    .link-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
-    .link-item input { flex: 1; }
-    .link-item .remove-link { color: #ef4444; background: none; border: none; cursor: pointer; padding: 0.2rem; }
-    .link-item .remove-link:hover { color: #dc2626; }
-    .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: #374151; margin-bottom: 0.3rem; }
-    .form-label .required { color: #ef4444; }
-    .form-control {
-        width: 100%; border: 1px solid #d1d5db; padding: 0.6rem 0.8rem; border-radius: 0.5rem;
-        outline: none; transition: all 0.2s; background: white; font-size: 0.85rem;
-    }
-    .form-control:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
-    .form-control.error { border-color: #ef4444; }
-    .form-control.error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
-    .form-hint { font-size: 0.7rem; color: #6b7280; margin-top: 0.2rem; }
-    .grid-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .grid-cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-    @media (max-width: 640px) {
-        .form-card { padding: 1.25rem; margin: 0 0.5rem; }
-        .grid-cols-2, .grid-cols-3 { grid-template-columns: 1fr; }
+        padding: 0.6rem 1rem;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        transition: all 0.2s ease;
+        gap: 0.75rem;
     }
 
-    .paypal-account-selector {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin: 1rem 0;
+    .file-item:hover {
+        border-color: var(--green-border);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-    .paypal-account-card {
-        flex: 1 1 180px;
-        padding: 0.75rem 1rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 0.75rem;
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .file-info .file-icon {
+        font-size: 1.2rem;
+        color: var(--muted);
+        flex-shrink: 0;
+    }
+
+    .file-info .file-details {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .file-info .file-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .file-info .file-size {
+        font-size: 0.7rem;
+        color: var(--muted);
+        margin-left: 0.5rem;
+    }
+
+    .file-status {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.2rem 0.6rem;
+        border-radius: var(--radius-full);
+        white-space: nowrap;
+    }
+
+    .file-status.scanning {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .file-status.verified {
+        background: var(--green-pale);
+        color: var(--green-dark);
+    }
+
+    .file-status .spinner-small {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    .file-remove {
+        background: none;
+        border: none;
+        color: var(--muted);
         cursor: pointer;
-        transition: all 0.2s;
-        background: white;
+        padding: 0.2rem 0.4rem;
+        border-radius: var(--radius-sm);
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+
+    .file-remove:hover {
+        color: var(--red);
+        background: var(--red-pale);
+    }
+
+    .file-security {
+        margin-top: 0.75rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        font-size: 0.7rem;
+        color: var(--muted);
     }
-    .paypal-account-card:hover { border-color: #9ca3af; }
-    .paypal-account-card.selected { border-color: #059669; background: #f0fdf4; }
-    .paypal-account-card .email { font-weight: 500; font-size: 0.9rem; color: #1f2937; }
-    .paypal-account-card .badge-default {
-        background: #d1fae5; color: #059669; font-size: 0.65rem;
-        padding: 0.1rem 0.5rem; border-radius: 9999px;
-    }
-    .no-accounts-msg { color: #6b7280; font-size: 0.85rem; }
 
-    .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 1001;
+    .file-security i {
+        color: var(--green);
+    }
+
+    .link-item {
         display: flex;
         align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(4px);
-        animation: fadeInUp 0.3s ease;
-    }
-    .modal-box {
-        background: white;
-        border-radius: 1rem;
-        padding: 2rem;
-        max-width: 420px;
-        width: 90%;
-        text-align: center;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-        animation: fadeInUp 0.3s ease;
-    }
-    .modal-box h3 {
-        font-size: 1.25rem;
-        font-weight: 700;
+        gap: 0.5rem;
         margin-bottom: 0.5rem;
-        color: #1e293b;
     }
-    .modal-box p { color: #6b7280; margin-bottom: 1.5rem; font-size: 0.95rem; }
-    .modal-box .btn-cancel {
-        margin-top: 1rem;
-        background: none;
-        border: 1px solid #d1d5db;
-        padding: 0.5rem 1.5rem;
-        border-radius: 6px;
-        cursor: pointer;
-        color: #6b7280;
-        font-weight: 500;
-        transition: all 0.2s;
-    }
-    .modal-box .btn-cancel:hover { background: #f9fafb; color: #374151; }
 
-    .loading-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(255,255,255,0.8);
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        backdrop-filter: blur(4px);
-        animation: fadeInUp 0.3s ease;
+    .link-item input {
+        flex: 1;
     }
-    .spinner-lg {
-        width: 48px;
-        height: 48px;
-        border: 4px solid #e5e7eb;
-        border-top-color: #059669;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+
+    .link-item .remove-link {
+        color: var(--muted);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.2rem;
+        transition: color 0.2s;
+    }
+
+    .link-item .remove-link:hover {
+        color: var(--red);
+    }
+
+    .add-link-btn {
+        color: var(--green);
+        font-weight: 500;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-size: 0.8rem;
+        transition: color 0.2s;
+    }
+
+    .add-link-btn:hover {
+        color: var(--green-dark);
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--ink-soft);
+        margin-bottom: 0.3rem;
+    }
+
+    .form-label .required {
+        color: var(--red);
+    }
+
+    .form-control {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        padding: 0.6rem 0.8rem;
+        border-radius: var(--radius-sm);
+        outline: none;
+        transition: all 0.2s;
+        background: var(--paper);
+        font-size: 0.85rem;
+        color: var(--ink);
+    }
+
+    .form-control:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+    }
+
+    .form-control.error {
+        border-color: var(--red);
+    }
+
+    .form-control.error:focus {
+        box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+    }
+
+    .form-hint {
+        font-size: 0.7rem;
+        color: var(--muted);
+        margin-top: 0.2rem;
+    }
+
+    /* ---- inline field errors ---- */
+    .field-error-msg {
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--red);
+        margin-top: 0.35rem;
+        display: none;
+        align-items: flex-start;
+        gap: 0.4rem;
+        line-height: 1.4;
+    }
+
+    .field-error-msg.visible {
+        display: flex;
+    }
+
+    .grid-cols-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .grid-cols-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-xs {
+        font-size: 0.7rem;
+    }
+
+    .text-sm {
+        font-size: 0.85rem;
+    }
+
+    .text-gray-500 {
+        color: var(--muted);
+    }
+
+    .text-gray-600 {
+        color: var(--ink-soft);
+    }
+
+    .text-red-700 {
+        color: var(--red);
+    }
+
+    .bg-red-50 {
+        background: var(--red-pale);
+    }
+
+    .border-l-4 {
+        border-left-width: 4px;
+    }
+
+    .border-red-400 {
+        border-color: var(--red);
+    }
+
+    .p-3 {
+        padding: 0.75rem;
+    }
+
+    .mb-2 {
+        margin-bottom: 0.5rem;
+    }
+
+    .mb-4 {
         margin-bottom: 1rem;
     }
-    .capture-status .spinner-lg { margin: 0 auto 1rem; }
+
+    .mt-2 {
+        margin-top: 0.5rem;
+    }
+
+    .mt-3 {
+        margin-top: 0.75rem;
+    }
+
+    .mt-4 {
+        margin-top: 1rem;
+    }
+
+    .mt-6 {
+        margin-top: 1.5rem;
+    }
+
+    .mr-1 {
+        margin-right: 0.25rem;
+    }
+
+    .rounded {
+        border-radius: 0.25rem;
+    }
+
+    .flex {
+        display: flex;
+    }
+
+    .items-center {
+        align-items: center;
+    }
+
+    .justify-end {
+        justify-content: flex-end;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .gap-3 {
+        gap: 0.75rem;
+    }
+
+    .gap-4 {
+        gap: 1rem;
+    }
+
+    .pt-4 {
+        padding-top: 1rem;
+    }
+
+    .border-t {
+        border-top: 1px solid var(--line);
+    }
+
+    .border-gray-200 {
+        border-color: var(--line);
+    }
+
+    .border-gray-300 {
+        border-color: var(--line);
+    }
+
+    .bg-green-600 {
+        background: var(--green);
+    }
+
+    .bg-green-600:hover {
+        background: var(--green-dark);
+    }
+
+    .text-white {
+        color: white;
+    }
+
+    .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .px-5 {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+
+    .py-1 {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .py-1\.5 {
+        padding-top: 0.375rem;
+        padding-bottom: 0.375rem;
+    }
+
+    .py-2 {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .hover\:bg-green-700:hover {
+        background: var(--green-dark);
+    }
+
+    .hover\:bg-gray-50:hover {
+        background: var(--surface);
+    }
+
+    .text-gray-700 {
+        color: var(--ink-soft);
+    }
+
+    .disabled\:opacity-50:disabled {
+        opacity: 0.5;
+    }
+
+    .space-y-2 > * + * {
+        margin-top: 0.5rem;
+    }
 
     @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
+
     @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
     }
-    .loading-text {
-        font-size: 1rem;
-        font-weight: 500;
-        color: #374151;
-        animation: pulse 1.5s ease-in-out infinite;
+
+    .flatpickr-calendar {
+        border-radius: var(--radius-sm) !important;
+        box-shadow: 0 12px 36px rgba(0,0,0,0.12) !important;
+        border: 1px solid var(--line) !important;
+    }
+
+    .flatpickr-day.selected {
+        background: var(--green) !important;
+        border-color: var(--green) !important;
+    }
+
+    .flatpickr-day.today {
+        border-color: var(--green) !important;
+    }
+
+    .flatpickr-day.today:hover {
+        background: var(--green) !important;
+        color: white !important;
+    }
+
+    .flatpickr-months .flatpickr-month,
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 600;
+    }
+
+    @media (max-width: 480px) {
+        .grid-cols-2,
+        .grid-cols-3 {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="main-inner">
-        <div class="form-card">
-            <h1 style="font-size:1.5rem; font-weight:700; margin-bottom:0.25rem;">Place New Order</h1>
-            <p style="color:#6b7280; font-size:0.85rem; margin-bottom:1.5rem;">Fill in the details to get a price estimate</p>
+<div class="form-card">
+    <h1 style="font-size:1.5rem;font-weight:700;margin-bottom:0.25rem;">Place New Order</h1>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Fill in the details to get a price estimate</p>
 
-            <div id="priceError" class="hidden bg-red-50 border-l-4 border-red-400 p-3 mb-4 rounded text-sm text-red-700"></div>
+    <div id="priceError" class="hidden bg-red-50 border-l-4 border-red-400 p-3 mb-4 rounded text-sm text-red-700"></div>
 
-            <form id="orderForm" enctype="multipart/form-data" novalidate>
-                <div class="form-section">
-                    <h3>Paper Details</h3>
-                    <div class="grid-cols-2">
-                        <div>
-                            <label class="form-label" for="academicLevel">Academic Level <span class="required">*</span></label>
-                            <select class="form-control" id="academicLevel" required>
-                                <option value="">Select level</option>
-                                <option value="high_school">High School</option>
-                                <option value="undergraduate" selected>Undergraduate</option>
-                                <option value="masters">Master's</option>
-                                <option value="phd">PhD</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="form-label" for="paperType">Paper Type <span class="required">*</span></label>
-                            <select class="form-control" id="paperType" required>
-                                <option value="">Select type</option>
-                                <option value="essay">Essay</option>
-                                <option value="research_paper" selected>Research Paper</option>
-                                <option value="dissertation">Dissertation</option>
-                                <option value="thesis">Thesis</option>
-                                <option value="case_study">Case Study</option>
-                                <option value="literature_review">Literature Review</option>
-                                <option value="article_review">Article Review</option>
-                                <option value="book_report">Book Report</option>
-                                <option value="speech">Speech</option>
-                                <option value="presentation">Presentation</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="form-label" for="subject">Subject <span class="required">*</span></label>
-                            <input type="text" class="form-control" id="subject" required placeholder="e.g., Psychology">
-                        </div>
-                        <div>
-                            <label class="form-label" for="format">Citation Style <span class="required">*</span></label>
-                            <select class="form-control" id="format" required>
-                                <option value="apa">APA (7th)</option>
-                                <option value="mla">MLA (9th)</option>
-                                <option value="chicago">Chicago</option>
-                                <option value="harvard">Harvard</option>
-                                <option value="turabian">Turabian</option>
-                                <option value="vancouver">Vancouver</option>
-                                <option value="oscola">OSCOLA</option>
-                                <option value="ieee">IEEE</option>
-                            </select>
-                        </div>
+    <form id="orderForm" enctype="multipart/form-data" novalidate>
+        <div class="form-section">
+            <h3>Paper Details</h3>
+            <div class="grid-cols-2">
+                <div>
+                    <label class="form-label" for="academicLevel">Academic Level <span class="required">*</span></label>
+                    <select class="form-control" id="academicLevel" required>
+                        <option value="">Select level</option>
+                        <option value="high_school">High School</option>
+                        <option value="undergraduate" selected>Undergraduate</option>
+                        <option value="masters">Master's</option>
+                        <option value="phd">PhD</option>
+                    </select>
+                    <div class="field-error-msg" id="error-academicLevel"></div>
+                </div>
+                <div>
+                    <label class="form-label" for="paperType">Paper Type <span class="required">*</span></label>
+                    <select class="form-control" id="paperType" required>
+                        <option value="">Select type</option>
+                        <option value="essay">Essay</option>
+                        <option value="research_paper" selected>Research Paper</option>
+                        <option value="dissertation">Dissertation</option>
+                        <option value="thesis">Thesis</option>
+                        <option value="case_study">Case Study</option>
+                        <option value="literature_review">Literature Review</option>
+                        <option value="article_review">Article Review</option>
+                        <option value="book_report">Book Report</option>
+                        <option value="speech">Speech</option>
+                        <option value="presentation">Presentation</option>
+                    </select>
+                    <div class="field-error-msg" id="error-paperType"></div>
+                </div>
+                <div>
+                    <label class="form-label" for="subject">Subject <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="subject" required placeholder="e.g., Psychology">
+                    <div class="field-error-msg" id="error-subject"></div>
+                </div>
+                <div>
+                    <label class="form-label" for="format">Citation Style <span class="required">*</span></label>
+                    <select class="form-control" id="format" required>
+                        <option value="apa">APA (7th)</option>
+                        <option value="mla">MLA (9th)</option>
+                        <option value="chicago">Chicago</option>
+                        <option value="harvard">Harvard</option>
+                        <option value="turabian">Turabian</option>
+                        <option value="vancouver">Vancouver</option>
+                        <option value="oscola">OSCOLA</option>
+                        <option value="ieee">IEEE</option>
+                    </select>
+                    <div class="field-error-msg" id="error-format"></div>
+                </div>
+            </div>
+            <div style="margin-top:1rem;">
+                <label class="form-label" for="topic">Topic <span class="required">*</span></label>
+                <input type="text" class="form-control" id="topic" required placeholder="Your paper topic">
+                <div class="field-error-msg" id="error-topic"></div>
+            </div>
+            <div style="margin-top:1rem;">
+                <label class="form-label" for="instructions">Instructions <span class="required">*</span></label>
+                <textarea class="form-control" id="instructions" rows="5" required placeholder="Detailed instructions..."></textarea>
+                <div class="field-error-msg" id="error-instructions"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Specifications</h3>
+            <div id="slidesSection" class="hidden">
+                <div>
+                    <label class="form-label" for="slides">Number of Slides <span class="required">*</span></label>
+                    <input type="number" class="form-control" id="slides" min="1" value="5">
+                    <div class="field-error-msg" id="error-slides"></div>
+                    <p class="form-hint">$8.00 per slide</p>
+                </div>
+            </div>
+            <div id="paperFields">
+                <div class="grid-cols-3">
+                    <div>
+                        <label class="form-label" for="pages">Pages</label>
+                        <input type="number" class="form-control" id="pages" value="1" min="0.5" step="0.5">
+                        <div class="field-error-msg" id="error-pages"></div>
                     </div>
-                    <div style="margin-top:1rem;">
-                        <label class="form-label" for="topic">Topic <span class="required">*</span></label>
-                        <input type="text" class="form-control" id="topic" required placeholder="Your paper topic">
+                    <div>
+                        <label class="form-label" for="words">Words</label>
+                        <input type="number" class="form-control" id="words" value="275" min="1">
+                        <div class="field-error-msg" id="error-words"></div>
                     </div>
-                    <div style="margin-top:1rem;">
-                        <label class="form-label" for="instructions">Instructions <span class="required">*</span></label>
-                        <textarea class="form-control" id="instructions" rows="5" required placeholder="Detailed instructions..."></textarea>
+                    <div>
+                        <label class="form-label" for="spacing">Spacing</label>
+                        <select class="form-control" id="spacing">
+                            <option value="single">Single (550 w/p)</option>
+                            <option value="one_point_five">1.5 (367 w/p)</option>
+                            <option value="double" selected>Double (275 w/p)</option>
+                        </select>
+                        <div class="field-error-msg" id="error-spacing"></div>
                     </div>
                 </div>
+                <p class="text-xs text-gray-500 mt-2">Enter pages or words – the other calculates automatically.</p>
+            </div>
+        </div>
 
-                <div class="form-section">
-                    <h3>Specifications</h3>
-                    <div id="slidesSection" class="hidden">
-                        <div>
-                            <label class="form-label" for="slides">Number of Slides <span class="required">*</span></label>
-                            <input type="number" class="form-control" id="slides" min="1" value="5">
-                            <p class="form-hint">$8.00 per slide</p>
-                        </div>
-                    </div>
-                    <div id="paperFields">
-                        <div class="grid-cols-3">
-                            <div>
-                                <label class="form-label" for="pages">Pages</label>
-                                <input type="number" class="form-control" id="pages" value="1" min="0.5" step="0.5">
-                            </div>
-                            <div>
-                                <label class="form-label" for="words">Words</label>
-                                <input type="number" class="form-control" id="words" value="275" min="1">
-                            </div>
-                            <div>
-                                <label class="form-label" for="spacing">Spacing</label>
-                                <select class="form-control" id="spacing">
-                                    <option value="single">Single (550 w/p)</option>
-                                    <option value="one_point_five">1.5 (367 w/p)</option>
-                                    <option value="double" selected>Double (275 w/p)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">Enter pages or words – the other calculates automatically.</p>
-                    </div>
+        <div class="form-section">
+            <h3>Timeline</h3>
+            <div class="grid-cols-2">
+                <div>
+                    <label class="form-label" for="deadline">Deadline <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="deadline" placeholder="Select date & time" readonly required>
+                    <div class="field-error-msg" id="error-deadline"></div>
+                    <p class="form-hint">Minimum 12 hours from now</p>
                 </div>
-
-                <div class="form-section">
-                    <h3>Timeline</h3>
-                    <div class="grid-cols-2">
-                        <div>
-                            <label class="form-label" for="deadline">Deadline <span class="required">*</span></label>
-                            <input type="text" class="form-control" id="deadline" placeholder="Select date & time" readonly required>
-                            <p class="form-hint">Minimum 12 hours from now</p>
-                        </div>
-                        <div>
-                            <label class="form-label" for="sources">Sources</label>
-                            <input type="number" class="form-control" id="sources" value="5" min="0" max="100">
-                            <p class="form-hint">Does not affect price</p>
-                        </div>
-                    </div>
+                <div>
+                    <label class="form-label" for="sources">Sources</label>
+                    <input type="number" class="form-control" id="sources" value="5" min="0" max="100">
+                    <div class="field-error-msg" id="error-sources"></div>
+                    <p class="form-hint">Does not affect price</p>
                 </div>
+            </div>
+        </div>
 
-                <div class="form-section">
-                    <h3>Reference Links</h3>
-                    <div id="linksContainer">
-                        <div class="link-item">
-                            <input type="url" class="form-control" placeholder="https://example.com/source">
-                            <button type="button" class="remove-link" disabled style="opacity:0.3">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <button type="button" class="add-link-btn mt-2">
-                        <i class="fas fa-plus mr-1"></i>Add another link
+        <div class="form-section">
+            <h3>Reference Links</h3>
+            <div id="linksContainer">
+                <div class="link-item">
+                    <input type="url" class="form-control" placeholder="https://example.com/source">
+                    <button type="button" class="remove-link" disabled style="opacity:0.3">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
-
-                <div class="form-section">
-                    <h3>Attachments</h3>
-                    <p class="text-xs text-gray-600 mb-2">Max 10MB per file. JPG, PNG, PDF, DOC, etc.</p>
-                    <div class="drop-zone" id="dropZone">
-                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
-                        <p class="text-sm text-gray-600">Drag & drop files or click to browse</p>
-                        <input type="file" id="fileInput" multiple class="hidden" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt">
-                        <button type="button" id="browseFilesBtn" class="mt-2 bg-green-600 text-white px-4 py-1.5 text-sm hover:bg-green-700 rounded">Browse Files</button>
-                    </div>
-                    <div id="fileList" class="mt-3 space-y-2"></div>
-                    <div class="mt-2 flex items-center text-xs text-gray-500">
-                        <i class="fas fa-shield-alt text-green-600 mr-1"></i>
-                        <span>Files scanned for security</span>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Price Estimate</h3>
-                    <div class="price-breakdown">
-                        <div class="price-row">
-                            <span class="label">Pages</span>
-                            <span class="value" id="displayPages">0</span>
-                        </div>
-                        <div class="price-row">
-                            <span class="label">Words per Page</span>
-                            <span class="value" id="displayWordsPerPage">275</span>
-                        </div>
-                        <div class="price-row">
-                            <span class="label">Cost per Page</span>
-                            <span class="value" id="displayCostPerPage">$10.00</span>
-                        </div>
-                        <div class="price-row">
-                            <span class="label">Base Price</span>
-                            <span class="value" id="displayBasePrice">$0.00</span>
-                        </div>
-                        <div class="price-total">
-                            <div class="price-row">
-                                <span class="label">Estimated Total</span>
-                                <span class="value" id="totalPrice">$0.00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>PayPal Account</h3>
-                    <div id="paypalAccountSelector" class="paypal-account-selector"></div>
-                    <div id="noAccountsMsg" class="no-accounts-msg">Loading your saved PayPal accounts…</div>
-                    <p class="form-hint">Choose a PayPal account for this order. This email will be used for refunds.</p>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <a href="/client/orders/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2 text-sm rounded">Cancel</a>
-                    <button type="submit" class="bg-green-600 text-white hover:bg-green-700 px-5 py-2 text-sm rounded disabled:opacity-50" id="submitBtn">Place Order</button>
-                </div>
-            </form>
+            </div>
+            <div class="field-error-msg" id="error-links" style="margin-top:0.5rem;"></div>
+            <button type="button" class="add-link-btn mt-2">
+                <i class="fas fa-plus mr-1"></i>Add another link
+            </button>
         </div>
-    </div>
+
+        <div class="form-section">
+            <h3>Attachments</h3>
+            <p class="text-xs text-gray-600 mb-2">Max 10MB per file. JPG, PNG, PDF, DOC, etc.</p>
+
+            <div class="upload-zone" id="dropZone">
+                <span class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </span>
+                <p class="upload-title">Drop files here or click to browse</p>
+                <p class="upload-subtitle">Drag & drop any files to attach them to your order</p>
+                <button type="button" class="upload-btn" id="browseFilesBtn">
+                    <i class="fas fa-folder-open"></i> Browse Files
+                </button>
+                <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+            </div>
+
+            <div class="file-list" id="fileList"></div>
+            <div class="field-error-msg" id="error-attachments" style="margin-top:0.75rem;"></div>
+
+            <div class="file-security">
+                <i class="fas fa-shield-alt"></i>
+                <span>Files are scanned for security before upload</span>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Price Estimate</h3>
+            <div class="price-breakdown">
+                <div class="price-row">
+                    <span class="label">Pages</span>
+                    <span class="value" id="displayPages">0</span>
+                </div>
+                <div class="price-row">
+                    <span class="label">Words per Page</span>
+                    <span class="value" id="displayWordsPerPage">275</span>
+                </div>
+                <div class="price-row">
+                    <span class="label">Cost per Page</span>
+                    <span class="value" id="displayCostPerPage">$10.00</span>
+                </div>
+                <div class="price-row">
+                    <span class="label">Base Price</span>
+                    <span class="value" id="displayBasePrice">$0.00</span>
+                </div>
+                <div class="price-total">
+                    <div class="price-row">
+                        <span class="label">Estimated Total</span>
+                        <span class="value" id="totalPrice">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <a href="/client/orders/" class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2 text-sm rounded">Cancel</a>
+            <button type="submit" class="bg-green-600 text-white hover:bg-green-700 px-5 py-2 text-sm rounded disabled:opacity-50" id="submitBtn">Place Order</button>
+        </div>
+    </form>
 </div>
 
 <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD" data-sdk-integration-source="button-factory"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-(function() {
-    'use strict';
-
-    // ---------- state ----------
-    var filesToUpload = [];
-    var verifiedFiles = [];
-    var priceData = null;
-    var priceUpdateTimeout = null;
-    var deadlinePicker = null;
-    var selectedPayPalEmail = null;
-    var payPalMethods = [];
-    var currentOrderId = null;
-    var paypalOrderId = null;
-    var orderAmount = 0;
-    var isSubmitting = false;
-    var idempotencyKey = null;
-
-    // ---------- DOM refs ----------
-    var form = document.getElementById('orderForm');
-    var submitBtn = document.getElementById('submitBtn');
-    var priceError = document.getElementById('priceError');
-    var paypalAccountSelector = document.getElementById('paypalAccountSelector');
-    var noAccountsMsg = document.getElementById('noAccountsMsg');
-
-    // ---------- helpers ----------
-    function getToken() {
-        return localStorage.getItem('access_token');
-    }
-
-    function generateIdempotencyKey() {
-        return 'ord_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
+    let filesToUpload = [];
+    let verifiedFiles = [];
+    let priceData = null;
+    let priceUpdateTimeout = null;
+    let deadlinePicker = null;
 
     function showLoading(message) {
-        var overlay = document.createElement('div');
-        overlay.className = 'loading-overlay';
-        overlay.id = 'loadingOverlay';
-        overlay.innerHTML = '<div class="spinner-lg"></div><div class="loading-text">' + message + '</div>';
-        document.body.appendChild(overlay);
+        if (window.Loading) window.Loading.show();
+        else {
+            let overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-white/80 flex items-center justify-center flex-col z-50 backdrop-blur-sm';
+            overlay.id = 'customLoading';
+            overlay.innerHTML = '<div class="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-4"></div><div class="text-gray-700 font-medium">' + message + '</div>';
+            document.body.appendChild(overlay);
+        }
     }
 
     function hideLoading() {
-        var overlay = document.getElementById('loadingOverlay');
-        if (overlay) overlay.remove();
+        if (window.Loading) window.Loading.hide();
+        else {
+            let overlay = document.getElementById('customLoading');
+            if (overlay) overlay.remove();
+        }
     }
 
-    function showModal(title, message, buttonText, callback, cancelText) {
-        var existing = document.getElementById('dynamicModal');
-        if (existing) existing.remove();
-
-        var modal = document.createElement('div');
-        modal.id = 'dynamicModal';
-        modal.className = 'modal-overlay';
-        modal.innerHTML = '<div class="modal-box"><h3>' + title + '</h3><p>' + message + '</p><div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">' +
-            '<button class="btn-cancel" id="modalCancelBtn">' + (cancelText || 'Cancel') + '</button>' +
-            '<button class="bg-green-600 text-white hover:bg-green-700 px-5 py-2 text-sm rounded" id="modalConfirmBtn">' + buttonText + '</button></div></div>';
-        document.body.appendChild(modal);
-
-        document.getElementById('modalCancelBtn').addEventListener('click', function() {
-            modal.remove();
-            if (callback) callback(false);
-        });
-        document.getElementById('modalConfirmBtn').addEventListener('click', function() {
-            modal.remove();
-            if (callback) callback(true);
-        });
-        // click outside to cancel
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.remove();
-                if (callback) callback(false);
-            }
-        });
-        return modal;
+    function escapeHtml(unsafe) {
+        if (unsafe === null || unsafe === undefined) return '';
+        return String(unsafe)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
-    function showAlert(title, message, buttonText) {
-        var existing = document.getElementById('dynamicModal');
-        if (existing) existing.remove();
-
-        var modal = document.createElement('div');
-        modal.id = 'dynamicModal';
-        modal.className = 'modal-overlay';
-        modal.innerHTML = '<div class="modal-box"><h3>' + title + '</h3><p>' + message + '</p><button class="bg-green-600 text-white hover:bg-green-700 px-5 py-2 text-sm rounded mt-2" id="alertOkBtn">' + (buttonText || 'OK') + '</button></div>';
-        document.body.appendChild(modal);
-
-        document.getElementById('alertOkBtn').addEventListener('click', function() {
-            modal.remove();
+    function clearFieldErrors() {
+        document.querySelectorAll('.field-error-msg').forEach(function(el) {
+            el.classList.remove('visible');
+            el.innerHTML = '';
         });
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) modal.remove();
+        document.querySelectorAll('.form-control.error').forEach(function(el) {
+            el.classList.remove('error');
         });
+    }
+
+    function showFieldError(fieldId, message) {
+        let el = document.getElementById('error-' + fieldId);
+        let input = document.getElementById(fieldId);
+        if (el) {
+            el.innerHTML = '<i class="fas fa-exclamation-circle" style="font-size:0.75rem;margin-right:4px;margin-top:2px;flex-shrink:0;"></i>' + escapeHtml(message);
+            el.classList.add('visible');
+        }
+        if (input && input.classList.contains('form-control')) {
+            input.classList.add('error');
+        }
+    }
+
+    function showPayPalModal(orderId, paypalOrderId, amount) {
+        let html = `
+            <div class="text-center">
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Complete Payment</h3>
+                <p class="text-gray-600 mb-4">Amount: <strong>$${parseFloat(amount).toFixed(2)}</strong></p>
+                <div id="paypal-button-container" class="mb-4"></div>
+                <button class="btn btn-outline" id="paypalCancelBtn">Cancel</button>
+            </div>
+        `;
+
+        if (window.Modal) {
+            window.Modal.show(html);
+            setTimeout(function() {
+                paypal.Buttons({
+                    createOrder: function() {
+                        return paypalOrderId;
+                    },
+                    onApprove: async function(data) {
+                        let container = document.getElementById('paypal-button-container');
+                        if (container) {
+                            container.innerHTML = '<div class="py-8"><div class="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div><p class="text-green-600 font-medium">Processing payment…</p></div>';
+                        }
+                        try {
+                            let res = await fetch('/api/v1/orders/' + orderId + '/capture-payment/', {
+                                method: 'POST',
+                                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+                            });
+                            let captureData = await res.json();
+                            if (res.ok) {
+                                if (window.Modal) window.Modal.hide();
+                                window.Toast.show('Payment successful!', 'success');
+                                setTimeout(function() {
+                                    window.location.href = '/client/orders/' + orderId + '/';
+                                }, 1500);
+                            } else {
+                                if (container) {
+                                    container.innerHTML = '<i class="fas fa-times-circle text-4xl text-red-600 mb-2"></i><p class="text-red-600">' + (captureData.error || 'Payment failed') + '</p>';
+                                }
+                                setTimeout(function() {
+                                    if (window.Modal) window.Modal.hide();
+                                }, 3000);
+                            }
+                        } catch (err) {
+                            if (container) {
+                                container.innerHTML = '<i class="fas fa-exclamation-triangle text-4xl text-yellow-600 mb-2"></i><p class="text-yellow-700">Network error</p>';
+                            }
+                            setTimeout(function() {
+                                if (window.Modal) window.Modal.hide();
+                            }, 3000);
+                        }
+                    },
+                    onCancel: function() {
+                        if (window.Modal) window.Modal.hide();
+                        enableSubmit();
+                    },
+                    onError: function(err) {
+                        window.Toast.show('PayPal error. Please try again.', 'error');
+                        if (window.Modal) window.Modal.hide();
+                        enableSubmit();
+                    }
+                }).render('#paypal-button-container');
+            }, 100);
+        }
     }
 
     function enableSubmit() {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Place Order';
-        isSubmitting = false;
+        let btn = document.getElementById('submitBtn');
+        btn.disabled = false;
+        btn.textContent = 'Place Order';
     }
 
-    function disableSubmit() {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Processing...';
-        isSubmitting = true;
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        let now = new Date();
+        let minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
 
-    // ---------- PayPal account picker ----------
-    function loadPayPalAccounts() {
-        var token = getToken();
-        if (!token) {
-            noAccountsMsg.textContent = 'Please login to see your PayPal accounts.';
-            return;
-        }
-
-        fetch('/api/v1/wallet/paypal/methods/', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        })
-        .then(function(res) { return res.ok ? res.json() : []; })
-        .then(function(methods) {
-            payPalMethods = methods;
-            renderPayPalAccounts(methods);
-        })
-        .catch(function() {
-            noAccountsMsg.textContent = 'Could not load accounts. Please try again.';
-        });
-    }
-
-    function renderPayPalAccounts(methods) {
-        var container = paypalAccountSelector;
-        container.innerHTML = '';
-        if (!methods || methods.length === 0) {
-            noAccountsMsg.textContent = 'No saved PayPal accounts. Add one from your wallet.';
-            return;
-        }
-        noAccountsMsg.textContent = '';
-
-        var defaultMethod = methods.find(function(m) { return m.is_default; });
-        if (defaultMethod) {
-            selectedPayPalEmail = defaultMethod.paypal_email;
-        } else if (methods.length > 0) {
-            selectedPayPalEmail = methods[0].paypal_email;
-        }
-
-        methods.forEach(function(method) {
-            var card = document.createElement('div');
-            card.className = 'paypal-account-card';
-            if (method.paypal_email === selectedPayPalEmail) {
-                card.classList.add('selected');
+        deadlinePicker = flatpickr('#deadline', {
+            enableTime: true,
+            dateFormat: 'Y-m-d H:i',
+            minDate: minDate,
+            defaultDate: minDate,
+            minuteIncrement: 15,
+            disableMobile: true,
+            onChange: function() {
+                clearTimeout(priceUpdateTimeout);
+                priceUpdateTimeout = setTimeout(calculatePrice, 300);
             }
-            card.innerHTML = '<div><div class="email">' + method.paypal_email + '</div>' +
-                (method.is_default ? '<span class="badge-default">Default</span>' : '') +
-                '</div>';
-            card.addEventListener('click', function() {
-                container.querySelectorAll('.paypal-account-card').forEach(function(c) {
-                    c.classList.remove('selected');
-                });
-                card.classList.add('selected');
-                selectedPayPalEmail = method.paypal_email;
-            });
-            container.appendChild(card);
-        });
-    }
-
-    // ---------- PayPal modal ----------
-    function showPayPalModal(orderId, ppOrderId, amount) {
-        currentOrderId = orderId;
-        paypalOrderId = ppOrderId;
-        orderAmount = amount;
-
-        var existing = document.getElementById('paypalModal');
-        if (existing) existing.remove();
-
-        var modal = document.createElement('div');
-        modal.id = 'paypalModal';
-        modal.className = 'modal-overlay';
-        modal.innerHTML = '<div class="modal-box"><h3>Complete Payment</h3><p>Amount: <strong>$' + parseFloat(amount).toFixed(2) + '</strong></p><div id="paypal-button-container"></div><button class="btn-cancel" id="cancelPayPalBtn">Cancel</button></div>';
-        document.body.appendChild(modal);
-
-        document.getElementById('cancelPayPalBtn').addEventListener('click', function() {
-            modal.remove();
-            cancelPendingOrder(orderId);
-            enableSubmit();
         });
 
-        paypal.Buttons({
-            createOrder: function() {
-                return ppOrderId;
-            },
-            onApprove: function(data) {
-                var container = document.getElementById('paypal-button-container');
-                container.innerHTML = '<div class="capture-status"><div class="spinner-lg" style="margin:0 auto 1rem;"></div><p style="color:#059669; font-weight:500;">Processing payment…</p></div>';
-                return fetch('/api/v1/orders/' + orderId + '/capture-payment/', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + getToken() }
-                })
-                .then(function(res) { return res.json(); })
-                .then(function(captureData) {
-                    if (captureData.success || captureData.status === 'completed') {
-                        container.innerHTML = '<i class="fas fa-check-circle" style="font-size:3rem; color:#059669;"></i><p style="font-weight:600; margin-top:0.5rem;">Payment successful!</p>';
-                        setTimeout(function() {
-                            modal.remove();
-                            window.location.href = '/client/orders/' + orderId + '/';
-                        }, 1500);
-                    } else {
-                        container.innerHTML = '<i class="fas fa-times-circle" style="font-size:3rem; color:#ef4444;"></i><p style="color:#dc2626; margin-top:0.5rem;">' + (captureData.error || 'Payment failed') + '</p>';
-                        setTimeout(function() {
-                            modal.remove();
-                            cancelPendingOrder(orderId);
-                            enableSubmit();
-                        }, 3000);
-                    }
-                })
-                .catch(function() {
-                    container.innerHTML = '<i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#f59e0b;"></i><p style="color:#92400e;">Network error</p>';
-                    setTimeout(function() {
-                        modal.remove();
-                        cancelPendingOrder(orderId);
-                        enableSubmit();
-                    }, 3000);
+        setupEventListeners();
+        calculatePrice();
+    });
+
+    function setupEventListeners() {
+        let paperType = document.getElementById('paperType');
+        paperType.addEventListener('change', function() {
+            togglePaperTypeFields(this.value);
+            clearTimeout(priceUpdateTimeout);
+            priceUpdateTimeout = setTimeout(calculatePrice, 300);
+        });
+
+        let priceInputs = ['academicLevel', 'pages', 'words', 'spacing', 'slides'];
+        priceInputs.forEach(function(id) {
+            let element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', function() {
+                    clearTimeout(priceUpdateTimeout);
+                    priceUpdateTimeout = setTimeout(calculatePrice, 300);
                 });
-            },
-            onCancel: function() {
-                modal.remove();
-                cancelPendingOrder(orderId);
-                enableSubmit();
-            },
-            onError: function(err) {
-                showAlert('PayPal Error', 'Something went wrong. Please try again.', 'OK');
-                modal.remove();
-                cancelPendingOrder(orderId);
-                enableSubmit();
+                if (element.type === 'number') {
+                    element.addEventListener('input', function() {
+                        clearTimeout(priceUpdateTimeout);
+                        priceUpdateTimeout = setTimeout(calculatePrice, 300);
+                    });
+                }
             }
-        }).render('#paypal-button-container');
+        });
+
+        document.getElementById('pages').addEventListener('input', function() {
+            syncPagesToWords(this.value);
+            clearTimeout(priceUpdateTimeout);
+            priceUpdateTimeout = setTimeout(calculatePrice, 300);
+        });
+
+        document.getElementById('words').addEventListener('input', function() {
+            syncWordsToPages(this.value);
+            clearTimeout(priceUpdateTimeout);
+            priceUpdateTimeout = setTimeout(calculatePrice, 300);
+        });
+
+        document.getElementById('spacing').addEventListener('change', function() {
+            let words = parseInt(document.getElementById('words').value) || 0;
+            let pages = parseFloat(document.getElementById('pages').value) || 0;
+            if (words > 0) {
+                syncWordsToPages(words);
+            } else if (pages > 0) {
+                syncPagesToWords(pages);
+            }
+            clearTimeout(priceUpdateTimeout);
+            priceUpdateTimeout = setTimeout(calculatePrice, 300);
+        });
+
+        setupFileUpload();
+        setupLinks();
+        setupFormSubmit();
     }
 
-    function cancelPendingOrder(orderId) {
-        if (!orderId) return;
-        // call cleanup endpoint
-        fetch('/api/v1/orders/' + orderId + '/cancel-pending/', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + getToken() }
-        }).catch(function(e) { console.warn('Cancel cleanup failed:', e); });
+    function syncPagesToWords(pagesValue) {
+        let pages = parseFloat(pagesValue) || 0;
+        let spacing = document.getElementById('spacing').value;
+        let wordsPerPage = { single: 550, one_point_five: 367, double: 275 };
+        if (pages > 0) {
+            let words = Math.round(pages * (wordsPerPage[spacing] || 275));
+            document.getElementById('words').value = words;
+        }
     }
 
-    // ---------- form submission ----------
-    function submitOrder(e) {
-        e.preventDefault();
-        if (isSubmitting) return;
-
-        // validate
-        var selectedDates = deadlinePicker.selectedDates;
-        if (!selectedDates || selectedDates.length === 0) {
-            showAlert('Deadline Required', 'Please select a valid deadline.', 'OK');
-            return;
+    function syncWordsToPages(wordsValue) {
+        let words = parseInt(wordsValue) || 0;
+        let spacing = document.getElementById('spacing').value;
+        let wordsPerPage = { single: 550, one_point_five: 367, double: 275 };
+        if (words > 0) {
+            let pages = words / (wordsPerPage[spacing] || 275);
+            document.getElementById('pages').value = pages.toFixed(1);
         }
-        var selectedDate = selectedDates[0];
-        var now = new Date();
-        var diffHours = (selectedDate - now) / (1000 * 60 * 60);
-        if (diffHours < 12) {
-            showAlert('Deadline Too Soon', 'Deadline must be at least 12 hours from now.', 'OK');
-            return;
-        }
+    }
 
-        var paperType = document.getElementById('paperType').value;
+    function togglePaperTypeFields(paperType) {
+        let slidesSection = document.getElementById('slidesSection');
+        let paperFields = document.getElementById('paperFields');
+
         if (paperType === 'presentation') {
-            var slides = parseInt(document.getElementById('slides').value) || 0;
-            if (slides < 1) {
-                showAlert('Slides Required', 'Please enter the number of slides.', 'OK');
-                return;
-            }
-        }
-
-        if (filesToUpload.length > 0 && filesToUpload.length > verifiedFiles.length) {
-            showAlert('Files Not Ready', 'Please wait for all files to be verified.', 'OK');
-            return;
-        }
-
-        // validate links
-        var linkInputs = document.querySelectorAll('#linksContainer input[type="url"]');
-        var links = [];
-        var hasInvalid = false;
-        linkInputs.forEach(function(input) {
-            input.classList.remove('error');
-            var raw = input.value.trim();
-            if (!raw) return;
-            var normalized = raw;
-            if (!/^https?:\/\//i.test(normalized)) {
-                normalized = 'https://' + normalized;
-            }
-            try {
-                var url = new URL(normalized);
-                if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error();
-                input.value = normalized;
-                links.push(normalized);
-            } catch (e) {
-                input.classList.add('error');
-                hasInvalid = true;
-            }
-        });
-        if (hasInvalid) {
-            showAlert('Invalid Links', 'One or more reference links are not valid URLs.', 'OK');
-            return;
-        }
-
-        // ensure a PayPal account is selected
-        if (!selectedPayPalEmail) {
-            showAlert('PayPal Account', 'Please select a PayPal account for this order.', 'OK');
-            return;
-        }
-
-        // idempotency key
-        idempotencyKey = generateIdempotencyKey();
-
-        var formData = new FormData();
-        formData.append('academic_level', document.getElementById('academicLevel').value);
-        formData.append('paper_type', paperType);
-        formData.append('subject', document.getElementById('subject').value);
-        formData.append('topic', document.getElementById('topic').value);
-        formData.append('instructions', document.getElementById('instructions').value);
-        formData.append('pages', document.getElementById('pages').value || '');
-        formData.append('words', document.getElementById('words').value || '');
-        formData.append('spacing', document.getElementById('spacing').value);
-        formData.append('slides', document.getElementById('slides').value || '');
-        formData.append('sources_count', document.getElementById('sources').value);
-        formData.append('deadline', flatpickr.formatDate(selectedDate, 'Y-m-d H:i'));
-        formData.append('format', document.getElementById('format').value);
-        formData.append('preferred_paypal_email', selectedPayPalEmail);
-        formData.append('idempotency_key', idempotencyKey);
-        links.forEach(function(link) { formData.append('links', link); });
-        verifiedFiles.forEach(function(file) { formData.append('attachments', file); });
-
-        disableSubmit();
-        showLoading('Creating your order…');
-
-        var token = getToken();
-        if (!token) {
-            hideLoading();
-            enableSubmit();
-            showAlert('Not Logged In', 'Please login to place an order.', 'OK');
-            return;
-        }
-
-        fetch('/api/v1/orders/create/', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token },
-            body: formData
-        })
-        .then(function(res) {
-            if (!res.ok) {
-                return res.json().then(function(data) {
-                    throw data;
-                }).catch(function() {
-                    throw { error: 'Server error' };
-                });
-            }
-            return res.json();
-        })
-        .then(function(data) {
-            hideLoading();
-            enableSubmit();
-            if (data.paypal_order_id) {
-                showPayPalModal(data.id, data.paypal_order_id, data.total_price);
-            } else {
-                window.location.href = '/client/orders/' + data.id + '/';
-            }
-        })
-        .catch(function(err) {
-            hideLoading();
-            enableSubmit();
-            var msg = err.error || err.message || 'Failed to create order. Please try again.';
-            if (typeof err === 'string') msg = err;
-            if (err.non_field_errors) msg = err.non_field_errors[0] || msg;
-            if (err.detail) msg = err.detail;
-            showAlert('Order Error', msg, 'OK');
-        });
-    }
-
-    // ---------- file handling ----------
-    function setupFileUpload() {
-        var dropZone = document.getElementById('dropZone');
-        var fileInput = document.getElementById('fileInput');
-        var browseBtn = document.getElementById('browseFilesBtn');
-
-        dropZone.addEventListener('click', function() { fileInput.click(); });
-        browseBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            fileInput.click();
-        });
-
-        dropZone.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-        dropZone.addEventListener('dragleave', function() {
-            dropZone.classList.remove('dragover');
-        });
-        dropZone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
-        fileInput.addEventListener('change', function(e) {
-            handleFiles(e.target.files);
-        });
-    }
-
-    function handleFiles(files) {
-        for (var i = 0; i < files.length; i++) {
-            var file = files[i];
-            if (file.size > 10 * 1024 * 1024) {
-                showAlert('File Too Large', 'File "' + file.name + '" exceeds 10MB limit.', 'OK');
-                continue;
-            }
-            var allowedTypes = ['image/jpeg', 'image/png', 'application/pdf',
-                'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'text/plain'];
-            if (allowedTypes.indexOf(file.type) === -1) {
-                showAlert('Unsupported File', 'File type "' + file.type + '" not supported.', 'OK');
-                continue;
-            }
-            filesToUpload.push(file);
-            addFileToList(file);
-            (function(f) {
-                setTimeout(function() {
-                    verifiedFiles.push(f);
-                    updateFileStatus(f.name);
-                }, 1000);
-            })(file);
-        }
-        document.getElementById('fileInput').value = '';
-    }
-
-    function addFileToList(file) {
-        var fileList = document.getElementById('fileList');
-        var fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
-        fileItem.dataset.filename = file.name;
-        fileItem.innerHTML = '<div class="file-info"><i class="fas fa-file text-gray-400"></i><div><span class="name">' + file.name + '</span><span class="size">' + (file.size / 1024).toFixed(2) + ' KB</span></div><span class="status-badge scanning" id="status-' + file.name + '"><i class="fas fa-spinner fa-spin mr-1"></i> Scanning</span></div><button type="button" class="remove-btn" data-filename="' + file.name + '"><i class="fas fa-times"></i></button>';
-        fileList.appendChild(fileItem);
-        fileItem.querySelector('.remove-btn').addEventListener('click', function() {
-            var filename = this.dataset.filename;
-            filesToUpload = filesToUpload.filter(function(f) { return f.name !== filename; });
-            verifiedFiles = verifiedFiles.filter(function(f) { return f.name !== filename; });
-            fileItem.remove();
-        });
-    }
-
-    function updateFileStatus(filename) {
-        var statusSpan = document.getElementById('status-' + filename);
-        if (statusSpan) {
-            statusSpan.className = 'status-badge verified';
-            statusSpan.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Verified';
+            slidesSection.classList.remove('hidden');
+            paperFields.classList.add('hidden');
+            document.getElementById('slides').required = true;
+            document.getElementById('pages').required = false;
+            document.getElementById('words').required = false;
+        } else {
+            slidesSection.classList.add('hidden');
+            paperFields.classList.remove('hidden');
+            document.getElementById('slides').required = false;
+            document.getElementById('pages').required = true;
+            document.getElementById('words').required = true;
         }
     }
 
-    // ---------- price calculation ----------
-    function calculatePrice() {
-        var academicLevel = document.getElementById('academicLevel').value;
-        var words = parseInt(document.getElementById('words').value) || 0;
-        var pages = parseFloat(document.getElementById('pages').value) || 0;
-        var spacing = document.getElementById('spacing').value;
-        var deadline = document.getElementById('deadline').value;
-        var paperType = document.getElementById('paperType').value;
-        var slides = parseInt(document.getElementById('slides').value) || 0;
-        var errorEl = priceError;
+    async function calculatePrice() {
+        let academicLevel = document.getElementById('academicLevel').value;
+        let words = parseInt(document.getElementById('words').value) || 0;
+        let pages = parseFloat(document.getElementById('pages').value) || 0;
+        let spacing = document.getElementById('spacing').value;
+        let deadline = document.getElementById('deadline').value;
+        let paperType = document.getElementById('paperType').value;
+        let slides = parseInt(document.getElementById('slides').value) || 0;
+        let errorEl = document.getElementById('priceError');
 
         if (!academicLevel || !deadline) {
             return;
@@ -889,55 +1081,57 @@
             }
         }
 
-        var token = getToken();
-        if (!token) {
-            errorEl.textContent = 'Please login to calculate price.';
-            errorEl.classList.remove('hidden');
-            return;
-        }
-
-        var requestData = {
-            academic_level: academicLevel,
-            spacing: spacing,
-            deadline: deadline,
-            paper_type: paperType
-        };
-        if (paperType === 'presentation') {
-            requestData.slides = slides;
-        } else {
-            if (words > 0) requestData.words = words;
-            if (pages > 0) requestData.pages = pages;
-        }
-
-        fetch('/api/v1/orders/price-quote/', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        })
-        .then(function(res) {
-            if (!res.ok) {
-                return res.json().then(function(data) {
-                    throw data;
-                }).catch(function() {
-                    throw { error: 'Price calculation failed' };
-                });
+        try {
+            let token = localStorage.getItem('access_token');
+            if (!token) {
+                errorEl.textContent = 'Please login to continue.';
+                errorEl.classList.remove('hidden');
+                return;
             }
-            return res.json();
-        })
-        .then(function(data) {
-            priceData = data;
-            updatePriceDisplay(data);
+
+            let requestData = {
+                academic_level: academicLevel,
+                spacing: spacing,
+                deadline: deadline,
+                paper_type: paperType
+            };
+
+            if (paperType === 'presentation') {
+                requestData.slides = slides;
+            } else {
+                if (words > 0) requestData.words = words;
+                if (pages > 0) requestData.pages = pages;
+            }
+
+            let response = await fetch('/api/v1/orders/price-quote/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                let errorMessage = 'Failed to calculate price';
+                try {
+                    let errorData = await response.json();
+                    errorMessage = errorData.error || errorData.message || errorMessage;
+                } catch (e) {
+                    errorMessage = response.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+
+            priceData = await response.json();
+            updatePriceDisplay(priceData);
             errorEl.classList.add('hidden');
-        })
-        .catch(function(err) {
-            var msg = err.error || err.message || 'Unable to calculate price.';
-            errorEl.textContent = msg;
+
+        } catch (error) {
+            errorEl.textContent = error.message || 'Unable to calculate price.';
             errorEl.classList.remove('hidden');
             resetPriceDisplay();
-        });
+        }
     }
 
     function updatePriceDisplay(data) {
@@ -946,7 +1140,7 @@
         document.getElementById('displayCostPerPage').textContent = '$' + (data.cost_per_page || 10).toFixed(2);
         document.getElementById('displayBasePrice').textContent = '$' + data.base_price.toFixed(2);
         document.getElementById('totalPrice').textContent = '$' + data.total_price.toFixed(2);
-        submitBtn.disabled = false;
+        document.getElementById('submitBtn').disabled = false;
     }
 
     function resetPriceDisplay() {
@@ -956,137 +1150,339 @@
         document.getElementById('displayBasePrice').textContent = '$0.00';
         document.getElementById('totalPrice').textContent = '$0.00';
         priceData = null;
-        submitBtn.disabled = true;
+        document.getElementById('submitBtn').disabled = true;
     }
 
-    // ---------- link handling ----------
+    function setupFileUpload() {
+        let dropZone = document.getElementById('dropZone');
+        let fileInput = document.getElementById('fileInput');
+        let browseBtn = document.getElementById('browseFilesBtn');
+
+        dropZone.addEventListener('click', function(e) {
+            if (e.target === dropZone || e.target.closest('.upload-zone')) {
+                fileInput.click();
+            }
+        });
+
+        browseBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', function() {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            handleFiles(e.target.files);
+        });
+    }
+
+    function handleFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i];
+
+            if (file.size > 10 * 1024 * 1024) {
+                window.Toast.show('File "' + file.name + '" exceeds 10MB limit.', 'error');
+                continue;
+            }
+
+            let allowedTypes = ['image/jpeg', 'image/png', 'application/pdf',
+                'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'text/plain'
+            ];
+
+            if (allowedTypes.indexOf(file.type) === -1) {
+                window.Toast.show('File type "' + file.type + '" is not supported.', 'error');
+                continue;
+            }
+
+            filesToUpload.push(file);
+            addFileToList(file);
+
+            setTimeout(function(f) {
+                verifiedFiles.push(f);
+                updateFileStatus(f.name);
+            }, 1000, file);
+        }
+
+        document.getElementById('fileInput').value = '';
+    }
+
+    function addFileToList(file) {
+        let fileList = document.getElementById('fileList');
+        let fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.dataset.filename = file.name;
+
+        let fileIcon = file.type.startsWith('image/') ? 'fa-image' :
+            file.type === 'application/pdf' ? 'fa-file-pdf' :
+            file.type.includes('word') ? 'fa-file-word' :
+            file.type.includes('excel') ? 'fa-file-excel' :
+            'fa-file';
+
+        fileItem.innerHTML = `
+            <div class="file-info">
+                <span class="file-icon"><i class="fas ${fileIcon}"></i></span>
+                <div class="file-details">
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${(file.size / 1024).toFixed(2)} KB</span>
+                </div>
+            </div>
+            <span class="file-status scanning" id="status-${file.name}">
+                <span class="spinner-small"></span> Scanning
+            </span>
+            <button type="button" class="file-remove" data-filename="${file.name}">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        fileList.appendChild(fileItem);
+
+        fileItem.querySelector('.file-remove').addEventListener('click', function() {
+            let filename = this.dataset.filename;
+            filesToUpload = filesToUpload.filter(function(f) { return f.name !== filename; });
+            verifiedFiles = verifiedFiles.filter(function(f) { return f.name !== filename; });
+            fileItem.remove();
+        });
+    }
+
+    function updateFileStatus(filename) {
+        let statusSpan = document.getElementById('status-' + filename);
+        if (statusSpan) {
+            statusSpan.className = 'file-status verified';
+            statusSpan.innerHTML = '<i class="fas fa-check-circle"></i> Verified';
+        }
+    }
+
+    function normalizeUrl(value) {
+        let trimmed = value.trim();
+        if (!trimmed) return '';
+        if (!/^https?:\/\//i.test(trimmed)) {
+            return 'https://' + trimmed;
+        }
+        return trimmed;
+    }
+
+    function isValidUrl(value) {
+        try {
+            let url = new URL(value);
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (e) {
+            return false;
+        }
+    }
+
     function setupLinks() {
         document.getElementById('linksContainer').addEventListener('click', function(e) {
             if (e.target.closest('.remove-link')) {
-                var linkItem = e.target.closest('.link-item');
+                let linkItem = e.target.closest('.link-item');
                 if (linkItem && linkItem.querySelectorAll('input').length > 1) {
                     linkItem.remove();
                 }
             }
         });
+
         document.querySelector('.add-link-btn').addEventListener('click', function() {
-            var container = document.getElementById('linksContainer');
-            var newField = document.createElement('div');
+            let container = document.getElementById('linksContainer');
+            let newField = document.createElement('div');
             newField.className = 'link-item';
             newField.innerHTML = '<input type="url" class="form-control" placeholder="https://example.com/source"><button type="button" class="remove-link"><i class="fas fa-times"></i></button>';
             container.appendChild(newField);
         });
     }
 
-    // ---------- sync pages/words ----------
-    function syncPagesToWords(pagesValue) {
-        var pages = parseFloat(pagesValue) || 0;
-        var spacing = document.getElementById('spacing').value;
-        var wordsPerPage = { single: 550, one_point_five: 367, double: 275 };
-        if (pages > 0) {
-            var words = Math.round(pages * (wordsPerPage[spacing] || 275));
-            document.getElementById('words').value = words;
-        }
+    function setupFormSubmit() {
+        document.getElementById('orderForm').addEventListener('submit', submitOrder);
     }
 
-    function syncWordsToPages(wordsValue) {
-        var words = parseInt(wordsValue) || 0;
-        var spacing = document.getElementById('spacing').value;
-        var wordsPerPage = { single: 550, one_point_five: 367, double: 275 };
-        if (words > 0) {
-            var pages = words / (wordsPerPage[spacing] || 275);
-            document.getElementById('pages').value = pages.toFixed(1);
+    function formatOrderError(error) {
+        if (!error) return 'Failed to create order. Please try again.';
+        if (typeof error === 'string') return error;
+        if (error.non_field_errors) {
+            return Array.isArray(error.non_field_errors) ? error.non_field_errors[0] : error.non_field_errors;
         }
+        if (error.detail) return error.detail;
+        if (error.error) return error.error;
+        if (error.message) return error.message;
+        return 'Failed to create order. Please try again.';
     }
 
-    // ---------- init ----------
-    document.addEventListener('DOMContentLoaded', function() {
-        var now = new Date();
-        var minDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+    async function submitOrder(e) {
+        e.preventDefault();
+        clearFieldErrors();
 
-        deadlinePicker = flatpickr('#deadline', {
-            enableTime: true,
-            dateFormat: 'Y-m-d H:i',
-            minDate: minDate,
-            defaultDate: minDate,
-            minuteIncrement: 15,
-            disableMobile: true,
-            onChange: function() {
-                clearTimeout(priceUpdateTimeout);
-                priceUpdateTimeout = setTimeout(calculatePrice, 300);
+        let selectedDates = deadlinePicker.selectedDates;
+        if (!selectedDates || selectedDates.length === 0) {
+            window.Toast.show('Please select a valid deadline.', 'warning');
+            return;
+        }
+
+        let selectedDate = selectedDates[0];
+        let now = new Date();
+        let diffHours = (selectedDate - now) / (1000 * 60 * 60);
+        if (diffHours < 12) {
+            window.Toast.show('Deadline must be at least 12 hours from now.', 'warning');
+            deadlinePicker.setDate(now.getTime() + 12 * 60 * 60 * 1000);
+            return;
+        }
+
+        let paperType = document.getElementById('paperType').value;
+        if (paperType === 'presentation') {
+            let slides = parseInt(document.getElementById('slides').value) || 0;
+            if (slides < 1) {
+                window.Toast.show('Please enter the number of slides for your presentation.', 'warning');
+                return;
             }
+        }
+
+        if (filesToUpload.length > 0 && filesToUpload.length > verifiedFiles.length) {
+            window.Toast.show('Please wait for all files to be verified before submitting.', 'warning');
+            return;
+        }
+
+        let linkInputs = document.querySelectorAll('#linksContainer input[type="url"]');
+        let links = [];
+        let hasInvalidLink = false;
+
+        linkInputs.forEach(function(input) {
+            input.classList.remove('error');
+            let raw = input.value.trim();
+            if (!raw) return;
+            let normalized = normalizeUrl(raw);
+            if (!isValidUrl(normalized)) {
+                input.classList.add('error');
+                hasInvalidLink = true;
+                return;
+            }
+            input.value = normalized;
+            links.push(normalized);
         });
 
-        // event listeners for price recalc
-        var priceInputs = ['academicLevel', 'pages', 'words', 'spacing', 'slides', 'paperType'];
-        priceInputs.forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('change', function() {
-                    clearTimeout(priceUpdateTimeout);
-                    priceUpdateTimeout = setTimeout(calculatePrice, 300);
-                });
-                if (el.type === 'number') {
-                    el.addEventListener('input', function() {
-                        clearTimeout(priceUpdateTimeout);
-                        priceUpdateTimeout = setTimeout(calculatePrice, 300);
-                    });
+        if (hasInvalidLink) {
+            window.Toast.show('One or more reference links are not valid URLs.', 'error');
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('academic_level', document.getElementById('academicLevel').value);
+        formData.append('paper_type', paperType);
+        formData.append('subject', document.getElementById('subject').value);
+        formData.append('topic', document.getElementById('topic').value);
+        formData.append('instructions', document.getElementById('instructions').value);
+        formData.append('pages', document.getElementById('pages').value || '');
+        formData.append('words', document.getElementById('words').value || '');
+        formData.append('spacing', document.getElementById('spacing').value);
+        formData.append('slides', document.getElementById('slides').value || '');
+        formData.append('sources_count', document.getElementById('sources').value);
+        formData.append('deadline', flatpickr.formatDate(selectedDate, 'Y-m-d H:i'));
+        formData.append('format', document.getElementById('format').value);
+        links.forEach(function(link) { formData.append('links', link); });
+        verifiedFiles.forEach(function(file) { formData.append('attachments', file); });
+
+        showLoading('Creating your order…');
+
+        let submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+
+        try {
+            let response = await fetch('/api/v1/orders/create/', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
+                body: formData
+            });
+
+            if (!response.ok) {
+                let errorData = null;
+                let genericMessage = 'Failed to create order';
+                try {
+                    errorData = await response.json();
+                } catch (e) {}
+
+                hideLoading();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Place Order';
+                clearFieldErrors();
+
+                let hasFieldErrors = false;
+                let firstErrorElement = null;
+
+                let fieldMap = {
+                    'academic_level': 'academicLevel',
+                    'paper_type': 'paperType',
+                    'subject': 'subject',
+                    'topic': 'topic',
+                    'instructions': 'instructions',
+                    'pages': 'pages',
+                    'words': 'words',
+                    'spacing': 'spacing',
+                    'slides': 'slides',
+                    'deadline': 'deadline',
+                    'sources_count': 'sources',
+                    'format': 'format',
+                    'links': 'links',
+                    'attachments': 'attachments'
+                };
+
+                if (errorData && typeof errorData === 'object') {
+                    for (let key in errorData) {
+                        if (Array.isArray(errorData[key])) {
+                            let fieldId = fieldMap[key] || key;
+                            let msg = errorData[key][0];
+                            showFieldError(fieldId, msg);
+                            hasFieldErrors = true;
+                            if (!firstErrorElement) {
+                                if (fieldId === 'links') {
+                                    firstErrorElement = document.getElementById('linksContainer');
+                                } else if (fieldId === 'attachments') {
+                                    firstErrorElement = document.getElementById('dropZone');
+                                } else {
+                                    firstErrorElement = document.getElementById(fieldId);
+                                }
+                            }
+                        }
+                    }
+
+                    if (!hasFieldErrors) {
+                        genericMessage = errorData.detail || errorData.error || errorData.message || (errorData.non_field_errors && errorData.non_field_errors[0]) || genericMessage;
+                        window.Toast.show(genericMessage, 'error');
+                    } else if (firstErrorElement) {
+                        firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else {
+                    window.Toast.show(genericMessage, 'error');
                 }
+                return;
             }
-        });
 
-        document.getElementById('pages').addEventListener('input', function() {
-            syncPagesToWords(this.value);
-            clearTimeout(priceUpdateTimeout);
-            priceUpdateTimeout = setTimeout(calculatePrice, 300);
-        });
-        document.getElementById('words').addEventListener('input', function() {
-            syncWordsToPages(this.value);
-            clearTimeout(priceUpdateTimeout);
-            priceUpdateTimeout = setTimeout(calculatePrice, 300);
-        });
-        document.getElementById('spacing').addEventListener('change', function() {
-            var words = parseInt(document.getElementById('words').value) || 0;
-            var pages = parseFloat(document.getElementById('pages').value) || 0;
-            if (words > 0) {
-                syncWordsToPages(words);
-            } else if (pages > 0) {
-                syncPagesToWords(pages);
-            }
-            clearTimeout(priceUpdateTimeout);
-            priceUpdateTimeout = setTimeout(calculatePrice, 300);
-        });
-        document.getElementById('paperType').addEventListener('change', function() {
-            var val = this.value;
-            var slidesSection = document.getElementById('slidesSection');
-            var paperFields = document.getElementById('paperFields');
-            if (val === 'presentation') {
-                slidesSection.classList.remove('hidden');
-                paperFields.classList.add('hidden');
-                document.getElementById('slides').required = true;
-                document.getElementById('pages').required = false;
-                document.getElementById('words').required = false;
+            let data = await response.json();
+            hideLoading();
+
+            if (data.paypal_order_id) {
+                showPayPalModal(data.id, data.paypal_order_id, data.total_price);
             } else {
-                slidesSection.classList.add('hidden');
-                paperFields.classList.remove('hidden');
-                document.getElementById('slides').required = false;
-                document.getElementById('pages').required = true;
-                document.getElementById('words').required = true;
+                window.location.href = '/client/orders/' + data.id + '/';
             }
-            clearTimeout(priceUpdateTimeout);
-            priceUpdateTimeout = setTimeout(calculatePrice, 300);
-        });
 
-        setupFileUpload();
-        setupLinks();
-        form.addEventListener('submit', submitOrder);
-
-        // load PayPal accounts
-        loadPayPalAccounts();
-
-        // initial price calculation
-        calculatePrice();
-    });
-})();
+        } catch (error) {
+            hideLoading();
+            window.Toast.show(error.message || 'Failed to create order. Please try again.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Place Order';
+        }
+    }
 </script>
 {% endblock %}

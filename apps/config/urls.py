@@ -12,12 +12,13 @@ from apps.accounts.views import (
     client_notifications_mark_all_read,
     client_notification_delete,
     client_notifications_unread_count,
-    profile,
 )
 
 app_name = 'config'
 
 urlpatterns = [
+    path('sitemap.xml', views.sitemap_xml, name='sitemap'),
+    path('robots.txt', views.robots_txt, name='robots'),
     path('', views.home, name='home'),
     path('login/', views.login_page, name='login'),
     path('register/', views.register_page, name='register'),
@@ -91,7 +92,6 @@ urlpatterns = [
     path('auth/', include('apps.accounts.urls')),
     path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/v1/auth/', include('apps.accounts.urls')),
-    path('api/v1/auth/profile/', profile, name='api-profile'),
     path('api/v1/admin/', include('apps.admin_portal.urls')),
     path('api/v1/messaging/', include('apps.messaging.urls')),
     path('api/v1/orders/', include('apps.orders.urls')),

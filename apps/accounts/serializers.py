@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
-from django.contrib.auth import authenticate
 from .models import User, PendingUser, LoginLog
 
 
@@ -9,18 +8,11 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     full_name = serializers.CharField(max_length=100)
     password = serializers.CharField(write_only=True, validators=[validate_password])
-    password_confirm = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True, required=False, allow_blank=True)
     phone = serializers.CharField(max_length=17, required=False, allow_blank=True)
     institution = serializers.CharField(max_length=100, required=False, allow_blank=True)
 
     def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError('An account with this email already exists')
-        if PendingUser.objects.filter(email=value).exists():
-            pending = PendingUser.objects.get(email=value)
-            if not pending.is_expired():
-                raise serializers.ValidationError('A pending registration already exists for this email')
-            pending.delete()
         return value.lower().strip()
 
     def validate_full_name(self, value):
@@ -30,7 +22,9 @@ class RegisterSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
-        if data['password'] != data['password_confirm']:
+        password = data.get('password')
+        password_confirm = data.get('password_confirm')
+        if password_confirm and password != password_confirm:
             raise serializers.ValidationError({'password_confirm': 'Passwords do not match'})
         return data
 
@@ -61,21 +55,6 @@ class LoginSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         return value.lower().strip()
-
-    def validate(self, data):
-        email = data.get('email')
-        password = data.get('password')
-        
-        if email and password:
-            user = authenticate(username=email, password=password)
-            if not user:
-                raise serializers.ValidationError('Invalid email or password')
-            if user.is_suspended:
-                raise serializers.ValidationError('Your account has been suspended')
-            if not user.email_verified:
-                raise serializers.ValidationError('Please verify your email first')
-            data['user'] = user
-        return data
 
 
 class ForgotPasswordSerializer(serializers.Serializer):
@@ -196,6 +175,7 @@ class PendingUserSerializer(serializers.ModelSerializer):
 class GoogleLoginSerializer(serializers.Serializer):
     access_token = serializers.CharField()
     id_token = serializers.CharField(required=False, allow_blank=True)
-    
+
+
 class ResendPasswordChangeCodeSerializer(serializers.Serializer):
     verification_id = serializers.UUIDField(required=False)

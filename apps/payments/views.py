@@ -326,19 +326,32 @@ def get_paypal_methods(request):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def remove_payment_method(request, method_id):
-    method = get_object_or_404(PaymentMethod, id=method_id, user=request.user)
+    method = get_object_or_404(PaymentMethod, id=method_id, user=request.user, is_active=True)
+
+    active_count = PaymentMethod.objects.filter(user=request.user, is_active=True).count()
+
+    if active_count == 1:
+        return Response({
+            'error': 'Cannot remove the only payment method. You need at least one active PayPal account.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if method.is_default and active_count > 1:
+        return Response({
+            'error': 'Cannot remove your default payment method. Please set another account as default first.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
     method.is_active = False
     method.save()
 
     if method.is_default:
-        next_method = PaymentMethod.objects.filter(user=request.user, is_active=True).first()
-        if next_method:
-            next_method.is_default = True
-            next_method.save()
+        new_default = PaymentMethod.objects.filter(user=request.user, is_active=True).first()
+        if new_default:
+            new_default.is_default = True
+            new_default.save()
 
     return Response({
         'success': True,
-        'message': 'Payment method removed'
+        'message': 'Payment method removed successfully.'
     })
 
 

@@ -1,45 +1,35 @@
+import logging
+import requests
+from django.core.cache import cache
+from django.db import transaction, IntegrityError
+from django.contrib.auth import login as django_login, authenticate, logout as auth_logout
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator
 from rest_framework import status
-from django.contrib.auth import login as django_login, logout as auth_logout
-from django.shortcuts import redirect
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import make_password
-from django.utils import timezone
-from django.db import transaction
-from django.conf import settings
-from django.core.cache import cache
-from django.views.decorators.csrf import csrf_exempt
-from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404
-import logging
-import requests
-import secrets
-import hashlib
-import json
-import jwt
 
-from .models import User, PendingUser, LoginLog, PasswordChangeVerification, SecurityEvent, ClientNotification
+from .models import User, PendingUser, LoginLog, SecurityEvent, ClientNotification, PasswordChangeVerification
 from .serializers import (
     RegisterSerializer, OTPVerificationSerializer, ResendOTPSerializer,
     LoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,
     ChangePasswordSerializer, UserProfileSerializer, UserSerializer,
     SendPasswordChangeCodeSerializer, VerifyPasswordChangeCodeSerializer,
     CompletePasswordChangeSerializer, ResendPasswordChangeCodeSerializer,
+    GoogleLoginSerializer, UserListSerializer,
 )
 from .utils import (
     generate_otp, generate_reset_token, generate_password_change_code,
     send_otp_email, send_password_reset_email, send_password_change_code_email,
     get_client_ip, get_client_user_agent, generate_apple_client_secret,
     log_security_event,
-)
-from .throttles import (
-    RegisterThrottle, LoginThrottle, PasswordResetThrottle,
-    ResendOTPThrottle, VerifyOTPThrottle,
-    VerifyPasswordChangeCodeThrottle, GoogleLoginThrottle
 )
 
 logger = logging.getLogger(__name__)
@@ -67,7 +57,6 @@ def verify_google_token(access_token, id_token, client_id):
         except Exception as e:
             logger.error(f"Google ID token verification failed: {str(e)}")
             return None
-
     if access_token:
         try:
             response = requests.get(
@@ -80,7 +69,6 @@ def verify_google_token(access_token, id_token, client_id):
         except Exception as e:
             logger.error(f"Google access token verification failed: {str(e)}")
             return None
-
     return None
 
 
@@ -89,11 +77,15 @@ def verify_google_token(access_token, id_token, client_id):
 @permission_classes([AllowAny])
 @authentication_classes([])
 def register(request):
-    throttle = RegisterThrottle()
-    if not throttle.allow_request(request, None):
+    ip = get_client_ip(request)
+    rate_key = f'register_rate:{ip}'
+    limit = 5
+    window = 3600
+    count = cache.get(rate_key, 0)
+    if count >= limit:
         log_security_event(
             'rate_limit_hit',
-            get_client_ip(request),
+            ip,
             get_client_user_agent(request),
             metadata={'endpoint': 'register'}
         )
@@ -101,15 +93,16 @@ def register(request):
             {'error': 'Too many registration attempts. Please try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS
         )
+    cache.set(rate_key, count + 1, window)
 
     serializer = RegisterSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     email = serializer.validated_data['email']
-    ip = get_client_ip(request)
 
-    if User.objects.filter(email=email).exists():
+    existing_user = User.objects.filter(email=email).first()
+    if existing_user and existing_user.email_verified:
         log_security_event(
             'register_duplicate',
             ip,
@@ -117,30 +110,48 @@ def register(request):
             metadata={'email': email}
         )
         return Response(
-            {'email': 'An account with this email already exists'},
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                'error': 'An account with this email already exists. Please sign in.',
+                'redirect': f'/login/?email={email}'
+            },
+            status=status.HTTP_409_CONFLICT
         )
 
-    PendingUser.objects.filter(email=email).delete()
+    pending = PendingUser.objects.filter(email=email).first()
+    if pending and pending.is_expired():
+        pending.delete()
+        pending = None
+
+    if not pending:
+        if existing_user:
+            pending = PendingUser.objects.create(
+                email=email,
+                full_name=existing_user.full_name,
+                password=existing_user.password,
+                phone=existing_user.phone,
+                institution=existing_user.institution,
+                otp_code_hash='',
+                otp_expires=timezone.now() + timezone.timedelta(minutes=10),
+                ip_address=ip
+            )
+        else:
+            pending = PendingUser.objects.create(
+                email=email,
+                full_name=serializer.validated_data['full_name'],
+                password=make_password(serializer.validated_data['password']),
+                phone=serializer.validated_data.get('phone', ''),
+                institution=serializer.validated_data.get('institution', ''),
+                otp_code_hash='',
+                otp_expires=timezone.now() + timezone.timedelta(minutes=10),
+                ip_address=ip
+            )
 
     otp = generate_otp()
-
-    pending_user = PendingUser.objects.create(
-        email=email,
-        full_name=serializer.validated_data['full_name'],
-        password=make_password(serializer.validated_data['password']),
-        phone=serializer.validated_data.get('phone', ''),
-        institution=serializer.validated_data.get('institution', ''),
-        otp_code_hash='',
-        otp_expires=timezone.now() + timezone.timedelta(minutes=10),
-        ip_address=ip
-    )
-    pending_user.set_otp(otp)
-
-    email_sent = send_otp_email(pending_user.email, otp, pending_user.full_name)
+    pending.set_otp(otp)
+    email_sent = send_otp_email(email, otp, pending.full_name)
 
     if not email_sent:
-        pending_user.delete()
+        pending.delete()
         log_security_event(
             'email_send_failed',
             ip,
@@ -160,20 +171,27 @@ def register(request):
     )
 
     return Response({
-        'message': 'Verification code sent to your email.',
-        'email': pending_user.email
-    }, status=status.HTTP_200_OK)
+        'require_verification': True,
+        'email': email,
+        'redirect': f'/login/?require_verification=true&email={email}'
+    }, status=status.HTTP_201_CREATED if not existing_user else status.HTTP_409_CONFLICT)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def verify_otp(request):
-    throttle = VerifyOTPThrottle()
-    if not throttle.allow_request(request, None):
+    ip = get_client_ip(request)
+    rate_key = f'verify_otp_rate:{ip}'
+    limit = 10
+    window = 3600
+    count = cache.get(rate_key, 0)
+    if count >= limit:
         return Response(
             {'error': 'Too many verification attempts. Please try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS
         )
+    cache.set(rate_key, count + 1, window)
 
     serializer = OTPVerificationSerializer(data=request.data)
     if not serializer.is_valid():
@@ -181,76 +199,113 @@ def verify_otp(request):
 
     email = serializer.validated_data['email']
     otp = serializer.validated_data['otp_code']
-    ip = get_client_ip(request)
+
+    lock_key = f'otp_lock_{email}'
+    attempts_key = f'otp_attempts_{email}'
+
+    if cache.get(lock_key):
+        log_security_event('otp_verification_locked', ip, get_client_user_agent(request), metadata={'email': email})
+        return Response(
+            {'error': 'Too many failed attempts. Please wait 30 minutes before trying again.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
     try:
         pending_user = PendingUser.objects.get(email=email)
     except PendingUser.DoesNotExist:
-        log_security_event(
-            'otp_verification_failed',
-            ip,
-            get_client_user_agent(request),
-            metadata={'email': email}
-        )
+        log_security_event('otp_verification_failed', ip, get_client_user_agent(request), metadata={'email': email})
         return Response(
-            {'error': 'No pending registration found'},
+            {'error': 'No pending registration found. Please register again.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
     if not pending_user.verify_otp(otp):
-        log_security_event(
-            'otp_verification_failed',
-            ip,
-            get_client_user_agent(request),
-            metadata={'email': email}
-        )
+        attempts = cache.get(attempts_key, 0) + 1
+        cache.set(attempts_key, attempts, timeout=1800)
+        remaining = 3 - attempts
+
+        if attempts >= 3:
+            cache.set(lock_key, True, timeout=1800)
+            log_security_event('otp_verification_locked', ip, get_client_user_agent(request), metadata={'email': email, 'attempts': attempts})
+            return Response(
+                {'error': 'Too many failed attempts. Your account is locked for 30 minutes.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        log_security_event('otp_verification_failed', ip, get_client_user_agent(request), metadata={'email': email, 'remaining_attempts': remaining})
         return Response(
-            {'error': 'Invalid or expired verification code'},
+            {'error': f'Invalid or expired verification code. {remaining} attempt(s) remaining.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if User.objects.filter(email=email).exists():
+    cache.delete(attempts_key)
+    cache.delete(lock_key)
+
+    user = User.objects.filter(email=email).first()
+    if user:
+        if not user.email_verified:
+            user.email_verified = True
+            user.save(update_fields=['email_verified'])
         pending_user.delete()
+        log_security_event('verification_success_existing_user', ip, get_client_user_agent(request), user=user, metadata={'email': email})
+        return Response({
+            'message': 'Email verified successfully. You can now login.',
+            'verified': True
+        }, status=status.HTTP_200_OK)
+
+    try:
+        with transaction.atomic():
+            user = User(
+                email=pending_user.email,
+                full_name=pending_user.full_name,
+                phone=pending_user.phone,
+                institution=pending_user.institution,
+                email_verified=True,
+                is_active=True,
+                role='client'
+            )
+            user.password = pending_user.password
+            user.save()
+            pending_user.delete()
+    except IntegrityError:
+        user = User.objects.get(email=email)
+        if not user.email_verified:
+            user.email_verified = True
+            user.save(update_fields=['email_verified'])
+        pending_user.delete()
+        log_security_event('verification_success_existing_user', ip, get_client_user_agent(request), user=user, metadata={'email': email})
+        return Response({
+            'message': 'Email verified successfully. You can now login.',
+            'verified': True
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        log_security_event('user_creation_failed', ip, get_client_user_agent(request), metadata={'email': email, 'error': str(e)})
         return Response(
-            {'error': 'An account with this email already exists'},
-            status=status.HTTP_400_BAD_REQUEST
+            {'error': f'Failed to create account: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-    with transaction.atomic():
-        user = User.objects.create_user(
-            email=pending_user.email,
-            full_name=pending_user.full_name,
-            password=pending_user.password,
-            phone=pending_user.phone,
-            institution=pending_user.institution,
-            email_verified=True,
-            is_active=True,
-            role='client'
-        )
-        pending_user.delete()
-
-    log_security_event(
-        'register_success',
-        ip,
-        get_client_user_agent(request),
-        user=user,
-        metadata={'email': email}
-    )
-
+    log_security_event('register_success', ip, get_client_user_agent(request), user=user, metadata={'email': email})
     return Response({
-        'message': 'Email verified successfully. You can now login.'
+        'message': 'Email verified successfully. You can now login.',
+        'verified': True
     }, status=status.HTTP_200_OK)
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def resend_otp(request):
-    throttle = ResendOTPThrottle()
-    if not throttle.allow_request(request, None):
+    ip = get_client_ip(request)
+    rate_key = f'resend_otp_rate:{ip}'
+    limit = 5
+    window = 3600
+    count = cache.get(rate_key, 0)
+    if count >= limit:
         return Response(
             {'error': 'Too many resend attempts. Please try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS
         )
+    cache.set(rate_key, count + 1, window)
 
     serializer = ResendOTPSerializer(data=request.data)
     if not serializer.is_valid():
@@ -258,16 +313,52 @@ def resend_otp(request):
 
     email = serializer.validated_data['email']
 
+    lock_key = f'otp_lock_{email}'
+    resend_key = f'otp_resend_{email}'
+
+    if cache.get(lock_key):
+        log_security_event(
+            'otp_resend_blocked_locked',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email}
+        )
+        return Response(
+            {'error': 'This email is temporarily locked. Please wait 30 minutes.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    resend_count = cache.get(resend_key, 0)
+    if resend_count >= 3:
+        log_security_event(
+            'otp_resend_limit_reached',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email, 'attempts': resend_count}
+        )
+        return Response(
+            {'error': 'Maximum resend limit reached. Please register again.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
     try:
         pending_user = PendingUser.objects.get(email=email)
     except PendingUser.DoesNotExist:
+        log_security_event(
+            'otp_resend_no_pending',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email}
+        )
         return Response(
-            {'error': 'No pending registration found'},
+            {'error': 'No pending registration found. Please register first.'},
             status=status.HTTP_404_NOT_FOUND
         )
 
     if pending_user.is_expired():
         pending_user.delete()
+        cache.delete(resend_key)
+        cache.delete(lock_key)
         return Response(
             {'error': 'Your registration has expired. Please register again.'},
             status=status.HTTP_400_BAD_REQUEST
@@ -277,15 +368,31 @@ def resend_otp(request):
     pending_user.set_otp(new_otp)
 
     email_sent = send_otp_email(email, new_otp, pending_user.full_name)
-
     if not email_sent:
+        pending_user.delete()
+        log_security_event(
+            'otp_resend_email_failed',
+            ip,
+            get_client_user_agent(request),
+            metadata={'email': email}
+        )
         return Response(
             {'error': 'Failed to send verification email. Please try again.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+    cache.set(resend_key, resend_count + 1, timeout=3600)
+    log_security_event(
+        'otp_resend_success',
+        ip,
+        get_client_user_agent(request),
+        metadata={'email': email, 'remaining': 2 - resend_count}
+    )
+
     return Response({
-        'message': 'New verification code sent to your email.'
+        'message': 'New verification code sent to your email.',
+        'remaining_attempts': 2 - resend_count,
+        'email': email
     }, status=status.HTTP_200_OK)
 
 
@@ -294,19 +401,18 @@ def resend_otp(request):
 @permission_classes([AllowAny])
 @authentication_classes([])
 def login(request):
-    if not settings.DEBUG:
-        throttle = LoginThrottle()
-        if not throttle.allow_request(request, None):
-            log_security_event(
-                'rate_limit_hit',
-                get_client_ip(request),
-                get_client_user_agent(request),
-                metadata={'endpoint': 'login'}
-            )
-            return Response(
-                {'error': 'Too many login attempts. Please try again later.'},
-                status=status.HTTP_429_TOO_MANY_REQUESTS
-            )
+    ip = get_client_ip(request)
+    rate_key = f'login_rate:{ip}'
+    limit = 10
+    window = 3600
+    count = cache.get(rate_key, 0)
+    if count >= limit:
+        log_security_event('rate_limit_hit', ip, get_client_user_agent(request), metadata={'endpoint': 'login'})
+        return Response(
+            {'error': 'Too many login attempts. Please try again later.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+    cache.set(rate_key, count + 1, window)
 
     serializer = LoginSerializer(data=request.data)
     if not serializer.is_valid():
@@ -315,26 +421,60 @@ def login(request):
     email = serializer.validated_data['email']
     password = serializer.validated_data['password']
     remember = request.data.get('remember', False)
-    ip = get_client_ip(request)
 
-    try:
-        user = User.objects.get(email=email)
+    user = User.objects.filter(email=email).first()
 
-        if user.account_locked_until and user.account_locked_until > timezone.now():
-            log_security_event(
-                'account_locked',
-                ip,
-                get_client_user_agent(request),
-                user=user
-            )
+    if user:
+        if not user.email_verified:
+            pending = PendingUser.objects.filter(email=email).first()
+            if not pending:
+                pending = PendingUser.objects.create(
+                    email=email,
+                    full_name=user.full_name,
+                    password=user.password,
+                    phone=user.phone,
+                    institution=user.institution,
+                    otp_code_hash='',
+                    otp_expires=timezone.now() + timezone.timedelta(minutes=10),
+                    ip_address=ip
+                )
+            elif pending.is_expired():
+                pending.delete()
+                pending = PendingUser.objects.create(
+                    email=email,
+                    full_name=user.full_name,
+                    password=user.password,
+                    phone=user.phone,
+                    institution=user.institution,
+                    otp_code_hash='',
+                    otp_expires=timezone.now() + timezone.timedelta(minutes=10),
+                    ip_address=ip
+                )
+            otp = generate_otp()
+            pending.set_otp(otp)
+            email_sent = send_otp_email(email, otp, pending.full_name)
+            if not email_sent:
+                pending.delete()
+                log_security_event('email_send_failed', ip, get_client_user_agent(request), metadata={'email': email})
+                return Response(
+                    {'error': 'Failed to send verification email. Please try again.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            log_security_event('login_unverified', ip, get_client_user_agent(request), user=user, metadata={'email': email})
             return Response(
-                {'error': 'Account locked due to multiple failed attempts. Try again later.'},
+                {
+                    'error': 'Email not verified. A new verification code has been sent.',
+                    'require_verification': True,
+                    'email': email,
+                    'redirect': f'/login/?require_verification=true&email={email}'
+                },
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        if not user.email_verified:
+        if user.account_locked_until and user.account_locked_until > timezone.now():
+            log_security_event('account_locked', ip, get_client_user_agent(request), user=user)
             return Response(
-                {'error': 'Please verify your email before logging in.'},
+                {'error': 'Account locked due to multiple failed attempts. Try again later.'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -350,108 +490,130 @@ def login(request):
                 user.suspended_until = None
                 user.save(update_fields=['is_suspended', 'suspension_reason', 'suspended_until'])
 
-    except User.DoesNotExist:
-        LoginLog.objects.create(
-            email=email,
-            ip_address=ip,
-            user_agent=get_client_user_agent(request),
-            success=False
-        )
-        log_security_event(
-            'login_user_not_found',
-            ip,
-            get_client_user_agent(request),
-            metadata={'email': email}
-        )
-        return Response(
-            {'error': 'No account found with this email address.'},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
+        authenticated_user = authenticate(request=request, username=email, password=password)
+        if not authenticated_user:
+            user.increment_failed_login()
+            LoginLog.objects.create(
+                user=user,
+                email=email,
+                ip_address=ip,
+                user_agent=get_client_user_agent(request),
+                success=False
+            )
+            log_security_event('login_failed', ip, get_client_user_agent(request), user=user)
+            return Response(
+                {'error': 'Invalid password. Please try again.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
-    authenticated_user = authenticate(request=request, username=email, password=password)
+        with transaction.atomic():
+            user.reset_failed_login()
+            user.last_login = timezone.now()
+            user.last_login_ip = ip
+            user.last_login_user_agent = get_client_user_agent(request)
+            user.save(update_fields=['last_login', 'last_login_ip', 'last_login_user_agent'])
 
-    if not authenticated_user:
-        user.increment_failed_login()
+        django_login(request, authenticated_user)
+
         LoginLog.objects.create(
             user=user,
             email=email,
             ip_address=ip,
             user_agent=get_client_user_agent(request),
-            success=False
+            success=True
         )
-        log_security_event(
-            'login_failed',
-            ip,
-            get_client_user_agent(request),
-            user=user
+
+        refresh = RefreshToken.for_user(user)
+        refresh['email'] = user.email
+        refresh['role'] = user.role
+        refresh['full_name'] = user.full_name
+
+        if not remember:
+            request.session.set_expiry(0)
+
+        profile_serializer = UserProfileSerializer(user)
+
+        response = Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': profile_serializer.data,
+            'access_expires_in': 3600,
+            'refresh_expires_in': 604800
+        }, status=status.HTTP_200_OK)
+
+        response.set_cookie(
+            'access_token',
+            str(refresh.access_token),
+            max_age=3600,
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            path='/'
         )
+        response.set_cookie(
+            'refresh_token',
+            str(refresh),
+            max_age=604800,
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            path='/'
+        )
+
+        log_security_event('login_success', ip, get_client_user_agent(request), user=user)
+        return response
+
+    pending = PendingUser.objects.filter(email=email).first()
+
+    if pending:
+        if pending.is_expired():
+            pending.delete()
+            log_security_event('login_pending_expired', ip, get_client_user_agent(request), metadata={'email': email})
+            return Response(
+                {
+                    'error': 'Your registration has expired. Please register again.',
+                    'redirect': f'/register/?email={email}'
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        otp = generate_otp()
+        pending.set_otp(otp)
+        email_sent = send_otp_email(email, otp, pending.full_name)
+
+        if not email_sent:
+            pending.delete()
+            log_security_event('email_send_failed', ip, get_client_user_agent(request), metadata={'email': email})
+            return Response(
+                {'error': 'Failed to send verification email. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        log_security_event('login_pending_verification_sent', ip, get_client_user_agent(request), metadata={'email': email})
         return Response(
-            {'error': 'Invalid password. Please try again.'},
-            status=status.HTTP_401_UNAUTHORIZED
+            {
+                'error': 'Please verify your email before logging in.',
+                'require_verification': True,
+                'email': email,
+                'redirect': f'/login/?require_verification=true&email={email}'
+            },
+            status=status.HTTP_403_FORBIDDEN
         )
-
-    with transaction.atomic():
-        user.reset_failed_login()
-        user.last_login = timezone.now()
-        user.last_login_ip = ip
-        user.last_login_user_agent = get_client_user_agent(request)
-        user.save(update_fields=['last_login', 'last_login_ip', 'last_login_user_agent'])
-
-    django_login(request, authenticated_user)
 
     LoginLog.objects.create(
-        user=user,
         email=email,
         ip_address=ip,
         user_agent=get_client_user_agent(request),
-        success=True
+        success=False
     )
-
-    refresh = RefreshToken.for_user(user)
-    refresh['email'] = user.email
-    refresh['role'] = user.role
-    refresh['full_name'] = user.full_name
-
-    if not remember:
-        request.session.set_expiry(0)
-
-    profile_serializer = UserProfileSerializer(user)
-
-    response = Response({
-        'access': str(refresh.access_token),
-        'refresh': str(refresh),
-        'user': profile_serializer.data,
-        'access_expires_in': 3600,
-        'refresh_expires_in': 604800
-    }, status=status.HTTP_200_OK)
-
-    response.set_cookie(
-        'access_token',
-        str(refresh.access_token),
-        max_age=3600,
-        httponly=True,
-        secure=not settings.DEBUG,
-        samesite='Lax',
-        path='/'
+    log_security_event('login_user_not_found', ip, get_client_user_agent(request), metadata={'email': email})
+    return Response(
+        {
+            'error': 'No account found with this email address.',
+            'redirect': f'/register/?email={email}'
+        },
+        status=status.HTTP_404_NOT_FOUND
     )
-    response.set_cookie(
-        'refresh_token',
-        str(refresh),
-        max_age=604800,
-        httponly=True,
-        secure=not settings.DEBUG,
-        samesite='Lax',
-        path='/'
-    )
-
-    log_security_event(
-        'login_success',
-        ip,
-        get_client_user_agent(request),
-        user=user
-    )
-
-    return response
 
 
 @csrf_exempt
@@ -500,6 +662,153 @@ def refresh_token(request):
             status=status.HTTP_401_UNAUTHORIZED
         )
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    try:
+        refresh_token = request.data.get('refresh') or request.COOKIES.get('refresh_token')
+        if refresh_token:
+            RefreshToken(refresh_token).blacklist()
+    except Exception:
+        pass
+    auth_logout(request)
+    response = Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
+    response.delete_cookie('access_token', path='/')
+    response.delete_cookie('refresh_token', path='/')
+    return response
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def forgot_password(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def reset_password(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def profile(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_deletion(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_deletion(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_password_change_code(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def resend_password_change_code(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_password_change_code(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def complete_password_change(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def google_login(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def google_callback(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def google_signup(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def apple_login(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def apple_callback(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def apple_signup(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def client_notifications_list(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def client_notification_mark_read(request, notification_id):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def client_notifications_mark_all_read(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def client_notification_delete(request, notification_id):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def client_notifications_unread_count(request):
+    return Response({'error': 'Not implemented'}, status=status.HTTP_501_NOT_IMPLEMENTED)
 
 @csrf_exempt
 @api_view(['POST'])
