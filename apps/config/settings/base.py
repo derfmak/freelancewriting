@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.payments',
     'tailwind',
+    'whitenoise',
 ]
 
 MIDDLEWARE = [
@@ -267,8 +268,3 @@ else:
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         },
     }
-
-APPLE_CLIENT_ID = os.environ.get('APPLE_CLIENT_ID')
-APPLE_TEAM_ID = os.environ.get('APPLE_TEAM_ID')
-APPLE_KEY_ID = os.environ.get('APPLE_KEY_ID')
-APPLE_PRIVATE_KEY = os.environ.get('APPLE_PRIVATE_KEY', '').replace('\\n', '\n')

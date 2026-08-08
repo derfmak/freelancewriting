@@ -28,3 +28,6 @@ INFO 2026-08-08 14:10:13,825 utils 20268 38384 OTP email sent to jonecoops@gmail
 DEBUG 2026-08-08 15:11:48,358 middleware 20268 49496 Invalid JWT token: Token is expired
 DEBUG 2026-08-08 15:11:48,358 middleware 20268 49100 Invalid JWT token: Token is expired
 ERROR 2026-08-08 15:53:40,623 views 50908 38532 Google token exchange failed: 400 Client Error: Bad Request for url: https://oauth2.googleapis.com/token
+DEBUG 2026-08-08 18:09:47,787 middleware 41160 45704 Invalid JWT token: Token is expired
+DEBUG 2026-08-08 18:09:47,788 middleware 41160 50824 Invalid JWT token: Token is expired
+DEBUG 2026-08-08 18:09:47,897 middleware 41160 53260 Invalid JWT token: Token is expired
