@@ -2,6 +2,7 @@
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=apps.config.settings.production
 
 WORKDIR /app
 
@@ -12,4 +13,7 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput
 
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "apps.config.asgi:application"]
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

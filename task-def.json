@@ -1,0 +1,38 @@
+﻿{
+  "family": "academicwrite-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "web",
+      "image": "YOUR_ECR_URI:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "hostPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {"name": "DJANGO_SETTINGS_MODULE", "value": "apps.config.settings.production"},
+        {"name": "DATABASE_URL", "value": "postgresql://user:pass@host:5432/dbname"},
+        {"name": "SECRET_KEY", "value": "your-super-secret-key"},
+        {"name": "DEBUG", "value": "False"},
+        {"name": "ALLOWED_HOSTS", "value": "yourdomain.com,www.yourdomain.com"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/academicwrite",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
