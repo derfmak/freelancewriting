@@ -1,3 +1,4 @@
-﻿#!/bin/sh
-python manage.py migrate --noinput
-exec daphne -b 0.0.0.0 -p 8000 apps.config.asgi:application
+﻿#!/bin/bash
+python manage.py migrate
+python manage.py collectstatic --noinput
+gunicorn core.wsgi:application
