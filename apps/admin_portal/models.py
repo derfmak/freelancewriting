@@ -325,7 +325,7 @@ class Blog(models.Model):
         indexes = [
             models.Index(fields=['slug']),
             models.Index(fields=['published_at']),
-            GinIndex(fields=['title', 'content', 'excerpt']),
+            models.Index(fields=['title', 'content', 'excerpt']),
         ]
         db_table = 'blog_posts'
         ordering = ['-published_at']
