@@ -1,4 +1,3 @@
-from django.contrib.postgres.operations import CreateExtension
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
@@ -16,7 +15,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        CreateExtension('pg_trgm'),
+        migrations.RunSQL(
+            'CREATE EXTENSION IF NOT EXISTS pg_trgm;',
+            reverse_sql='DROP EXTENSION IF EXISTS pg_trgm;'
+        ),
         migrations.CreateModel(
             name='PlatformStats',
             fields=[
