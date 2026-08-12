@@ -20,6 +20,7 @@ from .serializers import (
 from apps.payments.models import Wallet, Transaction
 from apps.payments.services import PayPalService
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -260,41 +261,49 @@ def create_order(request):
             metadata={}
         )
 
-        return_url = request.build_absolute_uri(f'/client/orders/{order.id}/')
-        cancel_url = request.build_absolute_uri(f'/client/orders/new/')
+        local_payment_intent_id = str(uuid.uuid4())
 
-        paypal_result = PayPalService.create_payment(
-            amount=price_data['total_price'],
-            return_url=return_url,
-            cancel_url=cancel_url
-        )
+    return_url = request.build_absolute_uri(f'/client/orders/{order.id}/')
+    cancel_url = request.build_absolute_uri(f'/client/orders/new/')
 
-        if not paypal_result['success']:
+    paypal_result = PayPalService.create_payment(
+        amount=price_data['total_price'],
+        return_url=return_url,
+        cancel_url=cancel_url,
+        idempotency_key=local_payment_intent_id
+    )
+
+    with db_transaction.atomic():
+        transaction_obj.refresh_from_db()
+        if paypal_result.get('success'):
+            transaction_obj.metadata['paypal_order_id'] = paypal_result['payment_id']
+            transaction_obj.metadata['local_id'] = local_payment_intent_id
+            transaction_obj.save()
+
+            log_history(order, request.user, 'create', None, 'request', {
+                'total_price': str(price_data['total_price']),
+                'pages': float(price_data.get('pages', 0)),
+                'words': words,
+                'spacing': spacing,
+            })
+
+            create_timeline(order, 'request', 'Order Created',
+                           'Your order has been submitted and is waiting for payment approval',
+                           'fa-file-alt', 'green')
+
+            response_data = OrderSerializer(order).data
+            response_data['paypal_order_id'] = paypal_result['payment_id']
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        else:
             transaction_obj.status = 'failed'
             transaction_obj.metadata['failure_reason'] = paypal_result.get('error', 'PayPal error')
             transaction_obj.save()
+            order.status = 'failed'
+            order.save()
             return Response(
                 {'error': 'PayPal payment creation failed', 'detail': paypal_result.get('error')},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        transaction_obj.metadata['paypal_order_id'] = paypal_result['payment_id']
-        transaction_obj.save()
-
-        log_history(order, request.user, 'create', None, 'request', {
-            'total_price': str(price_data['total_price']),
-            'pages': float(price_data.get('pages', 0)),
-            'words': words,
-            'spacing': spacing,
-        })
-
-        create_timeline(order, 'request', 'Order Created',
-                       'Your order has been submitted and is waiting for a writer',
-                       'fa-file-alt', 'green')
-
-        response_data = OrderSerializer(order).data
-        response_data['paypal_order_id'] = paypal_result['payment_id']
-        return Response(response_data, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -572,7 +581,23 @@ def cancel_order(request, order_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    transaction_obj = Transaction.objects.filter(
+        order=order, type='payment'
+    ).first()
+
     from_status = order.status
+
+    if transaction_obj and transaction_obj.status == 'pending':
+        transaction_obj.status = 'cancelled'
+        transaction_obj.save()
+
+        try:
+            paypal_order_id = transaction_obj.metadata.get('paypal_order_id')
+            if paypal_order_id:
+                PayPalService.cancel_payment(paypal_order_id)
+        except Exception as e:
+            logger.warning(f"Could not cancel PayPal order {paypal_order_id}: {e}")
+
     order.status = 'cancelled'
     order.cancelled_at = timezone.now()
     order.cancelled_by = request.user
@@ -707,45 +732,45 @@ def reorder_order(request, order_id):
         order.paper_type
     )
 
-    new_order = Order.objects.create(
-        client=request.user,
-        academic_level=order.academic_level,
-        paper_type=order.paper_type,
-        subject=order.subject,
-        topic=order.topic,
-        instructions=order.instructions,
-        pages=price_data.get('pages'),
-        words=order.words,
-        spacing=order.spacing,
-        slides=order.slides,
-        sources_count=order.sources_count,
-        deadline=timezone.now() + timedelta(days=7),
-        format=order.format,
-        links=order.links,
-        base_price=price_data['base_price'],
-        level_multiplier=price_data['level_multiplier'],
-        level_adjusted=price_data['level_adjusted'],
-        urgency_multiplier=price_data['urgency_multiplier'],
-        total_price=price_data['total_price'],
-        status='request',
-        parent_order=order,
-        version=order.version + 1,
-        auto_cancel_at=(timezone.now() + timedelta(days=7)) + timedelta(hours=48)
-    )
+    with db_transaction.atomic():
+        new_order = Order.objects.create(
+            client=request.user,
+            academic_level=order.academic_level,
+            paper_type=order.paper_type,
+            subject=order.subject,
+            topic=order.topic,
+            instructions=order.instructions,
+            pages=price_data.get('pages'),
+            words=order.words,
+            spacing=order.spacing,
+            slides=order.slides,
+            sources_count=order.sources_count,
+            deadline=timezone.now() + timedelta(days=7),
+            format=order.format,
+            links=order.links,
+            base_price=price_data['base_price'],
+            level_multiplier=price_data['level_multiplier'],
+            level_adjusted=price_data['level_adjusted'],
+            urgency_multiplier=price_data['urgency_multiplier'],
+            total_price=price_data['total_price'],
+            status='request',
+            parent_order=order,
+            version=order.version + 1,
+            auto_cancel_at=(timezone.now() + timedelta(days=7)) + timedelta(hours=48)
+        )
 
-    wallet = request.user.wallet
-    Transaction.objects.create(
-        user=request.user,
-        wallet=wallet,
-        amount=price_data['total_price'],
-        type='payment',
-        direction='debit',
-        status='pending',
-        payment_method='paypal',
-        description=f'Order {new_order.order_number} placed – PayPal payment to admin',
-        order=new_order,
-        metadata={}
-    )
+        transaction_obj = Transaction.objects.create(
+            user=request.user,
+            wallet=request.user.wallet,
+            amount=price_data['total_price'],
+            type='payment',
+            direction='debit',
+            status='pending',
+            payment_method='paypal',
+            description=f'Order {new_order.order_number} placed – PayPal payment to admin',
+            order=new_order,
+            metadata={}
+        )
 
     log_history(new_order, request.user, 'reorder', None, 'request', {
         'original_order': str(order.id),
@@ -797,59 +822,59 @@ def split_order(request, order_id):
             order.paper_type
         )
 
-        new_order = Order.objects.create(
-            client=request.user,
-            academic_level=order.academic_level,
-            paper_type=order.paper_type,
-            subject=order.subject,
-            topic=f"{order.topic} - Part {i+1}",
-            instructions=order.instructions,
-            pages=pages_per_part if pages_per_part else None,
-            words=int(words_per_part) if words_per_part > 0 else 275,
-            spacing=order.spacing,
-            slides=order.slides,
-            sources_count=order.sources_count,
-            deadline=order.deadline,
-            format=order.format,
-            links=order.links,
-            base_price=part_price_data['base_price'],
-            level_multiplier=part_price_data['level_multiplier'],
-            level_adjusted=part_price_data['level_adjusted'],
-            urgency_multiplier=part_price_data['urgency_multiplier'],
-            total_price=part_price_data['total_price'],
-            status='request',
-            parent_order=order,
-            order_group=order_group,
-            split_part=i+1,
-            split_total=parts,
-            auto_cancel_at=order.deadline + timedelta(hours=48)
-        )
+        with db_transaction.atomic():
+            new_order = Order.objects.create(
+                client=request.user,
+                academic_level=order.academic_level,
+                paper_type=order.paper_type,
+                subject=order.subject,
+                topic=f"{order.topic} - Part {i+1}",
+                instructions=order.instructions,
+                pages=pages_per_part if pages_per_part else None,
+                words=int(words_per_part) if words_per_part > 0 else 275,
+                spacing=order.spacing,
+                slides=order.slides,
+                sources_count=order.sources_count,
+                deadline=order.deadline,
+                format=order.format,
+                links=order.links,
+                base_price=part_price_data['base_price'],
+                level_multiplier=part_price_data['level_multiplier'],
+                level_adjusted=part_price_data['level_adjusted'],
+                urgency_multiplier=part_price_data['urgency_multiplier'],
+                total_price=part_price_data['total_price'],
+                status='request',
+                parent_order=order,
+                order_group=order_group,
+                split_part=i+1,
+                split_total=parts,
+                auto_cancel_at=order.deadline + timedelta(hours=48)
+            )
 
-        wallet = request.user.wallet
-        Transaction.objects.create(
-            user=request.user,
-            wallet=wallet,
-            amount=part_price_data['total_price'],
-            type='payment',
-            direction='debit',
-            status='pending',
-            payment_method='paypal',
-            description=f'Order {new_order.order_number} placed – PayPal payment to admin',
-            order=new_order,
-            metadata={}
-        )
+            Transaction.objects.create(
+                user=request.user,
+                wallet=request.user.wallet,
+                amount=part_price_data['total_price'],
+                type='payment',
+                direction='debit',
+                status='pending',
+                payment_method='paypal',
+                description=f'Order {new_order.order_number} placed – PayPal payment to admin',
+                order=new_order,
+                metadata={}
+            )
 
-        log_history(new_order, request.user, 'split', None, 'request', {
-            'parent_order': str(order.id),
-            'split_part': i+1,
-            'split_total': parts
-        })
+            log_history(new_order, request.user, 'split', None, 'request', {
+                'parent_order': str(order.id),
+                'split_part': i+1,
+                'split_total': parts
+            })
 
-        create_timeline(new_order, 'request', f'Order Part {i+1} of {parts}',
-                       f'Split from Order #{order.order_number}',
-                       'fa-cut', 'blue')
+            create_timeline(new_order, 'request', f'Order Part {i+1} of {parts}',
+                           f'Split from Order #{order.order_number}',
+                           'fa-cut', 'blue')
 
-        split_orders.append(new_order)
+            split_orders.append(new_order)
 
     order.status = 'cancelled'
     order.cancelled_at = timezone.now()
